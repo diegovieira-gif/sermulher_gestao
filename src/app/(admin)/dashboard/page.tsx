@@ -1,247 +1,187 @@
-'use client';
-
-import { useState, useEffect } from 'react';
-import { Users, FileText, AlertTriangle, Calendar } from 'lucide-react';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
-} from 'recharts';
 import { directus } from '@/lib/directus';
-import { aggregate } from '@directus/sdk';
+import { readItems } from '@directus/sdk';
+import { DashboardCharts } from './dashboard-charts';
 
-interface DashboardStats {
-  totalBeneficiarias: number;
-  totalAtendimentos: number;
-  totalInfratores: number;
-  eventosAtivos: number;
+interface Atendimento {
+  id: string;
+  data_atendimento: string;
+  setor_responsavel?: {
+    nome: string;
+  };
 }
 
-// Dados mock para o gráfico de barras
-const attendanceData = [
-  { month: 'Ago', atendimentos: 145 },
-  { month: 'Set', atendimentos: 178 },
-  { month: 'Out', atendimentos: 165 },
-  { month: 'Nov', atendimentos: 198 },
-  { month: 'Dez', atendimentos: 210 },
-  { month: 'Jan', atendimentos: 187 },
-];
+// Função auxiliar para agrupar atendimentos por mês
+function agruparAtendimentosPorMes(atendimentos: Atendimento[]) {
+  const mesesMap: Record<string, number> = {};
+  
+  atendimentos.forEach((atendimento) => {
+    if (atendimento.data_atendimento) {
+      const data = new Date(atendimento.data_atendimento);
+      const mesAno = data.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+      mesesMap[mesAno] = (mesesMap[mesAno] || 0) + 1;
+    }
+  });
 
-// Dados mock para o gráfico de pizza
-const sectorData = [
-  { name: 'Jurídico', value: 450, color: '#9333ea' },
-  { name: 'Psicológico', value: 380, color: '#f97316' },
-  { name: 'Social', value: 404, color: '#3b82f6' },
-];
+  // Converter para array e ordenar por data
+  return Object.entries(mesesMap)
+    .map(([month, atendimentos]) => ({ month, atendimentos }))
+    .slice(-6); // Últimos 6 meses
+}
 
-export default function DashboardPage() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+// Função auxiliar para distribuir por setores
+function distribuirPorSetores(atendimentos: Atendimento[]) {
+  const setoresMap: Record<string, number> = {};
+  
+  atendimentos.forEach((atendimento) => {
+    const setor = atendimento.setor_responsavel?.nome || 'Não especificado';
+    setoresMap[setor] = (setoresMap[setor] || 0) + 1;
+  });
 
-  useEffect(() => {
-    async function fetchStats() {
-      try {
-        setLoading(true);
-        setError(null);
+  const cores = ['#9333ea', '#f97316', '#3b82f6', '#10b981', '#ef4444'];
+  
+  return Object.entries(setoresMap).map(([name, value], index) => ({
+    name,
+    value,
+    color: cores[index % cores.length],
+  }));
+}
 
-        // Buscar contagem de beneficiárias
-        const beneficiariasCount = await directus.request(
-          aggregate('beneficiarias', {
-            aggregate: { count: '*' },
-          })
-        );
+export default async function DashboardPage() {
+  // Dados mock como fallback
+  const mockData = {
+    beneficiarias: [],
+    atendimentos: [],
+    infratores: [],
+    eventos: [],
+  };
 
-        // Buscar contagem de atendimentos
-        const atendimentosCount = await directus.request(
-          aggregate('atendimentos', {
-            aggregate: { count: '*' },
-          })
-        );
+  let usandoDadosMock = false;
 
-        // Buscar contagem de infratores (Sala Azul)
-        const infratoresCount = await directus.request(
-          aggregate('infratores', {
-            aggregate: { count: '*' },
-          })
-        );
-
-        setStats({
-          totalBeneficiarias: Number(beneficiariasCount[0]?.count || 0),
-          totalAtendimentos: Number(atendimentosCount[0]?.count || 0),
-          totalInfratores: Number(infratoresCount[0]?.count || 0),
-          eventosAtivos: 12, // Mock - implementar quando tiver collection de eventos
-        });
-      } catch (err) {
-        console.error('Erro ao buscar estatísticas:', err);
-        setError('Erro ao carregar dados do dashboard');
-      } finally {
-        setLoading(false);
-      }
+  try {
+    // Verificar configuração
+    if (!process.env.NEXT_PUBLIC_DIRECTUS_URL || !process.env.DIRECTUS_TOKEN) {
+      console.warn('⚠️ Variáveis de ambiente do Directus não configuradas. Usando dados mock.');
+      usandoDadosMock = true;
+      throw new Error('Variáveis de ambiente do Directus não configuradas');
     }
 
-    fetchStats();
-  }, []);
+    console.log('📊 Buscando dados do Directus...');
 
-  if (loading) {
+    // Buscar dados em paralelo do Directus
+    const [beneficiarias, atendimentos, infratores, eventos] = await Promise.all([
+      directus.request(readItems('beneficiarias', { limit: -1 })).catch(err => {
+        console.error('❌ Erro ao buscar beneficiarias:', err);
+        return [];
+      }),
+      directus.request(
+        readItems('atendimentos', {
+          limit: -1,
+          fields: ['*', 'setor_responsavel.*'],
+        })
+      ).catch(err => {
+        console.error('❌ Erro ao buscar atendimentos:', err);
+        return [];
+      }),
+      directus.request(readItems('infratores', { limit: -1 })).catch(err => {
+        console.error('❌ Erro ao buscar infratores:', err);
+        return [];
+      }),
+      directus.request(
+        readItems('eventos_campanhas', {
+          limit: -1,
+        })
+      ).catch(err => {
+        console.error('❌ Erro ao buscar eventos:', err);
+        return [];
+      }),
+    ]);
+
+    mockData.beneficiarias = beneficiarias as any[];
+    mockData.atendimentos = atendimentos as any[];
+    mockData.infratores = infratores as any[];
+    mockData.eventos = eventos as any[];
+
+    console.log('✅ Dados carregados:', {
+      beneficiarias: mockData.beneficiarias.length,
+      atendimentos: mockData.atendimentos.length,
+      infratores: mockData.infratores.length,
+      eventos: mockData.eventos.length,
+    });
+
+    // Calcular totais
+    const totalBeneficiarias = mockData.beneficiarias.length;
+    const totalAtendimentos = mockData.atendimentos.length;
+    const totalInfratores = mockData.infratores.length;
+    const totalEventos = mockData.eventos.length;
+
+    // Processar dados para os gráficos
+    const atendimentosPorMes = agruparAtendimentosPorMes(mockData.atendimentos as Atendimento[]);
+    const distribuicaoSetores = distribuirPorSetores(mockData.atendimentos as Atendimento[]);
+
+    // Se não há dados, usar dados de exemplo
+    const finalAtendimentosPorMes = atendimentosPorMes.length > 0 
+      ? atendimentosPorMes 
+      : [
+          { month: 'Jan', atendimentos: 0 },
+          { month: 'Fev', atendimentos: 0 },
+          { month: 'Mar', atendimentos: 0 },
+        ];
+
+    const finalDistribuicaoSetores = distribuicaoSetores.length > 0
+      ? distribuicaoSetores
+      : [
+          { name: 'Sem dados', value: 1, color: '#9333ea' },
+        ];
+
     return (
-      <div className="flex h-96 items-center justify-center">
-        <div className="text-center">
-          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-primary/20 border-t-primary"></div>
-          <p className="mt-4 text-muted-foreground">Carregando dashboard...</p>
-        </div>
-      </div>
+      <>
+        {usandoDadosMock && (
+          <div className="mb-4 rounded-lg border border-orange-200 bg-orange-50 p-4">
+            <p className="text-sm text-orange-800">
+              ⚠️ <strong>Modo de demonstração:</strong> Conecte-se ao Directus para ver dados reais.
+            </p>
+          </div>
+        )}
+        <DashboardCharts
+          totalBeneficiarias={totalBeneficiarias}
+          totalAtendimentos={totalAtendimentos}
+          totalInfratores={totalInfratores}
+          totalEventos={totalEventos}
+          atendimentosPorMes={finalAtendimentosPorMes}
+          distribuicaoSetores={finalDistribuicaoSetores}
+        />
+      </>
     );
-  }
-
-  if (error) {
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    console.error('Erro ao buscar dados do dashboard:', errorMessage);
+    console.error('Detalhes do erro:', error);
+    console.error('Directus URL:', process.env.NEXT_PUBLIC_DIRECTUS_URL);
+    console.error('Token configurado:', !!process.env.DIRECTUS_TOKEN);
+    
     return (
       <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6">
-        <p className="text-destructive">{error}</p>
+        <h3 className="text-lg font-semibold text-destructive mb-2">
+          Erro ao carregar dashboard
+        </h3>
+        <p className="text-destructive mb-2">
+          Não foi possível carregar os dados. Verifique:
+        </p>
+        <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+          <li>Se o Directus está rodando ({process.env.NEXT_PUBLIC_DIRECTUS_URL || 'URL não configurada'})</li>
+          <li>Se as variáveis de ambiente estão configuradas (.env.local)</li>
+          <li>Se o token de acesso é válido</li>
+          <li>Se as collections (beneficiarias, atendimentos, infratores, eventos_campanhas) existem</li>
+        </ul>
+        <details className="mt-4">
+          <summary className="cursor-pointer text-sm font-medium text-destructive hover:underline">
+            Ver detalhes técnicos
+          </summary>
+          <pre className="mt-2 p-3 bg-destructive/5 rounded text-xs overflow-auto">
+            {errorMessage}
+          </pre>
+        </details>
       </div>
     );
   }
-
-  const statsCards = [
-    {
-      title: 'Mulheres Atendidas',
-      value: stats?.totalBeneficiarias.toLocaleString('pt-BR') || '0',
-      icon: Users,
-      color: 'bg-purple-500',
-      lightColor: 'bg-purple-50',
-      textColor: 'text-purple-600',
-    },
-    {
-      title: 'Atendimentos',
-      value: stats?.totalAtendimentos.toLocaleString('pt-BR') || '0',
-      icon: FileText,
-      color: 'bg-orange-500',
-      lightColor: 'bg-orange-50',
-      textColor: 'text-orange-600',
-    },
-    {
-      title: 'Participantes Sala Azul',
-      value: stats?.totalInfratores.toLocaleString('pt-BR') || '0',
-      icon: AlertTriangle,
-      color: 'bg-blue-500',
-      lightColor: 'bg-blue-50',
-      textColor: 'text-blue-600',
-    },
-    {
-      title: 'Eventos Ativos',
-      value: stats?.eventosAtivos.toLocaleString('pt-BR') || '0',
-      icon: Calendar,
-      color: 'bg-green-500',
-      lightColor: 'bg-green-50',
-      textColor: 'text-green-600',
-    },
-  ];
-
-  return (
-    <div className="space-y-6">
-      {/* KPI Cards */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {statsCards.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <div
-              key={stat.title}
-              className="rounded-lg border border-border bg-card p-6 shadow-sm"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    {stat.title}
-                  </p>
-                  <p className="mt-2 text-3xl font-bold text-foreground">
-                    {stat.value}
-                  </p>
-                </div>
-                <div className={`rounded-full p-3 ${stat.lightColor}`}>
-                  <Icon className={`h-6 w-6 ${stat.textColor}`} />
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Charts Section */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Bar Chart - Evolução de Atendimentos */}
-        <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
-          <h3 className="mb-4 text-lg font-semibold text-foreground">
-            Evolução de Atendimentos
-          </h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={attendanceData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis
-                dataKey="month"
-                tick={{ fill: '#6b7280', fontSize: 12 }}
-              />
-              <YAxis tick={{ fill: '#6b7280', fontSize: 12 }} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#fff',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                }}
-              />
-              <Bar dataKey="atendimentos" fill="#9333ea" radius={[8, 8, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Pie Chart - Distribuição por Setor */}
-        <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
-          <h3 className="mb-4 text-lg font-semibold text-foreground">
-            Distribuição por Setor
-          </h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={sectorData}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={100}
-                paddingAngle={5}
-                dataKey="value"
-              >
-                {sectorData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#fff',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                }}
-              />
-              <Legend
-                verticalAlign="bottom"
-                height={36}
-                iconType="circle"
-                formatter={(value, entry: any) => (
-                  <span className="text-sm text-gray-600">
-                    {value}: {entry.payload.value}
-                  </span>
-                )}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-    </div>
-  );
 }

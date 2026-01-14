@@ -3,6 +3,14 @@ import { createDirectus, rest, staticToken } from '@directus/sdk';
 const directusUrl = process.env.NEXT_PUBLIC_DIRECTUS_URL || '';
 const directusToken = process.env.DIRECTUS_TOKEN || '';
 
+// Log de configuração (apenas em desenvolvimento)
+if (process.env.NODE_ENV === 'development') {
+  console.log('Directus Config:', {
+    url: directusUrl || 'NOT SET',
+    tokenSet: !!directusToken,
+  });
+}
+
 // Cliente Directus
 export const directus = createDirectus(directusUrl)
   .with(staticToken(directusToken))
