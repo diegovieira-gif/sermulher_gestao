@@ -95,8 +95,8 @@ export default function DashboardPage() {
     return (
       <div className="flex h-96 items-center justify-center">
         <div className="text-center">
-          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-purple-200 border-t-purple-600"></div>
-          <p className="mt-4 text-gray-600">Carregando dashboard...</p>
+          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-primary/20 border-t-primary"></div>
+          <p className="mt-4 text-muted-foreground">Carregando dashboard...</p>
         </div>
       </div>
     );
@@ -104,8 +104,8 @@ export default function DashboardPage() {
 
   if (error) {
     return (
-      <div className="rounded-lg border border-red-200 bg-red-50 p-6">
-        <p className="text-red-800">{error}</p>
+      <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6">
+        <p className="text-destructive">{error}</p>
       </div>
     );
   }
@@ -154,14 +154,14 @@ export default function DashboardPage() {
           return (
             <div
               key={stat.title}
-              className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+              className="rounded-lg border border-border bg-card p-6 shadow-sm"
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-sm font-medium text-muted-foreground">
                     {stat.title}
                   </p>
-                  <p className="mt-2 text-3xl font-bold text-gray-900">
+                  <p className="mt-2 text-3xl font-bold text-foreground">
                     {stat.value}
                   </p>
                 </div>
@@ -177,8 +177,8 @@ export default function DashboardPage() {
       {/* Charts Section */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Bar Chart - Evolução de Atendimentos */}
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <h3 className="mb-4 text-lg font-semibold text-gray-900">
+        <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+          <h3 className="mb-4 text-lg font-semibold text-foreground">
             Evolução de Atendimentos
           </h3>
           <ResponsiveContainer width="100%" height={300}>
@@ -202,8 +202,8 @@ export default function DashboardPage() {
         </div>
 
         {/* Pie Chart - Distribuição por Setor */}
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <h3 className="mb-4 text-lg font-semibold text-gray-900">
+        <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+          <h3 className="mb-4 text-lg font-semibold text-foreground">
             Distribuição por Setor
           </h3>
           <ResponsiveContainer width="100%" height={300}>

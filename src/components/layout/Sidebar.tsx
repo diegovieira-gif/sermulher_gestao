@@ -50,11 +50,11 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-gray-200 bg-white">
+    <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-border bg-card">
       <div className="flex h-full flex-col">
         {/* Logo/Header */}
-        <div className="flex h-16 items-center border-b border-gray-200 px-6">
-          <h1 className="text-xl font-bold text-purple-600">SerMulher</h1>
+        <div className="flex h-16 items-center border-b border-border px-6">
+          <h1 className="text-xl font-bold text-primary">SerMulher</h1>
         </div>
 
         {/* Menu Items */}
@@ -71,8 +71,8 @@ export function Sidebar() {
                     className={cn(
                       'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                       isActive
-                        ? 'bg-purple-50 text-purple-700'
-                        : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-foreground hover:bg-accent hover:text-accent-foreground'
                     )}
                   >
                     <Icon className="h-5 w-5" />
@@ -85,9 +85,9 @@ export function Sidebar() {
         </nav>
 
         {/* Logout Button */}
-        <div className="border-t border-gray-200 p-3">
+        <div className="border-t border-border p-3">
           <button
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
             onClick={() => {
               // Implementar lógica de logout aqui
               console.log('Logout');
