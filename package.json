@@ -2,11 +2,13 @@
   "name": "sermulher_gestao",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "setup-schema": "node setup-schema.js"
   },
   "dependencies": {
     "@directus/sdk": "^18.0.3",
