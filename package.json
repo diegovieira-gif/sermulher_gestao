@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "eslint",
     "setup-schema": "node setup-schema.js",
-    "seed-data": "node seed-data.js"
+    "seed-data": "node seed-data.js",
+    "update-sala-azul": "node update-schema-sala-azul.js"
   },
   "dependencies": {
     "@directus/sdk": "^18.0.3",
