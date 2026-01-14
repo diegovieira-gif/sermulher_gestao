@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "setup-schema": "node setup-schema.js"
+    "setup-schema": "node setup-schema.js",
+    "seed-data": "node seed-data.js"
   },
   "dependencies": {
     "@directus/sdk": "^18.0.3",
