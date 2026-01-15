@@ -128,10 +128,10 @@ export function DashboardCharts({
           </ResponsiveContainer>
         </div>
 
-        {/* Pie Chart - Distribuição por Setor */}
+        {/* Pie Chart - Distribuição por Status */}
         <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
           <h3 className="mb-4 text-lg font-semibold text-foreground">
-            Distribuição por Setor
+            Distribuição por Status
           </h3>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
