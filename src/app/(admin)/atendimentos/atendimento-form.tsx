@@ -72,17 +72,18 @@ export function AtendimentoForm({
           ? atendimento.beneficiaria?.id
           : atendimento.beneficiaria;
 
-      // Formata data ISO (2023-01-01T00:00:00) para YYYY-MM-DD que o input date aceita
+      // Formata data para YYYY-MM-DD que o input date aceita
+      // Usa split string simples para evitar problemas de timezone
       let dataAberturaFormatted = "";
       if (atendimento.data_abertura) {
-        try {
-          const date = new Date(atendimento.data_abertura);
-          if (!isNaN(date.getTime())) {
-            dataAberturaFormatted = date.toISOString().split("T")[0];
-          }
-        } catch (e) {
-          // Se falhar, deixa vazio
-          dataAberturaFormatted = "";
+        // Se já vier como YYYY-MM-DD, usa diretamente
+        // Se vier como ISO completo (com T), pega apenas a parte da data
+        const dateStr = String(atendimento.data_abertura);
+        if (dateStr.includes('T')) {
+          dataAberturaFormatted = dateStr.split('T')[0];
+        } else if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          // Já está no formato YYYY-MM-DD
+          dataAberturaFormatted = dateStr;
         }
       }
 

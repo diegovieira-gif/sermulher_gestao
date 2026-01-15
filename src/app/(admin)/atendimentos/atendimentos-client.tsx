@@ -17,17 +17,12 @@ import { Plus, Pencil, Loader2 } from "lucide-react";
 import { updateStatus } from "./actions";
 import { StatusAtendimento } from "./schemas";
 import { toast } from "sonner";
+import { formatDateDisplay } from "@/lib/utils";
 
 type BeneficiariaOption = { id: number; nome_completo: string };
 type OrigemOption = { id: number; nome: string };
 type PrioridadeOption = { id: number; nome: string; cor?: string };
 
-function formatDateBR(dateValue?: string | null) {
-  if (!dateValue) return "-";
-  const d = new Date(dateValue);
-  if (Number.isNaN(d.getTime())) return "-";
-  return new Intl.DateTimeFormat("pt-BR").format(d);
-}
 
 function prioridadeBadgeVariant(prioridade?: string | null) {
   if (prioridade === "Emergência" || prioridade === "Urgente") return "destructive";
@@ -192,7 +187,7 @@ export function AtendimentosClient({
                 return (
                   <TableRow key={item.id}>
                     <TableCell className="whitespace-nowrap">
-                      {formatDateBR(item.data_abertura)}
+                      {formatDateDisplay(item.data_abertura)}
                     </TableCell>
                     <TableCell className="font-medium">
                       {typeof item.beneficiaria === "object" && item.beneficiaria !== null
