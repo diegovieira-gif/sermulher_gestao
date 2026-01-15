@@ -3,13 +3,13 @@ import { getSalaDetails, getInfratoresDisponiveis } from "./actions";
 import { ParticipantesClient } from "./participantes-client";
 
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default async function ParticipantesPage({ params }: PageProps) {
-  const { id } = params;
+  const { id } = await params;
 
   // Busca dados da sala e participantes
   const salaResult = await getSalaDetails(id);
