@@ -2,7 +2,6 @@ import { directus } from "@/lib/directus";
 import { readItems } from "@directus/sdk";
 import Link from "next/link";
 import { Users, RefreshCw, AlertTriangle } from "lucide-react";
-import { NivelPericulosidade } from "./infratores/schemas";
 import { SalaAzulStatsChart } from "./sala-azul-stats-chart";
 
 interface Stats {
@@ -15,67 +14,53 @@ interface Stats {
   }>;
 }
 
-/**
- * Busca estatísticas do módulo Sala Azul
- */
 async function getStats(): Promise<Stats> {
   try {
-    // Busca dados em paralelo
     const [infratores, salas] = await Promise.all([
-      directus
-        .request(
-          readItems("infratores", {
-            fields: ["id", "nivel_periculosidade"],
-            limit: -1,
-          })
-        )
-        .catch(() => []),
-      directus
-        .request(
-          readItems("salas_azul", {
-            fields: ["id", "status"],
-            limit: -1,
-          })
-        )
-        .catch(() => []),
+      directus.request(
+        readItems("infratores", {
+          // Busca apenas o ID e o Nome do Nível para contagem
+          fields: ["id", "nivel_id.nome"] as any,
+          limit: -1,
+        })
+      ),
+      directus.request(
+        readItems("salas_azul", {
+          fields: ["id", "status"],
+          limit: -1,
+        })
+      ),
     ]);
 
-    // Conta ciclos ativos (status 'Em Andamento')
-    const ciclosAtivos =
-      Array.isArray(salas) && salas.length > 0
-        ? salas.filter((sala: any) => sala.status === "Em Andamento").length
-        : 0;
+    // 1. Ciclos Ativos
+    const ciclosAtivos = salas.filter(
+      (s: any) => s.status === "Em Andamento"
+    ).length;
 
-    // Conta total de participantes
-    const totalParticipantes = Array.isArray(infratores) ? infratores.length : 0;
+    // 2. Total Participantes
+    const totalParticipantes = infratores.length;
 
-    // Agrupa infratores por nível de periculosidade
-    const distribuicaoMap: Record<string, number> = {
-      [NivelPericulosidade.BAIXO]: 0,
-      [NivelPericulosidade.MEDIO]: 0,
-      [NivelPericulosidade.ALTO]: 0,
-      [NivelPericulosidade.CRITICO]: 0,
-    };
+    // 3. Distribuição e Risco
+    let alertaRisco = 0;
+    const distribuicaoMap: Record<string, number> = {};
 
-    if (Array.isArray(infratores) && infratores.length > 0) {
-      infratores.forEach((infrator: any) => {
-        const nivel = infrator.nivel_periculosidade;
-        if (nivel && distribuicaoMap[nivel] !== undefined) {
-          distribuicaoMap[nivel] = (distribuicaoMap[nivel] || 0) + 1;
-        }
-      });
-    }
+    infratores.forEach((inf: any) => {
+      const nomeNivel = inf.nivel_id?.nome || "Não Classificado";
 
-    // Calcula alerta de risco (Alto + Crítico)
-    const alertaRisco =
-      (distribuicaoMap[NivelPericulosidade.ALTO] || 0) +
-      (distribuicaoMap[NivelPericulosidade.CRITICO] || 0);
+      // Contagem para o gráfico
+      distribuicaoMap[nomeNivel] = (distribuicaoMap[nomeNivel] || 0) + 1;
 
-    // Converte para array para o gráfico
+      // Lógica de Risco (Case insensitive)
+      const nivelLower = nomeNivel.toLowerCase();
+      if (nivelLower.includes("alto") || nivelLower.includes("crítico")) {
+        alertaRisco++;
+      }
+    });
+
     const distribuicaoPericulosidade = Object.entries(distribuicaoMap).map(
-      ([nivel, quantidade]) => ({
+      ([nivel, qtd]) => ({
         nivel,
-        quantidade,
+        quantidade: qtd,
       })
     );
 
@@ -86,18 +71,12 @@ async function getStats(): Promise<Stats> {
       distribuicaoPericulosidade,
     };
   } catch (error) {
-    console.error("Erro ao buscar estatísticas:", error);
-    // Retorna valores padrão em caso de erro
+    console.error("Erro ao carregar stats Sala Azul:", error);
     return {
       ciclosAtivos: 0,
       totalParticipantes: 0,
       alertaRisco: 0,
-      distribuicaoPericulosidade: [
-        { nivel: NivelPericulosidade.BAIXO, quantidade: 0 },
-        { nivel: NivelPericulosidade.MEDIO, quantidade: 0 },
-        { nivel: NivelPericulosidade.ALTO, quantidade: 0 },
-        { nivel: NivelPericulosidade.CRITICO, quantidade: 0 },
-      ],
+      distribuicaoPericulosidade: [],
     };
   }
 }
@@ -117,125 +96,89 @@ export default async function SalaAzulPage() {
         </p>
       </div>
 
-      {/* Seção de Acesso Rápido */}
-      <div>
-        <h2 className="text-xl font-semibold mb-4 text-foreground">
-          Acesso Rápido
-        </h2>
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Card Infratores */}
-          <Link href="/sala-azul/infratores">
-            <div className="rounded-lg border-2 border-border bg-card p-6 shadow-sm hover:bg-muted/50 cursor-pointer transition-all">
-              <div className="flex items-center gap-4">
-                <div className="rounded-full bg-blue-100 dark:bg-blue-900/30 p-4">
-                  <Users className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-foreground mb-1">
-                    Gestão de Infratores
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Cadastrar e monitorar participantes
-                  </p>
-                </div>
+      {/* Cards de Acesso Rápido */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Link href="/sala-azul/infratores">
+          <div className="flex h-full cursor-pointer flex-col justify-between rounded-xl border bg-card p-6 shadow-sm transition-all hover:bg-accent/50 hover:border-primary/50">
+            <div className="flex items-center gap-4">
+              <div className="rounded-full bg-blue-100 p-3 dark:bg-blue-900/30">
+                <Users className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold">Gestão de Infratores</h3>
+                <p className="text-sm text-muted-foreground">
+                  Cadastrar, monitorar e avaliar participantes
+                </p>
               </div>
             </div>
-          </Link>
+          </div>
+        </Link>
+        <Link href="/sala-azul/ciclos">
+          <div className="flex h-full cursor-pointer flex-col justify-between rounded-xl border bg-card p-6 shadow-sm transition-all hover:bg-accent/50 hover:border-primary/50">
+            <div className="flex items-center gap-4">
+              <div className="rounded-full bg-emerald-100 p-3 dark:bg-emerald-900/30">
+                <RefreshCw className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold">Gestão de Ciclos</h3>
+                <p className="text-sm text-muted-foreground">
+                  Gerenciar turmas, cronogramas e frequência
+                </p>
+              </div>
+            </div>
+          </div>
+        </Link>
+      </div>
 
-          {/* Card Ciclos/Turmas */}
-          <Link href="/sala-azul/ciclos">
-            <div className="rounded-lg border-2 border-border bg-card p-6 shadow-sm hover:bg-muted/50 cursor-pointer transition-all">
-              <div className="flex items-center gap-4">
-                <div className="rounded-full bg-green-100 dark:bg-green-900/30 p-4">
-                  <RefreshCw className="h-8 w-8 text-green-600 dark:text-green-400" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-foreground mb-1">
-                    Gestão de Ciclos
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Gerenciar turmas e lançar frequência
-                  </p>
-                </div>
-              </div>
-            </div>
-          </Link>
+      {/* KPIs */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="rounded-xl border bg-card p-6 shadow-sm">
+          <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <h3 className="text-sm font-medium tracking-tight">
+              Ciclos Ativos
+            </h3>
+            <RefreshCw className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <div className="text-2xl font-bold">{stats.ciclosAtivos}</div>
+          <p className="text-xs text-muted-foreground">Turmas em andamento</p>
+        </div>
+        <div className="rounded-xl border bg-card p-6 shadow-sm">
+          <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <h3 className="text-sm font-medium tracking-tight">
+              Total Participantes
+            </h3>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <div className="text-2xl font-bold">{stats.totalParticipantes}</div>
+          <p className="text-xs text-muted-foreground">
+            Infratores cadastrados
+          </p>
+        </div>
+        <div className="rounded-xl border bg-card p-6 shadow-sm">
+          <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <h3 className="text-sm font-medium tracking-tight">
+              Alerta de Risco
+            </h3>
+            <AlertTriangle
+              className={`h-4 w-4 ${
+                stats.alertaRisco > 0 ? "text-red-500" : "text-muted-foreground"
+              }`}
+            />
+          </div>
+          <div
+            className={`text-2xl font-bold ${
+              stats.alertaRisco > 0 ? "text-red-600" : ""
+            }`}
+          >
+            {stats.alertaRisco}
+          </div>
+          <p className="text-xs text-muted-foreground">Nível Alto ou Crítico</p>
         </div>
       </div>
 
-      {/* Seção de Monitoramento (KPIs) */}
-      <div>
-        <h2 className="text-xl font-semibold mb-4 text-foreground">
-          Monitoramento
-        </h2>
-        <div className="grid gap-6 md:grid-cols-3">
-          {/* Card: Ciclos Ativos */}
-          <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Ciclos Ativos
-                </p>
-                <p className="mt-2 text-3xl font-bold text-foreground">
-                  {stats.ciclosAtivos}
-                </p>
-              </div>
-              <div className="rounded-full bg-blue-50 dark:bg-blue-900/30 p-3">
-                <RefreshCw className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-              </div>
-            </div>
-          </div>
-
-          {/* Card: Total de Participantes */}
-          <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Total de Participantes
-                </p>
-                <p className="mt-2 text-3xl font-bold text-foreground">
-                  {stats.totalParticipantes}
-                </p>
-              </div>
-              <div className="rounded-full bg-purple-50 dark:bg-purple-900/30 p-3">
-                <Users className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-              </div>
-            </div>
-          </div>
-
-          {/* Card: Alerta de Risco */}
-          <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Alerta de Risco
-                </p>
-                <p
-                  className={`mt-2 text-3xl font-bold ${
-                    stats.alertaRisco > 0
-                      ? "text-red-600 dark:text-red-400"
-                      : "text-foreground"
-                  }`}
-                >
-                  {stats.alertaRisco}
-                </p>
-              </div>
-              <div className="rounded-full bg-red-50 dark:bg-red-900/30 p-3">
-                <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Gráfico de Distribuição */}
-      <div>
-        <h2 className="text-xl font-semibold mb-4 text-foreground">
-          Distribuição por Nível de Periculosidade
-        </h2>
-        <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
-          <SalaAzulStatsChart data={stats.distribuicaoPericulosidade} />
-        </div>
+      {/* Gráfico */}
+      <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-7">
+        <SalaAzulStatsChart data={stats.distribuicaoPericulosidade} />
       </div>
     </div>
   );
