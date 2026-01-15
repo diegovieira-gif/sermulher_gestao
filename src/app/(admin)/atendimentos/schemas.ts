@@ -16,13 +16,9 @@ export const insertAtendimentoSchema = z.object({
     .int({ message: "Selecione uma beneficiária" })
     .positive({ message: "Selecione uma beneficiária" }),
 
-  origem_id: z.coerce.number({ message: "Selecione a origem" })
-    .int({ message: "Selecione a origem" })
-    .positive({ message: "Selecione a origem" }),
+  origem_id: z.coerce.number({ invalid_type_error: "Selecione a origem" }).positive(),
 
-  prioridade_id: z.coerce.number({ message: "Selecione a prioridade" })
-    .int({ message: "Selecione a prioridade" })
-    .positive({ message: "Selecione a prioridade" }),
+  prioridade_id: z.coerce.number({ invalid_type_error: "Selecione a prioridade" }).positive(),
 
   // Opcionais
   status: z

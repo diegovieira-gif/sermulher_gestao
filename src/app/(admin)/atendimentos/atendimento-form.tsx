@@ -141,7 +141,7 @@ export function AtendimentoForm({
                         Selecione uma beneficiária...
                       </option>
                       {beneficiariasOptions.map((opt) => (
-                        <option key={opt.id} value={opt.id}>
+                        <option key={opt.id} value={opt.id.toString()}>
                           {opt.nome_completo}
                         </option>
                       ))}
@@ -180,7 +180,7 @@ export function AtendimentoForm({
                           Selecione a origem...
                         </option>
                         {origensOptions.map((opt) => (
-                          <option key={opt.id} value={opt.id}>
+                          <option key={opt.id} value={opt.id.toString()}>
                             {opt.nome}
                           </option>
                         ))}
@@ -218,7 +218,7 @@ export function AtendimentoForm({
                           Selecione a prioridade...
                         </option>
                         {prioridadesOptions.map((opt) => (
-                          <option key={opt.id} value={opt.id}>
+                          <option key={opt.id} value={opt.id.toString()}>
                             {opt.nome}
                           </option>
                         ))}
