@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/form";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -52,37 +53,69 @@ export function AtendimentoForm({
 }: AtendimentoFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<UpsertAtendimentoInput>({
-    resolver: zodResolver(upsertAtendimentoSchema),
-    defaultValues: {
+  // LÓGICA DE NORMALIZAÇÃO: Converte objetos de relacionamento em IDs e formata data
+  const normalizedValues = useMemo(() => {
+    if (atendimento) {
+      // Se origem_id for objeto (vindo do get), pega o ID. Se for valor, mantém.
+      const origemId =
+        typeof atendimento.origem_id === "object" && atendimento.origem_id !== null
+          ? atendimento.origem_id?.id
+          : atendimento.origem_id;
+
+      const prioridadeId =
+        typeof atendimento.prioridade_id === "object" && atendimento.prioridade_id !== null
+          ? atendimento.prioridade_id?.id
+          : atendimento.prioridade_id;
+
+      const beneficiariaId =
+        typeof atendimento.beneficiaria === "object" && atendimento.beneficiaria !== null
+          ? atendimento.beneficiaria?.id
+          : atendimento.beneficiaria;
+
+      // Formata data ISO (2023-01-01T00:00:00) para YYYY-MM-DD que o input date aceita
+      let dataAberturaFormatted = "";
+      if (atendimento.data_abertura) {
+        try {
+          const date = new Date(atendimento.data_abertura);
+          if (!isNaN(date.getTime())) {
+            dataAberturaFormatted = date.toISOString().split("T")[0];
+          }
+        } catch (e) {
+          // Se falhar, deixa vazio
+          dataAberturaFormatted = "";
+        }
+      }
+
+      return {
+        id: atendimento.id,
+        beneficiaria: beneficiariaId ?? "",
+        origem_id: origemId ?? "",
+        prioridade_id: prioridadeId ?? "",
+        data_abertura: dataAberturaFormatted,
+        observacao_inicial: atendimento.observacao_inicial ?? "",
+        status: atendimento.status,
+      };
+    }
+
+    // Valores padrão para criação
+    return {
       id: undefined,
       beneficiaria: "",
       origem_id: "",
       prioridade_id: "",
+      data_abertura: new Date().toISOString().split("T")[0], // Hoje como padrão
       observacao_inicial: "",
-    },
+    };
+  }, [atendimento]);
+
+  const form = useForm<UpsertAtendimentoInput>({
+    resolver: zodResolver(upsertAtendimentoSchema),
+    defaultValues: normalizedValues,
   });
 
   useEffect(() => {
-    if (atendimento) {
-      form.reset({
-        id: atendimento.id,
-        beneficiaria: atendimento?.beneficiaria?.id ?? atendimento?.beneficiaria ?? "",
-        origem_id: atendimento?.origem_id?.id ?? atendimento?.origem_id ?? "",
-        prioridade_id: atendimento?.prioridade_id?.id ?? atendimento?.prioridade_id ?? "",
-        observacao_inicial: atendimento.observacao_inicial ?? "",
-      });
-      return;
-    }
-
-    form.reset({
-      id: undefined,
-      beneficiaria: "",
-      origem_id: "",
-      prioridade_id: "",
-      observacao_inicial: "",
-    });
-  }, [atendimento, form]);
+    form.reset(normalizedValues);
+  }, [normalizedValues, form]);
 
   const onSubmit = async (data: UpsertAtendimentoInput) => {
     setIsSubmitting(true);
@@ -118,6 +151,24 @@ export function AtendimentoForm({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="data_abertura"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Data do Atendimento</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="date"
+                      {...field}
+                      value={field.value || ""}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="beneficiaria"

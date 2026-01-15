@@ -20,6 +20,13 @@ export const insertAtendimentoSchema = z.object({
 
   prioridade_id: z.coerce.number({ invalid_type_error: "Selecione a prioridade" }).positive(),
 
+  // CORREÇÃO DATA: Se vier string vazia, transforma em null. Se vier valor, valida string.
+  data_abertura: z
+    .string()
+    .transform((val) => (val === "" ? null : val)) // Transforma vazio em null
+    .nullable() // Aceita null
+    .optional(), // Aceita undefined
+
   // Opcionais
   status: z
     .nativeEnum(StatusAtendimento)

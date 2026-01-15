@@ -18,13 +18,13 @@ export async function getAtendimentos() {
       readItems("atendimentos", {
         fields: [
           "*",
-          "beneficiaria.id",
           "beneficiaria.nome_completo",
-          "origem_id.id",
+          "beneficiaria.id",
           "origem_id.nome",
-          "prioridade_id.id",
+          "origem_id.id",
           "prioridade_id.nome",
           "prioridade_id.cor",
+          "prioridade_id.id",
         ],
         sort: ["-data_abertura"],
       })
@@ -149,6 +149,30 @@ export async function saveAtendimento(data: unknown) {
     }
 
     return { success: false, error: "Erro ao salvar atendimento. Tente novamente." };
+  }
+}
+
+/**
+ * Atualiza apenas o status de um atendimento
+ */
+export async function updateStatus(
+  id: number | string,
+  status: string
+): Promise<{ success: true; message: string } | { success: false; error: string }> {
+  try {
+    await directus.request(
+      updateItem("atendimentos", id, {
+        status,
+      })
+    );
+    revalidatePath("/atendimentos");
+    return { success: true, message: "Status atualizado com sucesso!" };
+  } catch (error) {
+    console.error("Erro ao atualizar status:", error);
+    return {
+      success: false,
+      error: "Erro ao atualizar status. Tente novamente.",
+    };
   }
 }
 
