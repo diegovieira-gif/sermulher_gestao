@@ -1,11 +1,9 @@
-import { getEventos, getTiposEventoOptions } from "./actions";
+import { getEventos, getTiposOptions } from "./actions";
 import { EventosClient } from "./eventos-client";
 
 export default async function EventosPage() {
-  const [eventosResult, tiposEventoResult] = await Promise.all([
-    getEventos(),
-    getTiposEventoOptions(),
-  ]);
+  const tiposOptions = await getTiposOptions();
+  const eventosResult = await getEventos();
 
   if (!eventosResult.success) {
     return (
@@ -17,11 +15,11 @@ export default async function EventosPage() {
     );
   }
 
-  if (!tiposEventoResult.success) {
+  if (!tiposOptions.success) {
     return (
       <div className="p-6">
         <div className="bg-destructive/10 text-destructive px-4 py-3 rounded">
-          {tiposEventoResult.error || "Erro ao carregar opções. Tente novamente."}
+          {tiposOptions.error || "Erro ao carregar opções. Tente novamente."}
         </div>
       </div>
     );
@@ -31,7 +29,7 @@ export default async function EventosPage() {
     <div className="p-6">
       <EventosClient
         eventos={eventosResult.data || []}
-        tiposEventoOptions={tiposEventoResult.data || []}
+        tiposEventoOptions={tiposOptions.data || []}
       />
     </div>
   );

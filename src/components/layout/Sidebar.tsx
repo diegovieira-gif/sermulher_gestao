@@ -35,7 +35,7 @@ const menuItems = [
     icon: AlertTriangle,
   },
   {
-    title: 'Eventos/Cursos',
+    title: 'Eventos/Campanhas',
     href: '/eventos',
     icon: Calendar,
   },

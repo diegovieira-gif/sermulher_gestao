@@ -5,9 +5,7 @@ export const insertEventoSchema = z
   .object({
     id: z.number().optional(),
     nome: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
-    tipo_id: z.coerce.number({ message: "Selecione o tipo de evento" })
-      .int({ message: "Selecione o tipo de evento" })
-      .positive({ message: "Selecione o tipo de evento" }),
+    tipo_id: z.coerce.number({ invalid_type_error: "Selecione o tipo" }).positive(),
     data_inicio: z
       .string()
       .min(1, "Data de início é obrigatória")

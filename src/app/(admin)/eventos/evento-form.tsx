@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -48,38 +48,64 @@ export function EventoForm({
 }: EventoFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<EventoFormValues>({
-    resolver: zodResolver(insertEventoSchema),
-    defaultValues: {
+  // LÓGICA DE NORMALIZAÇÃO: Converte objetos de relacionamento em IDs e formata datas
+  const normalizedValues = useMemo(() => {
+    if (evento) {
+      // Se tipo_id for objeto (vindo do get), pega o ID. Se for valor, mantém.
+      const tipoId =
+        typeof evento.tipo_id === "object" && evento.tipo_id !== null
+          ? evento.tipo_id?.id
+          : evento.tipo_id;
+
+      // Formata datas para YYYY-MM-DD que o input date aceita
+      let dataInicioFormatted = "";
+      if (evento.data_inicio) {
+        const dateStr = String(evento.data_inicio);
+        if (dateStr.includes('T')) {
+          dataInicioFormatted = dateStr.split('T')[0];
+        } else if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          dataInicioFormatted = dateStr;
+        }
+      }
+
+      let dataFimFormatted = "";
+      if (evento.data_fim) {
+        const dateStr = String(evento.data_fim);
+        if (dateStr.includes('T')) {
+          dataFimFormatted = dateStr.split('T')[0];
+        } else if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          dataFimFormatted = dateStr;
+        }
+      }
+
+      return {
+        id: evento.id,
+        nome: evento.nome,
+        tipo_id: tipoId ?? "",
+        data_inicio: dataInicioFormatted,
+        data_fim: dataFimFormatted,
+        descricao: evento.descricao || "",
+      };
+    }
+
+    // Valores padrão para criação
+    return {
       nome: "",
       tipo_id: "",
       data_inicio: "",
       data_fim: "",
       descricao: "",
-    },
+    };
+  }, [evento]);
+
+  const form = useForm<EventoFormValues>({
+    resolver: zodResolver(insertEventoSchema),
+    defaultValues: normalizedValues,
   });
 
-  // Atualiza o formulário quando o evento muda
   useEffect(() => {
-    if (evento) {
-      form.reset({
-        id: evento.id,
-        nome: evento.nome,
-        tipo_id: (evento as any).tipo_id?.id ?? (evento as any).tipo_id ?? "",
-        data_inicio: evento.data_inicio,
-        data_fim: evento.data_fim,
-        descricao: evento.descricao || "",
-      });
-    } else {
-      form.reset({
-        nome: "",
-        tipo_id: "",
-        data_inicio: "",
-        data_fim: "",
-        descricao: "",
-      });
-    }
-  }, [evento, form]);
+    form.reset(normalizedValues);
+  }, [normalizedValues, form]);
 
   const onSubmit = async (data: EventoFormValues) => {
     setIsSubmitting(true);
@@ -157,7 +183,7 @@ export function EventoForm({
                         Selecione o tipo de evento...
                       </option>
                       {tiposEventoOptions.map((opt) => (
-                        <option key={opt.id} value={opt.id}>
+                        <option key={opt.id} value={opt.id.toString()}>
                           {opt.nome}
                         </option>
                       ))}

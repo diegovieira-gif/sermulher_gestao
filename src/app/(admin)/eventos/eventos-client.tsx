@@ -169,13 +169,31 @@ export function EventosClient({ eventos, tiposEventoOptions }: EventosClientProp
                 );
                 const periodo = `${formatarData(evento.data_inicio)} até ${formatarData(evento.data_fim)}`;
 
+                // Acessa tipo_id - pode vir como objeto expandido ou apenas ID
+                const tipoObj = 
+                  typeof evento.tipo_id === "object" && evento.tipo_id !== null
+                    ? evento.tipo_id
+                    : typeof evento.tipo_id === "number"
+                    ? tiposEventoOptions.find((t) => t.id === evento.tipo_id)
+                    : null;
+
+                const tipoNome = tipoObj?.nome;
+                const tipoIcone = tipoObj?.icone;
+
                 return (
                   <TableRow key={evento.id}>
                     <TableCell className="font-medium">
                       {evento.nome}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{evento.tipo}</Badge>
+                      {tipoNome ? (
+                        <div className="flex items-center gap-2">
+                          {tipoIcone && <span>{tipoIcone}</span>}
+                          <Badge variant="outline">{tipoNome}</Badge>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">Sem tipo</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">

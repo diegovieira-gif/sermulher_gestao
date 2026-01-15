@@ -9,7 +9,7 @@ const pageTitles: Record<string, string> = {
   '/beneficiarias': 'Beneficiárias',
   '/atendimentos': 'Atendimentos',
   '/sala-azul': 'Sala Azul',
-  '/eventos': 'Eventos/Cursos',
+  '/eventos': 'Eventos e Campanhas',
   '/configuracoes': 'Configurações',
 };
 

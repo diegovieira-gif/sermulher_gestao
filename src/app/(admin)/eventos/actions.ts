@@ -16,7 +16,6 @@ export async function getEventos() {
       readItems("eventos_campanhas", {
         fields: [
           "*",
-          "tipo_id.id",
           "tipo_id.nome",
           "tipo_id.icone",
         ],
@@ -37,7 +36,7 @@ export async function getEventos() {
 /**
  * Busca opções de tipos de evento do banco de dados
  */
-export async function getTiposEventoOptions(): Promise<
+export async function getTiposOptions(): Promise<
   | { success: true; data: TipoEventoOption[] }
   | { success: false; error: string }
 > {
