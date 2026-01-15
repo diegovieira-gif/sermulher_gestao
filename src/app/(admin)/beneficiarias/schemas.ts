@@ -27,10 +27,11 @@ export const beneficiariaSchema = z.object({
   data_nascimento: z.string().min(1, "Data de nascimento é obrigatória"),
   contato: contatoSchema,
   endereco: enderecoSchema,
-  tags: z.array(z.string()).optional().default([]),
+  tags: z.array(z.string()).default([]),
 });
 
 // Tipos TypeScript derivados dos schemas
 export type Beneficiaria = z.infer<typeof beneficiariaSchema>;
+export type BeneficiariaFormValues = z.input<typeof beneficiariaSchema>;
 export type Contato = z.infer<typeof contatoSchema>;
 export type Endereco = z.infer<typeof enderecoSchema>;

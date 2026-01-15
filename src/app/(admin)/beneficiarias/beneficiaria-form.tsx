@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { beneficiariaSchema, type Beneficiaria } from "./schemas";
+import { beneficiariaSchema, type Beneficiaria, type BeneficiariaFormValues } from "./schemas";
 import { saveBeneficiaria } from "./actions";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,7 +38,7 @@ export function BeneficiariaForm({
 }: BeneficiariaFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<Beneficiaria>({
+  const form = useForm<BeneficiariaFormValues>({
     resolver: zodResolver(beneficiariaSchema),
     defaultValues: {
       nome_completo: "",
@@ -86,7 +86,7 @@ export function BeneficiariaForm({
     }
   }, [beneficiaria, form]);
 
-  const onSubmit = async (data: Beneficiaria) => {
+  const onSubmit = async (data: BeneficiariaFormValues) => {
     setIsSubmitting(true);
 
     try {
