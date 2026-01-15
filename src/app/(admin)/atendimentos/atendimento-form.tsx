@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  OrigemAtendimento,
-  PrioridadeAtendimento,
   upsertAtendimentoSchema,
   type UpsertAtendimentoInput,
 } from "./schemas";
@@ -32,18 +30,24 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
 type BeneficiariaOption = { id: number; nome_completo: string };
+type OrigemOption = { id: number; nome: string };
+type PrioridadeOption = { id: number; nome: string; cor?: string };
 
 interface AtendimentoFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  options: BeneficiariaOption[];
+  beneficiariasOptions: BeneficiariaOption[];
+  origensOptions: OrigemOption[];
+  prioridadesOptions: PrioridadeOption[];
   atendimento?: any | null;
 }
 
 export function AtendimentoForm({
   open,
   onOpenChange,
-  options,
+  beneficiariasOptions,
+  origensOptions,
+  prioridadesOptions,
   atendimento,
 }: AtendimentoFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -53,8 +57,8 @@ export function AtendimentoForm({
     defaultValues: {
       id: undefined,
       beneficiaria: "",
-      origem: OrigemAtendimento.RECEPCAO,
-      prioridade: PrioridadeAtendimento.NORMAL,
+      origem_id: "",
+      prioridade_id: "",
       observacao_inicial: "",
     },
   });
@@ -64,8 +68,8 @@ export function AtendimentoForm({
       form.reset({
         id: atendimento.id,
         beneficiaria: atendimento?.beneficiaria?.id ?? atendimento?.beneficiaria ?? "",
-        origem: atendimento.origem ?? OrigemAtendimento.RECEPCAO,
-        prioridade: atendimento.prioridade ?? PrioridadeAtendimento.NORMAL,
+        origem_id: atendimento?.origem_id?.id ?? atendimento?.origem_id ?? "",
+        prioridade_id: atendimento?.prioridade_id?.id ?? atendimento?.prioridade_id ?? "",
         observacao_inicial: atendimento.observacao_inicial ?? "",
       });
       return;
@@ -74,8 +78,8 @@ export function AtendimentoForm({
     form.reset({
       id: undefined,
       beneficiaria: "",
-      origem: OrigemAtendimento.RECEPCAO,
-      prioridade: PrioridadeAtendimento.NORMAL,
+      origem_id: "",
+      prioridade_id: "",
       observacao_inicial: "",
     });
   }, [atendimento, form]);
@@ -136,7 +140,7 @@ export function AtendimentoForm({
                       <option value="" disabled>
                         Selecione uma beneficiária...
                       </option>
-                      {options.map((opt) => (
+                      {beneficiariasOptions.map((opt) => (
                         <option key={opt.id} value={opt.id}>
                           {opt.nome_completo}
                         </option>
@@ -151,15 +155,33 @@ export function AtendimentoForm({
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="origem"
+                name="origem_id"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Origem</FormLabel>
                     <FormControl>
-                      <Select {...field}>
-                        {Object.values(OrigemAtendimento).map((o) => (
-                          <option key={o} value={o}>
-                            {o}
+                      <Select
+                        name={field.name}
+                        ref={field.ref}
+                        onBlur={field.onBlur}
+                        value={
+                          typeof field.value === "string" ||
+                          typeof field.value === "number"
+                            ? field.value
+                            : ""
+                        }
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value ? Number(e.target.value) : ""
+                          )
+                        }
+                      >
+                        <option value="" disabled>
+                          Selecione a origem...
+                        </option>
+                        {origensOptions.map((opt) => (
+                          <option key={opt.id} value={opt.id}>
+                            {opt.nome}
                           </option>
                         ))}
                       </Select>
@@ -171,15 +193,33 @@ export function AtendimentoForm({
 
               <FormField
                 control={form.control}
-                name="prioridade"
+                name="prioridade_id"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Prioridade</FormLabel>
                     <FormControl>
-                      <Select {...field}>
-                        {Object.values(PrioridadeAtendimento).map((p) => (
-                          <option key={p} value={p}>
-                            {p}
+                      <Select
+                        name={field.name}
+                        ref={field.ref}
+                        onBlur={field.onBlur}
+                        value={
+                          typeof field.value === "string" ||
+                          typeof field.value === "number"
+                            ? field.value
+                            : ""
+                        }
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value ? Number(e.target.value) : ""
+                          )
+                        }
+                      >
+                        <option value="" disabled>
+                          Selecione a prioridade...
+                        </option>
+                        {prioridadesOptions.map((opt) => (
+                          <option key={opt.id} value={opt.id}>
+                            {opt.nome}
                           </option>
                         ))}
                       </Select>

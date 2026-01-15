@@ -6,15 +6,26 @@ import { createItem, readItems, updateItem } from "@directus/sdk";
 import { insertAtendimentoSchema, upsertAtendimentoSchema } from "./schemas";
 
 type BeneficiariaOption = { id: number; nome_completo: string };
+type OrigemOption = { id: number; nome: string };
+type PrioridadeOption = { id: number; nome: string; cor?: string };
 
 /**
- * Busca atendimentos (inclui dados da beneficiária para exibir nome)
+ * Busca atendimentos (inclui dados da beneficiária, origem e prioridade para exibir)
  */
 export async function getAtendimentos() {
   try {
     const atendimentos = await directus.request(
       readItems("atendimentos", {
-        fields: ["*", "beneficiaria.id", "beneficiaria.nome_completo"],
+        fields: [
+          "*",
+          "beneficiaria.id",
+          "beneficiaria.nome_completo",
+          "origem_id.id",
+          "origem_id.nome",
+          "prioridade_id.id",
+          "prioridade_id.nome",
+          "prioridade_id.cor",
+        ],
         sort: ["-data_abertura"],
       })
     );
@@ -50,6 +61,52 @@ export async function getBeneficiariasOptions(): Promise<
     return {
       success: false,
       error: "Erro ao buscar beneficiárias. Tente novamente.",
+    };
+  }
+}
+
+/**
+ * Busca opções de origens e prioridades do banco de dados
+ */
+export async function getOptions(): Promise<
+  | {
+      success: true;
+      data: {
+        origens: OrigemOption[];
+        prioridades: PrioridadeOption[];
+      };
+    }
+  | { success: false; error: string }
+> {
+  try {
+    const [origens, prioridades] = await Promise.all([
+      directus.request(
+        readItems("config_origens", {
+          fields: ["id", "nome"],
+          filter: { status: { _eq: "ativo" } },
+          sort: ["nome"],
+        })
+      ) as Promise<OrigemOption[]>,
+      directus.request(
+        readItems("config_prioridades", {
+          fields: ["id", "nome", "cor"],
+          sort: ["nivel"],
+        })
+      ) as Promise<PrioridadeOption[]>,
+    ]);
+
+    return {
+      success: true,
+      data: {
+        origens,
+        prioridades,
+      },
+    };
+  } catch (error) {
+    console.error("Erro ao buscar opções (origens/prioridades):", error);
+    return {
+      success: false,
+      error: "Erro ao buscar opções. Tente novamente.",
     };
   }
 }

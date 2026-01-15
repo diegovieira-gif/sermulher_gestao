@@ -7,18 +7,6 @@ export const StatusAtendimento = {
   ARQUIVADO: "Arquivado",
 } as const;
 
-export const PrioridadeAtendimento = {
-  NORMAL: "Normal",
-  URGENTE: "Urgente",
-  EMERGENCIA: "Emergência",
-} as const;
-
-export const OrigemAtendimento = {
-  RECEPCAO: "Recepção",
-  OUVIDORIA: "Ouvidoria",
-  BUSCA_ATIVA: "Busca Ativa",
-} as const;
-
 // Schema de Inserção/Edição
 export const insertAtendimentoSchema = z.object({
   // CORREÇÃO: Usar coerce.number() pois o valor vem do Select como string mas o banco espera Int
@@ -28,11 +16,13 @@ export const insertAtendimentoSchema = z.object({
     .int({ message: "Selecione uma beneficiária" })
     .positive({ message: "Selecione uma beneficiária" }),
 
-  origem: z.nativeEnum(OrigemAtendimento, { message: "Selecione a origem" }),
+  origem_id: z.coerce.number({ message: "Selecione a origem" })
+    .int({ message: "Selecione a origem" })
+    .positive({ message: "Selecione a origem" }),
 
-  prioridade: z.nativeEnum(PrioridadeAtendimento, {
-    message: "Selecione a prioridade",
-  }),
+  prioridade_id: z.coerce.number({ message: "Selecione a prioridade" })
+    .int({ message: "Selecione a prioridade" })
+    .positive({ message: "Selecione a prioridade" }),
 
   // Opcionais
   status: z

@@ -15,6 +15,8 @@ import { AtendimentoForm } from "./atendimento-form";
 import { Plus, Pencil } from "lucide-react";
 
 type BeneficiariaOption = { id: number; nome_completo: string };
+type OrigemOption = { id: number; nome: string };
+type PrioridadeOption = { id: number; nome: string; cor?: string };
 
 function formatDateBR(dateValue?: string | null) {
   if (!dateValue) return "-";
@@ -38,11 +40,15 @@ function statusBadgeVariant(status?: string | null) {
 interface AtendimentosClientProps {
   atendimentos: any[];
   beneficiariasOptions: BeneficiariaOption[];
+  origensOptions: OrigemOption[];
+  prioridadesOptions: PrioridadeOption[];
 }
 
 export function AtendimentosClient({
   atendimentos,
   beneficiariasOptions,
+  origensOptions,
+  prioridadesOptions,
 }: AtendimentosClientProps) {
   const [formOpen, setFormOpen] = useState(false);
   const [selectedAtendimento, setSelectedAtendimento] = useState<any | null>(null);
@@ -86,6 +92,7 @@ export function AtendimentosClient({
             <TableRow>
               <TableHead>Data</TableHead>
               <TableHead>Beneficiária</TableHead>
+              <TableHead>Origem</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Prioridade</TableHead>
               <TableHead className="text-right">Ações</TableHead>
@@ -94,43 +101,59 @@ export function AtendimentosClient({
           <TableBody>
             {sortedAtendimentos.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground">
+                <TableCell colSpan={6} className="text-center text-muted-foreground">
                   Nenhum atendimento cadastrado
                 </TableCell>
               </TableRow>
             ) : (
-              sortedAtendimentos.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell className="whitespace-nowrap">
-                    {formatDateBR(item.data_abertura)}
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    {item.beneficiaria?.nome_completo || "-"}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={statusBadgeVariant(item.status) as any}>
-                      {item.status || "-"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={prioridadeBadgeVariant(item.prioridade) as any}>
-                      {item.prioridade || "-"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(item)}
-                        title="Editar"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
+              sortedAtendimentos.map((item) => {
+                const prioridadeCor = item.prioridade_id?.cor;
+                const badgeStyle = prioridadeCor
+                  ? { backgroundColor: prioridadeCor, color: "white", border: "transparent" }
+                  : undefined;
+
+                return (
+                  <TableRow key={item.id}>
+                    <TableCell className="whitespace-nowrap">
+                      {formatDateBR(item.data_abertura)}
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {item.beneficiaria?.nome_completo || "-"}
+                    </TableCell>
+                    <TableCell>
+                      {item.origem_id?.nome || "-"}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={statusBadgeVariant(item.status) as any}>
+                        {item.status || "-"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {prioridadeCor ? (
+                        <Badge style={badgeStyle}>
+                          {item.prioridade_id?.nome || "-"}
+                        </Badge>
+                      ) : (
+                        <Badge variant={prioridadeBadgeVariant(item.prioridade_id?.nome) as any}>
+                          {item.prioridade_id?.nome || "-"}
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(item)}
+                          title="Editar"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
@@ -139,7 +162,9 @@ export function AtendimentosClient({
       <AtendimentoForm
         open={formOpen}
         onOpenChange={setFormOpen}
-        options={beneficiariasOptions}
+        beneficiariasOptions={beneficiariasOptions}
+        origensOptions={origensOptions}
+        prioridadesOptions={prioridadesOptions}
         atendimento={selectedAtendimento}
       />
     </>
