@@ -7,10 +7,12 @@ import {
   insertInfratorSchema,
   type Infrator,
   type InfratorFormValues,
-  NivelPericulosidade,
-  StatusLegal,
-  TIPOS_AGRESSAO,
 } from "./schemas";
+import type {
+  NivelOption,
+  StatusLegalOption,
+  TipoAgressaoOption,
+} from "./actions";
 import { saveInfrator } from "./actions";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,13 +38,19 @@ import { Loader2, AlertTriangle, ShieldAlert } from "lucide-react";
 interface InfratorFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  infrator?: Infrator | null;
+  infrator?: any | null;
+  options: {
+    niveis: NivelOption[];
+    statusLegal: StatusLegalOption[];
+    tiposAgressao: TipoAgressaoOption[];
+  };
 }
 
 export function InfratorForm({
   open,
   onOpenChange,
   infrator,
+  options,
 }: InfratorFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -51,41 +59,45 @@ export function InfratorForm({
     defaultValues: {
       nome_completo: "",
       cpf: "",
-      nivel_periculosidade: NivelPericulosidade.BAIXO,
-      tipo_agressao: [],
-      status_legal: StatusLegal.EM_CUMPRIMENTO,
+      nivel_id: options.niveis[0]?.id || 0,
+      status_legal_id: options.statusLegal[0]?.id || 0,
+      tipos_agressao_ids: [],
     },
   });
 
   // Atualiza o formulário quando o infrator muda
   useEffect(() => {
     if (infrator) {
-      // Se tipo_agressao vier como string CSV do Directus, converte para array
-      const tipoAgressaoArray =
-        typeof infrator.tipo_agressao === "string"
-          ? infrator.tipo_agressao.split(",").map((t) => t.trim())
-          : Array.isArray(infrator.tipo_agressao)
-          ? infrator.tipo_agressao
-          : [];
+      // Normaliza tipos de agressão: converte array de objetos para array de IDs
+      const tiposAgressaoIds: number[] = [];
+      if (infrator.tipos_agressao_lista && Array.isArray(infrator.tipos_agressao_lista)) {
+        infrator.tipos_agressao_lista.forEach((item: any) => {
+          if (item?.config_tipos_agressao_id?.id) {
+            tiposAgressaoIds.push(item.config_tipos_agressao_id.id);
+          } else if (item?.config_tipos_agressao_id && typeof item.config_tipos_agressao_id === 'number') {
+            tiposAgressaoIds.push(item.config_tipos_agressao_id);
+          }
+        });
+      }
 
       form.reset({
         id: infrator.id,
-        nome_completo: infrator.nome_completo,
-        cpf: infrator.cpf,
-        nivel_periculosidade: infrator.nivel_periculosidade,
-        tipo_agressao: tipoAgressaoArray,
-        status_legal: infrator.status_legal,
+        nome_completo: infrator.nome_completo || "",
+        cpf: infrator.cpf || "",
+        nivel_id: infrator.nivel_id?.id || infrator.nivel_id || options.niveis[0]?.id || 0,
+        status_legal_id: infrator.status_legal_id?.id || infrator.status_legal_id || options.statusLegal[0]?.id || 0,
+        tipos_agressao_ids: tiposAgressaoIds,
       });
     } else {
       form.reset({
         nome_completo: "",
         cpf: "",
-        nivel_periculosidade: NivelPericulosidade.BAIXO,
-        tipo_agressao: [],
-        status_legal: StatusLegal.EM_CUMPRIMENTO,
+        nivel_id: options.niveis[0]?.id || 0,
+        status_legal_id: options.statusLegal[0]?.id || 0,
+        tipos_agressao_ids: [],
       });
     }
-  }, [infrator, form]);
+  }, [infrator, form, options]);
 
   const onSubmit = async (data: InfratorFormValues) => {
     setIsSubmitting(true);
@@ -180,7 +192,7 @@ export function InfratorForm({
 
               <FormField
                 control={form.control}
-                name="nivel_periculosidade"
+                name="nivel_id"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
@@ -189,23 +201,19 @@ export function InfratorForm({
                     </FormLabel>
                     <FormControl>
                       <Select
-                        value={field.value}
-                        onChange={field.onChange}
+                        value={field.value?.toString() || ""}
+                        onChange={(e) => {
+                          field.onChange(Number(e.target.value));
+                        }}
                         onBlur={field.onBlur}
                         name={field.name}
                       >
-                        <option value={NivelPericulosidade.BAIXO}>
-                          {NivelPericulosidade.BAIXO}
-                        </option>
-                        <option value={NivelPericulosidade.MEDIO}>
-                          {NivelPericulosidade.MEDIO}
-                        </option>
-                        <option value={NivelPericulosidade.ALTO}>
-                          {NivelPericulosidade.ALTO}
-                        </option>
-                        <option value={NivelPericulosidade.CRITICO}>
-                          {NivelPericulosidade.CRITICO}
-                        </option>
+                        <option value="">Selecione o nível</option>
+                        {options.niveis.map((nivel) => (
+                          <option key={nivel.id} value={nivel.id.toString()}>
+                            {nivel.nome}
+                          </option>
+                        ))}
                       </Select>
                     </FormControl>
                     <FormMessage />
@@ -215,7 +223,7 @@ export function InfratorForm({
 
               <FormField
                 control={form.control}
-                name="tipo_agressao"
+                name="tipos_agressao_ids"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
@@ -224,27 +232,27 @@ export function InfratorForm({
                     </FormLabel>
                     <FormControl>
                       <div className="space-y-2 border rounded-md p-4">
-                        {TIPOS_AGRESSAO.map((tipo) => (
+                        {options.tiposAgressao.map((tipo) => (
                           <label
-                            key={tipo}
-                            className="flex items-center space-x-2 cursor-pointer hover:bg-muted/50 p-2 rounded"
+                            key={tipo.id}
+                            className="flex items-center space-x-2 cursor-pointer hover:bg-muted/50 p-2 rounded-md"
                           >
                             <input
                               type="checkbox"
-                              checked={field.value?.includes(tipo) || false}
+                              checked={field.value?.includes(tipo.id) || false}
                               onChange={(e) => {
                                 const currentValue = field.value || [];
                                 if (e.target.checked) {
-                                  field.onChange([...currentValue, tipo]);
+                                  field.onChange([...currentValue, tipo.id]);
                                 } else {
                                   field.onChange(
-                                    currentValue.filter((v) => v !== tipo)
+                                    currentValue.filter((v) => v !== tipo.id)
                                   );
                                 }
                               }}
                               className="h-4 w-4 rounded border-gray-300"
                             />
-                            <span className="text-sm">{tipo}</span>
+                            <span className="text-sm">{tipo.nome}</span>
                           </label>
                         ))}
                       </div>
@@ -261,7 +269,7 @@ export function InfratorForm({
 
               <FormField
                 control={form.control}
-                name="status_legal"
+                name="status_legal_id"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
@@ -269,17 +277,19 @@ export function InfratorForm({
                     </FormLabel>
                     <FormControl>
                       <Select
-                        value={field.value}
-                        onChange={field.onChange}
+                        value={field.value?.toString() || ""}
+                        onChange={(e) => {
+                          field.onChange(Number(e.target.value));
+                        }}
                         onBlur={field.onBlur}
                         name={field.name}
                       >
-                        <option value={StatusLegal.EM_CUMPRIMENTO}>
-                          {StatusLegal.EM_CUMPRIMENTO}
-                        </option>
-                        <option value={StatusLegal.CONCLUIDO}>
-                          {StatusLegal.CONCLUIDO}
-                        </option>
+                        <option value="">Selecione o status</option>
+                        {options.statusLegal.map((status) => (
+                          <option key={status.id} value={status.id.toString()}>
+                            {status.nome}
+                          </option>
+                        ))}
                       </Select>
                     </FormControl>
                     <FormMessage />

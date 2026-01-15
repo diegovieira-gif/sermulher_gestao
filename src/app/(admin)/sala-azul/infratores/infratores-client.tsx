@@ -25,56 +25,27 @@ import { InfratorForm } from "./infrator-form";
 import { deleteInfrator } from "./actions";
 import { Plus, Pencil, Trash2, AlertTriangle, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
-import type { Infrator, NivelPericulosidade } from "./schemas";
+import type { Infrator } from "./schemas";
+import type {
+  NivelOption,
+  StatusLegalOption,
+  TipoAgressaoOption,
+} from "./actions";
 import { cn } from "@/lib/utils";
 
 interface InfratoresClientProps {
   infratores: any[];
+  options: {
+    niveis: NivelOption[];
+    statusLegal: StatusLegalOption[];
+    tiposAgressao: TipoAgressaoOption[];
+  };
 }
 
-// Função para obter a cor do badge baseado no nível de periculosidade
-function getPericulosidadeBadgeVariant(
-  nivel: NivelPericulosidade
-): "default" | "secondary" | "destructive" | "success" | "warning" | "info" {
-  switch (nivel) {
-    case "Baixo":
-      return "secondary"; // Verde/Cinza
-    case "Médio":
-      return "warning"; // Amarelo/Laranja
-    case "Alto":
-      return "destructive"; // Vermelho
-    case "Crítico":
-      return "default"; // Vamos usar uma classe customizada para roxo/preto
-    default:
-      return "secondary";
-  }
-}
-
-// Função para obter classes CSS customizadas para nível crítico
-function getPericulosidadeBadgeClass(nivel: NivelPericulosidade): string {
-  if (nivel === "Crítico") {
-    return "bg-purple-950 text-white border-purple-900 font-bold shadow-lg";
-  }
-  return "";
-}
-
-// Função para obter ícone baseado no nível
-function getPericulosidadeIcon(nivel: NivelPericulosidade) {
-  switch (nivel) {
-    case "Baixo":
-      return null;
-    case "Médio":
-      return <AlertTriangle className="h-3 w-3 mr-1" />;
-    case "Alto":
-      return <AlertTriangle className="h-3 w-3 mr-1" />;
-    case "Crítico":
-      return <ShieldAlert className="h-3 w-3 mr-1" />;
-    default:
-      return null;
-  }
-}
-
-export function InfratoresClient({ infratores }: InfratoresClientProps) {
+export function InfratoresClient({
+  infratores,
+  options,
+}: InfratoresClientProps) {
   const [formOpen, setFormOpen] = useState(false);
   const [selectedInfrator, setSelectedInfrator] = useState<Infrator | null>(
     null
@@ -122,16 +93,28 @@ export function InfratoresClient({ infratores }: InfratoresClientProps) {
     }
   };
 
-  // Função auxiliar para formatar tipo_agressao (pode vir como string CSV ou array)
-  const formatTipoAgressao = (tipoAgressao: any): string => {
-    if (!tipoAgressao) return "-";
-    if (Array.isArray(tipoAgressao)) {
-      return tipoAgressao.join(", ");
+  // Função auxiliar para formatar tipos de agressão (array de objetos)
+  const formatTiposAgressao = (tiposAgressaoLista: any): string => {
+    if (!tiposAgressaoLista || !Array.isArray(tiposAgressaoLista)) {
+      return "-";
     }
-    if (typeof tipoAgressao === "string") {
-      return tipoAgressao;
+    return tiposAgressaoLista
+      .map((item: any) => {
+        if (item?.config_tipos_agressao_id?.nome) {
+          return item.config_tipos_agressao_id.nome;
+        }
+        return null;
+      })
+      .filter(Boolean)
+      .join(", ");
+  };
+
+  // Função para obter a cor do badge baseado no nível
+  const getNivelCor = (nivelId: any): string => {
+    if (nivelId?.cor) {
+      return nivelId.cor;
     }
-    return "-";
+    return "#6b7280"; // Cor padrão cinza
   };
 
   return (
@@ -183,21 +166,20 @@ export function InfratoresClient({ infratores }: InfratoresClientProps) {
                   <TableCell>{infrator.cpf}</TableCell>
                   <TableCell>
                     <Badge
-                      variant={getPericulosidadeBadgeVariant(
-                        infrator.nivel_periculosidade
-                      )}
-                      className={cn(
-                        getPericulosidadeBadgeClass(infrator.nivel_periculosidade)
-                      )}
+                      style={{
+                        backgroundColor: getNivelCor(infrator.nivel_id),
+                        color: "white",
+                      }}
                     >
-                      {getPericulosidadeIcon(infrator.nivel_periculosidade)}
-                      {infrator.nivel_periculosidade}
+                      {infrator.nivel_id?.nome || "-"}
                     </Badge>
                   </TableCell>
                   <TableCell className="max-w-xs truncate">
-                    {formatTipoAgressao(infrator.tipo_agressao)}
+                    {formatTiposAgressao(infrator.tipos_agressao_lista)}
                   </TableCell>
-                  <TableCell>{infrator.status_legal}</TableCell>
+                  <TableCell>
+                    {infrator.status_legal_id?.nome || "-"}
+                  </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Button
@@ -227,6 +209,7 @@ export function InfratoresClient({ infratores }: InfratoresClientProps) {
         open={formOpen}
         onOpenChange={setFormOpen}
         infrator={selectedInfrator}
+        options={options}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

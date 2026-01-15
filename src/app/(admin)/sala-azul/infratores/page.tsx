@@ -1,14 +1,27 @@
-import { getInfratores } from "./actions";
+import { getInfratores, getOptions } from "./actions";
 import { InfratoresClient } from "./infratores-client";
 
 export default async function InfratoresPage() {
-  const result = await getInfratores();
+  const [infratoresResult, optionsResult] = await Promise.all([
+    getInfratores(),
+    getOptions(),
+  ]);
 
-  if (!result.success) {
+  if (!infratoresResult.success) {
     return (
       <div className="p-6">
         <div className="bg-destructive/10 text-destructive px-4 py-3 rounded">
-          {result.error}
+          {infratoresResult.error}
+        </div>
+      </div>
+    );
+  }
+
+  if (!optionsResult.success) {
+    return (
+      <div className="p-6">
+        <div className="bg-destructive/10 text-destructive px-4 py-3 rounded">
+          {optionsResult.error}
         </div>
       </div>
     );
@@ -16,7 +29,10 @@ export default async function InfratoresPage() {
 
   return (
     <div className="p-6">
-      <InfratoresClient infratores={result.data || []} />
+      <InfratoresClient
+        infratores={infratoresResult.data || []}
+        options={optionsResult.data}
+      />
     </div>
   );
 }
