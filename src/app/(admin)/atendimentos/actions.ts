@@ -37,12 +37,12 @@ export async function getBeneficiariasOptions(): Promise<
   | { success: false; error: string }
 > {
   try {
-    const beneficiarias = await directus.request(
-      readItems<BeneficiariaOption>("beneficiarias", {
+    const beneficiarias = (await directus.request(
+      readItems("beneficiarias", {
         fields: ["id", "nome_completo"],
         sort: ["nome_completo"],
       })
-    );
+    )) as BeneficiariaOption[];
 
     return { success: true, data: beneficiarias };
   } catch (error) {

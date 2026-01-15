@@ -7,11 +7,20 @@ export default async function AtendimentosPage() {
     getBeneficiariasOptions(),
   ]);
 
-  if (!atendimentosResult.success || !beneficiariasOptionsResult.success) {
-    const message =
-      atendimentosResult.success === false
-        ? atendimentosResult.error
-        : beneficiariasOptionsResult.error;
+  if (!atendimentosResult.success) {
+    const message = atendimentosResult.error;
+
+    return (
+      <div className="p-6">
+        <div className="bg-destructive/10 text-destructive px-4 py-3 rounded">
+          {message || "Erro ao carregar atendimentos. Tente novamente."}
+        </div>
+      </div>
+    );
+  }
+
+  if (!beneficiariasOptionsResult.success) {
+    const message = beneficiariasOptionsResult.error;
 
     return (
       <div className="p-6">

@@ -24,16 +24,14 @@ export const insertAtendimentoSchema = z.object({
   // CORREÇÃO: Usar coerce.number() pois o valor vem do Select como string mas o banco espera Int
   beneficiaria: z
     .coerce
-    .number({ invalid_type_error: "Selecione uma beneficiária" })
+    .number({ message: "Selecione uma beneficiária" })
     .int({ message: "Selecione uma beneficiária" })
     .positive({ message: "Selecione uma beneficiária" }),
 
-  origem: z.nativeEnum(OrigemAtendimento, {
-    errorMap: () => ({ message: "Selecione a origem" }),
-  }),
+  origem: z.nativeEnum(OrigemAtendimento, { message: "Selecione a origem" }),
 
   prioridade: z.nativeEnum(PrioridadeAtendimento, {
-    errorMap: () => ({ message: "Selecione a prioridade" }),
+    message: "Selecione a prioridade",
   }),
 
   // Opcionais
@@ -51,7 +49,7 @@ export const upsertAtendimentoSchema = insertAtendimentoSchema.extend({
     .union([
       z.string().uuid("ID deve ser um UUID válido"),
       z.coerce
-        .number({ invalid_type_error: "ID inválido" })
+        .number({ message: "ID inválido" })
         .int()
         .positive(),
     ])
