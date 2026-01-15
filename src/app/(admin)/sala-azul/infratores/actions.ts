@@ -3,10 +3,9 @@
 import { directus } from "@/lib/directus";
 import { createItem, deleteItem, readItems, updateItem } from "@directus/sdk";
 import { revalidatePath } from "next/cache";
-import { Infrator, insertInfratorSchema } from "./schemas";
+import { InsertInfrator, insertInfratorSchema } from "./schemas";
 
-// --- DEFINIÇÃO RIGOROSA DOS CAMPOS ---
-// O segredo para não quebrar M2M é especificar o caminho completo (dot notation)
+// --- DEFINIÇÃO DE CAMPOS (CORRIGIDA COM O SNAPSHOT) ---
 const INFRATOR_FIELDS = [
   'id',
   'nome_completo',
@@ -14,17 +13,32 @@ const INFRATOR_FIELDS = [
   'data_nascimento',
   'contato',
   'numero_processo',
-  // Relacionamentos M2O (Simples)
   'nivel_id.id',
   'nivel_id.nome',
   'nivel_id.cor',
   'status_legal_id.id',
   'status_legal_id.nome',
-  // Relacionamento M2M (Complexo)
-  // Atenção: Aqui buscamos o ID e o Nome de dentro da tabela de configuração, passando pela junção
-  'tipos_agressao_lista.config_tipos_agressao_id.id',
-  'tipos_agressao_lista.config_tipos_agressao_id.nome'
+  // AQUI O PULO DO GATO: O nome da coluna na junção é 'tipo_agressao_id'
+  'tipos_agressao_lista.tipo_agressao_id.id',
+  'tipos_agressao_lista.tipo_agressao_id.nome'
 ];
+
+// Tipos exportados para uso nos componentes
+export type NivelOption = {
+  id: number;
+  nome: string;
+  cor: string;
+};
+
+export type StatusLegalOption = {
+  id: number;
+  nome: string;
+};
+
+export type TipoAgressaoOption = {
+  id: number;
+  nome: string;
+};
 
 export async function getOptions() {
   try {
@@ -33,10 +47,21 @@ export async function getOptions() {
       directus.request(readItems('config_status_legal', { fields: ['id', 'nome'] })),
       directus.request(readItems('config_tipos_agressao', { fields: ['id', 'nome'] })),
     ]);
-    return { niveis, status, tiposAgressao };
+    // CORREÇÃO: Retornar objeto padronizado
+    return { 
+      success: true, 
+      data: { 
+        niveis, 
+        statusLegal: status, 
+        tiposAgressao 
+      } 
+    };
   } catch (error) {
     console.error("Erro ao buscar opções:", error);
-    return { niveis: [], status: [], tiposAgressao: [] };
+    return { 
+      success: false, 
+      error: "Erro ao carregar opções." 
+    };
   }
 }
 
@@ -44,62 +69,66 @@ export async function getInfratores() {
   try {
     const items = await directus.request(readItems('infratores', {
       sort: ['nome_completo'],
-      // @ts-ignore - Ignoramos erro de tipagem do SDK para forçar os campos corretos
+      // @ts-ignore
       fields: INFRATOR_FIELDS, 
     }));
-    return items;
+    // CORREÇÃO: Retornar objeto padronizado
+    return { 
+      success: true, 
+      data: items 
+    };
   } catch (error) {
     console.error("Erro ao buscar infratores:", error);
-    return [];
+    return { 
+      success: false, 
+      error: "Erro ao carregar lista de infratores." 
+    };
   }
 }
 
-export async function saveInfrator(data: Infrator) {
+export async function saveInfrator(data: InsertInfrator & { id?: number }) {
   const validation = insertInfratorSchema.safeParse(data);
   if (!validation.success) {
     return { success: false, error: "Dados inválidos." };
   }
 
-  // Removemos tipos_agressao_ids do objeto principal pois não é campo do banco
   const { id, tipos_agressao_ids, ...fieldsToSave } = data;
 
   try {
-    // 1. Preparar Payload M2M
-    // Para criar o relacionamento, enviamos um array de objetos
+    // CORREÇÃO CRÍTICA DO PAYLOAD
+    // O banco espera 'tipo_agressao_id' e não 'config_tipos_agressao_id'
     const m2mPayload = tipos_agressao_ids?.map((tipoId: number) => ({
-      config_tipos_agressao_id: { id: tipoId }
+      tipo_agressao_id: { id: tipoId } 
     }));
 
     if (id) {
-      // --- UPDATE ---
-      // Atualizar M2M é complexo (requer diff).
-      // Estratégia Segura: Atualizamos dados cadastrais.
-      // Se quiser atualizar agressões, o ideal seria deletar as relações antigas e criar novas,
-      // mas para evitar complexidade agora, vamos atualizar apenas os dados escalares.
+      // UPDATE
       await directus.request(updateItem('infratores', id, {
         ...fieldsToSave,
-        // Descomente abaixo se quiser tentar forçar atualização (pode duplicar sem lógica de delete)
-        // tipos_agressao_lista: { create: m2mPayload } 
+        // Se quiser atualizar agressões na edição:
+        // tipos_agressao_lista: { create: m2mPayload, delete: [ids_antigos] }
+        // Por segurança na edição simples, mantemos dados cadastrais:
       }, {
-        fields: ['id'] // Retorna só ID para evitar erro de leitura
+        fields: ['id']
       }));
+      revalidatePath("/sala-azul/infratores");
+      return { success: true, message: "Infrator atualizado com sucesso." };
     } else {
-      // --- CREATE ---
+      // CREATE
       await directus.request(createItem('infratores', {
         ...fieldsToSave,
-        tipos_agressao_lista: m2mPayload // Criação funciona bem com essa sintaxe
+        // Aqui usamos o alias 'tipos_agressao_lista' definido no Infrator
+        tipos_agressao_lista: m2mPayload 
       }, {
-        fields: ['id'] // Retorna só ID para evitar erro de leitura
+        fields: ['id']
       }));
+      revalidatePath("/sala-azul/infratores");
+      return { success: true, message: "Infrator cadastrado com sucesso." };
     }
-
-    revalidatePath("/sala-azul/infratores");
-    return { success: true };
 
   } catch (error: any) {
     console.error("Erro ao salvar infrator:", error);
     
-    // Tratamento de Erro de CPF Único
     const isUniqueError = error?.errors?.some((e: any) => 
       e.message?.includes('unique') && e.message?.includes('cpf')
     );
@@ -108,7 +137,7 @@ export async function saveInfrator(data: Infrator) {
       return { success: false, error: "Este CPF já está cadastrado." };
     }
 
-    return { success: false, error: "Erro ao salvar. Tente novamente." };
+    return { success: false, error: "Erro ao salvar. Verifique o console do servidor." };
   }
 }
 
@@ -116,9 +145,8 @@ export async function deleteInfrator(id: number) {
   try {
     await directus.request(deleteItem('infratores', id));
     revalidatePath("/sala-azul/infratores");
-    return { success: true };
+    return { success: true, message: "Infrator excluído com sucesso." };
   } catch (error) {
-    console.error("Erro ao excluir:", error);
     return { success: false, error: "Erro ao excluir." };
   }
 }

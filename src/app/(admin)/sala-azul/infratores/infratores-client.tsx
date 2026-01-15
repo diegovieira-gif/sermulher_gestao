@@ -98,10 +98,11 @@ export function InfratoresClient({
     if (!tiposAgressaoLista || !Array.isArray(tiposAgressaoLista)) {
       return "-";
     }
+    // CORREÇÃO: Usar 'tipo_agressao_id' conforme definido em INFRATOR_FIELDS
     return tiposAgressaoLista
       .map((item: any) => {
-        if (item?.config_tipos_agressao_id?.nome) {
-          return item.config_tipos_agressao_id.nome;
+        if (item?.tipo_agressao_id?.nome) {
+          return item.tipo_agressao_id.nome;
         }
         return null;
       })

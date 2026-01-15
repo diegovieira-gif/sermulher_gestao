@@ -24,3 +24,4 @@ export const insertInfratorSchema = z.object({
 // Tipos TypeScript derivados dos schemas
 export type Infrator = z.infer<typeof insertInfratorSchema>;
 export type InfratorFormValues = z.input<typeof insertInfratorSchema>;
+export type InsertInfrator = z.infer<typeof insertInfratorSchema>;

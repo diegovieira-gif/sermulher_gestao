@@ -10,7 +10,8 @@
     "lint": "eslint",
     "setup-schema": "node setup-schema.js",
     "seed-data": "node seed-data.js",
-    "update-sala-azul": "node update-schema-sala-azul.js"
+    "update-sala-azul": "node update-schema-sala-azul.js",
+    "fix-schema-relations": "node fix-schema-relations.js"
   },
   "dependencies": {
     "@directus/sdk": "^18.0.3",
@@ -22,6 +23,7 @@
     "@radix-ui/react-tabs": "^1.1.13",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dotenv": "^17.2.3",
     "lucide-react": "^0.562.0",
     "next": "16.1.1",
     "next-themes": "^0.4.6",
