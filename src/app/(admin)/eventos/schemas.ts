@@ -1,21 +1,13 @@
 import { z } from "zod";
 
-// Enum para os tipos de evento
-export enum TipoEvento {
-  CAMPANHA = "Campanha",
-  CURSO = "Curso",
-  PALESTRA = "Palestra",
-  MUTIRAO = "Mutirão",
-}
-
 // Schema Zod para inserção/atualização de evento
 export const insertEventoSchema = z
   .object({
     id: z.number().optional(),
     nome: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
-    tipo: z.nativeEnum(TipoEvento, {
-      errorMap: () => ({ message: "Tipo de evento é obrigatório" }),
-    }),
+    tipo_id: z.coerce.number({ message: "Selecione o tipo de evento" })
+      .int({ message: "Selecione o tipo de evento" })
+      .positive({ message: "Selecione o tipo de evento" }),
     data_inicio: z
       .string()
       .min(1, "Data de início é obrigatória")

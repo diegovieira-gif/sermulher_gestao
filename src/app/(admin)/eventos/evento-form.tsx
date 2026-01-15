@@ -7,7 +7,6 @@ import {
   insertEventoSchema,
   type Evento,
   type EventoFormValues,
-  TipoEvento,
 } from "./schemas";
 import { saveEvento } from "./actions";
 import { Button } from "@/components/ui/button";
@@ -32,15 +31,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
+type TipoEventoOption = { id: number; nome: string; icone?: string };
+
 interface EventoFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  tiposEventoOptions: TipoEventoOption[];
   evento?: Evento | null;
 }
 
 export function EventoForm({
   open,
   onOpenChange,
+  tiposEventoOptions,
   evento,
 }: EventoFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -49,7 +52,7 @@ export function EventoForm({
     resolver: zodResolver(insertEventoSchema),
     defaultValues: {
       nome: "",
-      tipo: TipoEvento.CAMPANHA,
+      tipo_id: "",
       data_inicio: "",
       data_fim: "",
       descricao: "",
@@ -62,7 +65,7 @@ export function EventoForm({
       form.reset({
         id: evento.id,
         nome: evento.nome,
-        tipo: evento.tipo,
+        tipo_id: (evento as any).tipo_id?.id ?? (evento as any).tipo_id ?? "",
         data_inicio: evento.data_inicio,
         data_fim: evento.data_fim,
         descricao: evento.descricao || "",
@@ -70,7 +73,7 @@ export function EventoForm({
     } else {
       form.reset({
         nome: "",
-        tipo: TipoEvento.CAMPANHA,
+        tipo_id: "",
         data_inicio: "",
         data_fim: "",
         descricao: "",
@@ -129,29 +132,35 @@ export function EventoForm({
 
             <FormField
               control={form.control}
-              name="tipo"
+              name="tipo_id"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Tipo</FormLabel>
                   <FormControl>
                     <Select
-                      value={field.value}
-                      onChange={field.onChange}
-                      onBlur={field.onBlur}
                       name={field.name}
+                      ref={field.ref}
+                      onBlur={field.onBlur}
+                      value={
+                        typeof field.value === "string" ||
+                        typeof field.value === "number"
+                          ? field.value
+                          : ""
+                      }
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value ? Number(e.target.value) : ""
+                        )
+                      }
                     >
-                      <option value={TipoEvento.CAMPANHA}>
-                        {TipoEvento.CAMPANHA}
+                      <option value="" disabled>
+                        Selecione o tipo de evento...
                       </option>
-                      <option value={TipoEvento.CURSO}>
-                        {TipoEvento.CURSO}
-                      </option>
-                      <option value={TipoEvento.PALESTRA}>
-                        {TipoEvento.PALESTRA}
-                      </option>
-                      <option value={TipoEvento.MUTIRAO}>
-                        {TipoEvento.MUTIRAO}
-                      </option>
+                      {tiposEventoOptions.map((opt) => (
+                        <option key={opt.id} value={opt.id}>
+                          {opt.nome}
+                        </option>
+                      ))}
                     </Select>
                   </FormControl>
                   <FormMessage />

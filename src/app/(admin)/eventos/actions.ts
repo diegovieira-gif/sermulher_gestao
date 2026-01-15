@@ -5,6 +5,8 @@ import { directus } from "@/lib/directus";
 import { readItems, createItem, updateItem, deleteItem } from "@directus/sdk";
 import { insertEventoSchema, type Evento } from "./schemas";
 
+type TipoEventoOption = { id: number; nome: string; icone?: string };
+
 /**
  * Busca todos os eventos do Directus ordenados por data_inicio descrescente
  */
@@ -12,7 +14,12 @@ export async function getEventos() {
   try {
     const eventos = await directus.request(
       readItems("eventos_campanhas", {
-        fields: ["*"],
+        fields: [
+          "*",
+          "tipo_id.id",
+          "tipo_id.nome",
+          "tipo_id.icone",
+        ],
         sort: ["-data_inicio"],
       })
     );
@@ -23,6 +30,31 @@ export async function getEventos() {
     return {
       success: false,
       error: "Erro ao buscar eventos. Tente novamente.",
+    };
+  }
+}
+
+/**
+ * Busca opções de tipos de evento do banco de dados
+ */
+export async function getTiposEventoOptions(): Promise<
+  | { success: true; data: TipoEventoOption[] }
+  | { success: false; error: string }
+> {
+  try {
+    const tipos = (await directus.request(
+      readItems("config_tipos_evento", {
+        fields: ["id", "nome", "icone"],
+        sort: ["nome"],
+      })
+    )) as TipoEventoOption[];
+
+    return { success: true, data: tipos };
+  } catch (error) {
+    console.error("Erro ao buscar tipos de evento (options):", error);
+    return {
+      success: false,
+      error: "Erro ao buscar tipos de evento. Tente novamente.",
     };
   }
 }

@@ -27,8 +27,11 @@ import { Plus, Edit, Trash2, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import type { Evento } from "./schemas";
 
+type TipoEventoOption = { id: number; nome: string; icone?: string };
+
 interface EventosClientProps {
   eventos: any[];
+  tiposEventoOptions: TipoEventoOption[];
 }
 
 type StatusEvento = "Encerrado" | "Em Andamento" | "Breve";
@@ -81,7 +84,7 @@ function getBadgeVariant(status: StatusEvento): "secondary" | "success" | "info"
   }
 }
 
-export function EventosClient({ eventos }: EventosClientProps) {
+export function EventosClient({ eventos, tiposEventoOptions }: EventosClientProps) {
   const [formOpen, setFormOpen] = useState(false);
   const [selectedEvento, setSelectedEvento] = useState<Evento | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -214,6 +217,7 @@ export function EventosClient({ eventos }: EventosClientProps) {
       <EventoForm
         open={formOpen}
         onOpenChange={setFormOpen}
+        tiposEventoOptions={tiposEventoOptions}
         evento={selectedEvento}
       />
 
