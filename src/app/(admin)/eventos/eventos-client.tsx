@@ -178,7 +178,6 @@ export function EventosClient({ eventos, tiposEventoOptions }: EventosClientProp
                     : null;
 
                 const tipoNome = tipoObj?.nome;
-                const tipoIcone = tipoObj?.icone;
 
                 return (
                   <TableRow key={evento.id}>
@@ -187,10 +186,7 @@ export function EventosClient({ eventos, tiposEventoOptions }: EventosClientProp
                     </TableCell>
                     <TableCell>
                       {tipoNome ? (
-                        <div className="flex items-center gap-2">
-                          {tipoIcone && <span>{tipoIcone}</span>}
-                          <Badge variant="outline">{tipoNome}</Badge>
-                        </div>
+                        <Badge variant="outline">{tipoNome}</Badge>
                       ) : (
                         <span className="text-muted-foreground">Sem tipo</span>
                       )}
