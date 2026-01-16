@@ -57,7 +57,17 @@ interface Participante {
   infrator: {
     id: number;
     nome_completo: string;
-    nivel_periculosidade: string | null;
+    cpf: string | null;
+    contato: {
+      telefone?: string;
+    } | null;
+    nivel_id: {
+      nome: string;
+      cor: string;
+    } | null;
+    status_legal_id: {
+      nome: string;
+    } | null;
   } | null;
   frequencia_percentual: number | null;
   status_participacao: string | null;
@@ -67,7 +77,16 @@ interface Participante {
 interface Infrator {
   id: number;
   nome_completo: string;
-  nivel_periculosidade: string | null;
+  cpf: string | null;
+  nivel_id: {
+    id: number;
+    nome: string;
+    cor: string;
+  } | null;
+  status_legal_id: {
+    id: number;
+    nome: string;
+  } | null;
 }
 
 interface Sala {
@@ -122,20 +141,10 @@ function getStatusBadgeVariant(status: string | null): "default" | "success" | "
   }
 }
 
-// Função para obter a variante do badge baseado na periculosidade
-function getPericulosidadeBadgeVariant(nivel: string | null): "default" | "success" | "warning" | "destructive" {
-  if (!nivel) return "default";
-  switch (nivel) {
-    case "Baixo":
-      return "success";
-    case "Médio":
-      return "warning";
-    case "Alto":
-    case "Crítico":
-      return "destructive";
-    default:
-      return "default";
-  }
+// Função para obter a cor do badge baseado no nível
+function getNivelCor(nivelId: Participante["infrator"]["nivel_id"]): string {
+  if (!nivelId?.cor) return "#6b7280"; // Cor padrão cinza
+  return nivelId.cor;
 }
 
 // Função para formatar nome do responsável
@@ -321,7 +330,7 @@ export function ParticipantesClient({
               </option>
               {infratoresDisponiveis.map((infrator) => (
                 <option key={infrator.id} value={infrator.id}>
-                  {infrator.nome_completo}
+                  {infrator.nome_completo} {infrator.cpf ? `- CPF: ${infrator.cpf}` : ""} {infrator.nivel_id ? `(${infrator.nivel_id.nome})` : ""}
                 </option>
               ))}
             </Select>
@@ -341,8 +350,10 @@ export function ParticipantesClient({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nome do Infrator</TableHead>
-              <TableHead>Periculosidade</TableHead>
+              <TableHead>Infrator</TableHead>
+              <TableHead>Nível de Risco</TableHead>
+              <TableHead>Status Legal</TableHead>
+              <TableHead>Contato</TableHead>
               <TableHead>Frequência</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Ações</TableHead>
@@ -352,7 +363,7 @@ export function ParticipantesClient({
             {participacoes.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={7}
                   className="text-center text-muted-foreground"
                 >
                   Nenhum participante cadastrado nesta turma
@@ -362,18 +373,32 @@ export function ParticipantesClient({
               participacoes.map((participante) => (
                 <TableRow key={participante.id}>
                   <TableCell className="font-medium">
-                    {participante.infrator?.nome_completo || "-"}
+                    <div>
+                      <div>{participante.infrator?.nome_completo || "-"}</div>
+                      <div className="text-sm text-muted-foreground">
+                        CPF: {participante.infrator?.cpf || "-"}
+                      </div>
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Badge
-                      variant={
-                        getPericulosidadeBadgeVariant(
-                          participante.infrator?.nivel_periculosidade || null
-                        ) as any
-                      }
+                      style={{
+                        backgroundColor: getNivelCor(participante.infrator?.nivel_id || null),
+                        color: "white",
+                      }}
                     >
-                      {participante.infrator?.nivel_periculosidade || "-"}
+                      {participante.infrator?.nivel_id?.nome || "-"}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-sm">
+                      {participante.infrator?.status_legal_id?.nome || "-"}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-sm">
+                      {participante.infrator?.contato?.telefone || "-"}
+                    </span>
                   </TableCell>
                   <TableCell>
                     {participante.frequencia_percentual !== null

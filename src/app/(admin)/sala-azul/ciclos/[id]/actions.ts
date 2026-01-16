@@ -44,14 +44,19 @@ export async function getSalaDetails(id: string | number) {
       })
     );
 
-    // Busca participantes da sala
+    // Busca participantes da sala com dados profundos do infrator
     const participacoes = await directus.request(
       readItems("participacoes_sala_azul", {
         fields: [
-          "*",
+          "*", // Dados da participação (presenças, status no ciclo)
           "infrator.id",
           "infrator.nome_completo",
-          "infrator.nivel_periculosidade",
+          "infrator.cpf",
+          "infrator.contato", // Para exibir telefone se necessário
+          // Busca Nível e Status para mostrar alertas na turma
+          "infrator.nivel_id.nome",
+          "infrator.nivel_id.cor",
+          "infrator.status_legal_id.nome",
         ],
         filter: {
           sala: {
@@ -107,7 +112,16 @@ export async function getInfratoresDisponiveis(salaId: number) {
 
     const infratores = await directus.request(
       readItems("infratores", {
-        fields: ["id", "nome_completo", "nivel_periculosidade"],
+        fields: [
+          "id",
+          "nome_completo",
+          "cpf",
+          "nivel_id.id",
+          "nivel_id.nome",
+          "nivel_id.cor",
+          "status_legal_id.id",
+          "status_legal_id.nome",
+        ],
         filter,
         sort: ["nome_completo"],
       })
