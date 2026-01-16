@@ -35,8 +35,8 @@ export async function getSalaDetails(id: string | number) {
       readItem("salas_azul", salaId, {
         fields: [
           "*",
-          "local.id",
-          "local.nome",
+          "local_id.id",
+          "local_id.nome",
           "responsavel_tecnico.id",
           "responsavel_tecnico.first_name",
           "responsavel_tecnico.last_name",

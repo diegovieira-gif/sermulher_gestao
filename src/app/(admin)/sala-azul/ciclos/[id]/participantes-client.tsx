@@ -94,7 +94,7 @@ interface Sala {
   nome_ciclo: string;
   data_inicio: string;
   data_termino: string;
-  local: {
+  local_id: {
     id: number;
     nome: string;
   } | null;
@@ -295,7 +295,7 @@ export function ParticipantesClient({
             <div>
               <p className="text-sm font-medium">Local</p>
               <p className="text-sm text-muted-foreground">
-                {sala.local?.nome || "-"}
+                {sala.local_id?.nome || "-"}
               </p>
             </div>
           </div>
