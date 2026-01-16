@@ -19,7 +19,8 @@ export async function getSalas() {
       readItems("salas_azul", {
         fields: [
           "*",
-          "local_id.nome",
+          "local_id.id",   // ID para o formulário
+          "local_id.nome", // NOME para a listagem
           "responsavel_tecnico.first_name",
           "responsavel_tecnico.last_name",
         ],

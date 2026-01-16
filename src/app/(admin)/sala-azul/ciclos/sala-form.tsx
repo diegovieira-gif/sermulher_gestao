@@ -75,10 +75,7 @@ export function SalaForm({
   useEffect(() => {
     if (sala) {
       // Trata local_id: se vier como objeto do Directus, extrai o ID
-      const localId =
-        typeof sala.local_id === "object" && sala.local_id !== null
-          ? sala.local_id.id
-          : sala.local_id;
+      const localId = sala?.local_id?.id || undefined;
 
       // Trata responsável: se vier como objeto do Directus, extrai o ID (UUID)
       const responsavelId =
@@ -223,11 +220,7 @@ export function SalaForm({
                         name={field.name}
                         ref={field.ref}
                         onBlur={field.onBlur}
-                        value={
-                          typeof field.value === "number"
-                            ? field.value.toString()
-                            : field.value?.toString() || ""
-                        }
+                        value={field.value?.toString() || ""}
                         onChange={(e) => {
                           const value = e.target.value;
                           field.onChange(value ? Number(value) : undefined);

@@ -195,9 +195,10 @@ export function SalasClient({
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-muted-foreground" />
                       <span>
-                        {sala.local_id && typeof sala.local_id === "object"
-                          ? sala.local_id.nome || "-"
-                          : "-"}
+                        {(() => {
+                          const localObj = sala.local_id;
+                          return localObj?.nome || "-";
+                        })()}
                       </span>
                     </div>
                   </TableCell>
