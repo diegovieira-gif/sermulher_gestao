@@ -47,6 +47,7 @@ import {
   MapPin,
   Users,
   ArrowLeft,
+  Printer,
 } from "lucide-react";
 import { toast } from "sonner";
 import { StatusParticipacao } from "./schemas";
@@ -410,6 +411,19 @@ export function ParticipantesClient({
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
+                      <Link
+                        href={`/sala-azul/ciclos/${sala.id}/relatorio/${participante.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title="Imprimir relatório individual"
+                        >
+                          <Printer className="h-4 w-4" />
+                        </Button>
+                      </Link>
                       <Button
                         variant="ghost"
                         size="icon"
