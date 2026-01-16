@@ -48,6 +48,7 @@ import {
   Users,
   ArrowLeft,
   Printer,
+  Award,
 } from "lucide-react";
 import { toast } from "sonner";
 import { StatusParticipacao } from "./schemas";
@@ -424,6 +425,22 @@ export function ParticipantesClient({
                           <Printer className="h-4 w-4" />
                         </Button>
                       </Link>
+                      {participante.status_participacao === StatusParticipacao.CONCLUIDO_COM_EXITO && (
+                        <Link
+                          href={`/sala-azul/ciclos/${sala.id}/certificado/${participante.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Emitir certificado"
+                            className="text-amber-600 hover:text-amber-700"
+                          >
+                            <Award className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"
