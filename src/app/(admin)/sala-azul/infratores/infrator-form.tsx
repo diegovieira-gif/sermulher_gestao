@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -53,59 +53,40 @@ export function InfratorForm({
 }: InfratorFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<InfratorFormValues>({
-    resolver: zodResolver(insertInfratorSchema),
-    defaultValues: {
-      nome_completo: "",
-      cpf: "",
-      data_nascimento: "",
-      telefone: "",
-      numero_processo: "",
-      nivel_id: options.niveis[0]?.id || 0,
-      status_legal_id: options.statusLegal[0]?.id || 0,
-      tipos_agressao_ids: [],
-    },
-  });
-
-  // Atualiza o formulário quando o infrator muda
-  useEffect(() => {
-    if (infrator) {
-      // Normaliza tipos de agressão: converte array de objetos para array de IDs
-      const tiposAgressaoIds: number[] = [];
-      if (infrator.tipos_agressao_lista && Array.isArray(infrator.tipos_agressao_lista)) {
-        infrator.tipos_agressao_lista.forEach((item: any) => {
-          if (item?.tipo_agressao_id?.id) {
-            tiposAgressaoIds.push(item.tipo_agressao_id.id);
-          } else if (item?.tipo_agressao_id && typeof item.tipo_agressao_id === 'number') {
-            tiposAgressaoIds.push(item.tipo_agressao_id);
-          }
-        });
+  // --- NORMALIZAÇÃO DOS DADOS ---
+  // Converte o formato complexo do Directus para o formato simples do Form
+  const defaultValues: Partial<InfratorFormValues> = infrator
+    ? {
+        ...infrator,
+        // Extrai o ID dos objetos Many-to-One
+        nivel_id: infrator.nivel_id?.id || infrator.nivel_id,
+        status_legal_id: infrator.status_legal_id?.id || infrator.status_legal_id,
+        // Extrai o telefone do JSON
+        telefone: infrator.contato?.telefone || "",
+        // Se for array de números (que é o que o log mostrou), usa direto.
+        // Se for array de objetos (caso o Directus mude de ideia), extrai o ID.
+        tipos_agressao_ids: Array.isArray(infrator.tipos_agressao_lista)
+          ? infrator.tipos_agressao_lista.map((item: any) =>
+              typeof item === 'number' ? item : (item.tipo_agressao_id?.id || item.id)
+            )
+          : [],
       }
-
-      form.reset({
-        id: infrator.id,
-        nome_completo: infrator.nome_completo || "",
-        cpf: infrator.cpf || "",
-        data_nascimento: infrator.data_nascimento || "",
-        telefone: infrator?.contato?.telefone || "",
-        numero_processo: infrator.numero_processo || "",
-        nivel_id: infrator.nivel_id?.id || infrator.nivel_id || options.niveis[0]?.id || 0,
-        status_legal_id: infrator.status_legal_id?.id || infrator.status_legal_id || options.statusLegal[0]?.id || 0,
-        tipos_agressao_ids: tiposAgressaoIds,
-      });
-    } else {
-      form.reset({
+    : {
+        // Valores padrão para cadastro novo
         nome_completo: "",
         cpf: "",
         data_nascimento: "",
         telefone: "",
         numero_processo: "",
-        nivel_id: options.niveis[0]?.id || 0,
-        status_legal_id: options.statusLegal[0]?.id || 0,
         tipos_agressao_ids: [],
-      });
-    }
-  }, [infrator, form, options]);
+        nivel_id: undefined,
+        status_legal_id: undefined,
+      };
+
+  const form = useForm<InfratorFormValues>({
+    resolver: zodResolver(insertInfratorSchema),
+    values: defaultValues as InfratorFormValues, // Use 'values' para reagir a mudanças no 'infrator'
+  });
 
   const onSubmit = async (data: InfratorFormValues) => {
     setIsSubmitting(true);

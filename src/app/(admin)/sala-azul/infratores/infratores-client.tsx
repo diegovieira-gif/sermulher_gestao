@@ -92,21 +92,28 @@ export function InfratoresClient({
     }
   };
 
-  // Função auxiliar para formatar tipos de agressão (array de objetos)
-  const formatTiposAgressao = (tiposAgressaoLista: any): string => {
-    if (!tiposAgressaoLista || !Array.isArray(tiposAgressaoLista)) {
-      return "-";
+  // Função auxiliar para formatar tipos de agressão (array de IDs)
+  const formatTiposAgressao = (ids: any) => {
+    // Validação: deve ser array e ter itens
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return <span className="text-muted-foreground">-</span>;
     }
-    // CORREÇÃO: Usar 'tipo_agressao_id' conforme definido em INFRATOR_FIELDS
-    return tiposAgressaoLista
-      .map((item: any) => {
-        if (item?.tipo_agressao_id?.nome) {
-          return item.tipo_agressao_id.nome;
-        }
-        return null;
-      })
-      .filter(Boolean)
-      .join(", ");
+
+    return (
+      <div className="flex flex-wrap gap-1">
+        {ids.map((id: number) => {
+          // LOOKUP: Encontra o nome na lista de opções que já temos em memória
+          const opcao = options.tiposAgressao.find((opt) => opt.id === id);
+          const nome = opcao?.nome || `ID: ${id}`; // Fallback se não achar
+
+          return (
+            <Badge key={id} variant="outline" className="text-xs">
+              {nome}
+            </Badge>
+          );
+        })}
+      </div>
+    );
   };
 
   // Função para obter a cor do badge baseado no nível
@@ -170,9 +177,10 @@ export function InfratoresClient({
               <TableHead>Nome</TableHead>
               <TableHead>CPF</TableHead>
               <TableHead>Info Pessoal</TableHead>
-              <TableHead>Número do Processo</TableHead>
-              <TableHead>Tipos de Agressão</TableHead>
+              <TableHead>Status Legal</TableHead>
               <TableHead>Nível de Periculosidade</TableHead>
+              <TableHead>Tipos de Agressão</TableHead>
+              <TableHead>Número do Processo</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -180,7 +188,7 @@ export function InfratoresClient({
             {infratores.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={7}
+                  colSpan={8}
                   className="text-center text-muted-foreground"
                 >
                   Nenhum infrator cadastrado
@@ -200,10 +208,7 @@ export function InfratoresClient({
                     </div>
                   </TableCell>
                   <TableCell>
-                    {infrator.numero_processo || "-"}
-                  </TableCell>
-                  <TableCell className="max-w-xs truncate">
-                    {formatTiposAgressao(infrator.tipos_agressao_lista)}
+                    <span>{infrator.status_legal_id?.nome || "-"}</span>
                   </TableCell>
                   <TableCell>
                     <Badge
@@ -214,6 +219,12 @@ export function InfratoresClient({
                     >
                       {infrator.nivel_id?.nome || "-"}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {formatTiposAgressao(infrator.tipos_agressao_lista)}
+                  </TableCell>
+                  <TableCell>
+                    {infrator.numero_processo || "-"}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">

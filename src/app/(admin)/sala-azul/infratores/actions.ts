@@ -5,7 +5,6 @@ import { createItem, deleteItem, readItems, updateItem } from "@directus/sdk";
 import { revalidatePath } from "next/cache";
 import { InsertInfrator, insertInfratorSchema } from "./schemas";
 
-// --- DEFINIÇÃO DE CAMPOS (CORRIGIDA COM O SNAPSHOT) ---
 const INFRATOR_FIELDS = [
   'id',
   'nome_completo',
@@ -13,14 +12,14 @@ const INFRATOR_FIELDS = [
   'data_nascimento',
   'contato',
   'numero_processo',
+  // Relacionamentos M2O (ainda precisamos dos nomes aqui)
   'nivel_id.id',
   'nivel_id.nome',
   'nivel_id.cor',
   'status_legal_id.id',
   'status_legal_id.nome',
-  // AQUI O PULO DO GATO: O nome da coluna na junção é 'tipo_agressao_id'
-  'tipos_agressao_lista.tipo_agressao_id.id',
-  'tipos_agressao_lista.tipo_agressao_id.nome'
+  // Relacionamento M2M - Busca apenas o campo (que virá como array de IDs)
+  'tipos_agressao_lista'
 ];
 
 // Tipos exportados para uso nos componentes
@@ -47,7 +46,6 @@ export async function getOptions() {
       directus.request(readItems('config_status_legal', { fields: ['id', 'nome'] })),
       directus.request(readItems('config_tipos_agressao', { fields: ['id', 'nome'] })),
     ]);
-    // CORREÇÃO: Retornar objeto padronizado
     return { 
       success: true, 
       data: { 
@@ -60,7 +58,7 @@ export async function getOptions() {
     console.error("Erro ao buscar opções:", error);
     return { 
       success: false, 
-      error: "Erro ao carregar opções." 
+      error: "Erro opções" 
     };
   }
 }
@@ -72,16 +70,16 @@ export async function getInfratores() {
       // @ts-ignore
       fields: INFRATOR_FIELDS, 
     }));
-    // CORREÇÃO: Retornar objeto padronizado
+
     return { 
       success: true, 
       data: items 
     };
   } catch (error) {
-    console.error("Erro ao buscar infratores:", error);
+    console.error("Erro busca:", error);
     return { 
       success: false, 
-      error: "Erro ao carregar lista de infratores." 
+      error: "Erro ao buscar infratores." 
     };
   }
 }
@@ -115,7 +113,7 @@ export async function saveInfrator(data: InsertInfrator & { id?: number }) {
       await directus.request(createItem('infratores', payload));
     }
     revalidatePath("/sala-azul/infratores");
-    return { success: true };
+    return { success: true, message: id ? "Infrator atualizado com sucesso." : "Infrator cadastrado com sucesso." };
 
   } catch (error: any) {
     console.error("Erro ao salvar:", error);
