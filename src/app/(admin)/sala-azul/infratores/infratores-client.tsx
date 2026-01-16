@@ -23,7 +23,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { InfratorForm } from "./infrator-form";
 import { deleteInfrator } from "./actions";
-import { Plus, Pencil, Trash2, AlertTriangle, ShieldAlert } from "lucide-react";
+import { Plus, Pencil, Trash2, AlertTriangle, ShieldAlert, Eye } from "lucide-react";
+import Link from "next/link";
 import { toast } from "sonner";
 import type { Infrator } from "./schemas";
 import type {
@@ -228,6 +229,11 @@ export function InfratoresClient({
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
+                      <Link href={`/sala-azul/infratores/${infrator.id}`}>
+                        <Button variant="ghost" size="icon" title="Ver detalhes">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </Link>
                       <Button
                         variant="ghost"
                         size="icon"
