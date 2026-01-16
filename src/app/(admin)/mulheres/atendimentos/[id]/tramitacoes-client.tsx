@@ -25,9 +25,10 @@ import {
 } from "@/components/ui/form";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Clock, Building2, User } from "lucide-react";
+import { Plus, Clock, Building2, User, Scale, Heart, Shield, Stethoscope, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import Link from "next/link";
 import {
   getTramitacoes,
   saveTramitacao,
@@ -35,23 +36,21 @@ import {
   type TramitacaoWithRelations,
   type SetorOption,
 } from "./actions";
+import { TipoDemanda, StatusEtapa } from "./schemas";
 
-// Tipos de demanda disponíveis
+// Tipos de demanda disponíveis (usando enum do schema)
 const TIPOS_DEMANDA = [
-  { value: "Jurídica", label: "Jurídica" },
-  { value: "Terapia", label: "Terapia" },
-  { value: "Psicológico", label: "Psicológico" },
-  { value: "Medida Protetiva", label: "Medida Protetiva" },
-  { value: "Exame", label: "Exame" },
-  { value: "Social", label: "Social" },
-  { value: "Outro", label: "Outro" },
+  { value: TipoDemanda.JURIDICA, label: "Jurídica", icon: Scale },
+  { value: TipoDemanda.TERAPIA, label: "Terapia", icon: Heart },
+  { value: TipoDemanda.MEDIDA_PROTETIVA, label: "Medida Protetiva", icon: Shield },
+  { value: TipoDemanda.EXAME, label: "Exame", icon: Stethoscope },
 ];
 
-// Status de etapa disponíveis
+// Status de etapa disponíveis (usando enum do schema)
 const STATUS_ETAPA = [
-  { value: "Aguardando", label: "Aguardando" },
-  { value: "Em atendimento", label: "Em atendimento" },
-  { value: "Finalizado", label: "Finalizado" },
+  { value: StatusEtapa.AGUARDANDO, label: "Aguardando" },
+  { value: StatusEtapa.EM_ATENDIMENTO, label: "Em atendimento" },
+  { value: StatusEtapa.FINALIZADO, label: "Finalizado" },
 ];
 
 // Schema de validação do formulário
@@ -88,7 +87,7 @@ export function TramitacoesClient({
       tipo_demanda: "",
       setor_responsavel: "",
       relato_tecnico: "",
-      status_etapa: "Em atendimento",
+      status_etapa: StatusEtapa.AGUARDANDO,
     },
   });
 
@@ -149,6 +148,13 @@ export function TramitacoesClient({
     if (status === "Finalizado") return "success";
     if (status === "Em atendimento") return "warning";
     return "secondary";
+  };
+
+  // Função para obter ícone baseado no tipo de demanda
+  const getTipoDemandaIcon = (tipo: string | null) => {
+    if (!tipo) return Clock;
+    const tipoEntry = TIPOS_DEMANDA.find(t => t.value === tipo);
+    return tipoEntry?.icon || Clock;
   };
 
   // Função para renderizar relato técnico (com quebra de linha)
@@ -215,10 +221,18 @@ export function TramitacoesClient({
             Histórico de tramitações e evoluções do atendimento
           </p>
         </div>
-        <Button onClick={() => setDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nova Tramitação
-        </Button>
+        <div className="flex gap-2">
+          <Link href={`/mulheres/atendimentos/${atendimentoId}/relatorio`} target="_blank">
+            <Button variant="outline">
+              <Printer className="mr-2 h-4 w-4" />
+              Imprimir Relatório
+            </Button>
+          </Link>
+          <Button onClick={() => setDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nova Tramitação
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -244,10 +258,15 @@ export function TramitacoesClient({
               
               <CardHeader className="pb-3">
                 <div className="flex items-start gap-4">
-                  {/* Ícone de timeline */}
-                  <div className="relative z-10 mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                    <Clock className="h-4 w-4" />
-                  </div>
+                  {/* Ícone de timeline baseado no tipo de demanda */}
+                  {(() => {
+                    const IconComponent = getTipoDemandaIcon(tramitacao.tipo_demanda);
+                    return (
+                      <div className="relative z-10 mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                        <IconComponent className="h-4 w-4" />
+                      </div>
+                    );
+                  })()}
                   
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center justify-between gap-2 flex-wrap">

@@ -4,16 +4,7 @@ import { revalidatePath } from "next/cache";
 import { directus } from "@/lib/directus";
 import { readItems, readItem, createItem } from "@directus/sdk";
 import { z } from "zod";
-
-// Schema para validação de tramitação
-const tramitacaoSchema = z.object({
-  atendimento_pai: z.coerce.number().int().positive(),
-  tipo_demanda: z.string().min(1, "Selecione o tipo de demanda"),
-  setor_responsavel: z.coerce.number().int().positive().optional(),
-  relato_tecnico: z.string().min(1, "O relato técnico é obrigatório"),
-  status_etapa: z.string().optional(),
-  data_recebimento: z.string().default(() => new Date().toISOString()),
-});
+import { tramitacaoSchema } from "./schemas";
 
 export type TramitacaoInput = z.infer<typeof tramitacaoSchema>;
 
@@ -47,6 +38,7 @@ export type AtendimentoDetails = {
     id: number;
     nome_completo: string;
     cpf: string | null;
+    data_nascimento: string | null;
     contato: any;
     endereco: any;
   } | null;
@@ -80,6 +72,7 @@ export async function getAtendimentoDetails(
           "beneficiaria.id",
           "beneficiaria.nome_completo",
           "beneficiaria.cpf",
+          "beneficiaria.data_nascimento",
           "beneficiaria.contato",
           "beneficiaria.endereco",
           "origem_id.id",

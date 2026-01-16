@@ -23,8 +23,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { AtendimentoForm } from "./atendimento-form";
 import { deleteAtendimento } from "./actions";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, FileText } from "lucide-react";
 import { toast } from "sonner";
+import Link from "next/link";
 import type {
   BeneficiariaOption,
   OrigemOption,
@@ -229,6 +230,15 @@ export function AtendimentosClient({
                     <TableCell>{getOrigemNome(atendimento.origem_id)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
+                        <Link href={`/mulheres/atendimentos/${atendimento.id}`}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Ver detalhes / Prontuário"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </Link>
                         <Button
                           variant="ghost"
                           size="icon"
