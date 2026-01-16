@@ -32,8 +32,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { saveSessao, deleteSessao } from "./actions";
-import { Plus, Pencil, Trash2, Calendar } from "lucide-react";
+import { saveSessao, deleteSessao, getChamada, saveChamada } from "./actions";
+import { Plus, Pencil, Trash2, Calendar, CheckSquare, User } from "lucide-react";
 import { toast } from "sonner";
 import type { SessaoData } from "./schemas";
 
@@ -43,6 +43,15 @@ interface Sessao {
   tema: string;
   relatorio: string | null;
   sala_id: number;
+}
+
+interface ChamadaItem {
+  participacao_id: number;
+  infrator: {
+    id: number;
+    nome_completo: string;
+  };
+  presente: boolean;
 }
 
 interface SessoesClientProps {
@@ -77,6 +86,13 @@ export function SessoesClient({ salaId, sessoes }: SessoesClientProps) {
   const [dataInput, setDataInput] = useState<string>("");
   const [temaInput, setTemaInput] = useState<string>("");
   const [relatorioInput, setRelatorioInput] = useState<string>("");
+
+  // Estados da chamada
+  const [chamadaDialogOpen, setChamadaDialogOpen] = useState(false);
+  const [sessaoChamada, setSessaoChamada] = useState<Sessao | null>(null);
+  const [chamadaItems, setChamadaItems] = useState<ChamadaItem[]>([]);
+  const [isLoadingChamada, setIsLoadingChamada] = useState(false);
+  const [isSavingChamada, startSaveChamadaTransition] = useTransition();
 
   const handleNew = () => {
     setSelectedSessao(null);
@@ -150,6 +166,59 @@ export function SessoesClient({ salaId, sessoes }: SessoesClientProps) {
     });
   };
 
+  const handleOpenChamada = async (sessao: Sessao) => {
+    setSessaoChamada(sessao);
+    setChamadaDialogOpen(true);
+    setIsLoadingChamada(true);
+
+    try {
+      const result = await getChamada(sessao.id, salaId);
+      if (result.success) {
+        setChamadaItems(result.data || []);
+      } else {
+        toast.error(result.error || "Erro ao carregar lista de presença");
+        setChamadaDialogOpen(false);
+      }
+    } catch (error) {
+      toast.error("Erro ao carregar lista de presença");
+      setChamadaDialogOpen(false);
+    } finally {
+      setIsLoadingChamada(false);
+    }
+  };
+
+  const handleTogglePresenca = (participacaoId: number) => {
+    setChamadaItems((prev) =>
+      prev.map((item) =>
+        item.participacao_id === participacaoId
+          ? { ...item, presente: !item.presente }
+          : item
+      )
+    );
+  };
+
+  const handleSaveChamada = () => {
+    if (!sessaoChamada) return;
+
+    startSaveChamadaTransition(async () => {
+      const presencas = chamadaItems.map((item) => ({
+        participacao_id: item.participacao_id,
+        presente: item.presente,
+      }));
+
+      const result = await saveChamada(sessaoChamada.id, presencas);
+
+      if (result.success) {
+        toast.success(result.message);
+        setChamadaDialogOpen(false);
+        setSessaoChamada(null);
+        router.refresh();
+      } else {
+        toast.error(result.error);
+      }
+    });
+  };
+
   return (
     <>
       <div className="flex justify-between items-center mb-6">
@@ -208,6 +277,14 @@ export function SessoesClient({ salaId, sessoes }: SessoesClientProps) {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleOpenChamada(sessao)}
+                        title="Lista de presença"
+                      >
+                        <CheckSquare className="h-4 w-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -289,6 +366,65 @@ export function SessoesClient({ salaId, sessoes }: SessoesClientProps) {
             </Button>
             <Button onClick={handleSave} disabled={isSaving}>
               {isSaving ? "Salvando..." : "Salvar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de Lista de Presença */}
+      <Dialog open={chamadaDialogOpen} onOpenChange={setChamadaDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Lista de Presença - {sessaoChamada ? formatarData(sessaoChamada.data) : ""}
+            </DialogTitle>
+            <DialogDescription>
+              Marque os participantes que compareceram nesta sessão
+            </DialogDescription>
+          </DialogHeader>
+          {isLoadingChamada ? (
+            <div className="py-8 text-center text-muted-foreground">
+              Carregando lista de participantes...
+            </div>
+          ) : (
+            <div className="space-y-2 py-4">
+              {chamadaItems.length === 0 ? (
+                <div className="py-8 text-center text-muted-foreground">
+                  Nenhum participante cadastrado neste ciclo
+                </div>
+              ) : (
+                chamadaItems.map((item) => (
+                  <label
+                    key={item.participacao_id}
+                    className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={item.presente}
+                      onChange={() => handleTogglePresenca(item.participacao_id)}
+                      className="h-5 w-5 rounded border-gray-300 cursor-pointer"
+                    />
+                    <div className="flex items-center gap-2 flex-1">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">
+                        {item.infrator.nome_completo}
+                      </span>
+                    </div>
+                  </label>
+                ))
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setChamadaDialogOpen(false)}
+              disabled={isSavingChamada}
+            >
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveChamada} disabled={isSavingChamada || isLoadingChamada}>
+              {isSavingChamada ? "Salvando..." : "Salvar Chamada"}
             </Button>
           </DialogFooter>
         </DialogContent>

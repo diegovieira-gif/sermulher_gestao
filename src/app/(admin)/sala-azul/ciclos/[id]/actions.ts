@@ -393,3 +393,140 @@ export async function deleteSessao(id: number) {
     };
   }
 }
+
+/**
+ * Busca a lista de chamada (presença) para uma sessão
+ */
+export async function getChamada(sessaoId: number, cicloId: number) {
+  try {
+    // Busca todos os participantes do ciclo
+    const participacoes = await directus.request(
+      readItems("participacoes_sala_azul", {
+        fields: [
+          "id",
+          "infrator.id",
+          "infrator.nome_completo",
+        ],
+        filter: {
+          sala: {
+            _eq: cicloId,
+          },
+        },
+        sort: ["infrator.nome_completo"],
+      })
+    );
+
+    // Busca os registros de presença existentes para esta sessão
+    const presencasExistentes = await directus.request(
+      readItems("sessoes_presenca", {
+        fields: ["participacao_id", "presente"],
+        filter: {
+          sessao_id: {
+            _eq: sessaoId,
+          },
+        },
+      })
+    );
+
+    // Cria um mapa para acesso rápido: participacao_id -> presente
+    const presencaMap = new Map<number, boolean>();
+    presencasExistentes.forEach((p: any) => {
+      presencaMap.set(p.participacao_id, p.presente === true);
+    });
+
+    // Mescla os dados: cada participante com sua flag de presença
+    const chamada = participacoes.map((participacao: any) => ({
+      participacao_id: participacao.id,
+      infrator: {
+        id: participacao.infrator?.id,
+        nome_completo: participacao.infrator?.nome_completo || "-",
+      },
+      presente: presencaMap.get(participacao.id) || false,
+    }));
+
+    return {
+      success: true,
+      data: chamada,
+    };
+  } catch (error) {
+    console.error("Erro ao buscar chamada:", error);
+    return {
+      success: false,
+      error: "Erro ao buscar lista de presença. Tente novamente.",
+      data: [],
+    };
+  }
+}
+
+/**
+ * Salva a lista de chamada (presença) para uma sessão
+ */
+export async function saveChamada(
+  sessaoId: number,
+  presencas: Array<{ participacao_id: number; presente: boolean }>
+) {
+  try {
+    if (!Array.isArray(presencas)) {
+      return {
+        success: false,
+        error: "Dados inválidos. Formato incorreto.",
+      };
+    }
+
+    // Busca a sessão para obter o ID da sala (para revalidar o path)
+    const sessao = await directus.request(
+      readItem("ciclo_sessoes", sessaoId, {
+        fields: ["sala_id"],
+      })
+    );
+
+    // Para cada registro de presença, atualiza ou cria
+    for (const presenca of presencas) {
+      // Verifica se já existe um registro para esta sessão e participação
+      const registrosExistentes = await directus.request(
+        readItems("sessoes_presenca", {
+          fields: ["id"],
+          filter: {
+            sessao_id: {
+              _eq: sessaoId,
+            },
+            participacao_id: {
+              _eq: presenca.participacao_id,
+            },
+          },
+          limit: 1,
+        })
+      );
+
+      if (registrosExistentes && registrosExistentes.length > 0) {
+        // Atualiza registro existente
+        await directus.request(
+          updateItem("sessoes_presenca", registrosExistentes[0].id, {
+            presente: presenca.presente,
+          })
+        );
+      } else {
+        // Cria novo registro
+        await directus.request(
+          createItem("sessoes_presenca", {
+            sessao_id: sessaoId,
+            participacao_id: presenca.participacao_id,
+            presente: presenca.presente,
+          })
+        );
+      }
+    }
+
+    revalidatePath(`/sala-azul/ciclos/${sessao.sala_id}`);
+    return {
+      success: true,
+      message: "Lista de presença salva com sucesso!",
+    };
+  } catch (error) {
+    console.error("Erro ao salvar chamada:", error);
+    return {
+      success: false,
+      error: "Erro ao salvar lista de presença. Tente novamente.",
+    };
+  }
+}
