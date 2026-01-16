@@ -2,7 +2,6 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GenericCrudTable } from "./generic-crud-table";
-import type { ConfigCollection } from "./actions";
 
 interface ConfiguracoesClientProps {
   origens: any[];
@@ -43,54 +42,19 @@ export function ConfiguracoesClient({
         <TabsContent value="origens" className="mt-6">
           <GenericCrudTable
             collectionName="config_origens"
-            title="Origens"
+            title="Origens de Encaminhamento"
             items={origens}
-            columns={[
-              { key: "nome", label: "Nome" },
-              {
-                key: "ativo",
-                label: "Status",
-                render: (item) => (
-                  <span
-                    className={
-                      item.ativo
-                        ? "text-green-600 font-medium"
-                        : "text-gray-400"
-                    }
-                  >
-                    {item.ativo ? "Ativo" : "Inativo"}
-                  </span>
-                ),
-              },
-            ]}
+            // REMOVIDO: { key: "status", label: "Status" } -> O componente já gera automático
+            columns={[{ key: "nome", label: "Nome" }]}
           />
         </TabsContent>
 
         <TabsContent value="prioridades" className="mt-6">
           <GenericCrudTable
             collectionName="config_prioridades"
-            title="Prioridades"
+            title="Níveis de Prioridade"
             items={prioridades}
-            columns={[
-              { key: "nome", label: "Nome" },
-              {
-                key: "cor",
-                label: "Cor",
-                render: (item) => (
-                  <div className="flex items-center gap-2">
-                    {item.cor && (
-                      <div
-                        className="w-6 h-6 rounded border"
-                        style={{ backgroundColor: item.cor }}
-                      />
-                    )}
-                    <span>{item.cor || "-"}</span>
-                  </div>
-                ),
-              },
-              { key: "nivel", label: "Nível" },
-            ]}
-            hasColorField={true}
+            columns={[{ key: "nome", label: "Nome" }]}
           />
         </TabsContent>
 
@@ -99,10 +63,7 @@ export function ConfiguracoesClient({
             collectionName="config_tipos_evento"
             title="Tipos de Evento"
             items={tiposEvento}
-            columns={[
-              { key: "nome", label: "Nome" },
-              { key: "icone", label: "Ícone" },
-            ]}
+            columns={[{ key: "nome", label: "Nome" }]}
           />
         </TabsContent>
 
@@ -118,7 +79,7 @@ export function ConfiguracoesClient({
         <TabsContent value="periculosidade" className="mt-6">
           <GenericCrudTable
             collectionName="config_niveis_periculosidade"
-            title="Periculosidade"
+            title="Níveis de Periculosidade"
             items={periculosidade}
             columns={[
               { key: "nome", label: "Nome" },
@@ -146,7 +107,7 @@ export function ConfiguracoesClient({
         <TabsContent value="locais" className="mt-6">
           <GenericCrudTable
             collectionName="locais"
-            title="Locais"
+            title="Locais (Salas)"
             items={locais}
             columns={[{ key: "nome", label: "Nome" }]}
           />

@@ -35,14 +35,15 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Select } from "@/components/ui/select"; // Usando seu select simples
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, Pencil } from "lucide-react";
+import { Plus, Trash2, Pencil, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { saveAuxItem, deleteAuxItem, type ConfigCollection } from "./actions";
-import { Loader2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface GenericCrudTableProps {
   collectionName: ConfigCollection;
@@ -56,21 +57,14 @@ interface GenericCrudTableProps {
   hasColorField?: boolean;
 }
 
-// Schema dinâmico baseado em se tem campo de cor
-const createSchema = (hasColorField: boolean) => {
-  const baseSchema = {
-    nome: z.string().min(1, "Nome é obrigatório"),
-  };
-
-  if (hasColorField) {
-    return z.object({
-      ...baseSchema,
-      cor: z.string().optional(),
-    });
-  }
-
-  return z.object(baseSchema);
-};
+const createSchema = (hasColor: boolean) =>
+  z.object({
+    id: z.number().optional(),
+    nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+    status: z.string().default("published"),
+    cor: hasColor ? z.string().optional() : z.string().optional(),
+    peso: z.coerce.number().optional(),
+  });
 
 export function GenericCrudTable({
   collectionName,
@@ -79,176 +73,167 @@ export function GenericCrudTable({
   columns,
   hasColorField = false,
 }: GenericCrudTableProps) {
-  const [formOpen, setFormOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<any | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<any | null>(null);
 
-  const schema = createSchema(hasColorField);
-  type FormValues = z.infer<typeof schema>;
-
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: {
+  const formSchema = createSchema(hasColorField);
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: { // Explicitly set default values for all fields in the schema
       nome: "",
-      ...(hasColorField && { cor: "" }),
+      status: "published",
+      cor: "#000000",
+      peso: 1,
     },
   });
 
-  const handleNew = () => {
+  const isSubmitting = form.formState.isSubmitting;
+
+  function handleEdit(item: any) {
+    setSelectedItem(item);
+    form.reset({
+      id: item.id,
+      nome: item.nome,
+      // Se não tiver status no banco, assume published no form
+      status: item.status || "published",
+      cor: item.cor || "#000000",
+      peso: item.peso || 1,
+    });
+    setFormOpen(true);
+  }
+
+  function handleCreate() {
     setSelectedItem(null);
     form.reset({
       nome: "",
-      ...(hasColorField && { cor: "" }),
+      status: "published",
+      cor: "#000000",
+      peso: 1,
     });
     setFormOpen(true);
-  };
+  }
 
-  const handleEdit = (item: any) => {
-    setSelectedItem(item);
-    form.reset({
-      nome: item.nome || "",
-      ...(hasColorField && { cor: item.cor || "" }),
-    });
-    setFormOpen(true);
-  };
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      // @ts-ignore
+      const result = await saveAuxItem(collectionName, values);
 
-  const handleDeleteClick = (id: number) => {
+      if (result.success) {
+        toast.success(selectedItem ? "Item atualizado!" : "Item criado!");
+        setFormOpen(false);
+      } else {
+        toast.error(result.error || "Erro ao salvar.");
+      }
+    } catch (error) {
+      toast.error("Erro inesperado.");
+    }
+  }
+
+  function handleDeleteClick(id: number) {
     setItemToDelete(id);
     setDeleteDialogOpen(true);
-  };
+  }
 
-  const handleDeleteConfirm = async () => {
+  async function handleDeleteConfirm() {
     if (!itemToDelete) return;
-
     setIsDeleting(true);
     try {
       const result = await deleteAuxItem(collectionName, itemToDelete);
-
       if (result.success) {
-        toast.success(result.message);
-        setDeleteDialogOpen(false);
-        setItemToDelete(null);
+        toast.success("Item excluído!");
       } else {
-        toast.error(result.error);
+        toast.error("Erro ao excluir.");
       }
-    } catch (error) {
-      toast.error("Erro ao excluir item");
-      console.error(error);
     } finally {
       setIsDeleting(false);
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
     }
-  };
-
-  const onSubmit = async (data: FormValues) => {
-    setIsSubmitting(true);
-
-    try {
-      // Preserva campos adicionais do item original (como "ativo", "nivel", "peso", "icone")
-      const additionalFields = selectedItem
-        ? Object.keys(selectedItem).reduce((acc, key) => {
-            if (key !== "id" && key !== "nome" && key !== "cor") {
-              acc[key] = selectedItem[key];
-            }
-            return acc;
-          }, {} as Record<string, any>)
-        : {};
-
-      const result = await saveAuxItem(collectionName, {
-        ...data,
-        ...additionalFields,
-        ...(selectedItem && { id: selectedItem.id }),
-      });
-
-      if (result.success) {
-        toast.success(result.message);
-        setFormOpen(false);
-        form.reset();
-        setSelectedItem(null);
-      } else {
-        toast.error(result.error);
-      }
-    } catch (error) {
-      toast.error("Erro ao salvar item");
-      console.error(error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  }
 
   return (
     <>
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-2xl font-bold">{title}</h2>
-          <p className="text-muted-foreground">
-            Gerencie os itens de {title.toLowerCase()}
-          </p>
-        </div>
-        <Button onClick={handleNew}>
-          <Plus className="mr-2 h-4 w-4" />
-          Adicionar Novo
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold">{title}</h2>
+        <Button onClick={handleCreate} size="sm">
+          <Plus className="h-4 w-4 mr-2" />
+          Novo
         </Button>
       </div>
 
-      <div className="border rounded-lg">
+      <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
               {columns.map((col) => (
                 <TableHead key={col.key}>{col.label}</TableHead>
               ))}
-              <TableHead className="text-right">Ações</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="w-[100px] text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {items.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={columns.length + 1}
-                  className="text-center text-muted-foreground"
+                  colSpan={columns.length + 2}
+                  className="text-center h-24 text-muted-foreground"
                 >
-                  Nenhum item cadastrado
+                  Nenhum item encontrado.
                 </TableCell>
               </TableRow>
             ) : (
-              items.map((item) => (
-                <TableRow key={item.id}>
-                  {columns.map((col) => (
-                    <TableCell key={col.key}>
-                      {col.render
-                        ? col.render(item)
-                        : item[col.key] || "-"}
+              items.map((item) => {
+                // LÓGICA CORRIGIDA: Se status for undefined/null ou 'published', é Ativo.
+                const isActive = !item.status || item.status === 'published';
+                
+                return (
+                  <TableRow key={item.id}>
+                    {columns.map((col) => (
+                      <TableCell key={col.key}>
+                        {col.render ? col.render(item) : item[col.key]}
+                      </TableCell>
+                    ))}
+                    
+                    {/* Coluna de Status */}
+                    <TableCell>
+                      <Badge 
+                        variant={isActive ? 'default' : 'secondary'}
+                        className={isActive ? 'bg-green-600 hover:bg-green-700' : ''}
+                      >
+                        {isActive ? 'Ativo' : 'Inativo'}
+                      </Badge>
                     </TableCell>
-                  ))}
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(item)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteClick(item.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
+
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(item)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteClick(item.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
       </div>
 
-      {/* Dialog de Formulário */}
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent>
           <DialogHeader>
@@ -256,7 +241,7 @@ export function GenericCrudTable({
               {selectedItem ? `Editar ${title}` : `Novo ${title}`}
             </DialogTitle>
             <DialogDescription>
-              Preencha os dados abaixo para {selectedItem ? "atualizar" : "criar"} o item.
+              Preencha os dados abaixo.
             </DialogDescription>
           </DialogHeader>
 
@@ -269,7 +254,7 @@ export function GenericCrudTable({
                   <FormItem>
                     <FormLabel>Nome</FormLabel>
                     <FormControl>
-                      <Input placeholder="Digite o nome" {...field} />
+                      <Input placeholder="Ex: Item A" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -282,28 +267,46 @@ export function GenericCrudTable({
                   name="cor"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Cor</FormLabel>
-                      <FormControl>
-                        <div className="flex gap-2">
-                          <Input
-                            type="color"
-                            className="w-20 h-9"
-                            {...field}
-                            value={field.value || "#000000"}
-                          />
-                          <Input
-                            placeholder="#000000"
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
+                      <FormLabel>Cor (Hex)</FormLabel>
+                      <div className="flex gap-2">
+                        <FormControl>
+                          <Input type="color" className="w-12 h-10 p-1" {...field} />
+                        </FormControl>
+                        <Input 
+                          placeholder="#000000" 
+                          {...field} 
+                          className="flex-1"
+                        />
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               )}
 
-              <div className="flex justify-end gap-4 pt-4">
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <FormControl>
+                      <Select 
+                        {...field} 
+                        value={field.value}
+                        onChange={(e) => field.onChange(e.target.value)}
+                      >
+                        <option value="published">Ativo</option>
+                        <option value="draft">Inativo (Rascunho)</option>
+                        <option value="archived">Arquivado</option>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex justify-end gap-2 pt-4">
                 <Button
                   type="button"
                   variant="outline"
@@ -323,14 +326,13 @@ export function GenericCrudTable({
           </Form>
         </DialogContent>
       </Dialog>
-
-      {/* Dialog de Confirmação de Exclusão */}
+      {/* Dialog Delete mantido... */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta ação não pode ser desfeita. O item será excluído permanentemente.
+              Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
