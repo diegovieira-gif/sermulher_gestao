@@ -12,7 +12,8 @@ export type ConfigCollection =
   | "config_prioridades"
   | "config_tipos_evento"
   | "config_tipos_agressao"
-  | "config_niveis_periculosidade";
+  | "config_niveis_periculosidade"
+  | "locais";
 
 /**
  * Busca todos os itens de uma collection de configuração

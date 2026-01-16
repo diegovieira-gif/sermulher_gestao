@@ -10,6 +10,7 @@ interface ConfiguracoesClientProps {
   tiposEvento: any[];
   tiposAgressao: any[];
   periculosidade: any[];
+  locais: any[];
 }
 
 export function ConfiguracoesClient({
@@ -18,6 +19,7 @@ export function ConfiguracoesClient({
   tiposEvento,
   tiposAgressao,
   periculosidade,
+  locais,
 }: ConfiguracoesClientProps) {
   return (
     <div>
@@ -29,12 +31,13 @@ export function ConfiguracoesClient({
       </div>
 
       <Tabs defaultValue="origens" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="origens">Origens</TabsTrigger>
           <TabsTrigger value="prioridades">Prioridades</TabsTrigger>
           <TabsTrigger value="tipos-evento">Tipos de Evento</TabsTrigger>
           <TabsTrigger value="tipos-agressao">Tipos de Agressão</TabsTrigger>
           <TabsTrigger value="periculosidade">Periculosidade</TabsTrigger>
+          <TabsTrigger value="locais">Locais</TabsTrigger>
         </TabsList>
 
         <TabsContent value="origens" className="mt-6">
@@ -137,6 +140,15 @@ export function ConfiguracoesClient({
               { key: "peso", label: "Peso" },
             ]}
             hasColorField={true}
+          />
+        </TabsContent>
+
+        <TabsContent value="locais" className="mt-6">
+          <GenericCrudTable
+            collectionName="locais"
+            title="Locais"
+            items={locais}
+            columns={[{ key: "nome", label: "Nome" }]}
           />
         </TabsContent>
       </Tabs>

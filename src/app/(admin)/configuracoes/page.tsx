@@ -3,13 +3,14 @@ import { ConfiguracoesClient } from "./configuracoes-client";
 
 export default async function ConfiguracoesPage() {
   // Busca todos os dados das collections de configuração
-  const [origensResult, prioridadesResult, tiposEventoResult, tiposAgressaoResult, periculosidadeResult] =
+  const [origensResult, prioridadesResult, tiposEventoResult, tiposAgressaoResult, periculosidadeResult, locaisResult] =
     await Promise.all([
       getAuxItems("config_origens"),
       getAuxItems("config_prioridades"),
       getAuxItems("config_tipos_evento"),
       getAuxItems("config_tipos_agressao"),
       getAuxItems("config_niveis_periculosidade"),
+      getAuxItems("locais"),
     ]);
 
   // Verifica se houve erros
@@ -18,7 +19,8 @@ export default async function ConfiguracoesPage() {
     !prioridadesResult.success ||
     !tiposEventoResult.success ||
     !tiposAgressaoResult.success ||
-    !periculosidadeResult.success
+    !periculosidadeResult.success ||
+    !locaisResult.success
   ) {
     return (
       <div className="p-6">
@@ -37,6 +39,7 @@ export default async function ConfiguracoesPage() {
         tiposEvento={tiposEventoResult.data || []}
         tiposAgressao={tiposAgressaoResult.data || []}
         periculosidade={periculosidadeResult.data || []}
+        locais={locaisResult.data || []}
       />
     </div>
   );

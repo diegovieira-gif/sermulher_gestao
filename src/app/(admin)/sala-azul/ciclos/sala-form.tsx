@@ -66,7 +66,7 @@ export function SalaForm({
       data_inicio: "",
       data_termino: "",
       status: StatusSala.PLANEJADA,
-      local: undefined,
+      local_id: undefined,
       responsavel_tecnico: "",
     },
   });
@@ -74,11 +74,11 @@ export function SalaForm({
   // Atualiza o formulário quando a sala muda
   useEffect(() => {
     if (sala) {
-      // Trata local: se vier como objeto do Directus, extrai o ID
+      // Trata local_id: se vier como objeto do Directus, extrai o ID
       const localId =
-        typeof sala.local === "object" && sala.local !== null
-          ? sala.local.id
-          : sala.local;
+        typeof sala.local_id === "object" && sala.local_id !== null
+          ? sala.local_id.id
+          : sala.local_id;
 
       // Trata responsável: se vier como objeto do Directus, extrai o ID (UUID)
       const responsavelId =
@@ -93,7 +93,7 @@ export function SalaForm({
         data_inicio: sala.data_inicio,
         data_termino: sala.data_termino,
         status: sala.status,
-        local: localId,
+        local_id: localId,
         responsavel_tecnico: responsavelId || "",
       });
     } else {
@@ -102,7 +102,7 @@ export function SalaForm({
         data_inicio: "",
         data_termino: "",
         status: StatusSala.PLANEJADA,
-        local: undefined,
+        local_id: undefined,
         responsavel_tecnico: "",
       });
     }
@@ -211,7 +211,7 @@ export function SalaForm({
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="local"
+                name="local_id"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="flex items-center gap-2">

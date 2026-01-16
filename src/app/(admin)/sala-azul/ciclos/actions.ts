@@ -19,7 +19,7 @@ export async function getSalas() {
       readItems("salas_azul", {
         fields: [
           "*",
-          "local.nome",
+          "local_id.nome",
           "responsavel_tecnico.first_name",
           "responsavel_tecnico.last_name",
         ],
@@ -105,7 +105,7 @@ export async function saveSala(data: unknown) {
       data_inicio: validatedData.data_inicio,
       data_termino: validatedData.data_termino,
       status: validatedData.status,
-      local: validatedData.local,
+      local_id: validatedData.local_id,
       responsavel_tecnico: validatedData.responsavel_tecnico,
     };
 
