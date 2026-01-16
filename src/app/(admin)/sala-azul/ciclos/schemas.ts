@@ -35,7 +35,7 @@ export const insertSalaSchema = z
     status: z.nativeEnum(StatusSala, {
       errorMap: () => ({ message: "Status é obrigatório" }),
     }),
-    local_id: z.coerce.number({ invalid_type_error: "Selecione o local" }).positive(),
+    local_id: z.coerce.number({ invalid_type_error: "Selecione o local" }).positive("Selecione o local"),
     responsavel_tecnico: z.string().uuid("Responsável técnico é obrigatório"),
   })
   .refine(

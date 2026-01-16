@@ -141,12 +141,6 @@ function getStatusBadgeVariant(status: string | null): "default" | "success" | "
   }
 }
 
-// Função para obter a cor do badge baseado no nível
-function getNivelCor(nivelId: Participante["infrator"]["nivel_id"]): string {
-  if (!nivelId?.cor) return "#6b7280"; // Cor padrão cinza
-  return nivelId.cor;
-}
-
 // Função para formatar nome do responsável
 function formatNomeResponsavel(responsavel: Sala["responsavel_tecnico"]): string {
   if (!responsavel) return "-";
@@ -383,7 +377,7 @@ export function ParticipantesClient({
                   <TableCell>
                     <Badge
                       style={{
-                        backgroundColor: getNivelCor(participante.infrator?.nivel_id || null),
+                        backgroundColor: participante.infrator?.nivel_id?.cor || "#6b7280",
                         color: "white",
                       }}
                     >

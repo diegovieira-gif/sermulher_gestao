@@ -52,7 +52,7 @@ export async function getSalaDetails(id: string | number) {
           "infrator.id",
           "infrator.nome_completo",
           "infrator.cpf",
-          "infrator.contato", // Para exibir telefone se necessário
+          "infrator.contato", // Campo JSON com telefone: { telefone: "..." }
           // Busca Nível e Status para mostrar alertas na turma
           "infrator.nivel_id.nome",
           "infrator.nivel_id.cor",

@@ -220,17 +220,22 @@ export function SalaForm({
                     </FormLabel>
                     <FormControl>
                       <Select
-                        value={field.value?.toString() || ""}
+                        name={field.name}
+                        ref={field.ref}
+                        onBlur={field.onBlur}
+                        value={
+                          typeof field.value === "number"
+                            ? field.value.toString()
+                            : field.value?.toString() || ""
+                        }
                         onChange={(e) => {
                           const value = e.target.value;
                           field.onChange(value ? Number(value) : undefined);
                         }}
-                        onBlur={field.onBlur}
-                        name={field.name}
                       >
                         <option value="">Selecione um local</option>
                         {locais.map((local) => (
-                          <option key={local.id} value={local.id}>
+                          <option key={local.id} value={local.id.toString()}>
                             {local.nome}
                           </option>
                         ))}
