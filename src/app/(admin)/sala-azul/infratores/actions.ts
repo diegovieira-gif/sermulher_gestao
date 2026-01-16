@@ -87,57 +87,39 @@ export async function getInfratores() {
 }
 
 export async function saveInfrator(data: InsertInfrator & { id?: number }) {
+  // Validação Zod
   const validation = insertInfratorSchema.safeParse(data);
   if (!validation.success) {
-    return { success: false, error: "Dados inválidos." };
+    return { success: false, error: "Dados inválidos" };
   }
 
-  const { id, tipos_agressao_ids, ...fieldsToSave } = data;
+  // Separa campos virtuais
+  const { id, tipos_agressao_ids, telefone, ...rest } = data;
+
+  // Monta payload para o Directus
+  const payload = {
+    ...rest,
+    contato: telefone ? { telefone } : null, // Salva no JSON
+    // Lógica M2M para criação (simplificada)
+    tipos_agressao_lista: !id && tipos_agressao_ids ? tipos_agressao_ids.map(tid => ({
+      tipo_agressao_id: { id: tid }
+    })) : undefined,
+  };
 
   try {
-    // CORREÇÃO CRÍTICA DO PAYLOAD
-    // O banco espera 'tipo_agressao_id' e não 'config_tipos_agressao_id'
-    const m2mPayload = tipos_agressao_ids?.map((tipoId: number) => ({
-      tipo_agressao_id: { id: tipoId } 
-    }));
-
     if (id) {
-      // UPDATE
-      await directus.request(updateItem('infratores', id, {
-        ...fieldsToSave,
-        // Se quiser atualizar agressões na edição:
-        // tipos_agressao_lista: { create: m2mPayload, delete: [ids_antigos] }
-        // Por segurança na edição simples, mantemos dados cadastrais:
-      }, {
-        fields: ['id']
-      }));
-      revalidatePath("/sala-azul/infratores");
-      return { success: true, message: "Infrator atualizado com sucesso." };
+      // Update (sem mexer no M2M por segurança nesta etapa)
+      await directus.request(updateItem('infratores', id, payload));
     } else {
-      // CREATE
-      await directus.request(createItem('infratores', {
-        ...fieldsToSave,
-        // Aqui usamos o alias 'tipos_agressao_lista' definido no Infrator
-        tipos_agressao_lista: m2mPayload 
-      }, {
-        fields: ['id']
-      }));
-      revalidatePath("/sala-azul/infratores");
-      return { success: true, message: "Infrator cadastrado com sucesso." };
+      // Create
+      await directus.request(createItem('infratores', payload));
     }
+    revalidatePath("/sala-azul/infratores");
+    return { success: true };
 
   } catch (error: any) {
-    console.error("Erro ao salvar infrator:", error);
-    
-    const isUniqueError = error?.errors?.some((e: any) => 
-      e.message?.includes('unique') && e.message?.includes('cpf')
-    );
-
-    if (isUniqueError) {
-      return { success: false, error: "Este CPF já está cadastrado." };
-    }
-
-    return { success: false, error: "Erro ao salvar. Verifique o console do servidor." };
+    console.error("Erro ao salvar:", error);
+    return { success: false, error: "Erro ao salvar infrator." };
   }
 }
 

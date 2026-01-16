@@ -31,7 +31,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Loader2, AlertTriangle, ShieldAlert } from "lucide-react";
 
@@ -59,6 +58,9 @@ export function InfratorForm({
     defaultValues: {
       nome_completo: "",
       cpf: "",
+      data_nascimento: "",
+      telefone: "",
+      numero_processo: "",
       nivel_id: options.niveis[0]?.id || 0,
       status_legal_id: options.statusLegal[0]?.id || 0,
       tipos_agressao_ids: [],
@@ -72,10 +74,10 @@ export function InfratorForm({
       const tiposAgressaoIds: number[] = [];
       if (infrator.tipos_agressao_lista && Array.isArray(infrator.tipos_agressao_lista)) {
         infrator.tipos_agressao_lista.forEach((item: any) => {
-          if (item?.config_tipos_agressao_id?.id) {
-            tiposAgressaoIds.push(item.config_tipos_agressao_id.id);
-          } else if (item?.config_tipos_agressao_id && typeof item.config_tipos_agressao_id === 'number') {
-            tiposAgressaoIds.push(item.config_tipos_agressao_id);
+          if (item?.tipo_agressao_id?.id) {
+            tiposAgressaoIds.push(item.tipo_agressao_id.id);
+          } else if (item?.tipo_agressao_id && typeof item.tipo_agressao_id === 'number') {
+            tiposAgressaoIds.push(item.tipo_agressao_id);
           }
         });
       }
@@ -84,6 +86,9 @@ export function InfratorForm({
         id: infrator.id,
         nome_completo: infrator.nome_completo || "",
         cpf: infrator.cpf || "",
+        data_nascimento: infrator.data_nascimento || "",
+        telefone: infrator?.contato?.telefone || "",
+        numero_processo: infrator.numero_processo || "",
         nivel_id: infrator.nivel_id?.id || infrator.nivel_id || options.niveis[0]?.id || 0,
         status_legal_id: infrator.status_legal_id?.id || infrator.status_legal_id || options.statusLegal[0]?.id || 0,
         tipos_agressao_ids: tiposAgressaoIds,
@@ -92,6 +97,9 @@ export function InfratorForm({
       form.reset({
         nome_completo: "",
         cpf: "",
+        data_nascimento: "",
+        telefone: "",
+        numero_processo: "",
         nivel_id: options.niveis[0]?.id || 0,
         status_legal_id: options.statusLegal[0]?.id || 0,
         tipos_agressao_ids: [],
@@ -184,6 +192,54 @@ export function InfratorForm({
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="data_nascimento"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Data de Nascimento</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="telefone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Telefone</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="(00) 00000-0000"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="numero_processo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Número do Processo</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="0000000-00.0000.0.00.0000"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             {/* Informações de Risco */}
@@ -200,13 +256,14 @@ export function InfratorForm({
                       <span className="text-destructive">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Select
+                      <select
                         value={field.value?.toString() || ""}
                         onChange={(e) => {
                           field.onChange(Number(e.target.value));
                         }}
                         onBlur={field.onBlur}
                         name={field.name}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <option value="">Selecione o nível</option>
                         {options.niveis.map((nivel) => (
@@ -214,7 +271,7 @@ export function InfratorForm({
                             {nivel.nome}
                           </option>
                         ))}
-                      </Select>
+                      </select>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -276,13 +333,14 @@ export function InfratorForm({
                       Status Legal <span className="text-destructive">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Select
+                      <select
                         value={field.value?.toString() || ""}
                         onChange={(e) => {
                           field.onChange(Number(e.target.value));
                         }}
                         onBlur={field.onBlur}
                         name={field.name}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <option value="">Selecione o status</option>
                         {options.statusLegal.map((status) => (
@@ -290,7 +348,7 @@ export function InfratorForm({
                             {status.nome}
                           </option>
                         ))}
-                      </Select>
+                      </select>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -31,7 +31,6 @@ import type {
   StatusLegalOption,
   TipoAgressaoOption,
 } from "./actions";
-import { cn } from "@/lib/utils";
 
 interface InfratoresClientProps {
   infratores: any[];
@@ -118,6 +117,34 @@ export function InfratoresClient({
     return "#6b7280"; // Cor padrão cinza
   };
 
+  // Função auxiliar para formatar data para PT-BR
+  const formatDate = (dateString: string | null | undefined): string => {
+    if (!dateString) return "-";
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('pt-BR');
+    } catch {
+      return dateString;
+    }
+  };
+
+  // Função auxiliar para calcular idade
+  const calcularIdade = (dataNascimento: string | null | undefined): string => {
+    if (!dataNascimento) return "-";
+    try {
+      const hoje = new Date();
+      const nascimento = new Date(dataNascimento);
+      let idade = hoje.getFullYear() - nascimento.getFullYear();
+      const mes = hoje.getMonth() - nascimento.getMonth();
+      if (mes < 0 || (mes === 0 && hoje.getDate() < nascimento.getDate())) {
+        idade--;
+      }
+      return `${idade} anos`;
+    } catch {
+      return "-";
+    }
+  };
+
   return (
     <>
       <div className="flex justify-between items-center mb-6">
@@ -142,9 +169,10 @@ export function InfratoresClient({
             <TableRow>
               <TableHead>Nome</TableHead>
               <TableHead>CPF</TableHead>
-              <TableHead>Nível de Periculosidade</TableHead>
+              <TableHead>Info Pessoal</TableHead>
+              <TableHead>Número do Processo</TableHead>
               <TableHead>Tipos de Agressão</TableHead>
-              <TableHead>Status Legal</TableHead>
+              <TableHead>Nível de Periculosidade</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -152,7 +180,7 @@ export function InfratoresClient({
             {infratores.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={6}
+                  colSpan={7}
                   className="text-center text-muted-foreground"
                 >
                   Nenhum infrator cadastrado
@@ -166,6 +194,18 @@ export function InfratoresClient({
                   </TableCell>
                   <TableCell>{infrator.cpf}</TableCell>
                   <TableCell>
+                    <div className="space-y-1 text-sm">
+                      <div>Nasc: {formatDate(infrator.data_nascimento)}</div>
+                      <div>Tel: {infrator?.contato?.telefone || "-"}</div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {infrator.numero_processo || "-"}
+                  </TableCell>
+                  <TableCell className="max-w-xs truncate">
+                    {formatTiposAgressao(infrator.tipos_agressao_lista)}
+                  </TableCell>
+                  <TableCell>
                     <Badge
                       style={{
                         backgroundColor: getNivelCor(infrator.nivel_id),
@@ -174,12 +214,6 @@ export function InfratoresClient({
                     >
                       {infrator.nivel_id?.nome || "-"}
                     </Badge>
-                  </TableCell>
-                  <TableCell className="max-w-xs truncate">
-                    {formatTiposAgressao(infrator.tipos_agressao_lista)}
-                  </TableCell>
-                  <TableCell>
-                    {infrator.status_legal_id?.nome || "-"}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">

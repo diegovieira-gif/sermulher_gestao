@@ -10,6 +10,10 @@ export const insertInfratorSchema = z.object({
     .string()
     .min(11, "CPF deve ter 11 dígitos")
     .regex(/^\d{11}$/, "CPF deve conter apenas números"),
+  // Novos Campos
+  data_nascimento: z.string().optional().nullable(),
+  telefone: z.string().optional(), // Virtual - será salvo dentro de 'contato' (JSON)
+  numero_processo: z.string().optional(),
   nivel_id: z.coerce
     .number({ invalid_type_error: "Selecione o nível" })
     .positive(),
