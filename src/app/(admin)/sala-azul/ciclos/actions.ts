@@ -13,17 +13,31 @@ import { insertSalaSchema, type Sala } from "./schemas";
 /**
  * Busca todas as salas do Directus ordenadas por data_inicio descrescente
  */
+const SALA_FIELDS = [
+  "id",
+  "nome_ciclo",
+  "data_inicio",
+  "data_termino",
+  "status",
+  // Relacionamento Local
+  "local_id.id",
+  "local_id.nome",
+  // Relacionamento Responsável Técnico
+  "responsavel_tecnico.first_name",
+  "responsavel_tecnico.last_name",
+  // CORREÇÃO: Busca o ID das participações reais (não infratores M2M)
+  "participacoes.id",
+];
+
+/**
+ * Busca todas as salas do Directus ordenadas por data_inicio descrescente
+ */
 export async function getSalas() {
   try {
     const salas = await directus.request(
       readItems("salas_azul", {
-        fields: [
-          "*",
-          "local_id.id",   // ID para o formulário
-          "local_id.nome", // NOME para a listagem
-          "responsavel_tecnico.first_name",
-          "responsavel_tecnico.last_name",
-        ],
+        // @ts-ignore
+        fields: SALA_FIELDS,
         sort: ["-data_inicio"],
       })
     );

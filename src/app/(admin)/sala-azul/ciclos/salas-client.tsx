@@ -164,6 +164,7 @@ export function SalasClient({
               <TableHead>Local</TableHead>
               <TableHead>Responsável</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Participantes</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -171,7 +172,7 @@ export function SalasClient({
             {salas.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={6}
+                  colSpan={7}
                   className="text-center text-muted-foreground"
                 >
                   Nenhum ciclo cadastrado
@@ -192,15 +193,7 @@ export function SalasClient({
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <span>
-                        {(() => {
-                          const localObj = sala.local_id;
-                          return localObj?.nome || "-";
-                        })()}
-                      </span>
-                    </div>
+                    <span>{sala.local_id?.nome || "-"}</span>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -216,6 +209,19 @@ export function SalasClient({
                     <Badge variant={getBadgeVariant(sala.status)}>
                       {sala.status}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="font-mono">
+                        {(() => {
+                          // Agora lemos o alias 'participacoes'
+                          const lista = sala.participacoes;
+                          const qtd = Array.isArray(lista) ? lista.length : 0;
+                          return qtd;
+                        })()}
+                      </Badge>
+                      <span className="text-muted-foreground text-xs">inscritos</span>
+                    </div>
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">

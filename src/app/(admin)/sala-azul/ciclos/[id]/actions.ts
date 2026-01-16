@@ -12,8 +12,10 @@ import {
 import {
   addParticipanteSchema,
   updateParticipacaoSchema,
+  sessaoSchema,
   type AddParticipanteData,
   type UpdateParticipacaoData,
+  type SessaoData,
 } from "./schemas";
 
 /**
@@ -274,6 +276,120 @@ export async function removeParticipante(participacaoId: number) {
     return {
       success: false,
       error: "Erro ao remover participante. Tente novamente.",
+    };
+  }
+}
+
+/**
+ * Busca todas as sessões de uma sala ordenadas por data (desc)
+ */
+export async function getSessoes(salaId: number) {
+  try {
+    const sessoes = await directus.request(
+      readItems("ciclo_sessoes", {
+        fields: ["*"],
+        filter: {
+          sala_id: {
+            _eq: salaId,
+          },
+        },
+        sort: ["-data"],
+      })
+    );
+
+    return {
+      success: true,
+      data: sessoes || [],
+    };
+  } catch (error) {
+    console.error("Erro ao buscar sessões:", error);
+    return {
+      success: false,
+      error: "Erro ao buscar sessões. Tente novamente.",
+      data: [],
+    };
+  }
+}
+
+/**
+ * Salva uma sessão (cria ou atualiza)
+ */
+export async function saveSessao(data: unknown) {
+  try {
+    // Valida os dados com Zod
+    const validatedData = sessaoSchema.parse(data);
+
+    // Prepara os dados para o Directus
+    const directusData: any = {
+      data: validatedData.data,
+      tema: validatedData.tema,
+      relatorio: validatedData.relatorio || null,
+      sala_id: validatedData.sala_id,
+    };
+
+    if (validatedData.id) {
+      // Atualiza sessão existente
+      await directus.request(
+        updateItem("ciclo_sessoes", validatedData.id, directusData)
+      );
+
+      revalidatePath(`/sala-azul/ciclos/${validatedData.sala_id}`);
+      return {
+        success: true,
+        message: "Sessão atualizada com sucesso!",
+      };
+    } else {
+      // Cria nova sessão
+      await directus.request(createItem("ciclo_sessoes", directusData));
+
+      revalidatePath(`/sala-azul/ciclos/${validatedData.sala_id}`);
+      return {
+        success: true,
+        message: "Sessão cadastrada com sucesso!",
+      };
+    }
+  } catch (error) {
+    console.error("Erro ao salvar sessão:", error);
+
+    // Erro de validação do Zod
+    if (error && typeof error === "object" && "issues" in error) {
+      return {
+        success: false,
+        error: "Dados inválidos. Verifique os campos e tente novamente.",
+      };
+    }
+
+    return {
+      success: false,
+      error: "Erro ao salvar sessão. Tente novamente.",
+    };
+  }
+}
+
+/**
+ * Deleta uma sessão
+ */
+export async function deleteSessao(id: number) {
+  try {
+    // Busca a sessão para obter o ID da sala antes de deletar
+    const sessao = await directus.request(
+      readItem("ciclo_sessoes", id, {
+        fields: ["sala_id"],
+      })
+    );
+
+    await directus.request(deleteItem("ciclo_sessoes", id));
+
+    revalidatePath(`/sala-azul/ciclos/${sessao.sala_id}`);
+    return {
+      success: true,
+      message: "Sessão excluída com sucesso!",
+    };
+  } catch (error) {
+    console.error("Erro ao excluir sessão:", error);
+    return {
+      success: false,
+      error: "Erro ao excluir sessão. Tente novamente.",
     };
   }
 }
