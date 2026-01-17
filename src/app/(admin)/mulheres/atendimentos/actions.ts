@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { directus } from "@/lib/directus";
 import { readItems, createItem, updateItem, deleteItem } from "@directus/sdk";
-import { atendimentoSchema } from "./schemas";
+import { atendimentoFormSchema } from "./schemas";
 
 const ATENDIMENTO_FIELDS = [
   'id',
@@ -12,6 +12,8 @@ const ATENDIMENTO_FIELDS = [
   'prioridade_id',
   'status',
   'data_abertura',
+  'encaminhamento_rma',
+  'tipos_violencia',
   // Relacionamentos
   'beneficiaria.id',
   'beneficiaria.nome_completo',
@@ -112,7 +114,7 @@ export async function getFormOptions() {
 export async function saveAtendimento(data: unknown) {
   try {
     // Valida os dados com Zod
-    const validatedData = atendimentoSchema.parse(data);
+    const validatedData = atendimentoFormSchema.parse(data);
 
     // Prepara o payload para o Directus
     const payload: any = {
@@ -127,6 +129,15 @@ export async function saveAtendimento(data: unknown) {
     }
     if (validatedData.prioridade_id) {
       payload.prioridade_id = validatedData.prioridade_id;
+    }
+    if (validatedData.encaminhamento_rma) {
+      payload.encaminhamento_rma = validatedData.encaminhamento_rma;
+    }
+    // Converte array de tipos_violencia para CSV
+    if (validatedData.tipos_violencia && Array.isArray(validatedData.tipos_violencia)) {
+      payload.tipos_violencia = validatedData.tipos_violencia.join(",");
+    } else if (typeof validatedData.tipos_violencia === 'string') {
+      payload.tipos_violencia = validatedData.tipos_violencia;
     }
 
     if (validatedData.id) {

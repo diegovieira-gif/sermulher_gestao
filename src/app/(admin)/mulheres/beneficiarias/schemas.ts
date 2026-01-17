@@ -46,6 +46,10 @@ export const beneficiariaSchema = z.object({
   contato: contatoSchema,
   endereco: enderecoSchema,
   perfil_socioeconomico: z.string().optional(),
+  // Novos campos de Dados Sociais e Proteção
+  recebe_bolsa_familia: z.boolean().optional(),
+  recebe_bpc: z.boolean().optional(),
+  possui_medida_protetiva: z.boolean().optional(),
 });
 
 // Tipos TypeScript derivados dos schemas

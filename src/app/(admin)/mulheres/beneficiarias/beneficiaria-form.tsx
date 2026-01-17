@@ -24,6 +24,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -57,6 +58,9 @@ export function BeneficiariaForm({
         cidade: "",
       },
       perfil_socioeconomico: "",
+      recebe_bolsa_familia: false,
+      recebe_bpc: false,
+      possui_medida_protetiva: false,
     },
   });
 
@@ -77,6 +81,9 @@ export function BeneficiariaForm({
         // Formata CPF se existir (remove formatação para exibição)
         cpf: beneficiaria.cpf || "",
         perfil_socioeconomico: beneficiaria.perfil_socioeconomico || "",
+        recebe_bolsa_familia: beneficiaria.recebe_bolsa_familia || false,
+        recebe_bpc: beneficiaria.recebe_bpc || false,
+        possui_medida_protetiva: beneficiaria.possui_medida_protetiva || false,
       };
       form.reset(normalizedData);
     } else {
@@ -95,6 +102,9 @@ export function BeneficiariaForm({
           cidade: "",
         },
         perfil_socioeconomico: "",
+        recebe_bolsa_familia: false,
+        recebe_bpc: false,
+        possui_medida_protetiva: false,
       });
     }
   }, [beneficiaria, form]);
@@ -135,9 +145,10 @@ export function BeneficiariaForm({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Tabs defaultValue="dados-pessoais" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="dados-pessoais">Dados Pessoais</TabsTrigger>
                 <TabsTrigger value="endereco-contato">Endereço e Contato</TabsTrigger>
+                <TabsTrigger value="dados-sociais">Dados Sociais</TabsTrigger>
               </TabsList>
 
               {/* Aba: Dados Pessoais */}
@@ -315,6 +326,73 @@ export function BeneficiariaForm({
                       )}
                     />
                   </div>
+                </div>
+              </TabsContent>
+
+              {/* Aba: Dados Sociais e Proteção */}
+              <TabsContent value="dados-sociais" className="space-y-4 mt-4">
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold">Dados Sociais e Proteção</h3>
+                  
+                  <FormField
+                    control={form.control}
+                    name="recebe_bolsa_familia"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>
+                            Recebe Bolsa Família
+                          </FormLabel>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="recebe_bpc"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>
+                            Recebe BPC (Benefício de Prestação Continuada)
+                          </FormLabel>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="possui_medida_protetiva"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>
+                            Possui Medida Protetiva
+                          </FormLabel>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
                 </div>
               </TabsContent>
             </Tabs>

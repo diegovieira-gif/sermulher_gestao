@@ -3,7 +3,13 @@
 import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { atendimentoSchema, type AtendimentoFormValues, StatusAtendimento } from "./schemas";
+import { 
+  atendimentoFormSchema, 
+  type AtendimentoFormValues, 
+  StatusAtendimento,
+  EncaminhamentoRMA,
+  tiposViolenciaDisponiveis,
+} from "./schemas";
 import { saveAtendimento } from "./actions";
 import type { BeneficiariaOption, OrigemOption, PrioridadeOption } from "./actions";
 import { BeneficiariaComboBox } from "./beneficiaria-combobox";
@@ -25,6 +31,7 @@ import {
 } from "@/components/ui/form";
 import { Select } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -83,6 +90,12 @@ export function AtendimentoForm({
         prioridade_id: prioridadeId || undefined,
         status: atendimento.status || StatusAtendimento.ABERTO,
         data_abertura: dataAberturaFormatted || new Date().toISOString().split("T")[0],
+        encaminhamento_rma: atendimento.encaminhamento_rma || undefined,
+        tipos_violencia: Array.isArray(atendimento.tipos_violencia) 
+          ? atendimento.tipos_violencia 
+          : atendimento.tipos_violencia 
+            ? atendimento.tipos_violencia.split(",").map((v: string) => v.trim()) 
+            : [],
       };
     }
 
@@ -93,11 +106,13 @@ export function AtendimentoForm({
       prioridade_id: undefined,
       status: StatusAtendimento.ABERTO,
       data_abertura: new Date().toISOString().split("T")[0],
+      encaminhamento_rma: undefined,
+      tipos_violencia: [],
     };
   }, [atendimento]);
 
   const form = useForm<AtendimentoFormValues>({
-    resolver: zodResolver(atendimentoSchema),
+    resolver: zodResolver(atendimentoFormSchema),
     defaultValues: normalizedValues,
   });
 
@@ -283,6 +298,85 @@ export function AtendimentoForm({
                   )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name="encaminhamento_rma"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Encaminhamento RMA</FormLabel>
+                    <FormControl>
+                      <Select
+                        name={field.name}
+                        ref={field.ref}
+                        onBlur={field.onBlur}
+                        value={field.value || ""}
+                        onChange={(e) => field.onChange(e.target.value || undefined)}
+                      >
+                        <option value="">Selecione o encaminhamento...</option>
+                        <option value={EncaminhamentoRMA.CRAS}>CRAS - Centro de Referência de Assistência Social</option>
+                        <option value={EncaminhamentoRMA.CREAS}>CREAS - Centro de Referência Especializado de Assistência Social</option>
+                        <option value={EncaminhamentoRMA.SAUDE}>Saúde</option>
+                        <option value={EncaminhamentoRMA.EDUCACAO}>Educação</option>
+                        <option value={EncaminhamentoRMA.TERCEIRO_SETOR}>Terceiro Setor</option>
+                        <option value={EncaminhamentoRMA.CASA_ABRIGO}>Casa Abrigo</option>
+                        <option value={EncaminhamentoRMA.DELEGACIA}>Delegacia</option>
+                        <option value={EncaminhamentoRMA.NENHUM}>Nenhum</option>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Card: Tipos de Violência */}
+            <div className="border rounded-lg p-4 space-y-4">
+              <h3 className="text-sm font-semibold">Tipos de Violência</h3>
+              
+              <FormField
+                control={form.control}
+                name="tipos_violencia"
+                render={() => (
+                  <FormItem>
+                    <div className="space-y-3">
+                      {tiposViolenciaDisponiveis.map((tipo) => (
+                        <FormField
+                          key={tipo}
+                          control={form.control}
+                          name="tipos_violencia"
+                          render={({ field }) => {
+                            const isChecked = Array.isArray(field.value) && field.value.includes(tipo);
+                            return (
+                              <FormItem
+                                key={tipo}
+                                className="flex flex-row items-start space-x-3 space-y-0"
+                              >
+                                <FormControl>
+                                  <Checkbox
+                                    checked={isChecked}
+                                    onCheckedChange={(checked: boolean) => {
+                                      const currentValue = Array.isArray(field.value) ? field.value : [];
+                                      const newValue = checked
+                                        ? [...currentValue, tipo]
+                                        : currentValue.filter((value) => value !== tipo);
+                                      field.onChange(newValue);
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormLabel className="font-normal capitalize">
+                                  {tipo.charAt(0).toUpperCase() + tipo.slice(1)}
+                                </FormLabel>
+                              </FormItem>
+                            );
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             {/* Botões */}
