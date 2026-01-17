@@ -42,11 +42,17 @@ export type PerfilRMA = {
   medida_protetiva: number;
 };
 
+export type LocalidadeRMA = {
+  bairro: string;
+  total: number;
+};
+
 export type DadosRMA = {
   volume: VolumeRMA;
   perfil: PerfilRMA;
   encaminhamentos: Encaminhamentos;
   tipos_violencia: TiposViolencia;
+  localidades: LocalidadeRMA[];
 };
 
 /**
@@ -62,6 +68,7 @@ type AtendimentoRMA = {
     recebe_bolsa_familia: boolean | null;
     recebe_bpc: boolean | null;
     possui_medida_protetiva: boolean | null;
+    endereco_bairro: string | null;
   } | null;
 };
 
@@ -130,6 +137,7 @@ export async function getDadosRMA({
           "beneficiaria.recebe_bolsa_familia",
           "beneficiaria.recebe_bpc",
           "beneficiaria.possui_medida_protetiva",
+          "beneficiaria.endereco.bairro",
         ],
         filter: {
           data_abertura: {
@@ -166,6 +174,9 @@ export async function getDadosRMA({
       patrimonial: 0,
       moral: 0,
     };
+
+    // Mapa para contar localidades (bairros)
+    const localidadesMap = new Map<string, number>();
 
     // Para identificar novos casos, precisamos verificar se é o primeiro atendimento da beneficiária no ano
     // Por enquanto, vamos contar todos como novos (simplificado)
@@ -217,6 +228,12 @@ export async function getDadosRMA({
             (tiposViolencia as any)[tipoNormalizado]++;
           }
         });
+      }
+
+      // Agrega Localidades (Bairros)
+      if (atendimento.beneficiaria?.endereco_bairro) {
+        const bairro = atendimento.beneficiaria.endereco_bairro;
+        localidadesMap.set(bairro, (localidadesMap.get(bairro) || 0) + 1);
       }
     });
 
@@ -271,6 +288,9 @@ export async function getDadosRMA({
       },
       encaminhamentos: encaminhamentos,
       tipos_violencia: tiposViolencia,
+      localidades: Array.from(localidadesMap.entries())
+        .map(([bairro, total]) => ({ bairro, total }))
+        .sort((a, b) => b.total - a.total), // Ordena por total decrescente
     };
 
     return {

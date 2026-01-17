@@ -455,6 +455,107 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Bloco L: Localidade */}
+      <div className="space-y-4 rma-print-section">
+        <h2 className="text-2xl font-bold text-foreground">Bloco L: Localidade</h2>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Home className="h-5 w-5" />
+              Atendimentos por Bairro
+            </CardTitle>
+            <CardDescription>Distribuição geográfica dos atendimentos por bairro em Aracaju</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {dados.localidades && dados.localidades.length > 0 ? (
+              <div className="space-y-4">
+                {/* Gráfico de barras horizontal */}
+                <div className="w-full h-96">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={dados.localidades.slice(0, 15)} // Top 15 bairros
+                      layout="vertical"
+                      margin={{ top: 5, right: 30, left: 200, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis type="number" />
+                      <YAxis dataKey="bairro" type="category" width={190} />
+                      <Tooltip />
+                      <Bar dataKey="total" fill="#8b5cf6" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Tabela detalhada */}
+                <div className="border rounded-lg overflow-hidden mt-6">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted">
+                      <tr>
+                        <th className="px-4 py-2 text-left font-semibold">Posição</th>
+                        <th className="px-4 py-2 text-left font-semibold">Bairro</th>
+                        <th className="px-4 py-2 text-right font-semibold">Atendimentos</th>
+                        <th className="px-4 py-2 text-right font-semibold">Percentual</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {dados.localidades.map((localidade, index) => {
+                        const porcentagem = (localidade.total / dados.volume.total_atendimentos) * 100;
+                        return (
+                          <tr key={index} className={index % 2 === 0 ? "bg-muted/50" : ""}>
+                            <td className="px-4 py-2 text-center text-muted-foreground">{index + 1}</td>
+                            <td className="px-4 py-2 font-medium">{localidade.bairro}</td>
+                            <td className="px-4 py-2 text-right font-semibold">{localidade.total}</td>
+                            <td className="px-4 py-2 text-right text-muted-foreground">
+                              {Math.round(porcentagem * 100) / 100}%
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Resumo estatístico */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+                  <Card className="bg-accent/50">
+                    <CardContent className="pt-6">
+                      <div className="text-center">
+                        <p className="text-sm text-muted-foreground mb-1">Total de Bairros</p>
+                        <p className="text-3xl font-bold">{dados.localidades.length}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-accent/50">
+                    <CardContent className="pt-6">
+                      <div className="text-center">
+                        <p className="text-sm text-muted-foreground mb-1">Bairro com Mais Atendimentos</p>
+                        <p className="text-2xl font-bold">{dados.localidades[0]?.bairro}</p>
+                        <p className="text-sm text-muted-foreground mt-1">{dados.localidades[0]?.total} atendimentos</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-accent/50">
+                    <CardContent className="pt-6">
+                      <div className="text-center">
+                        <p className="text-sm text-muted-foreground mb-1">Média de Atendimentos</p>
+                        <p className="text-3xl font-bold">
+                          {Math.round(dados.volume.total_atendimentos / dados.localidades.length)}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            ) : (
+              <div className="py-12 text-center text-muted-foreground">
+                Nenhum registro de localidade encontrado no período
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

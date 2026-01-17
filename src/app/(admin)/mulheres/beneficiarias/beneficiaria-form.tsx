@@ -5,7 +5,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { beneficiariaSchema, type Beneficiaria, type BeneficiariaFormValues } from "./schemas";
 import { saveBeneficiaria } from "./actions";
+import { BAIRROS_ARACAJU } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import {
   Dialog,
   DialogContent,
@@ -301,15 +303,36 @@ export function BeneficiariaForm({
                     <FormField
                       control={form.control}
                       name="endereco.bairro"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Bairro *</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Centro" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      render={({ field }) => {
+                        const bairroOptions: ComboboxOption[] = BAIRROS_ARACAJU.map(
+                          (bairro) => ({
+                            value: bairro,
+                            label: bairro,
+                          })
+                        );
+
+                        return (
+                          <FormItem>
+                            <FormLabel>Bairro *</FormLabel>
+                            <FormControl>
+                              <Combobox
+                                options={bairroOptions}
+                                value={field.value}
+                                onValueChange={field.onChange}
+                                placeholder="Selecione um bairro"
+                                searchPlaceholder="Buscar bairro..."
+                                emptyMessage="Nenhum bairro encontrado"
+                                allowCreate={true}
+                                onCreateOption={(newBairro) => {
+                                  field.onChange(newBairro);
+                                  toast.info(`Bairro "${newBairro}" adicionado`);
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
                     />
 
                     <FormField
