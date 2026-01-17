@@ -1,0 +1,487 @@
+'use client';
+
+import { useState, useTransition } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import {
+  FileText,
+  Users,
+  Shield,
+  Calendar,
+  TrendingUp,
+  Heart,
+  GraduationCap,
+  Building2,
+  Stethoscope,
+  Home,
+  Scale,
+  AlertTriangle,
+} from 'lucide-react';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+} from 'recharts';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import type { DadosRMA } from './actions';
+
+interface RMAClientProps {
+  dados: DadosRMA;
+  mesInicial: number;
+  anoInicial: number;
+}
+
+const MESES = [
+  { value: '1', label: 'Janeiro' },
+  { value: '2', label: 'Fevereiro' },
+  { value: '3', label: 'Março' },
+  { value: '4', label: 'Abril' },
+  { value: '5', label: 'Maio' },
+  { value: '6', label: 'Junho' },
+  { value: '7', label: 'Julho' },
+  { value: '8', label: 'Agosto' },
+  { value: '9', label: 'Setembro' },
+  { value: '10', label: 'Outubro' },
+  { value: '11', label: 'Novembro' },
+  { value: '12', label: 'Dezembro' },
+];
+
+// Gera anos dos últimos 5 anos até o próximo ano
+const ANOS = Array.from({ length: 6 }, (_, i) => {
+  const ano = new Date().getFullYear() - 4 + i;
+  return { value: ano.toString(), label: ano.toString() };
+});
+
+const CORES_ENCAMINHAMENTOS = [
+  '#9333ea', // cras - roxo
+  '#a855f7', // creas - roxo claro
+  '#10b981', // saude - verde
+  '#3b82f6', // educacao - azul
+  '#f59e0b', // terceiro_setor - amarelo
+  '#ef4444', // casa_abrigo - vermelho
+  '#6366f1', // delegacia - índigo
+  '#9ca3af', // nenhum - cinza
+];
+
+const CORES_VIOLENCIA = [
+  '#ec4899', // fisica - rosa
+  '#8b5cf6', // psicologica - roxo
+  '#ef4444', // sexual - vermelho
+  '#f59e0b', // patrimonial - amarelo
+  '#6366f1', // moral - índigo
+];
+
+export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [mes, setMes] = useState(mesInicial.toString());
+  const [ano, setAno] = useState(anoInicial.toString());
+  const [isPending, startTransition] = useTransition();
+
+  const handleFilterChange = () => {
+    startTransition(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('mes', mes);
+      params.set('ano', ano);
+      router.push(`/relatorios/rma?${params.toString()}`);
+    });
+  };
+
+  // Prepara dados para gráfico de encaminhamentos
+  const dadosEncaminhamentos = [
+    { nome: 'CRAS', valor: dados.encaminhamentos.cras, cor: CORES_ENCAMINHAMENTOS[0] },
+    { nome: 'CREAS', valor: dados.encaminhamentos.creas, cor: CORES_ENCAMINHAMENTOS[1] },
+    { nome: 'Saúde', valor: dados.encaminhamentos.saude, cor: CORES_ENCAMINHAMENTOS[2] },
+    { nome: 'Educação', valor: dados.encaminhamentos.educacao, cor: CORES_ENCAMINHAMENTOS[3] },
+    { nome: 'Terceiro Setor', valor: dados.encaminhamentos.terceiro_setor, cor: CORES_ENCAMINHAMENTOS[4] },
+    { nome: 'Casa Abrigo', valor: dados.encaminhamentos.casa_abrigo, cor: CORES_ENCAMINHAMENTOS[5] },
+    { nome: 'Delegacia', valor: dados.encaminhamentos.delegacia, cor: CORES_ENCAMINHAMENTOS[6] },
+    { nome: 'Nenhum', valor: dados.encaminhamentos.nenhum, cor: CORES_ENCAMINHAMENTOS[7] },
+  ].filter((item) => item.valor > 0); // Remove zeros
+
+  // Prepara dados para gráfico de tipos de violência
+  const dadosTiposViolencia = [
+    { nome: 'Física', valor: dados.tipos_violencia.fisica, cor: CORES_VIOLENCIA[0] },
+    { nome: 'Psicológica', valor: dados.tipos_violencia.psicologica, cor: CORES_VIOLENCIA[1] },
+    { nome: 'Sexual', valor: dados.tipos_violencia.sexual, cor: CORES_VIOLENCIA[2] },
+    { nome: 'Patrimonial', valor: dados.tipos_violencia.patrimonial, cor: CORES_VIOLENCIA[3] },
+    { nome: 'Moral', valor: dados.tipos_violencia.moral, cor: CORES_VIOLENCIA[4] },
+  ].filter((item) => item.valor > 0); // Remove zeros
+
+  // Calcula total para porcentagens
+  const totalEncaminhamentos = dados.encaminhamentos.cras +
+    dados.encaminhamentos.creas +
+    dados.encaminhamentos.saude +
+    dados.encaminhamentos.educacao +
+    dados.encaminhamentos.terceiro_setor +
+    dados.encaminhamentos.casa_abrigo +
+    dados.encaminhamentos.delegacia +
+    dados.encaminhamentos.nenhum;
+
+  const totalTiposViolencia = dados.tipos_violencia.fisica +
+    dados.tipos_violencia.psicologica +
+    dados.tipos_violencia.sexual +
+    dados.tipos_violencia.patrimonial +
+    dados.tipos_violencia.moral;
+
+  return (
+    <div className="space-y-6">
+      {/* Filtros */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Filtro de Período
+          </CardTitle>
+          <CardDescription>
+            Selecione o mês e ano para visualizar os dados do Relatório Mensal de Atendimento
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 space-y-2">
+              <Label htmlFor="mes">Mês</Label>
+              <Select
+                id="mes"
+                value={mes}
+                onChange={(e) => setMes(e.target.value)}
+                disabled={isPending}
+              >
+                {MESES.map((m) => (
+                  <option key={m.value} value={m.value}>
+                    {m.label}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div className="flex-1 space-y-2">
+              <Label htmlFor="ano">Ano</Label>
+              <Select
+                id="ano"
+                value={ano}
+                onChange={(e) => setAno(e.target.value)}
+                disabled={isPending}
+              >
+                {ANOS.map((a) => (
+                  <option key={a.value} value={a.value}>
+                    {a.label}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div className="flex items-end">
+              <Button
+                onClick={handleFilterChange}
+                disabled={isPending}
+                className="w-full sm:w-auto"
+              >
+                {isPending ? 'Carregando...' : 'Aplicar Filtro'}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Bloco 1: Volume de Atendimentos */}
+      <div className="space-y-4">
+        <h2 className="text-2xl font-bold text-foreground">Bloco 1: Volume de Atendimentos</h2>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total de Atendimentos</CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{dados.total_atendimentos}</div>
+              <p className="text-xs text-muted-foreground">No período selecionado</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Novos Casos</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{dados.novos_casos}</div>
+              <p className="text-xs text-muted-foreground">Primeiro atendimento do ano</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Recebe Bolsa Família</CardTitle>
+              <Heart className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{dados.perfil_social.recebe_bolsa_familia}</div>
+              <p className="text-xs text-muted-foreground">
+                {dados.total_atendimentos > 0
+                  ? `${Math.round((dados.perfil_social.recebe_bolsa_familia / dados.total_atendimentos) * 100)}% do total`
+                  : '0% do total'}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Recebe BPC</CardTitle>
+              <Shield className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{dados.perfil_social.recebe_bpc}</div>
+              <p className="text-xs text-muted-foreground">
+                {dados.total_atendimentos > 0
+                  ? `${Math.round((dados.perfil_social.recebe_bpc / dados.total_atendimentos) * 100)}% do total`
+                  : '0% do total'}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Bloco 2: Perfil Social */}
+      <div className="space-y-4">
+        <h2 className="text-2xl font-bold text-foreground">Bloco 2: Perfil Social</h2>
+        <div className="grid gap-6 md:grid-cols-3">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Heart className="h-5 w-5 text-pink-600" />
+                Bolsa Família
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{dados.perfil_social.recebe_bolsa_familia}</div>
+              <div className="mt-2 h-2 w-full rounded-full bg-muted">
+                <div
+                  className="h-2 rounded-full bg-pink-600"
+                  style={{
+                    width: `${dados.total_atendimentos > 0 ? (dados.perfil_social.recebe_bolsa_familia / dados.total_atendimentos) * 100 : 0}%`,
+                  }}
+                />
+              </div>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {dados.total_atendimentos > 0
+                  ? `${Math.round((dados.perfil_social.recebe_bolsa_familia / dados.total_atendimentos) * 100)}% dos atendimentos`
+                  : '0% dos atendimentos'}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-blue-600" />
+                BPC
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{dados.perfil_social.recebe_bpc}</div>
+              <div className="mt-2 h-2 w-full rounded-full bg-muted">
+                <div
+                  className="h-2 rounded-full bg-blue-600"
+                  style={{
+                    width: `${dados.total_atendimentos > 0 ? (dados.perfil_social.recebe_bpc / dados.total_atendimentos) * 100 : 0}%`,
+                  }}
+                />
+              </div>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {dados.total_atendimentos > 0
+                  ? `${Math.round((dados.perfil_social.recebe_bpc / dados.total_atendimentos) * 100)}% dos atendimentos`
+                  : '0% dos atendimentos'}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-red-600" />
+                Medida Protetiva
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{dados.perfil_social.possui_medida_protetiva}</div>
+              <div className="mt-2 h-2 w-full rounded-full bg-muted">
+                <div
+                  className="h-2 rounded-full bg-red-600"
+                  style={{
+                    width: `${dados.total_atendimentos > 0 ? (dados.perfil_social.possui_medida_protetiva / dados.total_atendimentos) * 100 : 0}%`,
+                  }}
+                />
+              </div>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {dados.total_atendimentos > 0
+                  ? `${Math.round((dados.perfil_social.possui_medida_protetiva / dados.total_atendimentos) * 100)}% dos atendimentos`
+                  : '0% dos atendimentos'}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Bloco 3: Encaminhamentos e Tipos de Violência */}
+      <div className="space-y-6">
+        <h2 className="text-2xl font-bold text-foreground">Bloco 3: Encaminhamentos e Violências</h2>
+        
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Encaminhamentos */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5" />
+                Encaminhamentos
+              </CardTitle>
+              <CardDescription>Distribuição dos encaminhamentos realizados</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {dadosEncaminhamentos.length > 0 ? (
+                <>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={dadosEncaminhamentos}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                      <XAxis
+                        dataKey="nome"
+                        className="text-muted-foreground"
+                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                        angle={-45}
+                        textAnchor="end"
+                        height={80}
+                      />
+                      <YAxis
+                        className="text-muted-foreground"
+                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                          color: 'hsl(var(--foreground))',
+                        }}
+                        formatter={(value: number) => [
+                          `${value} (${totalEncaminhamentos > 0 ? Math.round((value / totalEncaminhamentos) * 100) : 0}%)`,
+                          'Quantidade',
+                        ]}
+                      />
+                      <Bar dataKey="valor" radius={[8, 8, 0, 0]}>
+                        {dadosEncaminhamentos.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.cor} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                  <div className="mt-4 space-y-2">
+                    {dadosEncaminhamentos.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="h-4 w-4 rounded"
+                            style={{ backgroundColor: item.cor }}
+                          />
+                          <span className="text-sm">{item.nome}</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-sm font-semibold">{item.valor}</span>
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            ({totalEncaminhamentos > 0 ? Math.round((item.valor / totalEncaminhamentos) * 100) : 0}%)
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="py-12 text-center text-muted-foreground">
+                  Nenhum encaminhamento registrado no período
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Tipos de Violência */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5" />
+                Tipos de Violência
+              </CardTitle>
+              <CardDescription>Distribuição dos tipos de violência identificados</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {dadosTiposViolencia.length > 0 ? (
+                <>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={dadosTiposViolencia}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                      <XAxis
+                        dataKey="nome"
+                        className="text-muted-foreground"
+                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                        angle={-45}
+                        textAnchor="end"
+                        height={80}
+                      />
+                      <YAxis
+                        className="text-muted-foreground"
+                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                          color: 'hsl(var(--foreground))',
+                        }}
+                        formatter={(value: number) => [
+                          `${value} (${totalTiposViolencia > 0 ? Math.round((value / totalTiposViolencia) * 100) : 0}%)`,
+                          'Quantidade',
+                        ]}
+                      />
+                      <Bar dataKey="valor" radius={[8, 8, 0, 0]}>
+                        {dadosTiposViolencia.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.cor} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                  <div className="mt-4 space-y-2">
+                    {dadosTiposViolencia.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="h-4 w-4 rounded"
+                            style={{ backgroundColor: item.cor }}
+                          />
+                          <span className="text-sm">{item.nome}</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-sm font-semibold">{item.valor}</span>
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            ({totalTiposViolencia > 0 ? Math.round((item.valor / totalTiposViolencia) * 100) : 0}%)
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="py-12 text-center text-muted-foreground">
+                  Nenhum tipo de violência registrado no período
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
