@@ -31,6 +31,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import type { DadosRMA } from './actions';
 
 interface RMAClientProps {
@@ -204,67 +205,49 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
         </Button>
       </div>
 
-      {/* Bloco 1: Volume de Atendimentos */}
+      {/* Bloco A: Volume de Atendimentos */}
       <div className="space-y-4 rma-print-section">
-        <h2 className="text-2xl font-bold text-foreground">Bloco 1: Volume de Atendimentos</h2>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total de Atendimentos</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
+        <h2 className="text-2xl font-bold text-foreground">Bloco A: Volume de Atendimentos</h2>
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* Card grande com Total de Atendimentos */}
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <FileText className="h-5 w-5" />
+                Total de Atendimentos
+              </CardTitle>
+              <CardDescription>No período selecionado</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{dados.volume.total_atendimentos}</div>
-              <p className="text-xs text-muted-foreground">No período selecionado</p>
+              <div className="text-5xl font-bold text-primary">{dados.volume.total_atendimentos}</div>
+              <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4" />
+                  <span>Novos casos: <strong className="text-foreground">{dados.volume.novos_casos}</strong></span>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Novos Casos</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{dados.volume.novos_casos}</div>
-              <p className="text-xs text-muted-foreground">Primeiro atendimento do ano</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Recebe Bolsa Família</CardTitle>
-              <Heart className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{dados.perfil.bolsa_familia}</div>
-              <p className="text-xs text-muted-foreground">
-                {dados.volume.total_atendimentos > 0
-                  ? `${Math.round((dados.perfil.bolsa_familia / dados.volume.total_atendimentos) * 100)}% do total`
-                  : '0% do total'}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Recebe BPC</CardTitle>
-              <Shield className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{dados.perfil.bpc}</div>
-              <p className="text-xs text-muted-foreground">
-                {dados.volume.total_atendimentos > 0
-                  ? `${Math.round((dados.perfil.bpc / dados.volume.total_atendimentos) * 100)}% do total`
-                  : '0% do total'}
-              </p>
-            </CardContent>
-          </Card>
+          {/* Cards menores para informações adicionais */}
+          <div className="flex flex-col gap-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Novos Casos</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{dados.volume.novos_casos}</div>
+                <p className="text-xs text-muted-foreground">Primeiro atendimento do ano</p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
 
-      {/* Bloco 2: Perfil Social */}
+      {/* Bloco B: Perfil Social */}
       <div className="space-y-4 rma-print-section">
-        <h2 className="text-2xl font-bold text-foreground">Bloco 2: Perfil Social</h2>
+        <h2 className="text-2xl font-bold text-foreground">Bloco B: Perfil Social</h2>
         <div className="grid gap-6 md:grid-cols-3">
           <Card>
             <CardHeader>
@@ -343,13 +326,11 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
         </div>
       </div>
 
-      {/* Bloco 3: Encaminhamentos e Tipos de Violência */}
-      <div className="space-y-6 rma-print-section">
-        <h2 className="text-2xl font-bold text-foreground">Bloco 3: Encaminhamentos e Violências</h2>
+      {/* Bloco C: Encaminhamentos */}
+      <div className="space-y-4 rma-print-section">
+        <h2 className="text-2xl font-bold text-foreground">Bloco C: Encaminhamentos</h2>
         
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* Encaminhamentos */}
-          <Card>
+        <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Building2 className="h-5 w-5" />
@@ -421,81 +402,58 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
               )}
             </CardContent>
           </Card>
+      </div>
 
-          {/* Tipos de Violência */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5" />
-                Tipos de Violência
-              </CardTitle>
-              <CardDescription>Distribuição dos tipos de violência identificados</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {dadosTiposViolencia.length > 0 ? (
-                <>
-                  <ResponsiveContainer width="100%" height={300} className="print:!h-auto print:min-h-[200px]">
-                    <BarChart data={dadosTiposViolencia}>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                      <XAxis
-                        dataKey="nome"
-                        className="text-muted-foreground"
-                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                        angle={-45}
-                        textAnchor="end"
-                        height={80}
-                      />
-                      <YAxis
-                        className="text-muted-foreground"
-                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: 'hsl(var(--card))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px',
-                          color: 'hsl(var(--foreground))',
-                        }}
-                        formatter={(value: number | undefined) => [
-                          `${value || 0} (${totalTiposViolencia > 0 ? Math.round(((value || 0) / totalTiposViolencia) * 100) : 0}%)`,
-                          'Quantidade',
-                        ]}
-                      />
-                      <Bar dataKey="valor" radius={[8, 8, 0, 0]}>
-                        {dadosTiposViolencia.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.cor} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                  <div className="mt-4 space-y-2">
-                    {dadosTiposViolencia.map((item, index) => (
-                      <div key={index} className="flex items-center justify-between">
+      {/* Bloco D: Tipos de Violência */}
+      <div className="space-y-4 rma-print-section">
+        <h2 className="text-2xl font-bold text-foreground">Bloco D: Tipos de Violência</h2>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5" />
+              Tipos de Violência
+            </CardTitle>
+            <CardDescription>Distribuição dos tipos de violência identificados (em relação ao total de atendimentos)</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {dadosTiposViolencia.length > 0 && dados.volume.total_atendimentos > 0 ? (
+              <div className="space-y-6">
+                {dadosTiposViolencia.map((item, index) => {
+                  const porcentagem = (item.valor / dados.volume.total_atendimentos) * 100;
+                  return (
+                    <div key={index} className="space-y-2">
+                      <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <div
                             className="h-4 w-4 rounded"
                             style={{ backgroundColor: item.cor }}
                           />
-                          <span className="text-sm">{item.nome}</span>
+                          <span className="text-sm font-medium">{item.nome}</span>
                         </div>
                         <div className="text-right">
                           <span className="text-sm font-semibold">{item.valor}</span>
                           <span className="ml-2 text-xs text-muted-foreground">
-                            ({totalTiposViolencia > 0 ? Math.round((item.valor / totalTiposViolencia) * 100) : 0}%)
+                            ({Math.round(porcentagem)}%)
                           </span>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <div className="py-12 text-center text-muted-foreground">
-                  Nenhum tipo de violência registrado no período
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                      <Progress 
+                        value={porcentagem} 
+                        max={100}
+                        indicatorColor={item.cor}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="py-12 text-center text-muted-foreground">
+                Nenhum tipo de violência registrado no período
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
