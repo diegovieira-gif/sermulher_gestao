@@ -98,16 +98,16 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-border bg-card">
+    <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-slate-900 text-slate-300">
       <div className="flex h-full flex-col">
         {/* Logo/Header */}
-        <div className="flex h-16 items-center border-b border-border px-6">
-          <h1 className="text-xl font-bold text-primary">SerMulher</h1>
+        <div className="flex h-16 items-center border-b border-slate-800 px-6">
+          <h1 className="text-xl font-bold text-white">SerMulher</h1>
         </div>
 
         {/* Menu Items */}
         <nav className="flex-1 overflow-y-auto px-3 py-4">
-          <ul className="space-y-1">
+          <ul className="space-y-2">
             {menuItems.map((item) => {
               const Icon = item.icon;
               const hasSubmenu = item.items && item.items.length > 0;
@@ -121,10 +121,10 @@ export function Sidebar() {
                       <button
                         onClick={() => toggleMenu(item.title)}
                         className={cn(
-                          'flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                          'flex w-full items-center justify-between rounded-lg px-4 py-3 text-sm font-medium transition-colors',
                           isActiveParent
-                            ? 'bg-primary/10 text-primary'
-                            : 'text-foreground hover:bg-accent hover:text-accent-foreground'
+                            ? 'bg-slate-800 text-white border-l-4 border-blue-500'
+                            : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                         )}
                       >
                         <div className="flex items-center gap-3">
@@ -140,7 +140,7 @@ export function Sidebar() {
                       
                       {/* Submenu List */}
                       {isOpen && (
-                        <ul className="mt-1 space-y-1 px-4 border-l ml-5 border-border/50">
+                        <ul className="mt-2 space-y-1 px-4 border-l border-slate-700 ml-4">
                           {item.items!.map((subItem) => {
                             const isSubActive = pathname === subItem.href;
                             return (
@@ -150,8 +150,8 @@ export function Sidebar() {
                                   className={cn(
                                     'flex items-center rounded-lg px-3 py-2 text-sm transition-colors',
                                     isSubActive
-                                      ? 'text-primary font-medium bg-primary/5'
-                                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                                      ? 'text-white bg-slate-800 font-medium'
+                                      : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
                                   )}
                                 >
                                   {subItem.title}
@@ -166,10 +166,10 @@ export function Sidebar() {
                     <Link
                       href={item.href}
                       className={cn(
-                        'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                        'flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors',
                         pathname === item.href || pathname.startsWith(item.href + '/')
-                          ? 'bg-primary/10 text-primary'
-                          : 'text-foreground hover:bg-accent hover:text-accent-foreground'
+                          ? 'bg-slate-800 text-white border-l-4 border-blue-500'
+                          : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                       )}
                     >
                       <Icon className="h-5 w-5" />
@@ -183,9 +183,9 @@ export function Sidebar() {
         </nav>
 
         {/* Logout Button */}
-        <div className="border-t border-border p-3">
+        <div className="border-t border-slate-800 p-3">
           <button
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
             onClick={() => {
               console.log('Logout');
             }}

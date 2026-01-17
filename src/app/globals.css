@@ -162,7 +162,10 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-slate-100 text-foreground;
+  }
+  .dark body {
+    @apply bg-slate-900 text-foreground;
   }
 }
 

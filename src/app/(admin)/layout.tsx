@@ -23,11 +23,11 @@ export default function AdminLayout({
   const title = pageTitles[pathname] || 'SerMulher';
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-900">
       <Sidebar />
-      <div className="ml-64">
+      <div className="ml-64 flex flex-col">
         <Header title={title} />
-        <main className="mt-16 p-6">{children}</main>
+        <main className="flex-1 overflow-y-auto bg-slate-100 p-6 dark:bg-slate-900">{children}</main>
       </div>
     </div>
   );
