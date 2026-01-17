@@ -35,6 +35,10 @@ const menuItems: MenuItem[] = [
     href: '/mulheres',
     icon: HeartHandshake,
     items: [
+            {
+        title: 'Indicadores',
+        href: '/mulheres',
+      },
       {
         title: 'Beneficiárias',
         href: '/mulheres/beneficiarias',
