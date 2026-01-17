@@ -31,9 +31,9 @@ export default async function AtendimentosPage() {
     <div className="p-6">
       <AtendimentosClient
         atendimentos={atendimentosResult.data || []}
-        beneficiariasOptions={optionsResult.data.beneficiarias}
-        origensOptions={optionsResult.data.origens}
-        prioridadesOptions={optionsResult.data.prioridades}
+        beneficiariasOptions={optionsResult.data?.beneficiarias || []}
+        origensOptions={optionsResult.data?.origens || []}
+        prioridadesOptions={optionsResult.data?.prioridades || []}
       />
     </div>
   );

@@ -183,7 +183,7 @@ export async function saveTramitacao(
 
     // Erro de validação do Zod
     if (error instanceof z.ZodError) {
-      const firstError = error.errors[0];
+      const firstError = error.issues[0];
       return {
         success: false,
         error: firstError?.message || "Dados inválidos. Verifique os campos.",

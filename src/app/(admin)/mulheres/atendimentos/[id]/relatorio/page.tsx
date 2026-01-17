@@ -23,7 +23,7 @@ export default async function RelatorioAtendimentoPage({ params }: PageProps) {
 
   const atendimento = atendimentoRes.data;
   const mulher = atendimento.beneficiaria;
-  const tramitacoes = tramitacoesRes.data || [];
+  const tramitacoes = tramitacoesRes.success && tramitacoesRes.data ? tramitacoesRes.data : [];
 
   // Parse seguro de JSONs
   const contato = typeof mulher?.contato === 'string' ? JSON.parse(mulher.contato) : mulher?.contato || {};
@@ -89,7 +89,7 @@ export default async function RelatorioAtendimentoPage({ params }: PageProps) {
           <div className="grid grid-cols-3 gap-4 text-sm">
             <div>
               <span className="block text-slate-500 text-xs">Data de Abertura</span>
-              <strong className="text-slate-800">{new Date(atendimento.data_abertura).toLocaleDateString('pt-BR')}</strong>
+              <strong className="text-slate-800">{atendimento.data_abertura ? new Date(atendimento.data_abertura).toLocaleDateString('pt-BR') : "-"}</strong>
             </div>
             <div>
               <span className="block text-slate-500 text-xs">Origem</span>

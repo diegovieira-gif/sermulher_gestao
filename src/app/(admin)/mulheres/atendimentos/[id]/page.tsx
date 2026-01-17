@@ -170,8 +170,8 @@ export default async function AtendimentoDetailPage({ params }: PageProps) {
       {/* Área da Timeline (Client Component) */}
       <TramitacoesClient
         atendimentoId={atendimentoId}
-        initialTramitacoes={tramitacoesResult.success ? tramitacoesResult.data : []}
-        setores={setoresResult.success ? setoresResult.data : []}
+        initialTramitacoes={tramitacoesResult.success && tramitacoesResult.data ? tramitacoesResult.data : []}
+        setores={setoresResult.success && setoresResult.data ? setoresResult.data : []}
       />
     </div>
   );

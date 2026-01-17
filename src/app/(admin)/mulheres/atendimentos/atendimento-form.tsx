@@ -112,7 +112,7 @@ export function AtendimentoForm({
   }, [atendimento]);
 
   const form = useForm<AtendimentoFormValues>({
-    resolver: zodResolver(atendimentoFormSchema),
+    resolver: zodResolver(atendimentoFormSchema) as any,
     defaultValues: normalizedValues,
   });
 

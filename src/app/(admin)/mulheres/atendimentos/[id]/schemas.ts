@@ -18,9 +18,7 @@ export enum StatusEtapa {
 // Schema para validar nova tramitação
 export const tramitacaoSchema = z.object({
   atendimento_pai: z.coerce.number().int().positive("ID do atendimento é obrigatório"),
-  tipo_demanda: z.nativeEnum(TipoDemanda, {
-    errorMap: () => ({ message: "Selecione um tipo de demanda válido" }),
-  }),
+  tipo_demanda: z.nativeEnum(TipoDemanda),
   setor_responsavel: z.coerce.number().int().positive().optional(),
   relato_tecnico: z
     .string()
