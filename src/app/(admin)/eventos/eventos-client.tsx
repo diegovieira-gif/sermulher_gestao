@@ -188,7 +188,9 @@ export function EventosClient({ eventos, tiposEventoOptions }: EventosClientProp
                       <div className="flex items-center gap-2">
                         {evento.nome}
                         {isRecorrente && (
-                          <Repeat className="h-4 w-4 text-muted-foreground" title="Evento recorrente" />
+                          <div title="Evento recorrente">
+                            <Repeat className="h-4 w-4 text-muted-foreground" />
+                          </div>
                         )}
                       </div>
                     </TableCell>

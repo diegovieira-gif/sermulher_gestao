@@ -54,7 +54,7 @@ export function EventoForm({
       // Se tipo_id for objeto (vindo do get), pega o ID. Se for valor, mantém.
       const tipoId =
         typeof evento.tipo_id === "object" && evento.tipo_id !== null
-          ? evento.tipo_id?.id
+          ? (evento.tipo_id as any)?.id
           : evento.tipo_id;
 
       // Formata datas para YYYY-MM-DD que o input date aceita
@@ -103,12 +103,12 @@ export function EventoForm({
   }, [evento]);
 
   const form = useForm<EventoFormValues>({
-    resolver: zodResolver(insertEventoSchema),
-    defaultValues: normalizedValues,
+    resolver: zodResolver(insertEventoSchema) as any,
+    defaultValues: normalizedValues as any,
   });
 
   useEffect(() => {
-    form.reset(normalizedValues);
+    form.reset(normalizedValues as any);
   }, [normalizedValues, form]);
 
   const onSubmit = async (data: EventoFormValues) => {

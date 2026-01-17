@@ -5,7 +5,7 @@ export const insertEventoSchema = z
   .object({
     id: z.number().optional(),
     nome: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
-    tipo_id: z.coerce.number({ invalid_type_error: "Selecione o tipo" }).positive(),
+    tipo_id: z.coerce.number().positive({ message: "Selecione o tipo" }),
     data_inicio: z
       .string()
       .min(1, "Data de início é obrigatória")
@@ -27,9 +27,7 @@ export const insertEventoSchema = z
         { message: "Data de fim inválida" }
       ),
     descricao: z.string().optional(),
-    recorrencia: z.enum(["nao_recorrente", "mensal", "anual"], {
-      errorMap: () => ({ message: "Selecione a recorrência" }),
-    }).optional(),
+    recorrencia: z.enum(["nao_recorrente", "mensal", "anual"]).optional(),
     publico_alvo: z.string().optional(),
   })
   .refine(

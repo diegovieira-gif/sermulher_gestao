@@ -325,7 +325,9 @@ export function EventosCalendarioClient({ eventos, tiposEventoOptions }: Eventos
                         <div className="flex items-center gap-2">
                           <p className="font-medium">{evento.nome}</p>
                           {evento.recorrencia !== "nao_recorrente" && (
-                            <Repeat className="h-3 w-3 text-muted-foreground" title="Evento recorrente" />
+                            <div title="Evento recorrente">
+                              <Repeat className="h-3 w-3 text-muted-foreground" />
+                            </div>
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground">
@@ -379,7 +381,9 @@ export function EventosCalendarioClient({ eventos, tiposEventoOptions }: Eventos
                   <div className="flex items-center gap-2">
                     <p className="font-medium">{evento.nome}</p>
                     {evento.recorrencia !== "nao_recorrente" && (
-                      <Repeat className="h-3 w-3 text-muted-foreground" title="Evento recorrente" />
+                      <div title="Evento recorrente">
+                        <Repeat className="h-3 w-3 text-muted-foreground" />
+                      </div>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
