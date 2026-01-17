@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { directus } from "@/lib/directus";
 import { readItems, createItem, updateItem, deleteItem, readItem } from "@directus/sdk";
-import { beneficiariaSchema, type Beneficiaria } from "./schemas";
+import { beneficiariaSchema, entregaBeneficioSchema, type Beneficiaria } from "./schemas";
 
 const BENEFICIARIA_FIELDS = [
   'id',
@@ -36,6 +36,118 @@ export async function getBeneficiarias() {
     return {
       success: false,
       error: "Erro ao buscar beneficiárias. Tente novamente.",
+    };
+  }
+}
+
+/**
+ * Histórico de entregas de benefícios por beneficiária
+ */
+export async function getHistoricoBeneficios(beneficiariaId: string) {
+  try {
+    const historico = await directus.request(
+      readItems("entregas_beneficios", {
+        filter: {
+          beneficiaria: {
+            _eq: beneficiariaId,
+          },
+        },
+        sort: ["-data_entrega"],
+        // IMPORTANTE: Buscar os campos aninhados para exibir os nomes
+        fields: [
+          "*",
+          "beneficio.id",
+          "beneficio.nome",
+          // Expansão explícita do usuário criador
+          "user_created.first_name",
+          "user_created.last_name",
+          "user_created.email", // Fallback caso não tenha nome
+        ],
+      })
+    );
+
+    return { success: true, data: historico };
+  } catch (error) {
+    console.error("Erro ao buscar histórico de benefícios:", error);
+    return {
+      success: false,
+      error: "Erro ao carregar histórico de benefícios.",
+    };
+  }
+}
+
+/**
+ * Registra uma nova entrega de benefício
+ */
+export async function registrarEntrega(data: unknown) {
+  try {
+    const payload = entregaBeneficioSchema.parse(data);
+
+    const created = await directus.request(
+      createItem("entregas_beneficios", {
+        beneficiaria: payload.beneficiaria,
+        beneficio: payload.beneficio,
+        data_entrega: payload.data_entrega,
+        quantidade: payload.quantidade ?? 1,
+        observacao: payload.observacao || null,
+      })
+    );
+
+    // Busca o registro recém-criado com campos expandidos para atualizar a UI
+    const entregaCompleta = await directus.request(
+      readItem("entregas_beneficios", created.id as number, {
+        fields: [
+          "id",
+          "data_entrega",
+          "quantidade",
+          "observacao",
+          "beneficio.id",
+          "beneficio.nome",
+          "user_created.first_name",
+          "user_created.last_name",
+        ],
+      })
+    );
+
+    revalidatePath(`/mulheres/beneficiarias/${payload.beneficiaria}`);
+
+    return {
+      success: true,
+      data: entregaCompleta,
+      message: "Entrega registrada com sucesso!",
+    };
+  } catch (error) {
+    console.error("Erro ao registrar entrega:", error);
+
+    if (error instanceof Error && error.name === "ZodError") {
+      return {
+        success: false,
+        error: "Dados inválidos. Verifique os campos e tente novamente.",
+      };
+    }
+
+    return {
+      success: false,
+      error: "Erro ao registrar entrega de benefício.",
+    };
+  }
+}
+
+/**
+ * Remove uma entrega de benefício
+ */
+export async function deletarEntrega(entregaId: number, beneficiariaId: number) {
+  try {
+    await directus.request(deleteItem("entregas_beneficios", entregaId));
+
+    revalidatePath(`/mulheres/beneficiarias/${beneficiariaId}`);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao excluir entrega:", error);
+    return {
+      success: false,
+      error: "Erro ao excluir entrega de benefício.",
     };
   }
 }

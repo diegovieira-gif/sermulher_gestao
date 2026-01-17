@@ -26,9 +26,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import Link from "next/link";
 import { BeneficiariaForm } from "./beneficiaria-form";
 import { deleteBeneficiaria } from "./actions";
-import { Plus, Pencil, Trash2, ShieldAlert, HandCoins, Banknote } from "lucide-react";
+import { Plus, Pencil, Trash2, ShieldAlert, HandCoins, Banknote, Eye } from "lucide-react";
 import { toast } from "sonner";
 import type { Beneficiaria } from "./schemas";
 
@@ -228,6 +229,16 @@ export function BeneficiariasClient({ beneficiarias }: BeneficiariasClientProps)
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        asChild
+                        title="Ver detalhes"
+                      >
+                        <Link href={`/mulheres/beneficiarias/${beneficiaria.id}`}>
+                          <Eye className="h-4 w-4" />
+                        </Link>
+                      </Button>
                       <Button
                         variant="ghost"
                         size="icon"

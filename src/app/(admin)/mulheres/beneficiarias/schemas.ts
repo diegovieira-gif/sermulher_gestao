@@ -57,3 +57,21 @@ export type Beneficiaria = z.infer<typeof beneficiariaSchema>;
 export type BeneficiariaFormValues = z.input<typeof beneficiariaSchema>;
 export type Contato = z.infer<typeof contatoSchema>;
 export type Endereco = z.infer<typeof enderecoSchema>;
+
+// Schema para registrar entregas de benefícios vinculadas à beneficiária
+export const entregaBeneficioSchema = z.object({
+  beneficiaria: z.coerce.number().int().positive("Beneficiária é obrigatória"),
+  beneficio: z.coerce.number().int().positive("Benefício é obrigatório"),
+  data_entrega: z
+    .string()
+    .min(1, "Data de entrega é obrigatória")
+    .refine((val) => !isNaN(Date.parse(val)), { message: "Data inválida" }),
+  quantidade: z.coerce.number().int().positive().default(1),
+  observacao: z
+    .string()
+    .max(500, "Observação muito longa")
+    .optional()
+    .or(z.literal("")),
+});
+
+export type EntregaBeneficioFormValues = z.input<typeof entregaBeneficioSchema>;
