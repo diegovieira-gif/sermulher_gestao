@@ -20,9 +20,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { BeneficiariaForm } from "./beneficiaria-form";
 import { deleteBeneficiaria } from "./actions";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, ShieldAlert, HandCoins, Banknote } from "lucide-react";
 import { toast } from "sonner";
 import type { Beneficiaria } from "./schemas";
 
@@ -118,6 +124,57 @@ export function BeneficiariasClient({ beneficiarias }: BeneficiariasClientProps)
     }
   };
 
+  // Componente para renderizar status/benefícios com ícones e tooltips
+  const renderBeneficiosStatus = (beneficiaria: any) => {
+    const beneficios = [];
+    
+    if (beneficiaria.possui_medida_protetiva) {
+      beneficios.push({
+        icon: ShieldAlert,
+        label: "Medida Protetiva",
+        color: "text-orange-500",
+      });
+    }
+    
+    if (beneficiaria.recebe_bolsa_familia) {
+      beneficios.push({
+        icon: HandCoins,
+        label: "Bolsa Família",
+        color: "text-green-600",
+      });
+    }
+    
+    if (beneficiaria.recebe_bpc) {
+      beneficios.push({
+        icon: Banknote,
+        label: "BPC",
+        color: "text-blue-600",
+      });
+    }
+
+    if (beneficios.length === 0) {
+      return <span className="text-muted-foreground">-</span>;
+    }
+
+    return (
+      <TooltipProvider>
+        <div className="flex gap-2">
+          {beneficios.map((beneficio, idx) => {
+            const Icon = beneficio.icon;
+            return (
+              <Tooltip key={idx}>
+                <TooltipTrigger asChild>
+                  <Icon className={`h-5 w-5 ${beneficio.color} cursor-help`} />
+                </TooltipTrigger>
+                <TooltipContent>{beneficio.label}</TooltipContent>
+              </Tooltip>
+            );
+          })}
+        </div>
+      </TooltipProvider>
+    );
+  };
+
   return (
     <>
       <div className="flex justify-between items-center mb-6">
@@ -141,6 +198,7 @@ export function BeneficiariasClient({ beneficiarias }: BeneficiariasClientProps)
               <TableHead>CPF</TableHead>
               <TableHead>Telefone</TableHead>
               <TableHead>Idade</TableHead>
+              <TableHead>Status/Benefícios</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -148,7 +206,7 @@ export function BeneficiariasClient({ beneficiarias }: BeneficiariasClientProps)
             {beneficiarias.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={6}
                   className="text-center text-muted-foreground py-8"
                 >
                   Nenhuma beneficiária cadastrada
@@ -164,6 +222,9 @@ export function BeneficiariasClient({ beneficiarias }: BeneficiariasClientProps)
                   <TableCell>{getTelefone(beneficiaria.contato)}</TableCell>
                   <TableCell>
                     {calcularIdade(beneficiaria.data_nascimento)}
+                  </TableCell>
+                  <TableCell>
+                    {renderBeneficiosStatus(beneficiaria)}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">

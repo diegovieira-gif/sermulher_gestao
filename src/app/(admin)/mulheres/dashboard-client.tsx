@@ -132,8 +132,8 @@ export function DashboardClient({ stats }: DashboardClientProps) {
                   borderRadius: "8px",
                   color: "hsl(var(--foreground))",
                 }}
-                formatter={(value: number) => [
-                  `${value} casos`,
+                formatter={(value: number | undefined) => [
+                  `${value || 0} casos`,
                   "Quantidade",
                 ]}
               />
