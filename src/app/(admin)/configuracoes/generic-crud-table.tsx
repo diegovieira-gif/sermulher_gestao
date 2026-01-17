@@ -81,7 +81,7 @@ export function GenericCrudTable({
 
   const formSchema = createSchema(hasColorField);
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema) as any,
     defaultValues: { // Explicitly set default values for all fields in the schema
       nome: "",
       status: "published",
