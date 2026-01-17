@@ -29,6 +29,9 @@ export const insertEventoSchema = z
     descricao: z.string().optional(),
     recorrencia: z.enum(["nao_recorrente", "mensal", "anual"]).optional(),
     publico_alvo: z.string().optional(),
+    tipo: z.enum(["campanha", "evento", "roda_conversa", "curso"]).optional(),
+    status: z.enum(["planejado", "confirmado", "realizado", "cancelado"]).optional(),
+    local: z.string().optional(),
   })
   .refine(
     (data) => {
@@ -42,6 +45,30 @@ export const insertEventoSchema = z
     }
   );
 
+// Enums para opções de select
+export const tipoEventoEnum = [
+  { value: "campanha", label: "Campanha" },
+  { value: "evento", label: "Evento" },
+  { value: "roda_conversa", label: "Roda de Conversa" },
+  { value: "curso", label: "Curso" },
+] as const;
+
+export const statusEventoEnum = [
+  { value: "planejado", label: "Planejado", color: "yellow" },
+  { value: "confirmado", label: "Confirmado", color: "green" },
+  { value: "realizado", label: "Realizado", color: "blue" },
+  { value: "cancelado", label: "Cancelado", color: "red" },
+] as const;
+
+export const recorrenciaEnum = [
+  { value: "nao_recorrente", label: "Não recorrente" },
+  { value: "mensal", label: "Mensal" },
+  { value: "anual", label: "Anual" },
+] as const;
+
 // Tipos TypeScript derivados dos schemas
 export type Evento = z.infer<typeof insertEventoSchema>;
 export type EventoFormValues = z.input<typeof insertEventoSchema>;
+export type TipoEvento = typeof tipoEventoEnum[number]["value"];
+export type StatusEvento = typeof statusEventoEnum[number]["value"];
+export type Recorrencia = typeof recorrenciaEnum[number]["value"];

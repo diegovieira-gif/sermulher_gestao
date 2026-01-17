@@ -7,6 +7,9 @@ import {
   insertEventoSchema,
   type Evento,
   type EventoFormValues,
+  tipoEventoEnum,
+  statusEventoEnum,
+  recorrenciaEnum,
 } from "./schemas";
 import { saveEvento } from "./actions";
 import { Button } from "@/components/ui/button";
@@ -87,6 +90,9 @@ export function EventoForm({
         descricao: evento.descricao || "",
         recorrencia: evento.recorrencia || "nao_recorrente",
         publico_alvo: evento.publico_alvo || "",
+        tipo: evento.tipo || "evento",
+        status: evento.status || "planejado",
+        local: evento.local || "",
       };
     }
 
@@ -99,6 +105,9 @@ export function EventoForm({
       descricao: "",
       recorrencia: "nao_recorrente",
       publico_alvo: "",
+      tipo: "evento",
+      status: "planejado",
+      local: "",
     };
   }, [evento]);
 
@@ -134,7 +143,7 @@ export function EventoForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {evento ? "Editar Evento/Campanha" : "Novo Evento/Campanha"}
@@ -146,12 +155,13 @@ export function EventoForm({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Título */}
             <FormField
               control={form.control}
               name="nome"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Título</FormLabel>
+                  <FormLabel>Título *</FormLabel>
                   <FormControl>
                     <Input placeholder="Ex: Campanha de Doação" {...field} />
                   </FormControl>
@@ -160,51 +170,84 @@ export function EventoForm({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="tipo_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tipo</FormLabel>
-                  <FormControl>
-                    <Select
-                      name={field.name}
-                      ref={field.ref}
-                      onBlur={field.onBlur}
-                      value={
-                        typeof field.value === "string" ||
-                        typeof field.value === "number"
-                          ? field.value
-                          : ""
-                      }
-                      onChange={(e) =>
-                        field.onChange(
-                          e.target.value ? Number(e.target.value) : ""
-                        )
-                      }
-                    >
-                      <option value="" disabled>
-                        Selecione o tipo de evento...
-                      </option>
-                      {tiposEventoOptions.map((opt) => (
-                        <option key={opt.id} value={opt.id.toString()}>
-                          {opt.nome}
-                        </option>
-                      ))}
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
+            {/* Primeira linha: 2 colunas */}
             <div className="grid grid-cols-2 gap-4">
+              {/* Tipo de evento (da tabela config_tipos_evento) */}
+              <FormField
+                control={form.control}
+                name="tipo_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo de Evento *</FormLabel>
+                    <FormControl>
+                      <Select
+                        name={field.name}
+                        ref={field.ref}
+                        onBlur={field.onBlur}
+                        value={
+                          typeof field.value === "string" ||
+                          typeof field.value === "number"
+                            ? field.value
+                            : ""
+                        }
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value ? Number(e.target.value) : ""
+                          )
+                        }
+                      >
+                        <option value="" disabled>
+                          Selecione o tipo...
+                        </option>
+                        {tiposEventoOptions.map((opt) => (
+                          <option key={opt.id} value={opt.id.toString()}>
+                            {opt.nome}
+                          </option>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Status */}
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <FormControl>
+                      <Select
+                        name={field.name}
+                        ref={field.ref}
+                        onBlur={field.onBlur}
+                        value={field.value || "planejado"}
+                        onChange={(e) => field.onChange(e.target.value)}
+                      >
+                        {statusEventoEnum.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Segunda linha: 2 colunas */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Data Inicial */}
               <FormField
                 control={form.control}
                 name="data_inicio"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Data de Início</FormLabel>
+                    <FormLabel>Data de Início *</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
@@ -213,12 +256,13 @@ export function EventoForm({
                 )}
               />
 
+              {/* Data Final */}
               <FormField
                 control={form.control}
                 name="data_fim"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Data de Fim</FormLabel>
+                    <FormLabel>Data de Fim *</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
@@ -228,7 +272,9 @@ export function EventoForm({
               />
             </div>
 
+            {/* Terceira linha: 2 colunas */}
             <div className="grid grid-cols-2 gap-4">
+              {/* Recorrência */}
               <FormField
                 control={form.control}
                 name="recorrencia"
@@ -243,9 +289,11 @@ export function EventoForm({
                         value={field.value || "nao_recorrente"}
                         onChange={(e) => field.onChange(e.target.value)}
                       >
-                        <option value="nao_recorrente">Não recorrente</option>
-                        <option value="mensal">Mensal</option>
-                        <option value="anual">Anual</option>
+                        {recorrenciaEnum.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
                       </Select>
                     </FormControl>
                     <FormMessage />
@@ -253,14 +301,18 @@ export function EventoForm({
                 )}
               />
 
+              {/* Local */}
               <FormField
                 control={form.control}
-                name="publico_alvo"
+                name="local"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Público Alvo</FormLabel>
+                    <FormLabel>Local</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ex: Mulheres, Famílias..." {...field} />
+                      <Input
+                        placeholder="Ex: Centro de Referência"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -268,6 +320,55 @@ export function EventoForm({
               />
             </div>
 
+            {/* Quarta linha: 2 colunas */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Categoria de Tipo (campanha, evento, etc) */}
+              <FormField
+                control={form.control}
+                name="tipo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Categoria</FormLabel>
+                    <FormControl>
+                      <Select
+                        name={field.name}
+                        ref={field.ref}
+                        onBlur={field.onBlur}
+                        value={field.value || "evento"}
+                        onChange={(e) => field.onChange(e.target.value)}
+                      >
+                        {tipoEventoEnum.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Público Alvo */}
+              <FormField
+                control={form.control}
+                name="publico_alvo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Público Alvo</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Ex: Mulheres, Famílias..."
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Descrição (full width) */}
             <FormField
               control={form.control}
               name="descricao"
@@ -276,7 +377,7 @@ export function EventoForm({
                   <FormLabel>Descrição</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Descreva o evento ou campanha..."
+                      placeholder="Descreva o evento ou campanha em detalhes..."
                       rows={4}
                       {...field}
                     />
@@ -287,7 +388,7 @@ export function EventoForm({
             />
 
             {/* Botões */}
-            <div className="flex justify-end gap-4">
+            <div className="flex justify-end gap-4 pt-4">
               <Button
                 type="button"
                 variant="outline"

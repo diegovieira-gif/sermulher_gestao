@@ -34,6 +34,32 @@ export async function getEventos() {
 }
 
 /**
+ * Busca um evento específico pelo ID
+ */
+export async function getEventoById(id: number) {
+  try {
+    const evento = await directus.request(
+      readItems("eventos_campanhas", {
+        fields: [
+          "*",
+          "tipo_id.nome",
+          "tipo_id.icone",
+        ],
+        filter: { id: { _eq: id } },
+      })
+    );
+
+    return { success: true, data: evento?.[0] || null };
+  } catch (error) {
+    console.error("Erro ao buscar evento:", error);
+    return {
+      success: false,
+      error: "Erro ao buscar evento. Tente novamente.",
+    };
+  }
+}
+
+/**
  * Busca opções de tipos de evento do banco de dados
  */
 export async function getTiposOptions(): Promise<

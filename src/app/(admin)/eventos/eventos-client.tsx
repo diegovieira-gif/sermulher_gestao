@@ -25,6 +25,7 @@ import { EventoForm } from "./evento-form";
 import { deleteEvento } from "./actions";
 import { Plus, Edit, Trash2, Calendar, Repeat } from "lucide-react";
 import { toast } from "sonner";
+import { statusEventoEnum } from "./schemas";
 import type { Evento } from "./schemas";
 
 type TipoEventoOption = { id: number; nome: string; icone?: string };
@@ -82,6 +83,28 @@ function getBadgeVariant(status: StatusEvento): "secondary" | "success" | "info"
     default:
       return "secondary";
   }
+}
+
+// Função para obter a variante de badge baseada no status do evento
+function getStatusBadgeVariant(status?: string) {
+  switch (status) {
+    case "confirmado":
+      return "default"; // verde
+    case "planejado":
+      return "secondary"; // amarelo/cinza
+    case "realizado":
+      return "outline"; // azul
+    case "cancelado":
+      return "destructive"; // vermelho
+    default:
+      return "secondary";
+  }
+}
+
+// Função para obter o rótulo do status
+function getStatusLabel(status?: string): string {
+  const statusOption = statusEventoEnum.find(s => s.value === status);
+  return statusOption ? statusOption.label : "Planejado";
 }
 
 export function EventosClient({ eventos, tiposEventoOptions }: EventosClientProps) {
@@ -150,6 +173,7 @@ export function EventosClient({ eventos, tiposEventoOptions }: EventosClientProp
               <TableHead>Título</TableHead>
               <TableHead>Data</TableHead>
               <TableHead>Tipo</TableHead>
+              <TableHead>Situação</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
@@ -157,7 +181,7 @@ export function EventosClient({ eventos, tiposEventoOptions }: EventosClientProp
           <TableBody>
             {eventos.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground">
+                <TableCell colSpan={6} className="text-center text-muted-foreground">
                   Nenhum evento cadastrado
                 </TableCell>
               </TableRow>
@@ -188,7 +212,7 @@ export function EventosClient({ eventos, tiposEventoOptions }: EventosClientProp
                       <div className="flex items-center gap-2">
                         {evento.nome}
                         {isRecorrente && (
-                          <div title="Evento recorrente">
+                          <div title={`Evento recorrente (${evento.recorrencia})`}>
                             <Repeat className="h-4 w-4 text-muted-foreground" />
                           </div>
                         )}
@@ -210,6 +234,11 @@ export function EventosClient({ eventos, tiposEventoOptions }: EventosClientProp
                     <TableCell>
                       <Badge variant={getBadgeVariant(status)}>
                         {status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusBadgeVariant(evento.status)}>
+                        {getStatusLabel(evento.status)}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">

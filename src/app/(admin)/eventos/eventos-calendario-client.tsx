@@ -4,7 +4,8 @@ import { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Repeat } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Repeat, MapPin } from "lucide-react";
+import { statusEventoEnum } from "./schemas";
 
 type TipoEventoOption = { id: number; nome: string; icone?: string };
 
@@ -111,6 +112,8 @@ function transformarEventos(eventos: any[], tiposEventoOptions: TipoEventoOption
       recorrencia: evento.recorrencia || "nao_recorrente",
       publico_alvo: evento.publico_alvo || "",
       descricao: evento.descricao || "",
+      local: evento.local || "",
+      statusEvento: evento.status || "planejado",
     };
   });
 }
@@ -221,6 +224,26 @@ export function EventosCalendarioClient({ eventos, tiposEventoOptions }: Eventos
     }
   };
 
+  const getStatusEventoBadgeVariant = (status?: string) => {
+    switch (status) {
+      case "confirmado":
+        return "default"; // verde
+      case "planejado":
+        return "secondary"; // amarelo/cinza
+      case "realizado":
+        return "outline"; // azul
+      case "cancelado":
+        return "destructive"; // vermelho
+      default:
+        return "secondary";
+    }
+  };
+
+  const getStatusEventoLabel = (status?: string): string => {
+    const statusOption = statusEventoEnum.find(s => s.value === status);
+    return statusOption ? statusOption.label : "Planejado";
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -318,29 +341,33 @@ export function EventosCalendarioClient({ eventos, tiposEventoOptions }: Eventos
                 eventsForSelectedDate.map((evento) => (
                   <div
                     key={evento.id}
-                    className="p-3 border rounded-lg space-y-2 hover:bg-accent/50 transition-colors"
+                    className="p-4 border rounded-lg space-y-3 hover:bg-accent/50 transition-colors bg-card"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <p className="font-medium">{evento.nome}</p>
+                          <h4 className="font-semibold">{evento.nome}</h4>
                           {evento.recorrencia !== "nao_recorrente" && (
-                            <div title="Evento recorrente">
-                              <Repeat className="h-3 w-3 text-muted-foreground" />
-                            </div>
+                            <Repeat className="h-4 w-4 text-muted-foreground" title={`Recorrência: ${evento.recorrencia}`} />
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground">
                           {evento.tipoNome}
                         </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {formatDateShort(evento.dataInicio)} - {formatDateShort(evento.dataFim)}
-                        </p>
                       </div>
-                      <Badge variant={getStatusBadgeVariant(evento.status)}>
-                        {evento.status}
+                      <Badge variant={getStatusEventoBadgeVariant(evento.statusEvento)}>
+                        {getStatusEventoLabel(evento.statusEvento)}
                       </Badge>
                     </div>
+                    {evento.local && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <MapPin className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">{evento.local}</span>
+                      </div>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      {formatDateShort(evento.dataInicio)} - {formatDateShort(evento.dataFim)}
+                    </p>
                   </div>
                 ))
               ) : selectedDate ? (
@@ -371,27 +398,35 @@ export function EventosCalendarioClient({ eventos, tiposEventoOptions }: Eventos
               {upcomingEvents.map((evento) => (
                 <div
                   key={evento.id}
-                  className="p-4 border rounded-lg space-y-2 hover:bg-accent/50 transition-colors cursor-pointer"
+                  className="p-4 border rounded-lg space-y-3 hover:bg-accent/50 transition-colors cursor-pointer"
                   onClick={() => setSelectedDate(evento.dataInicio)}
                 >
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <CalendarIcon className="h-4 w-4" />
-                    <span>{formatDateShort(evento.dataInicio)} - {formatDateShort(evento.dataFim)}</span>
+                    <span className="font-medium">{formatDateShort(evento.dataInicio)} - {formatDateShort(evento.dataFim)}</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium">{evento.nome}</p>
-                    {evento.recorrencia !== "nao_recorrente" && (
-                      <div title="Evento recorrente">
-                        <Repeat className="h-3 w-3 text-muted-foreground" />
+                  <div className="flex items-start gap-2">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h5 className="font-medium text-base">{evento.nome}</h5>
+                        {evento.recorrencia !== "nao_recorrente" && (
+                          <Repeat className="h-3 w-3 text-muted-foreground" />
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  {evento.local && (
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <MapPin className="h-3 w-3" />
+                      <span className="line-clamp-1">{evento.local}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2 flex-wrap">
                     <Badge variant="outline" className="text-xs">
                       {evento.tipoNome}
                     </Badge>
-                    <Badge variant={getStatusBadgeVariant(evento.status)} className="text-xs">
-                      {evento.status}
+                    <Badge variant={getStatusEventoBadgeVariant(evento.statusEvento)} className="text-xs">
+                      {getStatusEventoLabel(evento.statusEvento)}
                     </Badge>
                   </div>
                 </div>

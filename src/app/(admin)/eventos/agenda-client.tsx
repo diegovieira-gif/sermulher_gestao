@@ -222,16 +222,18 @@ export function AgendaClient({ events }: AgendaClientProps) {
                 eventsForSelectedDate.map((event) => (
                   <div
                     key={event.id}
-                    className="p-3 border rounded-lg space-y-1 hover:bg-accent/50 transition-colors"
+                    className="p-4 border rounded-lg space-y-2 hover:bg-accent/50 transition-colors bg-card"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1">
-                        <p className="font-medium">{event.title}</p>
+                        <h3 className="font-semibold text-base">{event.title}</h3>
                         <p className="text-sm text-muted-foreground">
                           {event.subtitle}
                         </p>
                       </div>
-                      <Badge variant="outline">{event.type}</Badge>
+                      <Badge variant="outline" className="shrink-0">
+                        {event.type}
+                      </Badge>
                     </div>
                   </div>
                 ))
@@ -268,10 +270,10 @@ export function AgendaClient({ events }: AgendaClientProps) {
                 >
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <CalendarIcon className="h-4 w-4" />
-                    <span>{formatDateShort(event.date)}</span>
+                    <span className="font-medium">{formatDateShort(event.date)}</span>
                   </div>
-                  <p className="font-medium">{event.title}</p>
-                  <p className="text-sm text-muted-foreground">
+                  <h4 className="font-medium text-base">{event.title}</h4>
+                  <p className="text-sm text-muted-foreground line-clamp-2">
                     {event.subtitle}
                   </p>
                   <Badge variant="outline" className="mt-2">
