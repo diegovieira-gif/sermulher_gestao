@@ -9,6 +9,8 @@ import {
   FileText, 
   AlertTriangle, 
   Calendar, 
+  CalendarDays,
+  BarChart3,
   Settings, 
   LogOut,
   HeartHandshake, // Ícone para Mulheres
@@ -57,9 +59,14 @@ const menuItems: MenuItem[] = [
     // items: [ { title: 'Infratores', href: '/sala-azul/infratores' }, ... ]
   },
   {
-    title: 'Eventos/Campanhas',
+    title: 'Agenda & Eventos',
     href: '/eventos',
-    icon: Calendar,
+    icon: CalendarDays,
+  },
+  {
+    title: 'Relatório RMA',
+    href: '/relatorios/rma',
+    icon: BarChart3,
   },
   {
     title: 'Configurações',
@@ -160,7 +167,7 @@ export function Sidebar() {
                       href={item.href}
                       className={cn(
                         'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-                        pathname === item.href
+                        pathname === item.href || pathname.startsWith(item.href + '/')
                           ? 'bg-primary/10 text-primary'
                           : 'text-foreground hover:bg-accent hover:text-accent-foreground'
                       )}
