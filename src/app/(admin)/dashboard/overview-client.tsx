@@ -53,12 +53,18 @@ export function OverviewClient({ stats }: OverviewClientProps) {
     });
   };
 
-  // Cor do badge de prioridade
-  const getPrioridadeColor = (prioridade: string) => {
-    if (prioridade === "Emergência") {
+  // Cor do badge de prioridade (usa cor do DB se disponível, senão usa cores padrão)
+  const getPrioridadeColor = (prioridade: string, cor?: string) => {
+    // Se tiver cor do banco, usa inline style
+    if (cor) {
+      return undefined; // Retorna undefined para usar style inline
+    }
+    // Senão, usa cores padrão por nome
+    const prioridadeLower = prioridade?.toLowerCase() || "";
+    if (prioridadeLower.includes("emergência") || prioridadeLower.includes("emergencia") || prioridadeLower.includes("crítico") || prioridadeLower.includes("critico")) {
       return "bg-red-100 text-red-800 border-red-200";
     }
-    if (prioridade === "Urgente") {
+    if (prioridadeLower.includes("urgente") || prioridadeLower.includes("alto")) {
       return "bg-orange-100 text-orange-800 border-orange-200";
     }
     return "bg-gray-100 text-gray-800 border-gray-200";
@@ -69,7 +75,7 @@ export function OverviewClient({ stats }: OverviewClientProps) {
       {/* Header: Saudação e Data */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-foreground mb-2">
-          Bem-vindo, Gestor
+          Olá, Gestor
         </h1>
         <p className="text-muted-foreground capitalize">{dataAtual}</p>
       </div>
@@ -78,7 +84,7 @@ export function OverviewClient({ stats }: OverviewClientProps) {
       <div className="grid gap-6 md:grid-cols-2">
         {/* Card: Gestão de Mulheres */}
         <Link href="/mulheres">
-          <Card className="cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] border-l-4 border-l-purple-500 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20">
+          <Card className="cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] border-l-4 border-l-purple-500 bg-gradient-to-br from-pink-50 to-purple-50 dark:from-pink-950/20 dark:to-purple-950/20">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-xl text-purple-900 dark:text-purple-100">
@@ -168,16 +174,23 @@ export function OverviewClient({ stats }: OverviewClientProps) {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <p className="font-medium text-sm text-foreground">
+                          <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
                             {formatarDataSessao(sessao.data)}
-                          </p>
+                          </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground font-medium mb-1">
                           {sessao.tema}
                         </p>
-                        <p className="text-xs text-muted-foreground">
-                          📍 {sessao.local}
-                        </p>
+                        <div className="space-y-0.5">
+                          {sessao.nome_ciclo && (
+                            <p className="text-xs text-foreground font-medium">
+                              {sessao.nome_ciclo}
+                            </p>
+                          )}
+                          <p className="text-xs text-muted-foreground">
+                            📍 {sessao.local}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -194,61 +207,82 @@ export function OverviewClient({ stats }: OverviewClientProps) {
                 <div className="text-center py-8 text-muted-foreground">
                   <Calendar className="h-12 w-12 mx-auto mb-2 opacity-50" />
                   <p className="text-sm">
-                    Nenhuma sessão agendada para os próximos 7 dias
+                    Nenhuma sessão agendada para os próximos 15 dias
                   </p>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Coluna Direita: Urgências */}
+          {/* Coluna Direita: Alertas */}
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-red-600" />
-                <CardTitle>Casos de Alta Prioridade</CardTitle>
+                <AlertTriangle className="h-5 w-5 text-orange-600" />
+                <CardTitle>Casos em Andamento (Mulheres)</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
               {casosCriticos.length > 0 ? (
                 <div className="space-y-3">
-                  {casosCriticos.map((caso) => (
-                    <Link
-                      key={caso.id}
-                      href="/mulheres/atendimentos"
-                      className="block"
-                    >
-                      <div className="flex items-start gap-3 p-3 rounded-lg border border-red-200 bg-red-50/50 hover:bg-red-100/50 dark:bg-red-950/10 dark:border-red-900 dark:hover:bg-red-950/20 transition-colors">
-                        <div className="flex-shrink-0 mt-0.5">
-                          <AlertTriangle className="h-4 w-4 text-red-600" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Badge
-                              className={`text-xs ${getPrioridadeColor(
-                                caso.prioridade
-                              )}`}
-                            >
-                              {caso.prioridade}
-                            </Badge>
-                            <p className="text-xs text-muted-foreground">
-                              {formatarDataAtendimento(caso.data_abertura)}
+                  {casosCriticos.map((caso) => {
+                    const prioridadeColorClass = getPrioridadeColor(caso.prioridade, caso.prioridade_cor);
+                    const isAltaPrioridade = caso.prioridade?.toLowerCase().includes("emergência") || 
+                                            caso.prioridade?.toLowerCase().includes("emergencia") ||
+                                            caso.prioridade?.toLowerCase().includes("urgente") ||
+                                            caso.prioridade?.toLowerCase().includes("crítico") ||
+                                            caso.prioridade?.toLowerCase().includes("critico") ||
+                                            caso.prioridade?.toLowerCase().includes("alto");
+                    
+                    return (
+                      <Link
+                        key={caso.id}
+                        href="/mulheres/atendimentos"
+                        className="block"
+                      >
+                        <div className={`flex items-start gap-3 p-3 rounded-lg border transition-colors ${
+                          isAltaPrioridade 
+                            ? "border-orange-200 bg-orange-50/50 hover:bg-orange-100/50 dark:bg-orange-950/10 dark:border-orange-900 dark:hover:bg-orange-950/20"
+                            : "border-border hover:bg-accent/50"
+                        }`}>
+                          <div className="flex-shrink-0 mt-0.5">
+                            {isAltaPrioridade ? (
+                              <AlertTriangle className="h-4 w-4 text-orange-600" />
+                            ) : (
+                              <div className="w-2 h-2 rounded-full bg-gray-400" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Badge
+                                className={`text-xs ${prioridadeColorClass || ""}`}
+                                style={caso.prioridade_cor && !prioridadeColorClass ? {
+                                  backgroundColor: caso.prioridade_cor,
+                                  color: "white",
+                                  borderColor: caso.prioridade_cor,
+                                } : undefined}
+                              >
+                                {caso.prioridade}
+                              </Badge>
+                              <p className="text-xs text-muted-foreground">
+                                {formatarDataAtendimento(caso.data_abertura)}
+                              </p>
+                            </div>
+                            <p className="text-sm font-medium text-foreground">
+                              {caso.beneficiaria_nome}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Status: {caso.status}
                             </p>
                           </div>
-                          <p className="text-sm font-medium text-foreground">
-                            {caso.beneficiaria_nome}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Status: {caso.status}
-                          </p>
                         </div>
-                      </div>
-                    </Link>
-                  ))}
+                      </Link>
+                    );
+                  })}
                   <Link href="/mulheres/atendimentos">
                     <Button
                       variant="outline"
-                      className="w-full mt-2 text-red-600 border-red-200 hover:bg-red-50"
+                      className="w-full mt-2 text-orange-600 border-orange-200 hover:bg-orange-50"
                     >
                       Ver todos os atendimentos
                     </Button>
@@ -258,7 +292,7 @@ export function OverviewClient({ stats }: OverviewClientProps) {
                 <div className="text-center py-8 text-muted-foreground">
                   <AlertTriangle className="h-12 w-12 mx-auto mb-2 opacity-50" />
                   <p className="text-sm">
-                    Nenhum caso de alta prioridade pendente
+                    Nenhum caso em andamento
                   </p>
                 </div>
               )}

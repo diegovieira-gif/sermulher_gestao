@@ -7,6 +7,7 @@ export type ProximaSessao = {
   id: number;
   data: string;
   tema: string;
+  nome_ciclo?: string;
   local?: string;
 };
 
@@ -14,6 +15,7 @@ export type CasoCritico = {
   id: number;
   beneficiaria_nome: string;
   prioridade: string;
+  prioridade_cor?: string;
   data_abertura: string;
   status: string;
 };
@@ -35,11 +37,11 @@ export async function getGlobalDashboardStats(): Promise<
   | { success: false; error: string }
 > {
   try {
-    // Calcula datas para filtro de sessões (hoje até +7 dias)
+    // Calcula datas para filtro de sessões (hoje até +15 dias)
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
-    const hojeMais7Dias = new Date(hoje);
-    hojeMais7Dias.setDate(hojeMais7Dias.getDate() + 7);
+    const hojeMais15Dias = new Date(hoje);
+    hojeMais15Dias.setDate(hojeMais15Dias.getDate() + 15);
 
     // Busca todas as queries em paralelo
     const [
@@ -48,7 +50,8 @@ export async function getGlobalDashboardStats(): Promise<
       sessoesResult,
       atendimentosResult,
     ] = await Promise.all([
-      // Total de infratores (cadastros ativos)
+        // Total de infratores (cadastros ativos - sem filtro de status por enquanto)
+      // Nota: Se houver um campo de status para archived, adicione o filtro aqui
       directus
         .request(
           readItems("infratores", {
@@ -74,7 +77,7 @@ export async function getGlobalDashboardStats(): Promise<
           return [];
         }),
 
-      // Próximas sessões (ciclo_sessoes) - próximos 7 dias
+      // Próximas sessões (ciclo_sessoes) - próximos 15 dias
       directus
         .request(
           readItems("ciclo_sessoes", {
@@ -83,16 +86,17 @@ export async function getGlobalDashboardStats(): Promise<
               "data",
               "tema",
               "sala_id.id",
+              "sala_id.nome_ciclo",
               "sala_id.local_id.nome",
             ],
             filter: {
               data: {
                 _gte: hoje.toISOString().split("T")[0],
-                _lte: hojeMais7Dias.toISOString().split("T")[0],
+                _lte: hojeMais15Dias.toISOString().split("T")[0],
               },
             },
             sort: ["data"],
-            limit: 3,
+            limit: 4,
           })
         )
         .catch((err): any[] => {
@@ -100,7 +104,7 @@ export async function getGlobalDashboardStats(): Promise<
           return [];
         }),
 
-      // Casos críticos (atendimentos em andamento com prioridade alta)
+      // Casos em andamento (atendimentos - traz os 5 últimos em andamento)
       directus
         .request(
           readItems("atendimentos", {
@@ -112,18 +116,19 @@ export async function getGlobalDashboardStats(): Promise<
               "beneficiaria.nome_completo",
               "prioridade_id.id",
               "prioridade_id.nome",
+              "prioridade_id.cor",
             ],
             filter: {
               status: {
                 _eq: "Em andamento",
               },
             },
-            sort: ["-data_abertura"],
-            limit: 50, // Busca mais para filtrar depois
+            sort: ["-data_abertura"], // Ordena por data de criação (mais recentes primeiro)
+            limit: 5,
           })
         )
         .catch((err): any[] => {
-          console.error("❌ Erro ao buscar atendimentos críticos:", err);
+          console.error("❌ Erro ao buscar atendimentos em andamento:", err);
           return [];
         }),
     ]);
@@ -134,32 +139,24 @@ export async function getGlobalDashboardStats(): Promise<
         id: sessao.id,
         data: sessao.data,
         tema: sessao.tema || "Sem tema",
+        nome_ciclo: sessao.sala_id?.nome_ciclo || "Ciclo sem nome",
         local:
           sessao.sala_id?.local_id?.nome || "Local não definido",
       }))
       .filter((s) => s.data); // Remove sessões sem data
 
-    // Processa casos críticos: filtra por prioridade alta (Emergência ou Urgente)
+    // Processa casos em andamento: transforma todos os 5 atendimentos em andamento
     const casosCriticos: CasoCritico[] = (atendimentosResult as any[])
       .map((atendimento: any) => ({
         id: atendimento.id,
         beneficiaria_nome:
           atendimento.beneficiaria?.nome_completo || "Não informado",
         prioridade: atendimento.prioridade_id?.nome || "Sem prioridade",
+        prioridade_cor: atendimento.prioridade_id?.cor || undefined,
         data_abertura: atendimento.data_abertura || "",
         status: atendimento.status || "Em andamento",
       }))
-      .filter((c) => {
-        // Filtra apenas casos de alta prioridade (Emergência ou Urgente)
-        const prioridade = c.prioridade?.toLowerCase() || "";
-        return (
-          c.id &&
-          (prioridade.includes("emergência") ||
-            prioridade.includes("emergencia") ||
-            prioridade.includes("urgente"))
-        );
-      })
-      .slice(0, 5); // Limita a 5 casos
+      .filter((c) => c.id); // Remove atendimentos inválidos
 
     return {
       success: true,
