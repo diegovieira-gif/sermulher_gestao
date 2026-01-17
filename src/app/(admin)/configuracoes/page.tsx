@@ -3,7 +3,7 @@ import { ConfiguracoesClient } from "./configuracoes-client";
 
 export default async function ConfiguracoesPage() {
   // Busca todos os dados das collections de configuração
-  const [origensResult, prioridadesResult, tiposEventoResult, tiposAgressaoResult, periculosidadeResult, locaisResult] =
+  const [origensResult, prioridadesResult, tiposEventoResult, tiposAgressaoResult, periculosidadeResult, locaisResult, bairrosResult, beneficiosResult] =
     await Promise.all([
       getAuxItems("config_origens"),
       getAuxItems("config_prioridades"),
@@ -11,6 +11,8 @@ export default async function ConfiguracoesPage() {
       getAuxItems("config_tipos_agressao"),
       getAuxItems("config_niveis_periculosidade"),
       getAuxItems("locais"),
+      getAuxItems("config_bairros"),
+      getAuxItems("config_beneficios"),
     ]);
 
   // Verifica se houve erros
@@ -20,7 +22,9 @@ export default async function ConfiguracoesPage() {
     !tiposEventoResult.success ||
     !tiposAgressaoResult.success ||
     !periculosidadeResult.success ||
-    !locaisResult.success
+    !locaisResult.success ||
+    !bairrosResult.success ||
+    !beneficiosResult.success
   ) {
     return (
       <div className="p-6">
@@ -40,6 +44,8 @@ export default async function ConfiguracoesPage() {
         tiposAgressao={tiposAgressaoResult.data || []}
         periculosidade={periculosidadeResult.data || []}
         locais={locaisResult.data || []}
+        bairros={bairrosResult.data || []}
+        beneficios={beneficiosResult.data || []}
       />
     </div>
   );

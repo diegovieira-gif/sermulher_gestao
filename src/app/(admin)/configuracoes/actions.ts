@@ -15,6 +15,8 @@ export type ConfigCollection =
   | "config_tipos_agressao"
   | "config_niveis_periculosidade"
   | "config_status_legal"
+  | "config_bairros"
+  | "config_beneficios"
   | "locais";
 
 /**
@@ -38,6 +40,10 @@ function getCollectionName(type: string): string {
       return "config_niveis_periculosidade";
     case "status_legal":
       return "config_status_legal";
+    case "bairros":
+      return "config_bairros";
+    case "beneficios":
+      return "config_beneficios";
     case "locais":
       return "locais";
     default:

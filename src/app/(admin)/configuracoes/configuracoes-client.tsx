@@ -10,6 +10,8 @@ interface ConfiguracoesClientProps {
   tiposAgressao: any[];
   periculosidade: any[];
   locais: any[];
+  bairros: any[];
+  beneficios: any[];
 }
 
 export function ConfiguracoesClient({
@@ -19,6 +21,8 @@ export function ConfiguracoesClient({
   tiposAgressao,
   periculosidade,
   locais,
+  bairros,
+  beneficios,
 }: ConfiguracoesClientProps) {
   return (
     <div>
@@ -30,13 +34,15 @@ export function ConfiguracoesClient({
       </div>
 
       <Tabs defaultValue="origens" className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="origens">Origens</TabsTrigger>
           <TabsTrigger value="prioridades">Prioridades</TabsTrigger>
           <TabsTrigger value="tipos-evento">Tipos de Evento</TabsTrigger>
           <TabsTrigger value="tipos-agressao">Tipos de Agressão</TabsTrigger>
           <TabsTrigger value="periculosidade">Periculosidade</TabsTrigger>
           <TabsTrigger value="locais">Locais</TabsTrigger>
+          <TabsTrigger value="bairros">Bairros</TabsTrigger>
+          <TabsTrigger value="beneficios">Benefícios</TabsTrigger>
         </TabsList>
 
         <TabsContent value="origens" className="mt-6">
@@ -110,6 +116,30 @@ export function ConfiguracoesClient({
             title="Locais (Salas)"
             items={locais}
             columns={[{ key: "nome", label: "Nome" }]}
+          />
+        </TabsContent>
+
+        <TabsContent value="bairros" className="mt-6">
+          <GenericCrudTable
+            collectionName="config_bairros"
+            title="Bairros"
+            items={bairros}
+            columns={[
+              { key: "nome", label: "Nome" },
+              { key: "zona", label: "Zona" },
+            ]}
+          />
+        </TabsContent>
+
+        <TabsContent value="beneficios" className="mt-6">
+          <GenericCrudTable
+            collectionName="config_beneficios"
+            title="Benefícios"
+            items={beneficios}
+            columns={[
+              { key: "nome", label: "Nome" },
+              { key: "descricao", label: "Descrição" },
+            ]}
           />
         </TabsContent>
       </Tabs>
