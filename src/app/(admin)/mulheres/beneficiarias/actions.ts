@@ -13,6 +13,9 @@ const BENEFICIARIA_FIELDS = [
   'contato',
   'endereco',
   'perfil_socioeconomico',
+  'recebe_bolsa_familia',
+  'recebe_bpc',
+  'possui_medida_protetiva',
 ];
 
 /**
@@ -79,6 +82,17 @@ export async function saveBeneficiaria(data: unknown) {
     if (validatedData.cpf && validatedData.cpf.trim() !== "") {
       // Remove formatação do CPF antes de salvar
       payload.cpf = validatedData.cpf.replace(/\D/g, "");
+    }
+
+    // Campos opcionais de Dados Sociais e Proteção
+    if (validatedData.recebe_bolsa_familia !== undefined) {
+      payload.recebe_bolsa_familia = validatedData.recebe_bolsa_familia;
+    }
+    if (validatedData.recebe_bpc !== undefined) {
+      payload.recebe_bpc = validatedData.recebe_bpc;
+    }
+    if (validatedData.possui_medida_protetiva !== undefined) {
+      payload.possui_medida_protetiva = validatedData.possui_medida_protetiva;
     }
 
     if (validatedData.id) {

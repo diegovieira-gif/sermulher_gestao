@@ -24,7 +24,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -331,25 +331,25 @@ export function BeneficiariaForm({
 
               {/* Aba: Dados Sociais e Proteção */}
               <TabsContent value="dados-sociais" className="space-y-4 mt-4">
-                <div className="space-y-4">
+                <div className="border rounded-lg p-4 space-y-4">
                   <h3 className="text-sm font-semibold">Dados Sociais e Proteção</h3>
                   
                   <FormField
                     control={form.control}
                     name="recebe_bolsa_familia"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">
+                            Recebe Bolsa Família
+                          </FormLabel>
+                        </div>
                         <FormControl>
-                          <Checkbox
+                          <Switch
                             checked={field.value}
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>
-                            Recebe Bolsa Família
-                          </FormLabel>
-                        </div>
                       </FormItem>
                     )}
                   />
@@ -358,18 +358,18 @@ export function BeneficiariaForm({
                     control={form.control}
                     name="recebe_bpc"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">
+                            Recebe BPC (Benefício de Prestação Continuada)
+                          </FormLabel>
+                        </div>
                         <FormControl>
-                          <Checkbox
+                          <Switch
                             checked={field.value}
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>
-                            Recebe BPC (Benefício de Prestação Continuada)
-                          </FormLabel>
-                        </div>
                       </FormItem>
                     )}
                   />
@@ -378,18 +378,18 @@ export function BeneficiariaForm({
                     control={form.control}
                     name="possui_medida_protetiva"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">
+                            Possui Medida Protetiva
+                          </FormLabel>
+                        </div>
                         <FormControl>
-                          <Checkbox
+                          <Switch
                             checked={field.value}
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>
-                            Possui Medida Protetiva
-                          </FormLabel>
-                        </div>
                       </FormItem>
                     )}
                   />

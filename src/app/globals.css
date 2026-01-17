@@ -166,3 +166,19 @@
   }
 }
 
+@media print {
+  aside,
+  header,
+  .print\:hidden,
+  .no-print {
+    display: none !important;
+  }
+
+  main {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+}
+
