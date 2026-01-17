@@ -31,10 +31,20 @@ export type TiposViolencia = {
   moral: number;
 };
 
-export type DadosRMA = {
+export type VolumeRMA = {
   total_atendimentos: number;
   novos_casos: number;
-  perfil_social: PerfilSocial;
+};
+
+export type PerfilRMA = {
+  bolsa_familia: number;
+  bpc: number;
+  medida_protetiva: number;
+};
+
+export type DadosRMA = {
+  volume: VolumeRMA;
+  perfil: PerfilRMA;
   encaminhamentos: Encaminhamentos;
   tipos_violencia: TiposViolencia;
 };
@@ -84,14 +94,18 @@ function getRangeDatas(mes: number, ano: number): { inicio: string; fim: string 
 /**
  * Agrega dados do Relatório Mensal de Atendimento (RMA)
  * 
- * @param mes - Número do mês (1-12)
- * @param ano - Número do ano (ex: 2024)
+ * @param params - Objeto com mês e ano { mes: number, ano: number }
+ * @param params.mes - Número do mês (1-12)
+ * @param params.ano - Número do ano (ex: 2024)
  * @returns Objeto estruturado com todas as agregações do RMA
  */
-export async function getDadosRMA(
-  mes: number,
-  ano: number
-): Promise<{ success: true; data: DadosRMA } | { success: false; error: string }> {
+export async function getDadosRMA({
+  mes,
+  ano,
+}: {
+  mes: number;
+  ano: number;
+}): Promise<{ success: true; data: DadosRMA } | { success: false; error: string }> {
   try {
     // Validação de parâmetros
     if (!mes || !ano) {
@@ -246,9 +260,15 @@ export async function getDadosRMA(
 
     // Monta objeto de retorno
     const dadosRMA: DadosRMA = {
-      total_atendimentos: atendimentos.length,
-      novos_casos: novosCasos,
-      perfil_social: perfilSocial,
+      volume: {
+        total_atendimentos: atendimentos.length,
+        novos_casos: novosCasos,
+      },
+      perfil: {
+        bolsa_familia: perfilSocial.recebe_bolsa_familia,
+        bpc: perfilSocial.recebe_bpc,
+        medida_protetiva: perfilSocial.possui_medida_protetiva,
+      },
       encaminhamentos: encaminhamentos,
       tipos_violencia: tiposViolencia,
     };

@@ -21,7 +21,7 @@ export default async function RMAPage({ searchParams }: PageProps) {
   const anoValido = ano >= 2000 && ano <= 2100 ? ano : hoje.getFullYear();
 
   // Busca dados do RMA
-  const result = await getDadosRMA(mesValido, anoValido);
+  const result = await getDadosRMA({ mes: mesValido, ano: anoValido });
 
   if (!result.success) {
     return (

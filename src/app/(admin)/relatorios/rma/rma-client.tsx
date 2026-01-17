@@ -15,6 +15,7 @@ import {
   Home,
   Scale,
   AlertTriangle,
+  Printer,
 } from 'lucide-react';
 import {
   BarChart,
@@ -131,10 +132,15 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
     dados.tipos_violencia.patrimonial +
     dados.tipos_violencia.moral;
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
     <div className="space-y-6">
-      {/* Filtros */}
-      <Card>
+      {/* Filtros e Botão de Impressão */}
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between print:hidden">
+        <Card className="flex-1">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
@@ -187,10 +193,19 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
             </div>
           </div>
         </CardContent>
-      </Card>
+        </Card>
+        <Button
+          onClick={handlePrint}
+          variant="outline"
+          className="print:hidden"
+        >
+          <Printer className="mr-2 h-4 w-4" />
+          Imprimir Relatório
+        </Button>
+      </div>
 
       {/* Bloco 1: Volume de Atendimentos */}
-      <div className="space-y-4">
+      <div className="space-y-4 rma-print-section">
         <h2 className="text-2xl font-bold text-foreground">Bloco 1: Volume de Atendimentos</h2>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <Card>
@@ -199,7 +214,7 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
               <FileText className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{dados.total_atendimentos}</div>
+              <div className="text-2xl font-bold">{dados.volume.total_atendimentos}</div>
               <p className="text-xs text-muted-foreground">No período selecionado</p>
             </CardContent>
           </Card>
@@ -210,7 +225,7 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{dados.novos_casos}</div>
+              <div className="text-2xl font-bold">{dados.volume.novos_casos}</div>
               <p className="text-xs text-muted-foreground">Primeiro atendimento do ano</p>
             </CardContent>
           </Card>
@@ -221,10 +236,10 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
               <Heart className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{dados.perfil_social.recebe_bolsa_familia}</div>
+              <div className="text-2xl font-bold">{dados.perfil.bolsa_familia}</div>
               <p className="text-xs text-muted-foreground">
-                {dados.total_atendimentos > 0
-                  ? `${Math.round((dados.perfil_social.recebe_bolsa_familia / dados.total_atendimentos) * 100)}% do total`
+                {dados.volume.total_atendimentos > 0
+                  ? `${Math.round((dados.perfil.bolsa_familia / dados.volume.total_atendimentos) * 100)}% do total`
                   : '0% do total'}
               </p>
             </CardContent>
@@ -236,10 +251,10 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
               <Shield className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{dados.perfil_social.recebe_bpc}</div>
+              <div className="text-2xl font-bold">{dados.perfil.bpc}</div>
               <p className="text-xs text-muted-foreground">
-                {dados.total_atendimentos > 0
-                  ? `${Math.round((dados.perfil_social.recebe_bpc / dados.total_atendimentos) * 100)}% do total`
+                {dados.volume.total_atendimentos > 0
+                  ? `${Math.round((dados.perfil.bpc / dados.volume.total_atendimentos) * 100)}% do total`
                   : '0% do total'}
               </p>
             </CardContent>
@@ -248,7 +263,7 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
       </div>
 
       {/* Bloco 2: Perfil Social */}
-      <div className="space-y-4">
+      <div className="space-y-4 rma-print-section">
         <h2 className="text-2xl font-bold text-foreground">Bloco 2: Perfil Social</h2>
         <div className="grid gap-6 md:grid-cols-3">
           <Card>
@@ -259,18 +274,18 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{dados.perfil_social.recebe_bolsa_familia}</div>
+              <div className="text-3xl font-bold">{dados.perfil.bolsa_familia}</div>
               <div className="mt-2 h-2 w-full rounded-full bg-muted">
                 <div
                   className="h-2 rounded-full bg-pink-600"
                   style={{
-                    width: `${dados.total_atendimentos > 0 ? (dados.perfil_social.recebe_bolsa_familia / dados.total_atendimentos) * 100 : 0}%`,
+                    width: `${dados.volume.total_atendimentos > 0 ? (dados.perfil.bolsa_familia / dados.volume.total_atendimentos) * 100 : 0}%`,
                   }}
                 />
               </div>
               <p className="mt-2 text-sm text-muted-foreground">
-                {dados.total_atendimentos > 0
-                  ? `${Math.round((dados.perfil_social.recebe_bolsa_familia / dados.total_atendimentos) * 100)}% dos atendimentos`
+                {dados.volume.total_atendimentos > 0
+                  ? `${Math.round((dados.perfil.bolsa_familia / dados.volume.total_atendimentos) * 100)}% dos atendimentos`
                   : '0% dos atendimentos'}
               </p>
             </CardContent>
@@ -284,18 +299,18 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{dados.perfil_social.recebe_bpc}</div>
+              <div className="text-3xl font-bold">{dados.perfil.bpc}</div>
               <div className="mt-2 h-2 w-full rounded-full bg-muted">
                 <div
                   className="h-2 rounded-full bg-blue-600"
                   style={{
-                    width: `${dados.total_atendimentos > 0 ? (dados.perfil_social.recebe_bpc / dados.total_atendimentos) * 100 : 0}%`,
+                    width: `${dados.volume.total_atendimentos > 0 ? (dados.perfil.bpc / dados.volume.total_atendimentos) * 100 : 0}%`,
                   }}
                 />
               </div>
               <p className="mt-2 text-sm text-muted-foreground">
-                {dados.total_atendimentos > 0
-                  ? `${Math.round((dados.perfil_social.recebe_bpc / dados.total_atendimentos) * 100)}% dos atendimentos`
+                {dados.volume.total_atendimentos > 0
+                  ? `${Math.round((dados.perfil.bpc / dados.volume.total_atendimentos) * 100)}% dos atendimentos`
                   : '0% dos atendimentos'}
               </p>
             </CardContent>
@@ -309,18 +324,18 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{dados.perfil_social.possui_medida_protetiva}</div>
+              <div className="text-3xl font-bold">{dados.perfil.medida_protetiva}</div>
               <div className="mt-2 h-2 w-full rounded-full bg-muted">
                 <div
                   className="h-2 rounded-full bg-red-600"
                   style={{
-                    width: `${dados.total_atendimentos > 0 ? (dados.perfil_social.possui_medida_protetiva / dados.total_atendimentos) * 100 : 0}%`,
+                    width: `${dados.volume.total_atendimentos > 0 ? (dados.perfil.medida_protetiva / dados.volume.total_atendimentos) * 100 : 0}%`,
                   }}
                 />
               </div>
               <p className="mt-2 text-sm text-muted-foreground">
-                {dados.total_atendimentos > 0
-                  ? `${Math.round((dados.perfil_social.possui_medida_protetiva / dados.total_atendimentos) * 100)}% dos atendimentos`
+                {dados.volume.total_atendimentos > 0
+                  ? `${Math.round((dados.perfil.medida_protetiva / dados.volume.total_atendimentos) * 100)}% dos atendimentos`
                   : '0% dos atendimentos'}
               </p>
             </CardContent>
@@ -329,7 +344,7 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
       </div>
 
       {/* Bloco 3: Encaminhamentos e Tipos de Violência */}
-      <div className="space-y-6">
+      <div className="space-y-6 rma-print-section">
         <h2 className="text-2xl font-bold text-foreground">Bloco 3: Encaminhamentos e Violências</h2>
         
         <div className="grid gap-6 lg:grid-cols-2">
@@ -345,7 +360,7 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
             <CardContent>
               {dadosEncaminhamentos.length > 0 ? (
                 <>
-                  <ResponsiveContainer width="100%" height={300}>
+                  <ResponsiveContainer width="100%" height={300} className="print:!h-auto print:min-h-[200px]">
                     <BarChart data={dadosEncaminhamentos}>
                       <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                       <XAxis
@@ -419,7 +434,7 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
             <CardContent>
               {dadosTiposViolencia.length > 0 ? (
                 <>
-                  <ResponsiveContainer width="100%" height={300}>
+                  <ResponsiveContainer width="100%" height={300} className="print:!h-auto print:min-h-[200px]">
                     <BarChart data={dadosTiposViolencia}>
                       <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                       <XAxis
