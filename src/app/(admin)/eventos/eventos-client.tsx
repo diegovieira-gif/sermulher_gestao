@@ -23,7 +23,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { EventoForm } from "./evento-form";
 import { deleteEvento } from "./actions";
-import { Plus, Edit, Trash2, Calendar } from "lucide-react";
+import { Plus, Edit, Trash2, Calendar, Repeat } from "lucide-react";
 import { toast } from "sonner";
 import type { Evento } from "./schemas";
 
@@ -147,9 +147,9 @@ export function EventosClient({ eventos, tiposEventoOptions }: EventosClientProp
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nome</TableHead>
+              <TableHead>Título</TableHead>
+              <TableHead>Data</TableHead>
               <TableHead>Tipo</TableHead>
-              <TableHead>Período</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
@@ -167,7 +167,7 @@ export function EventosClient({ eventos, tiposEventoOptions }: EventosClientProp
                   evento.data_inicio,
                   evento.data_fim
                 );
-                const periodo = `${formatarData(evento.data_inicio)} até ${formatarData(evento.data_fim)}`;
+                const dataFormatada = formatarData(evento.data_inicio);
 
                 // Acessa tipo_id - pode vir como objeto expandido ou apenas ID
                 const tipoObj = 
@@ -179,10 +179,24 @@ export function EventosClient({ eventos, tiposEventoOptions }: EventosClientProp
 
                 const tipoNome = tipoObj?.nome;
 
+                // Verifica se é evento recorrente
+                const isRecorrente = evento.recorrencia && evento.recorrencia !== "nao_recorrente";
+
                 return (
                   <TableRow key={evento.id}>
                     <TableCell className="font-medium">
-                      {evento.nome}
+                      <div className="flex items-center gap-2">
+                        {evento.nome}
+                        {isRecorrente && (
+                          <Repeat className="h-4 w-4 text-muted-foreground" title="Evento recorrente" />
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <span>{dataFormatada}</span>
+                      </div>
                     </TableCell>
                     <TableCell>
                       {tipoNome ? (
@@ -190,12 +204,6 @@ export function EventosClient({ eventos, tiposEventoOptions }: EventosClientProp
                       ) : (
                         <span className="text-muted-foreground">Sem tipo</span>
                       )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span>{periodo}</span>
-                      </div>
                     </TableCell>
                     <TableCell>
                       <Badge variant={getBadgeVariant(status)}>

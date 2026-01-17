@@ -27,6 +27,10 @@ export const insertEventoSchema = z
         { message: "Data de fim inválida" }
       ),
     descricao: z.string().optional(),
+    recorrencia: z.enum(["nao_recorrente", "mensal", "anual"], {
+      errorMap: () => ({ message: "Selecione a recorrência" }),
+    }).optional(),
+    publico_alvo: z.string().optional(),
   })
   .refine(
     (data) => {

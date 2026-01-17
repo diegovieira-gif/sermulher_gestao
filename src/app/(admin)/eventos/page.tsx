@@ -1,12 +1,11 @@
-import { getEventos, getTiposOptions, getAgendaEvents } from "./actions";
+import { getEventos, getTiposOptions } from "./actions";
 import { EventosClient } from "./eventos-client";
-import { AgendaClient } from "./agenda-client";
+import { EventosCalendarioClient } from "./eventos-calendario-client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default async function EventosPage() {
   const tiposOptions = await getTiposOptions();
   const eventosResult = await getEventos();
-  const agendaResult = await getAgendaEvents();
 
   // Tratamento de erros para eventos
   if (!eventosResult.success) {
@@ -29,28 +28,23 @@ export default async function EventosPage() {
     );
   }
 
-  // Para a agenda, não bloqueamos a página se houver erro, apenas mostramos mensagem
-  const agendaEvents = agendaResult.success ? agendaResult.data : [];
-
   return (
     <div className="p-6">
-      <Tabs defaultValue="agenda" className="space-y-4">
+      <Tabs defaultValue="lista" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="agenda">Agenda</TabsTrigger>
-          <TabsTrigger value="eventos">Eventos e Campanhas</TabsTrigger>
+          <TabsTrigger value="lista">Lista</TabsTrigger>
+          <TabsTrigger value="calendario">Calendário</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="agenda" className="space-y-4">
-          {!agendaResult.success && (
-            <div className="bg-destructive/10 text-destructive px-4 py-3 rounded">
-              {agendaResult.error || "Erro ao carregar agenda. Tente novamente."}
-            </div>
-          )}
-          <AgendaClient events={agendaEvents} />
+        <TabsContent value="lista" className="space-y-4">
+          <EventosClient
+            eventos={eventosResult.data || []}
+            tiposEventoOptions={tiposOptions.data || []}
+          />
         </TabsContent>
 
-        <TabsContent value="eventos" className="space-y-4">
-          <EventosClient
+        <TabsContent value="calendario" className="space-y-4">
+          <EventosCalendarioClient
             eventos={eventosResult.data || []}
             tiposEventoOptions={tiposOptions.data || []}
           />

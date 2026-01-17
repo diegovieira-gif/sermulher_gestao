@@ -85,6 +85,8 @@ export function EventoForm({
         data_inicio: dataInicioFormatted,
         data_fim: dataFimFormatted,
         descricao: evento.descricao || "",
+        recorrencia: evento.recorrencia || "nao_recorrente",
+        publico_alvo: evento.publico_alvo || "",
       };
     }
 
@@ -95,6 +97,8 @@ export function EventoForm({
       data_inicio: "",
       data_fim: "",
       descricao: "",
+      recorrencia: "nao_recorrente",
+      publico_alvo: "",
     };
   }, [evento]);
 
@@ -147,7 +151,7 @@ export function EventoForm({
               name="nome"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nome</FormLabel>
+                  <FormLabel>Título</FormLabel>
                   <FormControl>
                     <Input placeholder="Ex: Campanha de Doação" {...field} />
                   </FormControl>
@@ -217,6 +221,46 @@ export function EventoForm({
                     <FormLabel>Data de Fim</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="recorrencia"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Recorrência</FormLabel>
+                    <FormControl>
+                      <Select
+                        name={field.name}
+                        ref={field.ref}
+                        onBlur={field.onBlur}
+                        value={field.value || "nao_recorrente"}
+                        onChange={(e) => field.onChange(e.target.value)}
+                      >
+                        <option value="nao_recorrente">Não recorrente</option>
+                        <option value="mensal">Mensal</option>
+                        <option value="anual">Anual</option>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="publico_alvo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Público Alvo</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ex: Mulheres, Famílias..." {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
