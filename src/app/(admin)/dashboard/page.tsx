@@ -1,4 +1,4 @@
-import { getGlobalDashboardStats } from "./actions";
+import { getDashboardStats, getGlobalDashboardStats } from "./actions";
 import { OverviewClient } from "./overview-client";
 
 export default async function DashboardPage() {
@@ -14,17 +14,25 @@ export default async function DashboardPage() {
       );
     }
 
-    // Busca dados globais do dashboard
-    const result = await getGlobalDashboardStats();
+    // Tenta carregar o novo dashboard primeiro
+    const result = await getDashboardStats();
 
-    if (!result.success) {
+    if (result.success) {
+      // Se conseguir o novo dashboard, renderiza com o novo componente
+      return <OverviewClient stats={result.data} userName="Secretária" />;
+    }
+
+    // Se não conseguir o novo, tenta o antigo (global)
+    const globalResult = await getGlobalDashboardStats();
+
+    if (!globalResult.success) {
       return (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6">
           <h3 className="text-lg font-semibold text-destructive mb-2">
             Erro ao carregar dashboard
           </h3>
           <p className="text-destructive mb-2">
-            {result.error}
+            {globalResult.error}
           </p>
           <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
             <li>Se o Directus está rodando ({process.env.NEXT_PUBLIC_DIRECTUS_URL || "URL não configurada"})</li>
@@ -36,8 +44,8 @@ export default async function DashboardPage() {
       );
     }
 
-    // Renderiza o componente visual do dashboard
-    return <OverviewClient stats={result.data} />;
+    // Renderiza o dashboard antigo como fallback
+    return <OverviewClient stats={globalResult.data} />;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
     console.error("Erro ao buscar dados do dashboard:", errorMessage);

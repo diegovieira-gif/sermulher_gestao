@@ -348,7 +348,9 @@ export function EventosCalendarioClient({ eventos, tiposEventoOptions }: Eventos
                         <div className="flex items-center gap-2">
                           <h4 className="font-semibold">{evento.nome}</h4>
                           {evento.recorrencia !== "nao_recorrente" && (
-                            <Repeat className="h-4 w-4 text-muted-foreground" title={`Recorrência: ${evento.recorrencia}`} />
+                            <div className="flex" title={`Recorrencia: ${evento.recorrencia}`}>
+                              <Repeat className="h-4 w-4 text-muted-foreground" />
+                            </div>
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground">
