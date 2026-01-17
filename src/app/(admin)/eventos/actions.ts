@@ -131,3 +131,113 @@ export async function deleteEvento(id: number) {
     };
   }
 }
+
+/**
+ * Tipo para evento da agenda
+ */
+export type AgendaEvent = {
+  id: number;
+  date: Date;
+  title: string;
+  subtitle: string;
+  type: "sessao";
+};
+
+/**
+ * Busca eventos da agenda (sessões dos ciclos da Sala Azul)
+ * Por enquanto busca todas as sessões futuras, independente do mês
+ */
+export async function getAgendaEvents(
+  month?: Date
+): Promise<
+  | { success: true; data: AgendaEvent[] }
+  | { success: false; error: string; data: [] }
+> {
+  try {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    // Busca todas as sessões futuras ou do mês especificado
+    // Com relacionamentos: sala_id.nome_ciclo e sala_id.local_id.nome
+    // Nota: O Directus transforma o campo "local" em "local_id" ao expandir relacionamentos
+    const sessoes = await directus.request(
+      readItems("ciclo_sessoes", {
+        fields: [
+          "id",
+          "data",
+          "tema",
+          "sala_id.id",
+          "sala_id.nome_ciclo",
+          "sala_id.local_id.id",
+          "sala_id.local_id.nome",
+        ],
+        filter: month
+          ? {
+              // Filtrar pelo mês se especificado
+              data: {
+                _gte: new Date(
+                  month.getFullYear(),
+                  month.getMonth(),
+                  1
+                ).toISOString(),
+                _lt: new Date(
+                  month.getFullYear(),
+                  month.getMonth() + 1,
+                  1
+                ).toISOString(),
+              },
+            }
+          : {
+              // Ou apenas sessões futuras
+              data: {
+                _gte: hoje.toISOString(),
+              },
+            },
+        sort: ["data"],
+      })
+    );
+
+    // Transforma os dados no formato esperado
+    const eventos: AgendaEvent[] = (sessoes || []).map((sessao: any) => {
+      const dataStr = sessao.data;
+      const data = new Date(dataStr);
+
+      // Acessa os relacionamentos
+      const sala =
+        typeof sessao.sala_id === "object" && sessao.sala_id !== null
+          ? sessao.sala_id
+          : null;
+
+      const nomeCiclo = sala?.nome_ciclo || "Ciclo sem nome";
+      // Tenta local ou local_id (dependendo de como o Directus retorna)
+      const local =
+        (typeof sala?.local === "object" && sala?.local !== null
+          ? sala.local
+          : null) ||
+        (typeof sala?.local_id === "object" && sala?.local_id !== null
+          ? sala.local_id
+          : null);
+      const nomeLocal = local?.nome || "Local não informado";
+
+      return {
+        id: sessao.id,
+        date: data,
+        title: sessao.tema || "Sessão sem tema",
+        subtitle: `${nomeCiclo} - ${nomeLocal}`,
+        type: "sessao" as const,
+      };
+    });
+
+    return {
+      success: true,
+      data: eventos,
+    };
+  } catch (error) {
+    console.error("Erro ao buscar eventos da agenda:", error);
+    return {
+      success: false,
+      error: "Erro ao buscar eventos da agenda. Tente novamente.",
+      data: [],
+    };
+  }
+}
