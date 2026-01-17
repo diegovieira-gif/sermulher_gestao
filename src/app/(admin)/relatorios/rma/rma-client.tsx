@@ -382,8 +382,8 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
                           borderRadius: '8px',
                           color: 'hsl(var(--foreground))',
                         }}
-                        formatter={(value: number) => [
-                          `${value} (${totalEncaminhamentos > 0 ? Math.round((value / totalEncaminhamentos) * 100) : 0}%)`,
+                        formatter={(value: number | undefined) => [
+                          `${value || 0} (${totalEncaminhamentos > 0 ? Math.round(((value || 0) / totalEncaminhamentos) * 100) : 0}%)`,
                           'Quantidade',
                         ]}
                       />
@@ -456,8 +456,8 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
                           borderRadius: '8px',
                           color: 'hsl(var(--foreground))',
                         }}
-                        formatter={(value: number) => [
-                          `${value} (${totalTiposViolencia > 0 ? Math.round((value / totalTiposViolencia) * 100) : 0}%)`,
+                        formatter={(value: number | undefined) => [
+                          `${value || 0} (${totalTiposViolencia > 0 ? Math.round(((value || 0) / totalTiposViolencia) * 100) : 0}%)`,
                           'Quantidade',
                         ]}
                       />
