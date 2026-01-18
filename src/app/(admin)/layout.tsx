@@ -1,8 +1,7 @@
-'use client';
-
+import { cookies } from 'next/headers';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
-import { usePathname } from 'next/navigation';
+import { LayoutClient } from './layout-client';
 
 const pageTitles: Record<string, string> = {
   '/dashboard': 'Dashboard',
@@ -14,20 +13,20 @@ const pageTitles: Record<string, string> = {
   '/configuracoes': 'Configurações',
 };
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
-  const title = pageTitles[pathname] || 'SerMulher';
+  // Ler o cookie user_role (padrão: 'visitante' se não existir)
+  const cookieStore = await cookies();
+  const userRole = cookieStore.get('user_role')?.value || 'visitante';
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-900">
-      <Sidebar />
+      <Sidebar userRole={userRole} />
       <div className="ml-64 flex flex-col">
-        <Header title={title} />
-        <main className="flex-1 overflow-y-auto bg-slate-100 p-6 dark:bg-slate-900">{children}</main>
+        <LayoutClient pageTitles={pageTitles}>{children}</LayoutClient>
       </div>
     </div>
   );

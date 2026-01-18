@@ -13,88 +13,122 @@ import {
   BarChart3,
   Settings, 
   LogOut,
-  HeartHandshake, // Ícone para Mulheres
+  HeartHandshake,
   ChevronDown,
   ChevronRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { logout } from '@/app/login/actions';
 
-interface MenuItem {
-  title: string;
+interface MenuItemConfig {
+  label: string;
   href: string;
   icon: any;
-  items?: { title: string; href: string }[]; // Suporte a submenus
+  roles?: string[];
+  items?: { label: string; href: string }[];
 }
 
-const menuItems: MenuItem[] = [
+// Constante MENU_ITEMS com regras de acesso baseado em role
+const MENU_ITEMS: MenuItemConfig[] = [
   {
-    title: 'Dashboard',
-    href: '/dashboard', // Ou '/' dependendo da sua home
+    label: 'Dashboard',
+    href: '/dashboard',
     icon: LayoutDashboard,
+    roles: [], // Todos logados
   },
   {
-    title: 'Gestão de Mulheres',
+    label: 'Gestão de Mulheres',
     href: '/mulheres',
     icon: HeartHandshake,
+    roles: [], // Todos logados
     items: [
-            {
-        title: 'Indicadores',
+      {
+        label: 'Indicadores',
         href: '/mulheres',
       },
       {
-        title: 'Beneficiárias',
+        label: 'Beneficiárias',
         href: '/mulheres/beneficiarias',
       },
       {
-        title: 'Atendimentos',
+        label: 'Atendimentos',
         href: '/mulheres/atendimentos',
       },
     ],
   },
   {
-    title: 'Sala Azul',
+    label: 'Sala Azul',
     href: '/sala-azul',
     icon: AlertTriangle,
-    // Se quiser expandir o Sala Azul no futuro, basta adicionar items aqui:
-    // items: [ { title: 'Infratores', href: '/sala-azul/infratores' }, ... ]
+    roles: [], // Todos logados
   },
   {
-    title: 'Agenda & Eventos',
+    label: 'Agenda & Eventos',
     href: '/eventos',
     icon: CalendarDays,
+    roles: [], // Todos logados
   },
   {
-    title: 'Relatório RMA',
+    label: 'Relatório RMA',
     href: '/relatorios/rma',
     icon: BarChart3,
+    roles: ['admin', 'gestao', 'assistente_social'], // Recepção não vê
   },
   {
-    title: 'Configurações',
+    label: 'Configurações',
     href: '/configuracoes',
     icon: Settings,
+    roles: ['admin', 'gestao'], // Apenas admin e gestão
   },
 ];
 
-export function Sidebar() {
+/**
+ * Verifica se um usuário com determinada role tem acesso a um item do menu
+ */
+function canAccessMenuItem(userRole: string, itemRoles?: string[]): boolean {
+  // Se roles está vazio ou undefined, o item é público para todos logados
+  if (!itemRoles || itemRoles.length === 0) {
+    return true;
+  }
+  // Verifica se o userRole está no array de roles permitidas
+  // Admin sempre tem acesso
+  return itemRoles.includes(userRole) || userRole === 'admin' || userRole === 'Administrator';
+}
+
+interface SidebarProps {
+  userRole: string;
+}
+
+export function Sidebar({ userRole }: SidebarProps) {
   const pathname = usePathname();
+  
+  // Filtrar itens do menu baseado nas roles do usuário
+  const filteredMenuItems = MENU_ITEMS.filter(item => 
+    canAccessMenuItem(userRole, item.roles)
+  );
+
   // Estado para controlar quais menus estão abertos
   // Inicializa aberto se a rota atual estiver dentro do submenu
   const [openMenus, setOpenMenus] = useState<string[]>(() => {
     const openInit: string[] = [];
-    menuItems.forEach(item => {
+    filteredMenuItems.forEach(item => {
       if (item.items && item.items.some(sub => pathname.startsWith(sub.href))) {
-        openInit.push(item.title);
+        openInit.push(item.label);
       }
     });
     return openInit;
   });
 
-  const toggleMenu = (title: string) => {
+  const toggleMenu = (label: string) => {
     setOpenMenus(prev => 
-      prev.includes(title) 
-        ? prev.filter(t => t !== title) 
-        : [...prev, title]
+      prev.includes(label) 
+        ? prev.filter(t => t !== label) 
+        : [...prev, label]
     );
+  };
+
+  const handleLogout = async () => {
+    await logout();
   };
 
   return (
@@ -108,18 +142,18 @@ export function Sidebar() {
         {/* Menu Items */}
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           <ul className="space-y-2">
-            {menuItems.map((item) => {
+            {filteredMenuItems.map((item) => {
               const Icon = item.icon;
               const hasSubmenu = item.items && item.items.length > 0;
-              const isActiveParent = pathname.startsWith(item.href) && item.href !== '/dashboard'; // Ajuste conforme sua rota base
-              const isOpen = openMenus.includes(item.title);
+              const isActiveParent = pathname.startsWith(item.href) && item.href !== '/dashboard';
+              const isOpen = openMenus.includes(item.label);
 
               return (
-                <li key={item.title}>
+                <li key={item.label}>
                   {hasSubmenu ? (
                     <div>
                       <button
-                        onClick={() => toggleMenu(item.title)}
+                        onClick={() => toggleMenu(item.label)}
                         className={cn(
                           'flex w-full items-center justify-between rounded-lg px-4 py-3 text-sm font-medium transition-colors',
                           isActiveParent
@@ -129,7 +163,7 @@ export function Sidebar() {
                       >
                         <div className="flex items-center gap-3">
                           <Icon className="h-5 w-5" />
-                          <span>{item.title}</span>
+                          <span>{item.label}</span>
                         </div>
                         {isOpen ? (
                           <ChevronDown className="h-4 w-4 opacity-50" />
@@ -154,7 +188,7 @@ export function Sidebar() {
                                       : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
                                   )}
                                 >
-                                  {subItem.title}
+                                  {subItem.label}
                                 </Link>
                               </li>
                             );
@@ -173,7 +207,7 @@ export function Sidebar() {
                       )}
                     >
                       <Icon className="h-5 w-5" />
-                      <span>{item.title}</span>
+                      <span>{item.label}</span>
                     </Link>
                   )}
                 </li>
@@ -184,15 +218,15 @@ export function Sidebar() {
 
         {/* Logout Button */}
         <div className="border-t border-slate-800 p-3">
-          <button
-            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
-            onClick={() => {
-              console.log('Logout');
-            }}
-          >
-            <LogOut className="h-5 w-5" />
-            <span>Sair</span>
-          </button>
+          <form action={handleLogout}>
+            <button
+              type="submit"
+              className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
+            >
+              <LogOut className="h-5 w-5" />
+              <span>Sair</span>
+            </button>
+          </form>
         </div>
       </div>
     </aside>
