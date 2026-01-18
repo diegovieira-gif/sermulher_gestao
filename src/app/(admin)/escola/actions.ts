@@ -90,3 +90,111 @@ export async function deleteCurso(id: number) {
     return { success: false, error: "Erro ao deletar curso." };
   }
 }
+
+/**
+ * Opções de Cursos para selects
+ */
+export async function getCursosOptions() {
+  try {
+    const cursos = await directus.request(
+      readItems("escola_cursos", {
+        limit: -1,
+        sort: ["nome"],
+        // @ts-ignore
+        fields: ["id", "nome"],
+      })
+    );
+
+    const options = (cursos || []).map((c: any) => ({
+      label: c.nome,
+      value: c.id,
+    }));
+
+    return { success: true, data: options as Array<{ label: string; value: number | string }> };
+  } catch (error) {
+    console.error("Erro ao buscar opções de cursos:", error);
+    return { success: false, error: "Erro ao buscar cursos." };
+  }
+}
+
+// =========================
+// Gestão de Turmas (escola_turmas)
+// =========================
+
+const turmaSchema = z.object({
+  id: z.number().optional(),
+  nome: z.string().min(2, "Informe o nome da turma"),
+  curso: z.coerce.number(),
+  instrutor: z.string().min(2, "Informe o instrutor"),
+  vagas: z.coerce.number().int().positive("Vagas deve ser maior que zero"),
+  data_inicio: z.string().optional(),
+  data_fim: z.string().optional(),
+  status: z.enum(["Aberta", "Em Andamento", "Concluída", "Cancelada"]),
+});
+
+export type TurmaPayload = z.infer<typeof turmaSchema>;
+
+/**
+ * Busca todas as turmas com o nome do curso relacionado.
+ */
+export async function getTurmas() {
+  try {
+    const turmas = await directus.request(
+      readItems("escola_turmas", {
+        limit: -1,
+        sort: ["nome"],
+        // Importante: trazer o nome do curso relacionado
+        // @ts-ignore
+        fields: ["*", "curso.nome"],
+      })
+    );
+
+    return { success: true, data: turmas as any[] };
+  } catch (error) {
+    console.error("Erro ao buscar turmas:", error);
+    return { success: false, error: "Erro ao buscar turmas." };
+  }
+}
+
+/**
+ * Cria ou atualiza uma turma
+ */
+export async function saveTurma(data: TurmaPayload) {
+  const parsed = turmaSchema.safeParse(data);
+  if (!parsed.success) {
+    return { success: false, error: "Dados inválidos. Verifique os campos." };
+  }
+
+  const { id, ...payload } = parsed.data;
+
+  try {
+    if (id) {
+      await directus.request(updateItem("escola_turmas", id, payload));
+    } else {
+      await directus.request(createItem("escola_turmas", payload));
+    }
+
+    revalidatePath("/escola/turmas");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao salvar turma:", error);
+    return { success: false, error: "Erro ao salvar turma." };
+  }
+}
+
+/**
+ * Deleta uma turma
+ */
+export async function deleteTurma(id: number) {
+  try {
+    await directus.request(deleteItem("escola_turmas", id));
+
+    revalidatePath("/escola/turmas");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao deletar turma:", error);
+    return { success: false, error: "Erro ao deletar turma." };
+  }
+}
