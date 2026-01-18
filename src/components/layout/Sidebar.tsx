@@ -14,6 +14,7 @@ import {
   Settings, 
   LogOut,
   HeartHandshake,
+  BookOpen,
   ChevronDown,
   ChevronRight
 } from 'lucide-react';
@@ -53,6 +54,22 @@ const MENU_ITEMS: MenuItemConfig[] = [
       {
         label: 'Atendimentos',
         href: '/mulheres/atendimentos',
+      },
+    ],
+  },
+  {
+    label: 'Escola da Mulher',
+    href: '/escola',
+    icon: BookOpen,
+    roles: [], // Todos logados
+    items: [
+      {
+        label: 'Catálogo de Cursos',
+        href: '/escola/cursos',
+      },
+      {
+        label: 'Gestão de Turmas',
+        href: '/escola/turmas',
       },
     ],
   },

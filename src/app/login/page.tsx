@@ -6,21 +6,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle, LogIn, ShieldCheck } from 'lucide-react';
+import { AlertCircle, LogIn, ShieldCheck, Loader2 } from 'lucide-react';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
 
   return (
-    <Button 
-      type="submit" 
+    <Button
+      type="submit"
       className="w-full bg-primary hover:bg-primary/90 text-white font-medium py-3 rounded-lg transition-all duration-200"
       disabled={pending}
     >
       {pending ? (
         <>
-          <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-          Autenticando...
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Entrando...
         </>
       ) : (
         <>
