@@ -8,6 +8,8 @@ interface ConfiguracoesClientProps {
   prioridades: any[];
   tiposEvento: any[];
   tiposAgressao: any[];
+  tiposViolencia: any[];
+  encaminhamentos: any[];
   periculosidade: any[];
   locais: any[];
   bairros: any[];
@@ -19,6 +21,8 @@ export function ConfiguracoesClient({
   prioridades,
   tiposEvento,
   tiposAgressao,
+  tiposViolencia,
+  encaminhamentos,
   periculosidade,
   locais,
   bairros,
@@ -34,11 +38,13 @@ export function ConfiguracoesClient({
       </div>
 
       <Tabs defaultValue="origens" className="w-full">
-        <TabsList className="grid w-full grid-cols-8">
+        <TabsList className="grid w-full grid-cols-10">
           <TabsTrigger value="origens">Origens</TabsTrigger>
           <TabsTrigger value="prioridades">Prioridades</TabsTrigger>
           <TabsTrigger value="tipos-evento">Tipos de Evento</TabsTrigger>
           <TabsTrigger value="tipos-agressao">Tipos de Agressão</TabsTrigger>
+          <TabsTrigger value="tipos-violencia">Tipos de Violência</TabsTrigger>
+          <TabsTrigger value="encaminhamentos">Encaminhamentos</TabsTrigger>
           <TabsTrigger value="periculosidade">Periculosidade</TabsTrigger>
           <TabsTrigger value="locais">Locais</TabsTrigger>
           <TabsTrigger value="bairros">Bairros</TabsTrigger>
@@ -79,6 +85,27 @@ export function ConfiguracoesClient({
             title="Tipos de Agressão"
             items={tiposAgressao}
             columns={[{ key: "nome", label: "Nome" }]}
+          />
+        </TabsContent>
+
+        <TabsContent value="tipos-violencia" className="mt-6">
+          <GenericCrudTable
+            collectionName="config_tipos_violencia"
+            title="Tipos de Violência"
+            items={tiposViolencia}
+            columns={[{ key: "nome", label: "Nome" }]}
+          />
+        </TabsContent>
+
+        <TabsContent value="encaminhamentos" className="mt-6">
+          <GenericCrudTable
+            collectionName="config_encaminhamentos"
+            title="Encaminhamentos (RMA)"
+            items={encaminhamentos}
+            columns={[
+              { key: "nome", label: "Nome" },
+              { key: "grupo_rma", label: "Grupo RMA" },
+            ]}
           />
         </TabsContent>
 

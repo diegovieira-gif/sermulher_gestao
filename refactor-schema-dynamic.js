@@ -92,6 +92,43 @@ async function ensureRelation(payload) {
 
 const configCollections = [
   {
+    name: 'config_encaminhamentos',
+    meta: { icon: 'send', display_template: '{{nome}}', sort: 200 },
+    fields: [
+      { field: 'nome', type: 'string', meta: { interface: 'input', required: true }, schema: { is_nullable: false } },
+      {
+        field: 'grupo_rma',
+        type: 'string',
+        meta: {
+          interface: 'select-dropdown',
+          options: {
+            choices: [
+              { text: 'Saúde', value: 'saude' },
+              { text: 'Assistência', value: 'assistencia' },
+              { text: 'Justiça', value: 'justica' }
+            ]
+          },
+          note: 'Agrupamento RMA: saúde, assistência ou justiça',
+          required: true
+        },
+        schema: { is_nullable: false }
+      }
+    ],
+    seed: [
+      { nome: 'CRAS - Centro de Referência de Assistência Social', grupo_rma: 'assistencia' },
+      { nome: 'CREAS - Centro de Referência Especializado de Assistência Social', grupo_rma: 'assistencia' },
+      { nome: 'Casa Abrigo', grupo_rma: 'assistencia' },
+      { nome: 'Serviço de Convivência / SCFV', grupo_rma: 'assistencia' },
+      { nome: 'UPA / Hospital', grupo_rma: 'saude' },
+      { nome: 'UBS / ESF', grupo_rma: 'saude' },
+      { nome: 'CAPS', grupo_rma: 'saude' },
+      { nome: 'Delegacia / DDM', grupo_rma: 'justica' },
+      { nome: 'Defensoria Pública', grupo_rma: 'justica' },
+      { nome: 'Ministério Público', grupo_rma: 'justica' },
+      { nome: 'Juizado / Vara Criminal', grupo_rma: 'justica' }
+    ]
+  },
+  {
     name: 'config_origens',
     meta: { icon: 'list', display_template: '{{nome}}', sort: 201 },
     fields: [
@@ -171,6 +208,21 @@ const configCollections = [
       { nome: 'Sexual' },
       { nome: 'Patrimonial' }
     ]
+  },
+  {
+    name: 'config_tipos_violencia',
+    meta: { icon: 'policy', display_template: '{{nome}}', sort: 207 },
+    fields: [
+      { field: 'nome', type: 'string', meta: { interface: 'input', required: true }, schema: { is_nullable: false } }
+    ],
+    seed: [
+      { nome: 'Física' },
+      { nome: 'Psicológica' },
+      { nome: 'Moral' },
+      { nome: 'Sexual' },
+      { nome: 'Patrimonial' },
+      { nome: 'Política' }
+    ]
   }
 ];
 
@@ -193,6 +245,20 @@ async function etapa2Seeds() {
 
 async function etapa3Relacionamentos() {
   console.log('\n==== ETAPA 3: Relacionamentos nas tabelas principais ====');
+
+  // atendimentos -> config_encaminhamentos
+  await ensureField('atendimentos', {
+    field: 'encaminhamento_id',
+    type: 'integer',
+    meta: { interface: 'select-dropdown-m2o', special: ['m2o'], note: 'Encaminhamento (config_encaminhamentos)' },
+    schema: { is_nullable: true }
+  });
+  await ensureRelation({
+    collection: 'atendimentos',
+    field: 'encaminhamento_id',
+    related_collection: 'config_encaminhamentos',
+    meta: { one_field: 'atendimentos' }
+  });
 
   // atendimentos -> config_origens
   await ensureField('atendimentos', {
@@ -316,6 +382,59 @@ async function etapa3Relacionamentos() {
     junction_collection: 'infratores_tipos_agressao',
     junction_field: 'infrator_id',
     one_field: 'tipo_agressao_id'
+  });
+
+  // Junction atendimentos_tipos_violencia (atendimentos <-> config_tipos_violencia)
+  await ensureCollection('atendimentos_tipos_violencia', {
+    icon: 'link',
+    display_template: '{{atendimento_id}}-{{tipo_violencia_id}}',
+    sort: 208
+  });
+
+  await ensureField('atendimentos_tipos_violencia', {
+    field: 'atendimento_id',
+    type: 'integer',
+    meta: { interface: 'select-dropdown-m2o', special: ['m2o'] },
+    schema: { is_nullable: true }
+  });
+  await ensureRelation({
+    collection: 'atendimentos_tipos_violencia',
+    field: 'atendimento_id',
+    related_collection: 'atendimentos',
+    meta: { one_field: 'tipos_violencia_links' }
+  });
+
+  await ensureField('atendimentos_tipos_violencia', {
+    field: 'tipo_violencia_id',
+    type: 'integer',
+    meta: { interface: 'select-dropdown-m2o', special: ['m2o'] },
+    schema: { is_nullable: true }
+  });
+  await ensureRelation({
+    collection: 'atendimentos_tipos_violencia',
+    field: 'tipo_violencia_id',
+    related_collection: 'config_tipos_violencia',
+    meta: { one_field: 'atendimentos_links' }
+  });
+
+  await ensureField('atendimentos', {
+    field: 'tipos_violencia_lista',
+    type: 'alias',
+    meta: {
+      interface: 'select-multiple-dropdown-m2m',
+      special: ['m2m'],
+      note: 'Tipos de violencia (config_tipos_violencia) via tabela de juncao'
+    },
+    schema: { is_nullable: true }
+  });
+
+  await ensureRelation({
+    many_collection: 'atendimentos',
+    many_field: 'tipos_violencia_lista',
+    one_collection: 'config_tipos_violencia',
+    junction_collection: 'atendimentos_tipos_violencia',
+    junction_field: 'atendimento_id',
+    one_field: 'tipo_violencia_id'
   });
 }
 

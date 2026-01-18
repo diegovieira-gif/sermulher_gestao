@@ -35,7 +35,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Select } from "@/components/ui/select"; // Usando seu select simples
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, Pencil, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -291,14 +291,15 @@ export function GenericCrudTable({
                   <FormItem>
                     <FormLabel>Status</FormLabel>
                     <FormControl>
-                      <Select 
-                        {...field} 
-                        value={field.value}
-                        onChange={(e) => field.onChange(e.target.value)}
-                      >
-                        <option value="published">Ativo</option>
-                        <option value="draft">Inativo (Rascunho)</option>
-                        <option value="archived">Arquivado</option>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="published">Ativo</SelectItem>
+                          <SelectItem value="draft">Inativo (Rascunho)</SelectItem>
+                          <SelectItem value="archived">Arquivado</SelectItem>
+                        </SelectContent>
                       </Select>
                     </FormControl>
                     <FormMessage />

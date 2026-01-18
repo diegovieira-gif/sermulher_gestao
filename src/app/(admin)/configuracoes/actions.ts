@@ -13,10 +13,12 @@ export type ConfigCollection =
   | "config_prioridades"
   | "config_tipos_evento"
   | "config_tipos_agressao"
+  | "config_tipos_violencia"
   | "config_niveis_periculosidade"
   | "config_status_legal"
   | "config_bairros"
   | "config_beneficios"
+  | "config_encaminhamentos"
   | "locais";
 
 /**
@@ -36,6 +38,9 @@ function getCollectionName(type: string): string {
     case "tipos-agressao":
     case "tipos_agressao":
       return "config_tipos_agressao";
+    case "tipos-violencia":
+    case "tipos_violencia":
+      return "config_tipos_violencia";
     case "periculosidade":
       return "config_niveis_periculosidade";
     case "status_legal":
@@ -44,6 +49,8 @@ function getCollectionName(type: string): string {
       return "config_bairros";
     case "beneficios":
       return "config_beneficios";
+    case "encaminhamentos":
+      return "config_encaminhamentos";
     case "locais":
       return "locais";
     default:

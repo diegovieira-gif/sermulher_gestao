@@ -11,6 +11,9 @@
     "setup-schema": "node setup-schema.js",
     "seed-data": "node seed-data.js",
     "update-sala-azul": "node update-schema-sala-azul.js",
+    "update-entregas": "node update-schema-entregas.js",
+    "fix-relations-entregas": "node fix-relations-entregas.js",
+    "audit-entregas": "node audit-entregas-user-created.js",
     "fix-schema-relations": "node fix-schema-relations.js"
   },
   "dependencies": {

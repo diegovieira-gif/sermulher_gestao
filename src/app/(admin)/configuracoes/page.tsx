@@ -3,12 +3,25 @@ import { ConfiguracoesClient } from "./configuracoes-client";
 
 export default async function ConfiguracoesPage() {
   // Busca todos os dados das collections de configuração
-  const [origensResult, prioridadesResult, tiposEventoResult, tiposAgressaoResult, periculosidadeResult, locaisResult, bairrosResult, beneficiosResult] =
+  const [
+    origensResult,
+    prioridadesResult,
+    tiposEventoResult,
+    tiposAgressaoResult,
+    tiposViolenciaResult,
+    encaminhamentosResult,
+    periculosidadeResult,
+    locaisResult,
+    bairrosResult,
+    beneficiosResult,
+  ] =
     await Promise.all([
       getAuxItems("config_origens"),
       getAuxItems("config_prioridades"),
       getAuxItems("config_tipos_evento"),
       getAuxItems("config_tipos_agressao"),
+      getAuxItems("config_tipos_violencia"),
+      getAuxItems("config_encaminhamentos"),
       getAuxItems("config_niveis_periculosidade"),
       getAuxItems("locais"),
       getAuxItems("config_bairros"),
@@ -21,6 +34,8 @@ export default async function ConfiguracoesPage() {
     !prioridadesResult.success ||
     !tiposEventoResult.success ||
     !tiposAgressaoResult.success ||
+    !tiposViolenciaResult.success ||
+    !encaminhamentosResult.success ||
     !periculosidadeResult.success ||
     !locaisResult.success ||
     !bairrosResult.success ||
@@ -42,6 +57,8 @@ export default async function ConfiguracoesPage() {
         prioridades={prioridadesResult.data || []}
         tiposEvento={tiposEventoResult.data || []}
         tiposAgressao={tiposAgressaoResult.data || []}
+        tiposViolencia={tiposViolenciaResult.data || []}
+        encaminhamentos={encaminhamentosResult.data || []}
         periculosidade={periculosidadeResult.data || []}
         locais={locaisResult.data || []}
         bairros={bairrosResult.data || []}
