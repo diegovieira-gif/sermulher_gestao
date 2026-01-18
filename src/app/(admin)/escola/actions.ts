@@ -129,7 +129,7 @@ const turmaSchema = z.object({
   vagas: z.coerce.number().int().positive("Vagas deve ser maior que zero"),
   data_inicio: z.string().optional(),
   data_fim: z.string().optional(),
-  status: z.enum(["Aberta", "Em Andamento", "Concluída", "Cancelada"]),
+  status: z.enum(["aberta", "em_andamento", "concluida", "cancelada"]),
 });
 
 export type TurmaPayload = z.infer<typeof turmaSchema>;

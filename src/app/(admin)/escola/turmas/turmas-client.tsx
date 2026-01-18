@@ -20,11 +20,18 @@ import {
 import { z } from "zod";
 import { deleteTurma, saveTurma, type TurmaPayload } from "../actions";
 
+const STATUS_LABEL: Record<string, string> = {
+  aberta: "Aberta",
+  em_andamento: "Em Andamento",
+  concluida: "Concluída",
+  cancelada: "Cancelada",
+};
+
 const STATUS_COLOR: Record<string, string> = {
-  Aberta: "bg-green-600 hover:bg-green-700 text-white",
-  "Em Andamento": "bg-blue-600 hover:bg-blue-700 text-white",
-  Concluída: "bg-gray-600 hover:bg-gray-700 text-white",
-  Cancelada: "bg-red-600 hover:bg-red-700 text-white",
+  aberta: "bg-green-600 hover:bg-green-700 text-white",
+  em_andamento: "bg-blue-600 hover:bg-blue-700 text-white",
+  concluida: "bg-gray-600 hover:bg-gray-700 text-white",
+  cancelada: "bg-red-600 hover:bg-red-700 text-white",
 };
 
 const turmaFormSchema = z.object({
@@ -35,7 +42,7 @@ const turmaFormSchema = z.object({
   vagas: z.coerce.number().int().positive("Vagas deve ser maior que zero"),
   data_inicio: z.string().optional(),
   data_fim: z.string().optional(),
-  status: z.enum(["Aberta", "Em Andamento", "Concluída", "Cancelada"]),
+  status: z.enum(["aberta", "em_andamento", "concluida", "cancelada"]),
 });
 
 const defaultFormValues: TurmaPayload = {
@@ -45,7 +52,7 @@ const defaultFormValues: TurmaPayload = {
   vagas: 20,
   data_inicio: "",
   data_fim: "",
-  status: "Aberta",
+  status: "aberta",
 };
 
 function dateOnly(v?: string | null) {
@@ -88,7 +95,7 @@ export function TurmasClient({ turmas, cursosOptions }: TurmasClientProps) {
         vagas: item.vagas ? Number(item.vagas) : 0,
         data_inicio: dateOnly(item.data_inicio),
         data_fim: dateOnly(item.data_fim),
-        status: (item.status as any) || "Aberta",
+        status: (item.status as any) || "aberta",
       })}
       onSave={(values) => saveTurma(values)}
       onDelete={(id) => deleteTurma(id)}
@@ -105,8 +112,8 @@ export function TurmasClient({ turmas, cursosOptions }: TurmasClientProps) {
           key: "status",
           label: "Status",
           render: (item) => (
-            <Badge className={STATUS_COLOR[item.status || "Aberta"] || ""}>
-              {item.status || "Aberta"}
+            <Badge className={STATUS_COLOR[item.status || "aberta"] || ""}>
+              {STATUS_LABEL[item.status as keyof typeof STATUS_LABEL] || item.status}
             </Badge>
           ),
         },
@@ -231,10 +238,10 @@ export function TurmasClient({ turmas, cursosOptions }: TurmasClientProps) {
                       <SelectValue placeholder="Selecione o status" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Aberta">Aberta</SelectItem>
-                      <SelectItem value="Em Andamento">Em Andamento</SelectItem>
-                      <SelectItem value="Concluída">Concluída</SelectItem>
-                      <SelectItem value="Cancelada">Cancelada</SelectItem>
+                      <SelectItem value="aberta">Aberta</SelectItem>
+                      <SelectItem value="em_andamento">Em Andamento</SelectItem>
+                      <SelectItem value="concluida">Concluída</SelectItem>
+                      <SelectItem value="cancelada">Cancelada</SelectItem>
                     </SelectContent>
                   </Select>
                 </FormControl>
