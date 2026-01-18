@@ -612,12 +612,12 @@ export function OverviewClient({ stats, userName = "Secretaria" }: OverviewClien
         )}
 
         <div className="flex gap-2 justify-center pt-4">
-          <Link href="/admin/mulheres/atendimentos">
+          <Link href="/mulheres/atendimentos">
             <button className="px-6 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 font-medium transition-colors">
               Novo Atendimento
             </button>
           </Link>
-          <Link href="/admin/eventos">
+          <Link href="/eventos">
             <button className="px-6 py-2 rounded-lg border border-border hover:bg-muted font-medium transition-colors">
               Ver Agenda
             </button>
