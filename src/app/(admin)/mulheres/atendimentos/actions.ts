@@ -122,7 +122,7 @@ export async function getFormOptions() {
         })
       ) as Promise<EncaminhamentoOption[]>,
       directus.request(
-        readItems("config_tipos_violencia", {
+        readItems("config_tipos_agressao", {
           fields: ["id", "nome"],
           sort: ["nome"],
         })
@@ -194,7 +194,7 @@ export async function saveAtendimento(data: unknown) {
 
       try {
         const violencias = await directus.request(
-          readItems("config_tipos_violencia", {
+          readItems("config_tipos_agressao", {
             fields: ["nome"],
             filter: { id: { _in: validatedData.tipos_violencia } },
           })

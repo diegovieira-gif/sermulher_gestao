@@ -8,7 +8,6 @@ interface ConfiguracoesClientProps {
   prioridades: any[];
   tiposEvento: any[];
   tiposAgressao: any[];
-  tiposViolencia: any[];
   encaminhamentos: any[];
   periculosidade: any[];
   locais: any[];
@@ -21,7 +20,6 @@ export function ConfiguracoesClient({
   prioridades,
   tiposEvento,
   tiposAgressao,
-  tiposViolencia,
   encaminhamentos,
   periculosidade,
   locais,
@@ -38,11 +36,10 @@ export function ConfiguracoesClient({
       </div>
 
       <Tabs defaultValue="origens" className="w-full">
-        <TabsList className="grid w-full grid-cols-10">
+        <TabsList className="grid w-full grid-cols-9">
           <TabsTrigger value="origens">Origens</TabsTrigger>
           <TabsTrigger value="prioridades">Prioridades</TabsTrigger>
           <TabsTrigger value="tipos-evento">Tipos de Evento</TabsTrigger>
-          <TabsTrigger value="tipos-agressao">Tipos de Agressão</TabsTrigger>
           <TabsTrigger value="tipos-violencia">Tipos de Violência</TabsTrigger>
           <TabsTrigger value="encaminhamentos">Encaminhamentos</TabsTrigger>
           <TabsTrigger value="periculosidade">Periculosidade</TabsTrigger>
@@ -79,20 +76,11 @@ export function ConfiguracoesClient({
           />
         </TabsContent>
 
-        <TabsContent value="tipos-agressao" className="mt-6">
-          <GenericCrudTable
-            collectionName="config_tipos_agressao"
-            title="Tipos de Agressão"
-            items={tiposAgressao}
-            columns={[{ key: "nome", label: "Nome" }]}
-          />
-        </TabsContent>
-
         <TabsContent value="tipos-violencia" className="mt-6">
           <GenericCrudTable
-            collectionName="config_tipos_violencia"
+            collectionName="config_tipos_agressao"
             title="Tipos de Violência"
-            items={tiposViolencia}
+            items={tiposAgressao}
             columns={[{ key: "nome", label: "Nome" }]}
           />
         </TabsContent>

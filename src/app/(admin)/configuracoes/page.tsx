@@ -8,7 +8,6 @@ export default async function ConfiguracoesPage() {
     prioridadesResult,
     tiposEventoResult,
     tiposAgressaoResult,
-    tiposViolenciaResult,
     encaminhamentosResult,
     periculosidadeResult,
     locaisResult,
@@ -20,7 +19,6 @@ export default async function ConfiguracoesPage() {
       getAuxItems("config_prioridades"),
       getAuxItems("config_tipos_evento"),
       getAuxItems("config_tipos_agressao"),
-      getAuxItems("config_tipos_violencia"),
       getAuxItems("config_encaminhamentos"),
       getAuxItems("config_niveis_periculosidade"),
       getAuxItems("locais"),
@@ -34,7 +32,6 @@ export default async function ConfiguracoesPage() {
     !prioridadesResult.success ||
     !tiposEventoResult.success ||
     !tiposAgressaoResult.success ||
-    !tiposViolenciaResult.success ||
     !encaminhamentosResult.success ||
     !periculosidadeResult.success ||
     !locaisResult.success ||
@@ -57,7 +54,6 @@ export default async function ConfiguracoesPage() {
         prioridades={prioridadesResult.data || []}
         tiposEvento={tiposEventoResult.data || []}
         tiposAgressao={tiposAgressaoResult.data || []}
-        tiposViolencia={tiposViolenciaResult.data || []}
         encaminhamentos={encaminhamentosResult.data || []}
         periculosidade={periculosidadeResult.data || []}
         locais={locaisResult.data || []}

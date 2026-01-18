@@ -13,7 +13,6 @@ export type ConfigCollection =
   | "config_prioridades"
   | "config_tipos_evento"
   | "config_tipos_agressao"
-  | "config_tipos_violencia"
   | "config_niveis_periculosidade"
   | "config_status_legal"
   | "config_bairros"
@@ -40,7 +39,8 @@ function getCollectionName(type: string): string {
       return "config_tipos_agressao";
     case "tipos-violencia":
     case "tipos_violencia":
-      return "config_tipos_violencia";
+      // Mapeamos "tipos-violencia" (usado na URL/Tabs) para a collection real "config_tipos_agressao"
+      return "config_tipos_agressao";
     case "periculosidade":
       return "config_niveis_periculosidade";
     case "status_legal":
