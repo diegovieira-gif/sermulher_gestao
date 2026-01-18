@@ -29,7 +29,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -181,29 +187,29 @@ export function EventoForm({
                     <FormLabel>Tipo de Evento *</FormLabel>
                     <FormControl>
                       <Select
-                        name={field.name}
-                        ref={field.ref}
-                        onBlur={field.onBlur}
                         value={
                           typeof field.value === "string" ||
                           typeof field.value === "number"
-                            ? field.value
+                            ? String(field.value)
                             : ""
                         }
-                        onChange={(e) =>
-                          field.onChange(
-                            e.target.value ? Number(e.target.value) : ""
-                          )
+                        onValueChange={(value) =>
+                          field.onChange(value ? Number(value) : "")
                         }
                       >
-                        <option value="" disabled>
-                          Selecione o tipo...
-                        </option>
-                        {tiposEventoOptions.map((opt) => (
-                          <option key={opt.id} value={opt.id.toString()}>
-                            {opt.nome}
-                          </option>
-                        ))}
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Selecione o tipo..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {tiposEventoOptions.map((opt) => (
+                            <SelectItem
+                              key={opt.id}
+                              value={opt.id.toString()}
+                            >
+                              {opt.nome}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
                       </Select>
                     </FormControl>
                     <FormMessage />
@@ -220,17 +226,22 @@ export function EventoForm({
                     <FormLabel>Status</FormLabel>
                     <FormControl>
                       <Select
-                        name={field.name}
-                        ref={field.ref}
-                        onBlur={field.onBlur}
                         value={field.value || "planejado"}
-                        onChange={(e) => field.onChange(e.target.value)}
+                        onValueChange={field.onChange}
                       >
-                        {statusEventoEnum.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Selecione o status..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {statusEventoEnum.map((option) => (
+                            <SelectItem
+                              key={option.value}
+                              value={option.value}
+                            >
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
                       </Select>
                     </FormControl>
                     <FormMessage />
@@ -283,17 +294,22 @@ export function EventoForm({
                     <FormLabel>Recorrência</FormLabel>
                     <FormControl>
                       <Select
-                        name={field.name}
-                        ref={field.ref}
-                        onBlur={field.onBlur}
                         value={field.value || "nao_recorrente"}
-                        onChange={(e) => field.onChange(e.target.value)}
+                        onValueChange={field.onChange}
                       >
-                        {recorrenciaEnum.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Selecione a recorrência..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {recorrenciaEnum.map((option) => (
+                            <SelectItem
+                              key={option.value}
+                              value={option.value}
+                            >
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
                       </Select>
                     </FormControl>
                     <FormMessage />
@@ -331,17 +347,22 @@ export function EventoForm({
                     <FormLabel>Categoria</FormLabel>
                     <FormControl>
                       <Select
-                        name={field.name}
-                        ref={field.ref}
-                        onBlur={field.onBlur}
                         value={field.value || "evento"}
-                        onChange={(e) => field.onChange(e.target.value)}
+                        onValueChange={field.onChange}
                       >
-                        {tipoEventoEnum.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Selecione a categoria..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {tipoEventoEnum.map((option) => (
+                            <SelectItem
+                              key={option.value}
+                              value={option.value}
+                            >
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
                       </Select>
                     </FormControl>
                     <FormMessage />

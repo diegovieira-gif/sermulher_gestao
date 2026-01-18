@@ -55,15 +55,19 @@ interface GenericCrudTableProps {
     render?: (item: any) => React.ReactNode;
   }>;
   hasColorField?: boolean;
+  hasGrupoRma?: boolean;
 }
 
-const createSchema = (hasColor: boolean) =>
+const createSchema = (hasColor: boolean, hasGrupoRma: boolean) =>
   z.object({
     id: z.number().optional(),
     nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
     status: z.string().default("published"),
     cor: hasColor ? z.string().optional() : z.string().optional(),
     peso: z.coerce.number().optional(),
+    grupo_rma: hasGrupoRma
+      ? z.string().min(1, "Grupo do RMA é obrigatório")
+      : z.string().optional(),
   });
 
 export function GenericCrudTable({
@@ -72,6 +76,7 @@ export function GenericCrudTable({
   items,
   columns,
   hasColorField = false,
+  hasGrupoRma = false,
 }: GenericCrudTableProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -79,7 +84,7 @@ export function GenericCrudTable({
   const [formOpen, setFormOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
 
-  const formSchema = createSchema(hasColorField);
+  const formSchema = createSchema(hasColorField, hasGrupoRma);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema) as any,
     defaultValues: { // Explicitly set default values for all fields in the schema
@@ -87,6 +92,7 @@ export function GenericCrudTable({
       status: "published",
       cor: "#000000",
       peso: 1,
+      grupo_rma: "",
     },
   });
 
@@ -101,6 +107,7 @@ export function GenericCrudTable({
       status: item.status || "published",
       cor: item.cor || "#000000",
       peso: item.peso || 1,
+      grupo_rma: item.grupo_rma || "",
     });
     setFormOpen(true);
   }
@@ -112,6 +119,7 @@ export function GenericCrudTable({
       status: "published",
       cor: "#000000",
       peso: 1,
+      grupo_rma: "",
     });
     setFormOpen(true);
   }
@@ -260,6 +268,34 @@ export function GenericCrudTable({
                   </FormItem>
                 )}
               />
+
+              {hasGrupoRma && (
+                <FormField
+                  control={form.control}
+                  name="grupo_rma"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Grupo do RMA (Relatório)</FormLabel>
+                      <FormControl>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o grupo" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="assistencia_social">Assistência Social - CRAS/CREAS</SelectItem>
+                            <SelectItem value="saude">Saúde</SelectItem>
+                            <SelectItem value="educacao">Educação</SelectItem>
+                            <SelectItem value="justica">Justiça/Delegacia</SelectItem>
+                            <SelectItem value="terceiro_setor">Terceiro Setor/ONGs</SelectItem>
+                            <SelectItem value="outros">Outros</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               {hasColorField && (
                 <FormField

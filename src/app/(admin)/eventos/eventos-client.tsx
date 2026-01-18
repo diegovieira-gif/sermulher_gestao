@@ -11,6 +11,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -113,6 +120,8 @@ export function EventosClient({ eventos, tiposEventoOptions }: EventosClientProp
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [eventoToDelete, setEventoToDelete] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [tipoFilter, setTipoFilter] = useState("todos");
+  const [statusFilter, setStatusFilter] = useState("todos");
 
   const handleNew = () => {
     setSelectedEvento(null);
@@ -151,6 +160,22 @@ export function EventosClient({ eventos, tiposEventoOptions }: EventosClientProp
     }
   };
 
+  // Filtrar eventos baseado nos filtros selecionados
+  const eventosFiltrados = eventos.filter((evento) => {
+    const tipoMatch =
+      tipoFilter === "todos" ||
+      String(
+        typeof evento.tipo_id === "object" && evento.tipo_id !== null
+          ? evento.tipo_id.id
+          : evento.tipo_id
+      ) === tipoFilter;
+
+    const statusMatch =
+      statusFilter === "todos" || evento.status === statusFilter;
+
+    return tipoMatch && statusMatch;
+  });
+
   return (
     <>
       <div className="flex justify-between items-center mb-6">
@@ -166,6 +191,38 @@ export function EventosClient({ eventos, tiposEventoOptions }: EventosClientProp
         </Button>
       </div>
 
+      <div className="mb-4 flex flex-wrap gap-3">
+        {/* Filtro de Tipo de Evento */}
+        <Select value={tipoFilter} onValueChange={setTipoFilter}>
+          <SelectTrigger className="w-[180px] bg-white">
+            <SelectValue placeholder="Tipo de Evento" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos os tipos</SelectItem>
+            {tiposEventoOptions.map((tipo) => (
+              <SelectItem key={tipo.id} value={String(tipo.id)}>
+                {tipo.nome}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Filtro de Status */}
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[180px] bg-white">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos os status</SelectItem>
+            {statusEventoEnum.map((status) => (
+              <SelectItem key={status.value} value={status.value}>
+                {status.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       <div className="border rounded-lg">
         <Table>
           <TableHeader>
@@ -179,14 +236,14 @@ export function EventosClient({ eventos, tiposEventoOptions }: EventosClientProp
             </TableRow>
           </TableHeader>
           <TableBody>
-            {eventos.length === 0 ? (
+            {eventosFiltrados.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center text-muted-foreground">
                   Nenhum evento cadastrado
                 </TableCell>
               </TableRow>
             ) : (
-              eventos.map((evento) => {
+              eventosFiltrados.map((evento) => {
                 const status = calcularStatus(
                   evento.data_inicio,
                   evento.data_fim

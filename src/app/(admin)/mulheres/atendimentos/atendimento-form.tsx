@@ -33,7 +33,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Select } from "@/components/ui/select";
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
@@ -107,12 +107,20 @@ export function AtendimentoForm({
       })();
 
       const tiposViolenciaIds = (() => {
+        // Para M2M do Directus, a estrutura é: [{ config_tipos_agressao_id: { id, nome } }]
         if (Array.isArray(atendimento.tipos_violencia_lista)) {
           return atendimento.tipos_violencia_lista
-            .map((item: any) =>
-              typeof item === "object" && item !== null ? item.id : Number(item)
-            )
-            .filter(Boolean);
+            .map((item: any) => {
+              // Estrutura M2M do Directus (junction table)
+              if (item?.config_tipos_agressao_id) {
+                return typeof item.config_tipos_agressao_id === 'object' 
+                  ? item.config_tipos_agressao_id.id 
+                  : item.config_tipos_agressao_id;
+              }
+              // Fallback: item simples
+              return typeof item === "object" && item !== null ? item.id : Number(item);
+            })
+            .filter(Boolean) as number[];
         }
 
         if (Array.isArray(atendimento.tipos_violencia)) {
@@ -262,27 +270,21 @@ export function AtendimentoForm({
                       <FormLabel>Origem</FormLabel>
                       <FormControl>
                         <Select
-                          name={field.name}
-                          ref={field.ref}
-                          onBlur={field.onBlur}
-                          value={
-                            typeof field.value === "string" ||
-                            typeof field.value === "number"
-                              ? field.value
-                              : ""
-                          }
-                          onChange={(e) =>
-                            field.onChange(
-                              e.target.value ? Number(e.target.value) : undefined
-                            )
+                          value={field.value ? String(field.value) : ""}
+                          onValueChange={(val) =>
+                            field.onChange(val ? Number(val) : undefined)
                           }
                         >
-                          <option value="">Selecione a origem...</option>
-                          {origensOptions.map((opt) => (
-                            <option key={opt.id} value={opt.id.toString()}>
-                              {opt.nome}
-                            </option>
-                          ))}
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione a origem..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {origensOptions.map((opt) => (
+                              <SelectItem key={opt.id} value={String(opt.id)}>
+                                {opt.nome}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
                         </Select>
                       </FormControl>
                       <FormMessage />
@@ -298,27 +300,21 @@ export function AtendimentoForm({
                       <FormLabel>Prioridade</FormLabel>
                       <FormControl>
                         <Select
-                          name={field.name}
-                          ref={field.ref}
-                          onBlur={field.onBlur}
-                          value={
-                            typeof field.value === "string" ||
-                            typeof field.value === "number"
-                              ? field.value
-                              : ""
-                          }
-                          onChange={(e) =>
-                            field.onChange(
-                              e.target.value ? Number(e.target.value) : undefined
-                            )
+                          value={field.value ? String(field.value) : ""}
+                          onValueChange={(val) =>
+                            field.onChange(val ? Number(val) : undefined)
                           }
                         >
-                          <option value="">Selecione a prioridade...</option>
-                          {prioridadesOptions.map((opt) => (
-                            <option key={opt.id} value={opt.id.toString()}>
-                              {opt.nome}
-                            </option>
-                          ))}
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione a prioridade..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {prioridadesOptions.map((opt) => (
+                              <SelectItem key={opt.id} value={String(opt.id)}>
+                                {opt.nome}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
                         </Select>
                       </FormControl>
                       <FormMessage />
@@ -350,17 +346,19 @@ export function AtendimentoForm({
                       <FormLabel>Status</FormLabel>
                       <FormControl>
                         <Select
-                          name={field.name}
-                          ref={field.ref}
-                          onBlur={field.onBlur}
                           value={field.value || StatusAtendimento.ABERTO}
-                          onChange={(e) => field.onChange(e.target.value)}
+                          onValueChange={field.onChange}
                         >
-                          {Object.values(StatusAtendimento).map((status) => (
-                            <option key={status} value={status}>
-                              {status}
-                            </option>
-                          ))}
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Object.values(StatusAtendimento).map((status) => (
+                              <SelectItem key={status} value={status}>
+                                {status}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
                         </Select>
                       </FormControl>
                       <FormMessage />
@@ -377,26 +375,21 @@ export function AtendimentoForm({
                     <FormLabel>Encaminhamento (config)</FormLabel>
                     <FormControl>
                       <Select
-                        name={field.name}
-                        ref={field.ref}
-                        onBlur={field.onBlur}
-                        value={
-                          typeof field.value === "number" || typeof field.value === "string"
-                            ? field.value
-                            : ""
-                        }
-                        onChange={(e) =>
-                          field.onChange(
-                            e.target.value ? Number(e.target.value) : undefined
-                          )
+                        value={field.value ? String(field.value) : ""}
+                        onValueChange={(val) =>
+                          field.onChange(val ? Number(val) : undefined)
                         }
                       >
-                        <option value="">Selecione o encaminhamento...</option>
-                        {encaminhamentosOptions.map((opt) => (
-                          <option key={opt.id} value={opt.id.toString()}>
-                            {opt.nome}
-                          </option>
-                        ))}
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o encaminhamento..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {encaminhamentosOptions.map((opt) => (
+                            <SelectItem key={opt.id} value={String(opt.id)}>
+                              {opt.nome}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
                       </Select>
                     </FormControl>
                     <FormMessage />

@@ -23,7 +23,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Select } from "@/components/ui/select";
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Clock, Building2, User, Scale, Heart, Shield, Stethoscope, Printer } from "lucide-react";
 import { toast } from "sonner";
@@ -333,18 +333,19 @@ export function TramitacoesClient({
                     <FormLabel>Tipo de Demanda *</FormLabel>
                     <FormControl>
                       <Select
-                        name={field.name}
-                        ref={field.ref}
-                        onBlur={field.onBlur}
                         value={field.value || ""}
-                        onChange={(e) => field.onChange(e.target.value)}
+                        onValueChange={field.onChange}
                       >
-                        <option value="">Selecione o tipo de demanda</option>
-                        {TIPOS_DEMANDA.map((tipo) => (
-                          <option key={tipo.value} value={tipo.value}>
-                            {tipo.label}
-                          </option>
-                        ))}
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o tipo de demanda" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {TIPOS_DEMANDA.map((tipo) => (
+                            <SelectItem key={tipo.value} value={tipo.value}>
+                              {tipo.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
                       </Select>
                     </FormControl>
                     <FormMessage />
@@ -360,18 +361,19 @@ export function TramitacoesClient({
                     <FormLabel>Setor Responsável</FormLabel>
                     <FormControl>
                       <Select
-                        name={field.name}
-                        ref={field.ref}
-                        onBlur={field.onBlur}
                         value={field.value || ""}
-                        onChange={(e) => field.onChange(e.target.value)}
+                        onValueChange={field.onChange}
                       >
-                        <option value="">Nenhum</option>
-                        {setores.map((setor) => (
-                          <option key={setor.id} value={setor.id.toString()}>
-                            {setor.nome}
-                          </option>
-                        ))}
+                        <SelectTrigger>
+                          <SelectValue placeholder="Nenhum" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {setores.map((setor) => (
+                            <SelectItem key={setor.id} value={String(setor.id)}>
+                              {setor.nome}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
                       </Select>
                     </FormControl>
                     <FormMessage />
@@ -387,18 +389,19 @@ export function TramitacoesClient({
                     <FormLabel>Status da Etapa</FormLabel>
                     <FormControl>
                       <Select
-                        name={field.name}
-                        ref={field.ref}
-                        onBlur={field.onBlur}
                         value={field.value || ""}
-                        onChange={(e) => field.onChange(e.target.value)}
+                        onValueChange={field.onChange}
                       >
-                        <option value="">Selecione o status</option>
-                        {STATUS_ETAPA.map((status) => (
-                          <option key={status.value} value={status.value}>
-                            {status.label}
-                          </option>
-                        ))}
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {STATUS_ETAPA.map((status) => (
+                            <SelectItem key={status.value} value={status.value}>
+                              {status.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
                       </Select>
                     </FormControl>
                     <FormMessage />

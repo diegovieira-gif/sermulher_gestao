@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import {
   Table,
@@ -60,6 +61,13 @@ export function AtendimentosClient({
     null
   );
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Filtros
+  const [statusFilter, setStatusFilter] = useState<string>("todos");
+  const [origemFilter, setOrigemFilter] = useState<string>("todos");
+  const [prioridadeFilter, setPrioridadeFilter] = useState<string>("todos");
+  const [encaminhamentoFilter, setEncaminhamentoFilter] = useState<string>("todos");
+  const [tipoViolenciaFilter, setTipoViolenciaFilter] = useState<string>("todos");
 
   const handleNew = () => {
     setSelectedAtendimento(null);
@@ -159,6 +167,50 @@ export function AtendimentosClient({
     };
   };
 
+  // Auxiliares para filtros
+  const normalizeId = (val: any): number | undefined => {
+    if (val == null) return undefined;
+    if (typeof val === "object") return val?.id ?? undefined;
+    if (typeof val === "string") {
+      const n = Number(val);
+      return Number.isNaN(n) ? undefined : n;
+    }
+    if (typeof val === "number") return val;
+    return undefined;
+  };
+
+  const atendimentoHasTipoViolencia = (item: any, tipoId: number): boolean => {
+    // Pode vir como lista m2m (tipos_violencia_lista) ou array simples (tipos_violencia)
+    const lista = Array.isArray(item?.tipos_violencia_lista)
+      ? item.tipos_violencia_lista
+      : Array.isArray(item?.tipos_violencia)
+      ? item.tipos_violencia
+      : [];
+
+    return lista.some((it: any) => {
+      if (it?.config_tipos_agressao_id) {
+        const id = normalizeId(it.config_tipos_agressao_id);
+        return id === tipoId;
+      }
+      const id = normalizeId(it);
+      return id === tipoId;
+    });
+  };
+
+  const filteredAtendimentos = atendimentos.filter((a) => {
+    const statusOk =
+      statusFilter === "todos" || (a.status || "Aberto") === statusFilter;
+    const origemOk =
+      origemFilter === "todos" || normalizeId(a.origem_id) === Number(origemFilter);
+    const prioridadeOk =
+      prioridadeFilter === "todos" || normalizeId(a.prioridade_id) === Number(prioridadeFilter);
+    const encaminhamentoOk =
+      encaminhamentoFilter === "todos" || normalizeId(a.encaminhamento_id) === Number(encaminhamentoFilter);
+    const tipoOk =
+      tipoViolenciaFilter === "todos" || atendimentoHasTipoViolencia(a, Number(tipoViolenciaFilter));
+    return statusOk && origemOk && prioridadeOk && encaminhamentoOk && tipoOk;
+  });
+
   return (
     <>
       <div className="flex justify-between items-center mb-6">
@@ -174,6 +226,83 @@ export function AtendimentosClient({
         </Button>
       </div>
 
+      {/* Filtros */}
+      <div className="mb-4 flex flex-wrap gap-3">
+        {/* Filtro de Status */}
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[180px] bg-white">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos</SelectItem>
+            <SelectItem value="Aberto">Aberto</SelectItem>
+            <SelectItem value="Em andamento">Em andamento</SelectItem>
+            <SelectItem value="Concluído">Concluído</SelectItem>
+            <SelectItem value="Arquivado">Arquivado</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* Filtro de Origem */}
+        <Select value={origemFilter} onValueChange={setOrigemFilter}>
+          <SelectTrigger className="w-[200px] bg-white">
+            <SelectValue placeholder="Origem" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todas as origens</SelectItem>
+            {origensOptions.map((opt) => (
+              <SelectItem key={opt.id} value={String(opt.id)}>
+                {opt.nome}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Filtro de Prioridade */}
+        <Select value={prioridadeFilter} onValueChange={setPrioridadeFilter}>
+          <SelectTrigger className="w-[200px] bg-white">
+            <SelectValue placeholder="Prioridade" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todas as prioridades</SelectItem>
+            {prioridadesOptions.map((opt) => (
+              <SelectItem key={opt.id} value={String(opt.id)}>
+                {opt.nome}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Filtro de Encaminhamento */}
+        <Select value={encaminhamentoFilter} onValueChange={setEncaminhamentoFilter}>
+          <SelectTrigger className="w-[220px] bg-white">
+            <SelectValue placeholder="Encaminhamento" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos os encaminhamentos</SelectItem>
+            {encaminhamentosOptions.map((opt) => (
+              <SelectItem key={opt.id} value={String(opt.id)}>
+                {opt.nome}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Filtro de Tipo de Violência */}
+        <Select value={tipoViolenciaFilter} onValueChange={setTipoViolenciaFilter}>
+          <SelectTrigger className="w-[240px] bg-white">
+            <SelectValue placeholder="Tipo de Violência" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos os tipos</SelectItem>
+            {tiposViolenciaOptions.map((opt) => (
+              <SelectItem key={opt.id} value={String(opt.id)}>
+                {opt.nome}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       <div className="border rounded-lg">
         <Table>
           <TableHeader>
@@ -187,7 +316,7 @@ export function AtendimentosClient({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {atendimentos.length === 0 ? (
+            {filteredAtendimentos.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={6}
@@ -197,7 +326,7 @@ export function AtendimentosClient({
                 </TableCell>
               </TableRow>
             ) : (
-              atendimentos.map((atendimento) => {
+              filteredAtendimentos.map((atendimento) => {
                 const prioridade = getPrioridade(atendimento.prioridade_id);
                 const beneficiariaNome = getBeneficiariaNome(atendimento.beneficiaria);
                 const beneficiariaCPF = getBeneficiariaCPF(atendimento.beneficiaria);

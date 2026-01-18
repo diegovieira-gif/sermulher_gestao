@@ -94,6 +94,7 @@ export function ConfiguracoesClient({
               { key: "nome", label: "Nome" },
               { key: "grupo_rma", label: "Grupo RMA" },
             ]}
+            hasGrupoRma={true}
           />
         </TabsContent>
 

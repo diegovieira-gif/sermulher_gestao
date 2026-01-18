@@ -28,7 +28,13 @@ import {
   Cell,
 } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -156,31 +162,39 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
             <div className="flex-1 space-y-2">
               <Label htmlFor="mes">Mês</Label>
               <Select
-                id="mes"
                 value={mes}
-                onChange={(e) => setMes(e.target.value)}
+                onValueChange={(value) => setMes(value)}
                 disabled={isPending}
               >
-                {MESES.map((m) => (
-                  <option key={m.value} value={m.value}>
-                    {m.label}
-                  </option>
-                ))}
+                <SelectTrigger className="w-full bg-white">
+                  <SelectValue placeholder="Selecione o Mês" />
+                </SelectTrigger>
+                <SelectContent>
+                  {MESES.map((m) => (
+                    <SelectItem key={m.value} value={m.value}>
+                      {m.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
             </div>
             <div className="flex-1 space-y-2">
               <Label htmlFor="ano">Ano</Label>
               <Select
-                id="ano"
                 value={ano}
-                onChange={(e) => setAno(e.target.value)}
+                onValueChange={(value) => setAno(value)}
                 disabled={isPending}
               >
-                {ANOS.map((a) => (
-                  <option key={a.value} value={a.value}>
-                    {a.label}
-                  </option>
-                ))}
+                <SelectTrigger className="w-full bg-white">
+                  <SelectValue placeholder="Selecione o Ano" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ANOS.map((a) => (
+                    <SelectItem key={a.value} value={a.value}>
+                      {a.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
             </div>
             <div className="flex items-end">

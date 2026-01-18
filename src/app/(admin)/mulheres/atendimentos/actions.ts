@@ -23,7 +23,6 @@ const ATENDIMENTO_FIELDS = [
   'encaminhamento_rma',
   'encaminhamento_id',
   'tipos_violencia',
-  'tipos_violencia_lista',
   // Relacionamentos
   'beneficiaria.id',
   'beneficiaria.nome_completo',
@@ -36,8 +35,10 @@ const ATENDIMENTO_FIELDS = [
   'encaminhamento_id.id',
   'encaminhamento_id.nome',
   'encaminhamento_id.grupo_rma',
-  'tipos_violencia_lista.id',
-  'tipos_violencia_lista.nome',
+  // Sintaxe correta para M2M no Directus:
+  'tipos_violencia_lista.atendimentos_id',
+  'tipos_violencia_lista.config_tipos_agressao_id.id',
+  'tipos_violencia_lista.config_tipos_agressao_id.nome',
 ];
 
 // Tipos exportados para uso nos componentes
@@ -190,7 +191,10 @@ export async function saveAtendimento(data: unknown) {
       }
     }
     if (validatedData.tipos_violencia && Array.isArray(validatedData.tipos_violencia)) {
-      payload.tipos_violencia_lista = validatedData.tipos_violencia;
+      // Para M2M no Directus, precisamos passar objetos com a FK da related collection
+      payload.tipos_violencia_lista = validatedData.tipos_violencia.map(id => ({
+        config_tipos_agressao_id: id
+      }));
 
       try {
         const violencias = await directus.request(
