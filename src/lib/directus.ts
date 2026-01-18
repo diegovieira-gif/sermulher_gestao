@@ -1,4 +1,5 @@
 import { createDirectus, rest, staticToken } from '@directus/sdk';
+import { cookies } from 'next/headers';
 
 const directusUrl = process.env.NEXT_PUBLIC_DIRECTUS_URL || '';
 const directusToken = process.env.DIRECTUS_TOKEN || '';
@@ -11,10 +12,24 @@ if (process.env.NODE_ENV === 'development') {
   });
 }
 
-// Cliente Directus
+// Cliente Directus com token estático (para operações administrativas)
 export const directus = createDirectus(directusUrl)
   .with(staticToken(directusToken))
   .with(rest());
+
+// Cliente Directus autenticado (para operações do usuário logado)
+export async function getAuthenticatedClient() {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get('session_token');
+
+  if (!sessionToken?.value) {
+    throw new Error('Usuário não autenticado');
+  }
+
+  return createDirectus(directusUrl)
+    .with(staticToken(sessionToken.value))
+    .with(rest());
+}
 
 // Função para testar a conexão
 export async function testConnection() {
