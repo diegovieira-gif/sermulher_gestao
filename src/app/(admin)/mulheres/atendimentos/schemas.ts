@@ -8,27 +8,6 @@ export enum StatusAtendimento {
   ARQUIVADO = "Arquivado",
 }
 
-// Enum para Encaminhamento RMA
-export enum EncaminhamentoRMA {
-  CRAS = "cras",
-  CREAS = "creas",
-  SAUDE = "saude",
-  EDUCACAO = "educacao",
-  TERCEIRO_SETOR = "terceiro_setor",
-  CASA_ABRIGO = "casa_abrigo",
-  DELEGACIA = "delegacia",
-  NENHUM = "nenhum",
-}
-
-// Tipos de Violência (armazenados como CSV no banco)
-export const tiposViolenciaDisponiveis = [
-  "fisica",
-  "psicologica",
-  "sexual",
-  "patrimonial",
-  "moral",
-] as const;
-
 // Schema principal de atendimento (para leitura do banco)
 export const atendimentoSchema = z.object({
   id: z.number().optional(),
@@ -55,11 +34,17 @@ export const atendimentoSchema = z.object({
   data_abertura: z
     .string()
     .default(() => new Date().toISOString().split("T")[0]),
-  encaminhamento_rma: z.nativeEnum(EncaminhamentoRMA).optional(),
+  encaminhamento_id: z
+    .coerce
+    .number({ message: "Selecione o encaminhamento" })
+    .int()
+    .positive()
+    .optional(),
   tipos_violencia: z
     .union([
-      z.string(), // Para leitura do banco (CSV)
-      z.array(z.string()), // Para escrita do formulário
+      z.array(z.coerce.number()),
+      z.array(z.string()),
+      z.string(),
     ])
     .optional(),
 });
@@ -88,8 +73,13 @@ export const atendimentoFormSchema = z.object({
     .nativeEnum(StatusAtendimento),
   data_abertura: z
     .string(),
-  encaminhamento_rma: z.nativeEnum(EncaminhamentoRMA).optional(),
-  tipos_violencia: z.array(z.string()).optional(),
+  encaminhamento_id: z
+    .coerce
+    .number({ message: "Selecione o encaminhamento" })
+    .int()
+    .positive()
+    .optional(),
+  tipos_violencia: z.array(z.coerce.number()).optional(),
 });
 
 // Tipos TypeScript derivados dos schemas

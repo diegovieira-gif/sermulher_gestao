@@ -3,15 +3,19 @@
 import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { 
-  atendimentoFormSchema, 
-  type AtendimentoFormValues, 
+import {
+  atendimentoFormSchema,
+  type AtendimentoFormValues,
   StatusAtendimento,
-  EncaminhamentoRMA,
-  tiposViolenciaDisponiveis,
 } from "./schemas";
 import { saveAtendimento } from "./actions";
-import type { BeneficiariaOption, OrigemOption, PrioridadeOption } from "./actions";
+import type {
+  BeneficiariaOption,
+  OrigemOption,
+  PrioridadeOption,
+  EncaminhamentoOption,
+  TipoViolenciaOption,
+} from "./actions";
 import { BeneficiariaComboBox } from "./beneficiaria-combobox";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,6 +45,8 @@ interface AtendimentoFormProps {
   beneficiariasOptions: BeneficiariaOption[];
   origensOptions: OrigemOption[];
   prioridadesOptions: PrioridadeOption[];
+  encaminhamentosOptions: EncaminhamentoOption[];
+  tiposViolenciaOptions: TipoViolenciaOption[];
   atendimento?: any | null;
 }
 
@@ -50,9 +56,19 @@ export function AtendimentoForm({
   beneficiariasOptions,
   origensOptions,
   prioridadesOptions,
+  encaminhamentosOptions,
+  tiposViolenciaOptions,
   atendimento,
 }: AtendimentoFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const slugify = (value: string) =>
+    value
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
 
   // Normaliza os dados do Directus para o formulário
   const normalizedValues = useMemo(() => {
@@ -72,6 +88,64 @@ export function AtendimentoForm({
           ? atendimento.prioridade_id?.id
           : atendimento.prioridade_id;
 
+      const encaminhamentoId = (() => {
+        if (typeof atendimento.encaminhamento_id === "object" && atendimento.encaminhamento_id !== null) {
+          return atendimento.encaminhamento_id?.id;
+        }
+        if (typeof atendimento.encaminhamento_id === "number") {
+          return atendimento.encaminhamento_id;
+        }
+        if (typeof atendimento.encaminhamento_rma === "string") {
+          const slug = slugify(atendimento.encaminhamento_rma);
+          const found = encaminhamentosOptions.find((opt) => {
+            const optionSlug = slugify(opt.nome || "");
+            return optionSlug === slug || optionSlug.includes(slug);
+          });
+          return found?.id;
+        }
+        return undefined;
+      })();
+
+      const tiposViolenciaIds = (() => {
+        if (Array.isArray(atendimento.tipos_violencia_lista)) {
+          return atendimento.tipos_violencia_lista
+            .map((item: any) =>
+              typeof item === "object" && item !== null ? item.id : Number(item)
+            )
+            .filter(Boolean);
+        }
+
+        if (Array.isArray(atendimento.tipos_violencia)) {
+          return atendimento.tipos_violencia
+            .map((item: any) =>
+              typeof item === "object" && item !== null
+                ? item.id
+                : typeof item === "number"
+                ? item
+                : (() => {
+                    const slug = slugify(String(item));
+                    const match = tiposViolenciaOptions.find((opt) => slugify(opt.nome) === slug);
+                    return match?.id;
+                  })()
+            )
+            .filter(Boolean) as number[];
+        }
+
+        if (typeof atendimento.tipos_violencia === "string") {
+          return atendimento.tipos_violencia
+            .split(",")
+            .map((v: string) => v.trim())
+            .map((v: string) => {
+              const slug = slugify(v);
+              const match = tiposViolenciaOptions.find((opt) => slugify(opt.nome) === slug);
+              return match?.id;
+            })
+            .filter(Boolean) as number[];
+        }
+
+        return [];
+      })();
+
       // Formata data para YYYY-MM-DD
       let dataAberturaFormatted = "";
       if (atendimento.data_abertura) {
@@ -90,12 +164,8 @@ export function AtendimentoForm({
         prioridade_id: prioridadeId || undefined,
         status: atendimento.status || StatusAtendimento.ABERTO,
         data_abertura: dataAberturaFormatted || new Date().toISOString().split("T")[0],
-        encaminhamento_rma: atendimento.encaminhamento_rma || undefined,
-        tipos_violencia: Array.isArray(atendimento.tipos_violencia) 
-          ? atendimento.tipos_violencia 
-          : atendimento.tipos_violencia 
-            ? atendimento.tipos_violencia.split(",").map((v: string) => v.trim()) 
-            : [],
+        encaminhamento_id: encaminhamentoId || undefined,
+        tipos_violencia: tiposViolenciaIds,
       };
     }
 
@@ -106,10 +176,10 @@ export function AtendimentoForm({
       prioridade_id: undefined,
       status: StatusAtendimento.ABERTO,
       data_abertura: new Date().toISOString().split("T")[0],
-      encaminhamento_rma: undefined,
+      encaminhamento_id: undefined,
       tipos_violencia: [],
     };
-  }, [atendimento]);
+  }, [atendimento, encaminhamentosOptions, tiposViolenciaOptions]);
 
   const form = useForm<AtendimentoFormValues>({
     resolver: zodResolver(atendimentoFormSchema) as any,
@@ -301,27 +371,32 @@ export function AtendimentoForm({
 
               <FormField
                 control={form.control}
-                name="encaminhamento_rma"
+                name="encaminhamento_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Encaminhamento RMA</FormLabel>
+                    <FormLabel>Encaminhamento (config)</FormLabel>
                     <FormControl>
                       <Select
                         name={field.name}
                         ref={field.ref}
                         onBlur={field.onBlur}
-                        value={field.value || ""}
-                        onChange={(e) => field.onChange(e.target.value || undefined)}
+                        value={
+                          typeof field.value === "number" || typeof field.value === "string"
+                            ? field.value
+                            : ""
+                        }
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value ? Number(e.target.value) : undefined
+                          )
+                        }
                       >
                         <option value="">Selecione o encaminhamento...</option>
-                        <option value={EncaminhamentoRMA.CRAS}>CRAS - Centro de Referência de Assistência Social</option>
-                        <option value={EncaminhamentoRMA.CREAS}>CREAS - Centro de Referência Especializado de Assistência Social</option>
-                        <option value={EncaminhamentoRMA.SAUDE}>Saúde</option>
-                        <option value={EncaminhamentoRMA.EDUCACAO}>Educação</option>
-                        <option value={EncaminhamentoRMA.TERCEIRO_SETOR}>Terceiro Setor</option>
-                        <option value={EncaminhamentoRMA.CASA_ABRIGO}>Casa Abrigo</option>
-                        <option value={EncaminhamentoRMA.DELEGACIA}>Delegacia</option>
-                        <option value={EncaminhamentoRMA.NENHUM}>Nenhum</option>
+                        {encaminhamentosOptions.map((opt) => (
+                          <option key={opt.id} value={opt.id.toString()}>
+                            {opt.nome}
+                          </option>
+                        ))}
                       </Select>
                     </FormControl>
                     <FormMessage />
@@ -340,16 +415,18 @@ export function AtendimentoForm({
                 render={() => (
                   <FormItem>
                     <div className="space-y-3">
-                      {tiposViolenciaDisponiveis.map((tipo) => (
+                      {tiposViolenciaOptions.map((tipo) => (
                         <FormField
-                          key={tipo}
+                          key={tipo.id}
                           control={form.control}
                           name="tipos_violencia"
                           render={({ field }) => {
-                            const isChecked = Array.isArray(field.value) && field.value.includes(tipo);
+                            const isChecked =
+                              Array.isArray(field.value) &&
+                              field.value.includes(tipo.id);
                             return (
                               <FormItem
-                                key={tipo}
+                                key={tipo.id}
                                 className="flex flex-row items-start space-x-3 space-y-0"
                               >
                                 <FormControl>
@@ -358,14 +435,14 @@ export function AtendimentoForm({
                                     onCheckedChange={(checked: boolean) => {
                                       const currentValue = Array.isArray(field.value) ? field.value : [];
                                       const newValue = checked
-                                        ? [...currentValue, tipo]
-                                        : currentValue.filter((value) => value !== tipo);
+                                        ? [...currentValue, tipo.id]
+                                        : currentValue.filter((value) => value !== tipo.id);
                                       field.onChange(newValue);
                                     }}
                                   />
                                 </FormControl>
                                 <FormLabel className="font-normal capitalize">
-                                  {tipo.charAt(0).toUpperCase() + tipo.slice(1)}
+                                  {tipo.nome}
                                 </FormLabel>
                               </FormItem>
                             );

@@ -5,6 +5,14 @@ import { directus } from "@/lib/directus";
 import { readItems, createItem, updateItem, deleteItem } from "@directus/sdk";
 import { atendimentoFormSchema } from "./schemas";
 
+const slugify = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+
 const ATENDIMENTO_FIELDS = [
   'id',
   'beneficiaria',
@@ -13,7 +21,9 @@ const ATENDIMENTO_FIELDS = [
   'status',
   'data_abertura',
   'encaminhamento_rma',
+  'encaminhamento_id',
   'tipos_violencia',
+  'tipos_violencia_lista',
   // Relacionamentos
   'beneficiaria.id',
   'beneficiaria.nome_completo',
@@ -23,6 +33,11 @@ const ATENDIMENTO_FIELDS = [
   'prioridade_id.id',
   'prioridade_id.nome',
   'prioridade_id.cor',
+  'encaminhamento_id.id',
+  'encaminhamento_id.nome',
+  'encaminhamento_id.grupo_rma',
+  'tipos_violencia_lista.id',
+  'tipos_violencia_lista.nome',
 ];
 
 // Tipos exportados para uso nos componentes
@@ -41,6 +56,17 @@ export type PrioridadeOption = {
   id: number;
   nome: string;
   cor?: string;
+};
+
+export type EncaminhamentoOption = {
+  id: number;
+  nome: string;
+  grupo_rma?: string;
+};
+
+export type TipoViolenciaOption = {
+  id: number;
+  nome: string;
 };
 
 /**
@@ -70,7 +96,7 @@ export async function getAtendimentos() {
  */
 export async function getFormOptions() {
   try {
-    const [beneficiarias, origens, prioridades] = await Promise.all([
+    const [beneficiarias, origens, prioridades, encaminhamentos, tiposViolencia] = await Promise.all([
       directus.request(
         readItems("beneficiarias", {
           fields: ["id", "nome_completo", "cpf"],
@@ -89,6 +115,18 @@ export async function getFormOptions() {
           sort: ["nivel"],
         })
       ) as Promise<PrioridadeOption[]>,
+      directus.request(
+        readItems("config_encaminhamentos", {
+          fields: ["id", "nome", "grupo_rma"],
+          sort: ["nome"],
+        })
+      ) as Promise<EncaminhamentoOption[]>,
+      directus.request(
+        readItems("config_tipos_violencia", {
+          fields: ["id", "nome"],
+          sort: ["nome"],
+        })
+      ) as Promise<TipoViolenciaOption[]>,
     ]);
 
     return {
@@ -97,6 +135,8 @@ export async function getFormOptions() {
         beneficiarias,
         origens,
         prioridades,
+        encaminhamentos,
+        tiposViolencia,
       },
     };
   } catch (error) {
@@ -130,14 +170,46 @@ export async function saveAtendimento(data: unknown) {
     if (validatedData.prioridade_id) {
       payload.prioridade_id = validatedData.prioridade_id;
     }
-    if (validatedData.encaminhamento_rma) {
-      payload.encaminhamento_rma = validatedData.encaminhamento_rma;
+    if (validatedData.encaminhamento_id) {
+      payload.encaminhamento_id = validatedData.encaminhamento_id;
+
+      try {
+        const enc = await directus.request(
+          readItems("config_encaminhamentos", {
+            fields: ["nome"],
+            filter: { id: { _eq: validatedData.encaminhamento_id } },
+            limit: 1,
+          })
+        );
+        const encNome = enc?.[0]?.nome;
+        if (encNome) {
+          payload.encaminhamento_rma = slugify(String(encNome));
+        }
+      } catch {
+        // mantém compatibilidade mesmo se não achar o nome
+      }
     }
-    // Converte array de tipos_violencia para CSV
     if (validatedData.tipos_violencia && Array.isArray(validatedData.tipos_violencia)) {
-      payload.tipos_violencia = validatedData.tipos_violencia.join(",");
-    } else if (typeof validatedData.tipos_violencia === 'string') {
-      payload.tipos_violencia = validatedData.tipos_violencia;
+      payload.tipos_violencia_lista = validatedData.tipos_violencia;
+
+      try {
+        const violencias = await directus.request(
+          readItems("config_tipos_violencia", {
+            fields: ["nome"],
+            filter: { id: { _in: validatedData.tipos_violencia } },
+          })
+        );
+        const nomes = Array.isArray(violencias)
+          ? violencias
+              .map((item: any) => item?.nome)
+              .filter(Boolean)
+          : [];
+        if (nomes.length) {
+          payload.tipos_violencia = nomes.join(",");
+        }
+      } catch {
+        // se falhar, não bloqueia a gravação
+      }
     }
 
     if (validatedData.id) {

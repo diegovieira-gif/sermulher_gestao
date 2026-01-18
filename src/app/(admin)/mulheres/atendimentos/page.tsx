@@ -34,6 +34,8 @@ export default async function AtendimentosPage() {
         beneficiariasOptions={optionsResult.data?.beneficiarias || []}
         origensOptions={optionsResult.data?.origens || []}
         prioridadesOptions={optionsResult.data?.prioridades || []}
+        encaminhamentosOptions={optionsResult.data?.encaminhamentos || []}
+        tiposViolenciaOptions={optionsResult.data?.tiposViolencia || []}
       />
     </div>
   );

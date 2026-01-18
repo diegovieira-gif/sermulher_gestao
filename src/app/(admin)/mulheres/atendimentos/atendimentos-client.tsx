@@ -30,6 +30,8 @@ import type {
   BeneficiariaOption,
   OrigemOption,
   PrioridadeOption,
+  EncaminhamentoOption,
+  TipoViolenciaOption,
 } from "./actions";
 
 interface AtendimentosClientProps {
@@ -37,6 +39,8 @@ interface AtendimentosClientProps {
   beneficiariasOptions: BeneficiariaOption[];
   origensOptions: OrigemOption[];
   prioridadesOptions: PrioridadeOption[];
+  encaminhamentosOptions: EncaminhamentoOption[];
+  tiposViolenciaOptions: TipoViolenciaOption[];
 }
 
 export function AtendimentosClient({
@@ -44,6 +48,8 @@ export function AtendimentosClient({
   beneficiariasOptions,
   origensOptions,
   prioridadesOptions,
+  encaminhamentosOptions,
+  tiposViolenciaOptions,
 }: AtendimentosClientProps) {
   const [formOpen, setFormOpen] = useState(false);
   const [selectedAtendimento, setSelectedAtendimento] = useState<any | null>(
@@ -276,6 +282,8 @@ export function AtendimentosClient({
         beneficiariasOptions={beneficiariasOptions}
         origensOptions={origensOptions}
         prioridadesOptions={prioridadesOptions}
+        encaminhamentosOptions={encaminhamentosOptions}
+        tiposViolenciaOptions={tiposViolenciaOptions}
         atendimento={selectedAtendimento}
       />
 
