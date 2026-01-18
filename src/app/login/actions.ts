@@ -85,7 +85,7 @@ export async function login(prevState: { error?: string } | undefined, formData:
   }
 
   // Redireciona para o dashboard
-  redirect('/admin/dashboard');
+  redirect('/dashboard');
 }
 
 export async function logout() {
