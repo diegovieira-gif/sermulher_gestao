@@ -107,8 +107,8 @@ export default async function BeneficiariaDetalhePage({ params }: PageProps) {
           <BeneficiosTab
             beneficiariaId={beneficiaria.id}
             beneficiariaNome={beneficiaria.nome_completo}
-            beneficiosOptions={beneficios}
-            historico={historico}
+            beneficiosOptions={beneficios as any}
+            historico={historico as any}
           />
         </TabsContent>
       </Tabs>

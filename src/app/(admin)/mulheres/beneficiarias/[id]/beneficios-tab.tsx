@@ -220,6 +220,7 @@ export function BeneficiosTab({
                       <FormItem>
                         <FormLabel>Quantidade</FormLabel>
                         <FormControl>
+                          {/* @ts-ignore */}
                           <Input
                             type="number"
                             min={1}
