@@ -480,3 +480,78 @@ export async function saveFrequencia(
     return { success: false, error: "Erro ao salvar frequência." };
   }
 }
+
+// =========================
+// Gestão de Resultados e Certificação
+// =========================
+
+export type MatriculaComPerformance = Matricula & {
+  aulas_totais: number;
+  presencas: number;
+  frequencia_percentual: number;
+  aprovada: boolean;
+};
+
+/**
+ * Busca performance de todas as alunas de uma turma
+ * Retorna: matrículas com aulas_totais, presencas, frequencia_percentual e aprovada
+ */
+export async function getTurmaPerformance(turmaId: number) {
+  try {
+    // 1. Busca todas as matrículas da turma
+    const matriculasResult = await getMatriculasByTurma(turmaId);
+    if (!matriculasResult.success || !matriculasResult.data) {
+      return { success: false, error: "Erro ao buscar matrículas." };
+    }
+
+    const matriculas = matriculasResult.data;
+
+    // 2. Busca TODOS os registros de frequência da turma (não filtrado por data)
+    const frequenciasResult = await directus.request(
+      readItems("escola_frequencia", {
+        filter: {
+          turma: {
+            _eq: turmaId,
+          },
+        },
+        // @ts-ignore
+        fields: ["id", "turma", "beneficiaria", "data", "presente"],
+        limit: -1,
+      })
+    );
+
+    const frequencias = (frequenciasResult || []) as RegistroFrequencia[];
+
+    // 3. Calcula total de aulas (datas únicas com registros de frequência)
+    const aulasSet = new Set(frequencias.map((f) => f.data));
+    const aulas_totais = aulasSet.size;
+
+    // 4. Monta array de performance para cada matrícula
+    const performance: MatriculaComPerformance[] = matriculas.map((matricula) => {
+      // Conta presenças da aluna (presente = true)
+      const presencas = frequencias.filter(
+        (f) => f.beneficiaria === matricula.beneficiaria.id && f.presente === true
+      ).length;
+
+      // Calcula frequência percentual
+      const frequencia_percentual =
+        aulas_totais > 0 ? (presencas / aulas_totais) * 100 : 0;
+
+      // Determina se aprovada (>= 75%)
+      const aprovada = frequencia_percentual >= 75;
+
+      return {
+        ...matricula,
+        aulas_totais,
+        presencas,
+        frequencia_percentual: Math.round(frequencia_percentual * 100) / 100,
+        aprovada,
+      };
+    });
+
+    return { success: true, data: performance };
+  } catch (error) {
+    console.error("Erro ao buscar performance da turma:", error);
+    return { success: false, error: "Erro ao buscar performance." };
+  }
+}

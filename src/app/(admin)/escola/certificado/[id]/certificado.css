@@ -1,0 +1,262 @@
+/* Certificado - Estilos */
+
+.certificado-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.certificado-content {
+  width: 100%;
+  max-width: 900px;
+  aspect-ratio: 16 / 11;
+}
+
+.certificado-border {
+  width: 100%;
+  height: 100%;
+  border: 3px solid #1a472a;
+  border-radius: 8px;
+  padding: 3rem 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: white;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+/* Ornamentação de canto */
+.certificado-border::before,
+.certificado-border::after {
+  content: "";
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  border: 2px solid #1a472a;
+}
+
+.certificado-border::before {
+  top: 15px;
+  left: 15px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.certificado-border::after {
+  bottom: 15px;
+  right: 15px;
+  border-left: none;
+  border-top: none;
+}
+
+/* Header */
+.certificado-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.certificado-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1a472a;
+  margin: 0;
+  letter-spacing: 2px;
+}
+
+/* Body */
+.certificado-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  gap: 0.5rem;
+}
+
+.certificado-text {
+  font-size: 1rem;
+  color: #333;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.certificado-intro {
+  font-style: italic;
+  color: #666;
+}
+
+.certificado-name {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1a472a;
+  margin: 0.5rem 0;
+  border-bottom: 2px solid #1a472a;
+  padding-bottom: 0.5rem;
+  letter-spacing: 1px;
+}
+
+.certificado-course {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #1a472a;
+  margin: 0.5rem 0;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+/* Footer */
+.certificado-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.certificado-signature {
+  flex: 1;
+  text-align: center;
+}
+
+.signature-line {
+  border-top: 2px solid #333;
+  height: 2px;
+  margin-bottom: 0.5rem;
+}
+
+.signature-text {
+  font-size: 0.9rem;
+  color: #333;
+  margin: 0;
+  font-style: italic;
+}
+
+.certificado-date {
+  flex: 1;
+  text-align: right;
+}
+
+.date-text {
+  font-size: 0.95rem;
+  color: #333;
+  margin: 0;
+}
+
+/* Responsividade para Tela */
+@media screen and (max-width: 768px) {
+  .certificado-content {
+    max-width: 100%;
+  }
+
+  .certificado-border {
+    padding: 2rem 1.5rem;
+  }
+
+  .certificado-title {
+    font-size: 2rem;
+  }
+
+  .certificado-name {
+    font-size: 1.2rem;
+  }
+
+  .certificado-course {
+    font-size: 1.1rem;
+  }
+
+  .certificado-text {
+    font-size: 0.95rem;
+  }
+
+  .certificado-footer {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .certificado-date {
+    text-align: center;
+  }
+}
+
+/* Impressão - Otimização para PDF/Print */
+@media print {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    background: white;
+    padding: 0;
+    margin: 0;
+  }
+
+  .hidden-print,
+  button,
+  .no-print {
+    display: none !important;
+  }
+
+  .certificado-container {
+    padding: 0;
+  }
+
+  .certificado-content {
+    max-width: 100%;
+    width: 210mm;
+    height: 297mm;
+    margin: 0 auto;
+    aspect-ratio: 1 / 1.414; /* A4 ratio */
+  }
+
+  .certificado-border {
+    width: 100%;
+    height: 100%;
+    padding: 4rem 3rem;
+    box-shadow: none;
+    border-width: 4px;
+    page-break-after: avoid;
+  }
+
+  .certificado-title {
+    font-size: 3rem;
+  }
+
+  .certificado-name {
+    font-size: 1.6rem;
+    margin: 1rem 0;
+  }
+
+  .certificado-course {
+    font-size: 1.5rem;
+    margin: 0.8rem 0;
+  }
+
+  .certificado-text {
+    font-size: 1.1rem;
+  }
+
+  @page {
+    margin: 0;
+    size: A4;
+  }
+}
+
+/* Fallback para navegadores que não suportam bem a impressão */
+@supports not (aspect-ratio: 1) {
+  .certificado-content {
+    width: 900px;
+    height: 600px;
+  }
+
+  @media print {
+    .certificado-content {
+      width: 210mm;
+      height: 297mm;
+    }
+  }
+}

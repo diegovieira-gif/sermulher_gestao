@@ -36,10 +36,11 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { BeneficiariaComboBox, type BeneficiariaOption } from "@/app/(admin)/mulheres/atendimentos/beneficiaria-combobox";
-import { saveMatricula, deleteMatricula, type Matricula } from "../../actions";
+import { saveMatricula, deleteMatricula, getTurmaPerformance, type Matricula } from "../../actions";
 import { FrequenciaClient } from "./frequencia-client";
+import { ResultadosClient } from "./resultados-client";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, Trash2, Loader2, Users, ClipboardList } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Loader2, Users, ClipboardList, Award } from "lucide-react";
 
 interface TurmaDetalhesClientProps {
   turma: any;
@@ -108,6 +109,25 @@ export function TurmaDetalhesClient({
   const [matriculaToDelete, setMatriculaToDelete] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [currentMatriculas, setCurrentMatriculas] = useState<Matricula[]>(matriculas);
+  const [performanceData, setPerformanceData] = useState<any[]>([]);
+  const [isLoadingPerformance, setIsLoadingPerformance] = useState(false);
+
+  // Carrega performance quando necessário
+  async function loadPerformance() {
+    setIsLoadingPerformance(true);
+    try {
+      const result = await getTurmaPerformance(turma.id);
+      if (result.success && result.data) {
+        setPerformanceData(result.data);
+      } else {
+        toast.error(result.error || "Erro ao carregar performance");
+      }
+    } catch (error) {
+      toast.error("Erro inesperado ao carregar performance");
+    } finally {
+      setIsLoadingPerformance(false);
+    }
+  }
 
   // Opções para o combobox
   const beneficiariasOptions: BeneficiariaOption[] = beneficiarias.map((b) => ({
@@ -207,7 +227,7 @@ export function TurmaDetalhesClient({
         </div>
       </div>
 
-      {/* Tabs: Matrículas e Diário de Classe */}
+      {/* Tabs: Matrículas, Diário de Classe e Resultados */}
       <Tabs defaultValue="matriculas" className="space-y-4">
         <TabsList>
           <TabsTrigger value="matriculas" className="flex items-center gap-2">
@@ -217,6 +237,10 @@ export function TurmaDetalhesClient({
           <TabsTrigger value="frequencia" className="flex items-center gap-2">
             <ClipboardList className="h-4 w-4" />
             Diário de Classe
+          </TabsTrigger>
+          <TabsTrigger value="resultados" className="flex items-center gap-2" onClick={loadPerformance}>
+            <Award className="h-4 w-4" />
+            Resultados
           </TabsTrigger>
         </TabsList>
 
@@ -295,6 +319,22 @@ export function TurmaDetalhesClient({
         {/* Tab: Diário de Classe (Frequência) */}
         <TabsContent value="frequencia">
           <FrequenciaClient turmaId={turma.id} matriculas={currentMatriculas} />
+        </TabsContent>
+
+        {/* Tab: Resultados */}
+        <TabsContent value="resultados" className="space-y-4">
+          {isLoadingPerformance ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <span className="ml-2 text-muted-foreground">Carregando resultados...</span>
+            </div>
+          ) : performanceData.length > 0 ? (
+            <ResultadosClient performance={performanceData} />
+          ) : (
+            <div className="rounded-md border p-6 text-center text-muted-foreground">
+              Nenhum dado de performance disponível.
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 
