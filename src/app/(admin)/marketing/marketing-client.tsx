@@ -1,15 +1,10 @@
 "use client";
 
-import { GenericCrudTable } from "@/app/(admin)/configuracoes/generic-crud-table";
-import { Badge } from "@/components/ui/badge";
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -17,362 +12,323 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { BarChart3, Eye, TrendingUp } from "lucide-react";
-import { z } from "zod";
-import { deleteMarketingItem, saveMarketingItem } from "./actions";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Megaphone,
+  Users,
+  MousePointerClick,
+  Plus,
+  Trash2,
+  Edit,
+  Calendar,
+} from "lucide-react";
+import { saveMarketingItem, deleteMarketingItem } from "./actions";
+import { useToast } from "@/components/ui/use-toast"; // Se não tiver useToast, pode remover ou trocar por alert
 
-// Tipo para os itens
-interface MarketingItem {
-  id?: number;
-  titulo: string;
-  data_publicacao: string;
-  plataforma: string;
-  link?: string;
-  alcance?: number;
-  interacoes?: number;
-  campanha?: string;
-}
+export function MarketingClient({
+  items,
+  stats,
+}: {
+  items: any[];
+  stats: any;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  // Estado do Formulário
+  const [formData, setFormData] = useState({
+    id: null,
+    titulo: "",
+    data_publicacao: new Date().toISOString().split("T")[0],
+    plataforma: "instagram",
+    link: "",
+    alcance: "",
+    interacoes: "",
+    campanha: "",
+  });
 
-// Labels e cores das plataformas
-const PLATAFORMA_LABEL: Record<string, string> = {
-  instagram: "Instagram",
-  facebook: "Facebook",
-  linkedin: "LinkedIn",
-  site: "Site/Blog",
-  jornal: "Jornal/Revista",
-  midia_tradicional: "TV/Rádio",
-  outros: "Outros",
-};
-
-const PLATAFORMA_COLOR: Record<string, string> = {
-  instagram: "bg-pink-600 hover:bg-pink-700 text-white",
-  facebook: "bg-blue-600 hover:bg-blue-700 text-white",
-  linkedin: "bg-sky-700 hover:bg-sky-800 text-white",
-  site: "bg-gray-700 hover:bg-gray-800 text-white",
-  jornal: "bg-slate-600 hover:bg-slate-700 text-white",
-  midia_tradicional: "bg-orange-600 hover:bg-orange-700 text-white",
-  outros: "bg-purple-600 hover:bg-purple-700 text-white",
-};
-
-// Schema do formulário
-const marketingFormSchema = z.object({
-  id: z.number().optional(),
-  titulo: z.string().min(2, "Título é obrigatório"),
-  data_publicacao: z.string().min(1, "Data de publicação é obrigatória"),
-  plataforma: z.enum([
-    "instagram",
-    "facebook",
-    "linkedin",
-    "site",
-    "jornal",
-    "midia_tradicional",
-    "outros"
-  ]),
-  link: z.string().optional(),
-  alcance: z.coerce.number().int().min(0).optional(),
-  interacoes: z.coerce.number().int().min(0).optional(),
-  campanha: z.string().optional(),
-});
-
-const defaultFormValues = {
-  titulo: "",
-  data_publicacao: "",
-  plataforma: "instagram" as const,
-  link: "",
-  alcance: 0,
-  interacoes: 0,
-  campanha: "",
-};
-
-function dateOnly(v?: string | null) {
-  if (!v) return "";
-  const d = String(v);
-  return d.length >= 10 ? d.slice(0, 10) : d;
-}
-
-function formatDate(dateString?: string | null) {
-  if (!dateString) return "-";
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat("pt-BR").format(date);
-}
-
-interface MarketingClientProps {
-  items: MarketingItem[];
-  stats: {
-    postsMes: number;
-    alcanceMes: number;
-    interacoesMes: number;
+  // Função para abrir modal de edição
+  const handleEdit = (item: any) => {
+    setFormData({
+      id: item.id,
+      titulo: item.titulo,
+      data_publicacao: item.data_publicacao,
+      plataforma: item.plataforma,
+      link: item.link || "",
+      alcance: item.alcance || "0",
+      interacoes: item.interacoes || "0",
+      campanha: item.campanha || "",
+    });
+    setIsOpen(true);
   };
-}
 
-export function MarketingClient({ items, stats }: MarketingClientProps) {
+  // Função para limpar e abrir modal de novo item
+  const handleNew = () => {
+    setFormData({
+      id: null,
+      titulo: "",
+      data_publicacao: new Date().toISOString().split("T")[0],
+      plataforma: "instagram",
+      link: "",
+      alcance: "",
+      interacoes: "",
+      campanha: "",
+    });
+    setIsOpen(true);
+  };
+
+  // Salvar
+  const onSave = async () => {
+    if (!formData.titulo || !formData.data_publicacao) {
+      alert("Preencha Título e Data!");
+      return;
+    }
+
+    setLoading(true);
+    const payload = {
+      ...formData,
+      alcance: Number(formData.alcance),
+      interacoes: Number(formData.interacoes),
+    };
+
+    const res = await saveMarketingItem(payload);
+    setLoading(false);
+
+    if (res.success) {
+      setIsOpen(false);
+      // O Next.js deve revalidar a página automaticamente via server action
+    } else {
+      alert("Erro ao salvar: " + (res.error || "Desconhecido"));
+    }
+  };
+
+  // Deletar
+  const onDelete = async (id: number) => {
+    if (confirm("Tem certeza que deseja excluir?")) {
+      await deleteMarketingItem(id);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      {/* Cards de Estatísticas */}
+      {/* 1. Cards de KPIs */}
       <div className="grid gap-4 md:grid-cols-3">
-        {/* Card 1: Publicações do Mês */}
-        <div className="rounded-lg border bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">
-                Publicações (Mês)
-              </p>
-              <p className="mt-2 text-3xl font-bold text-gray-900">
-                {stats.postsMes}
-              </p>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Publicações (Mês)
+            </CardTitle>
+            <Megaphone className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.postsMes}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Alcance Total</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {stats.alcanceMes.toLocaleString("pt-BR")}
             </div>
-            <div className="rounded-full bg-blue-100 p-3">
-              <BarChart3 className="h-6 w-6 text-blue-600" />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Interações</CardTitle>
+            <MousePointerClick className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {stats.interacoesMes.toLocaleString("pt-BR")}
             </div>
-          </div>
-        </div>
-
-        {/* Card 2: Alcance Total */}
-        <div className="rounded-lg border bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">
-                Alcance Total (Mês)
-              </p>
-              <p className="mt-2 text-3xl font-bold text-gray-900">
-                {stats.alcanceMes.toLocaleString("pt-BR")}
-              </p>
-            </div>
-            <div className="rounded-full bg-green-100 p-3">
-              <Eye className="h-6 w-6 text-green-600" />
-            </div>
-          </div>
-        </div>
-
-        {/* Card 3: Interações Totais */}
-        <div className="rounded-lg border bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">
-                Interações (Mês)
-              </p>
-              <p className="mt-2 text-3xl font-bold text-gray-900">
-                {stats.interacoesMes.toLocaleString("pt-BR")}
-              </p>
-            </div>
-            <div className="rounded-full bg-purple-100 p-3">
-              <TrendingUp className="h-6 w-6 text-purple-600" />
-            </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Tabela CRUD */}
-      <GenericCrudTable
-        collectionName="marketing_items"
-        title="Gestão de Publicações"
-        items={items}
-        showStatus={false}
-        formSchema={marketingFormSchema}
-        defaultValues={defaultFormValues}
-        mapItemToFormValues={(item) => ({
-          id: item.id ? Number(item.id) : undefined,
-          titulo: item.titulo || "",
-          data_publicacao: dateOnly(item.data_publicacao),
-          plataforma: (item.plataforma as any) || "instagram",
-          link: item.link || "",
-          alcance: item.alcance ? Number(item.alcance) : 0,
-          interacoes: item.interacoes ? Number(item.interacoes) : 0,
-          campanha: item.campanha || "",
-        })}
-        onSave={async (values) => {
-          return await saveMarketingItem(values);
-        }}
-        onDelete={async (id) => {
-          return await deleteMarketingItem(id);
-        }}
-        columns={[
-          {
-            header: "Data",
-            accessorKey: "data_publicacao",
-            cell: (item) => (
-              <span className="font-medium">{formatDate(item.data_publicacao)}</span>
-            ),
-          },
-          {
-            header: "Título",
-            accessorKey: "titulo",
-            cell: (item) => (
-              <div className="max-w-md">
-                <p className="truncate font-medium">{item.titulo}</p>
-              </div>
-            ),
-          },
-          {
-            header: "Plataforma",
-            accessorKey: "plataforma",
-            cell: (item) => (
-              <Badge
-                className={
-                  PLATAFORMA_COLOR[item.plataforma || "outros"] ||
-                  "bg-gray-600 hover:bg-gray-700"
-                }
-              >
-                {PLATAFORMA_LABEL[item.plataforma || "outros"] || "N/A"}
-              </Badge>
-            ),
-          },
-          {
-            header: "Alcance",
-            accessorKey: "alcance",
-            cell: (item) => (
-              <span className="text-gray-700">
-                {item.alcance ? item.alcance.toLocaleString("pt-BR") : "-"}
-              </span>
-            ),
-          },
-          {
-            header: "Campanha",
-            accessorKey: "campanha",
-            cell: (item) => (
-              <span className="text-gray-600">{item.campanha || "-"}</span>
-            ),
-          },
-        ]}
-        renderFormFields={(form) => (
-          <>
-            <FormField
-              control={form.control}
-              name="titulo"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Título *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ex: Lançamento da campanha..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+      {/* 2. Área da Tabela */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Gestão de Comunicação</CardTitle>
+          <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={handleNew}>
+                <Plus className="w-4 h-4 mr-2" /> Novo
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>
+                  {formData.id ? "Editar Publicação" : "Nova Publicação"}
+                </DialogTitle>
+              </DialogHeader>
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="data_publicacao"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Data de Publicação *</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* FORMULÁRIO EXPLÍCITO */}
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label>Título / Manchete</Label>
+                  <Input
+                    value={formData.titulo}
+                    onChange={(e) =>
+                      setFormData({ ...formData, titulo: e.target.value })
+                    }
+                    placeholder="Ex: Post sobre o evento..."
+                  />
+                </div>
 
-              <FormField
-                control={form.control}
-                name="plataforma"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Plataforma *</FormLabel>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label>Data</Label>
+                    <Input
+                      type="date"
+                      value={formData.data_publicacao}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          data_publicacao: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Plataforma</Label>
                     <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={formData.plataforma}
+                      onValueChange={(val) =>
+                        setFormData({ ...formData, plataforma: val })
+                      }
                     >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione..." />
-                        </SelectTrigger>
-                      </FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="instagram">Instagram</SelectItem>
                         <SelectItem value="facebook">Facebook</SelectItem>
-                        <SelectItem value="linkedin">LinkedIn</SelectItem>
-                        <SelectItem value="site">Site/Blog</SelectItem>
-                        <SelectItem value="jornal">Jornal/Revista</SelectItem>
-                        <SelectItem value="midia_tradicional">TV/Rádio</SelectItem>
+                        <SelectItem value="site">Site</SelectItem>
+                        <SelectItem value="jornal">Jornal</SelectItem>
                         <SelectItem value="outros">Outros</SelectItem>
                       </SelectContent>
                     </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                  </div>
+                </div>
 
-            <FormField
-              control={form.control}
-              name="campanha"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Campanha</FormLabel>
-                  <FormControl>
+                <div className="grid gap-2">
+                  <Label>Campanha</Label>
+                  <Input
+                    value={formData.campanha}
+                    onChange={(e) =>
+                      setFormData({ ...formData, campanha: e.target.value })
+                    }
+                    placeholder="Ex: Outubro Rosa"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label>Alcance</Label>
                     <Input
-                      placeholder="Ex: Outubro Rosa, Institucional..."
-                      {...field}
+                      type="number"
+                      value={formData.alcance}
+                      onChange={(e) =>
+                        setFormData({ ...formData, alcance: e.target.value })
+                      }
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="link"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Link (URL)</FormLabel>
-                  <FormControl>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Interações</Label>
                     <Input
-                      type="url"
-                      placeholder="https://..."
-                      {...field}
+                      type="number"
+                      value={formData.interacoes}
+                      onChange={(e) =>
+                        setFormData({ ...formData, interacoes: e.target.value })
+                      }
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  </div>
+                </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="alcance"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Alcance</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min="0"
-                        placeholder="Ex: 1500"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <Button onClick={onSave} disabled={loading}>
+                  {loading ? "Salvando..." : "Salvar"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </CardHeader>
 
-              <FormField
-                control={form.control}
-                name="interacoes"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Interações</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min="0"
-                        placeholder="Ex: 250"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+        <CardContent>
+          <div className="rounded-md border">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-muted/50 text-muted-foreground">
+                <tr>
+                  <th className="p-4 font-medium">Data</th>
+                  <th className="p-4 font-medium">Título</th>
+                  <th className="p-4 font-medium">Plataforma</th>
+                  <th className="p-4 font-medium">Campanha</th>
+                  <th className="p-4 font-medium">Alcance</th>
+                  <th className="p-4 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="p-8 text-center text-muted-foreground"
+                    >
+                      Nenhuma publicação encontrada.
+                    </td>
+                  </tr>
+                ) : (
+                  items.map((item) => (
+                    <tr
+                      key={item.id}
+                      className="border-t hover:bg-muted/50 transition-colors"
+                    >
+                      <td className="p-4">
+                        {new Date(item.data_publicacao).toLocaleDateString(
+                          "pt-BR",
+                        )}
+                      </td>
+                      <td className="p-4 font-medium">{item.titulo}</td>
+                      <td className="p-4 capitalize">
+                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                          {item.plataforma}
+                        </span>
+                      </td>
+                      <td className="p-4 text-muted-foreground">
+                        {item.campanha || "-"}
+                      </td>
+                      <td className="p-4 font-mono">{item.alcance}</td>
+                      <td className="p-4 text-right flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(item)}
+                        >
+                          <Edit className="w-4 h-4 text-blue-500" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onDelete(item.id)}
+                        >
+                          <Trash2 className="w-4 h-4 text-red-500" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
                 )}
-              />
-            </div>
-          </>
-        )}
-      />
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
