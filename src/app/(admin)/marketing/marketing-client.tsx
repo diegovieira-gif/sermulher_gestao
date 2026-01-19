@@ -19,17 +19,21 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+// Importando ícones mais ricos para o Dashboard
 import {
-  Megaphone,
-  Users,
-  MousePointerClick,
   Plus,
   Trash2,
   Edit,
-  Calendar,
+  BarChart3,
+  Eye,
+  TrendingUp, // Ícones dos Cards
+  Instagram,
+  Globe,
+  Newspaper,
+  Facebook,
+  Monitor, // Ícones da Tabela
 } from "lucide-react";
 import { saveMarketingItem, deleteMarketingItem } from "./actions";
-import { useToast } from "@/components/ui/use-toast"; // Se não tiver useToast, pode remover ou trocar por alert
 
 export function MarketingClient({
   items,
@@ -40,7 +44,7 @@ export function MarketingClient({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  // Estado do Formulário
+
   const [formData, setFormData] = useState({
     id: null,
     titulo: "",
@@ -52,7 +56,6 @@ export function MarketingClient({
     campanha: "",
   });
 
-  // Função para abrir modal de edição
   const handleEdit = (item: any) => {
     setFormData({
       id: item.id,
@@ -67,7 +70,6 @@ export function MarketingClient({
     setIsOpen(true);
   };
 
-  // Função para limpar e abrir modal de novo item
   const handleNew = () => {
     setFormData({
       id: null,
@@ -82,7 +84,6 @@ export function MarketingClient({
     setIsOpen(true);
   };
 
-  // Salvar
   const onSave = async () => {
     if (!formData.titulo || !formData.data_publicacao) {
       alert("Preencha Título e Data!");
@@ -101,54 +102,92 @@ export function MarketingClient({
 
     if (res.success) {
       setIsOpen(false);
-      // O Next.js deve revalidar a página automaticamente via server action
     } else {
       alert("Erro ao salvar: " + (res.error || "Desconhecido"));
     }
   };
 
-  // Deletar
   const onDelete = async (id: number) => {
     if (confirm("Tem certeza que deseja excluir?")) {
       await deleteMarketingItem(id);
     }
   };
 
+  // Helper para ícone da plataforma
+  const getPlatformIcon = (plat: string) => {
+    switch (plat) {
+      case "instagram":
+        return <Instagram className="w-4 h-4 text-pink-600" />;
+      case "facebook":
+        return <Facebook className="w-4 h-4 text-blue-600" />;
+      case "site":
+        return <Globe className="w-4 h-4 text-gray-600" />;
+      case "jornal":
+        return <Newspaper className="w-4 h-4 text-gray-800" />;
+      default:
+        return <Monitor className="w-4 h-4 text-gray-500" />;
+    }
+  };
+
   return (
     <div className="space-y-6">
-      {/* 1. Cards de KPIs */}
+      {/* 1. Cards de KPIs (ESTILO NOVO E RICO) */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        {/* Card 1: Publicações */}
+        <Card className="relative overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Publicações (Mês)
             </CardTitle>
-            <Megaphone className="h-4 w-4 text-muted-foreground" />
+            <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+              <BarChart3 className="h-4 w-4 text-blue-600" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.postsMes}</div>
+            <div className="text-3xl font-bold">{stats.postsMes}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Novas postagens este mês
+            </p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Alcance Total</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+
+        {/* Card 2: Alcance */}
+        <Card className="relative overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Alcance Total
+            </CardTitle>
+            <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
+              <Eye className="h-4 w-4 text-green-600" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-3xl font-bold">
               {stats.alcanceMes.toLocaleString("pt-BR")}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Pessoas impactadas
+            </p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Interações</CardTitle>
-            <MousePointerClick className="h-4 w-4 text-muted-foreground" />
+
+        {/* Card 3: Interações */}
+        <Card className="relative overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Interações
+            </CardTitle>
+            <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
+              <TrendingUp className="h-4 w-4 text-purple-600" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-3xl font-bold">
               {stats.interacoesMes.toLocaleString("pt-BR")}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Engajamento (Likes/Coment.)
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -170,7 +209,6 @@ export function MarketingClient({
                 </DialogTitle>
               </DialogHeader>
 
-              {/* FORMULÁRIO EXPLÍCITO */}
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
                   <Label>Título / Manchete</Label>
@@ -281,7 +319,7 @@ export function MarketingClient({
                       colSpan={6}
                       className="p-8 text-center text-muted-foreground"
                     >
-                      Nenhuma publicação encontrada.
+                      Nenhum item encontrado.
                     </td>
                   </tr>
                 ) : (
@@ -296,10 +334,11 @@ export function MarketingClient({
                         )}
                       </td>
                       <td className="p-4 font-medium">{item.titulo}</td>
-                      <td className="p-4 capitalize">
-                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
-                          {item.plataforma}
-                        </span>
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          {getPlatformIcon(item.plataforma)}
+                          <span className="capitalize">{item.plataforma}</span>
+                        </div>
                       </td>
                       <td className="p-4 text-muted-foreground">
                         {item.campanha || "-"}
