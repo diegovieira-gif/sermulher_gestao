@@ -19,7 +19,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge"; // Importe o Badge
+import { Badge } from "@/components/ui/badge";
 import {
   Plus,
   Trash2,
@@ -35,13 +35,14 @@ import {
   Newspaper,
   Facebook,
   Monitor,
+  ExternalLink,
 } from "lucide-react";
 import { saveMarketingItem, deleteMarketingItem } from "./actions";
 
 interface MarketingClientProps {
   items: any[];
   stats: any;
-  campanhasList: any[]; // Nova prop
+  campanhasList: any[];
 }
 
 export function MarketingClient({
@@ -60,7 +61,7 @@ export function MarketingClient({
     link: "",
     alcance: "",
     interacoes: "",
-    campanha_id: "0", // "0" significa sem campanha
+    campanha_id: "0",
   });
 
   const handleEdit = (item: any) => {
@@ -72,7 +73,6 @@ export function MarketingClient({
       link: item.link || "",
       alcance: item.alcance || "0",
       interacoes: item.interacoes || "0",
-      // Se tiver campanha vinculada (objeto ou id), pega o ID, senão "0"
       campanha_id: item.campanha_id
         ? String(item.campanha_id.id || item.campanha_id)
         : "0",
@@ -105,7 +105,6 @@ export function MarketingClient({
       ...formData,
       alcance: Number(formData.alcance),
       interacoes: Number(formData.interacoes),
-      // Converte "0" de volta para null
       campanha_id:
         formData.campanha_id === "0" ? null : Number(formData.campanha_id),
     };
@@ -294,7 +293,19 @@ export function MarketingClient({
                   </div>
                 </div>
 
-                {/* DROPDOWN DE CAMPANHA CORRIGIDO */}
+                {/* CAMPO LINK RESTAURADO AQUI */}
+                <div className="grid gap-2">
+                  <Label>Link (URL)</Label>
+                  <Input
+                    value={formData.link}
+                    onChange={(e) =>
+                      setFormData({ ...formData, link: e.target.value })
+                    }
+                    placeholder="https://..."
+                  />
+                </div>
+
+                {/* DROPDOWN DE CAMPANHA */}
                 <div className="grid gap-2">
                   <Label>Campanha</Label>
                   <Select
@@ -388,7 +399,21 @@ export function MarketingClient({
                           "pt-BR",
                         )}
                       </td>
-                      <td className="p-4 font-medium">{item.titulo}</td>
+                      <td className="p-4 font-medium">
+                        <div className="flex flex-col">
+                          <span>{item.titulo}</span>
+                          {item.link && (
+                            <a
+                              href={item.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-blue-500 hover:underline flex items-center gap-1"
+                            >
+                              Link <ExternalLink className="w-3 h-3" />
+                            </a>
+                          )}
+                        </div>
+                      </td>
                       <td className="p-4">
                         <div className="flex items-center gap-2">
                           {getPlatformIcon(item.plataforma)}
@@ -405,7 +430,7 @@ export function MarketingClient({
                               item.campanha_id.cor
                                 ? {
                                     backgroundColor:
-                                      item.campanha_id.cor + "20", // 20% opacidade
+                                      item.campanha_id.cor + "20",
                                     color: item.campanha_id.cor,
                                     borderColor: item.campanha_id.cor,
                                   }
