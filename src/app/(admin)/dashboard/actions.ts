@@ -1,7 +1,33 @@
 "use server";
 
 import { directus } from "@/lib/directus";
-import { readItems } from "@directus/sdk";
+import { readItems, aggregate } from "@directus/sdk";
+
+// ======= TIPOS UNIFICADOS DO DASHBOARD =======
+
+export type UnifiedDashboardStats = {
+  // KPIs de Atendimentos (RMA)
+  atendimentos: {
+    totalMes: number;
+    evolucaoMeses: Array<{ name: string; total: number }>;
+  };
+  // KPIs da Escola da Mulher
+  escola: {
+    alunasCursando: number;
+    turmasAbertas: number;
+  };
+  // KPIs da Agenda
+  agenda: {
+    proximoEvento: {
+      data: string;
+      titulo: string;
+      local?: string;
+    } | null;
+    eventosMes: number;
+  };
+};
+
+// ======= TIPOS LEGADOS (mantidos para compatibilidade) =======
 
 export type KPIData = {
   totalAtendimentosMes: number;
@@ -67,9 +93,183 @@ export type GlobalDashboardStats = {
   casosCriticos: CasoCritico[];
 };
 
+// ======= NOVA FUNÇÃO AGREGADORA UNIFICADA =======
+
 /**
- * Busca KPIs do mês atual (Atendimentos)
+ * Função principal que agrega estatísticas de TODOS os módulos do sistema.
+ * Retorna dados otimizados para o Dashboard Unificado com KPIs visuais.
  */
+export async function getUnifiedDashboardStats(): Promise<
+  | { success: true; data: UnifiedDashboardStats }
+  | { success: false; error: string }
+> {
+  try {
+    const agora = new Date();
+    const mesAtual = agora.getMonth();
+    const anoAtual = agora.getFullYear();
+
+    // Calcula os últimos 6 meses (incluindo o atual)
+    const mesesParaGrafico = [];
+    for (let i = 5; i >= 0; i--) {
+      const data = new Date(anoAtual, mesAtual - i, 1);
+      mesesParaGrafico.push({
+        inicio: new Date(data.getFullYear(), data.getMonth(), 1).toISOString().split("T")[0],
+        fim: new Date(data.getFullYear(), data.getMonth() + 1, 0).toISOString().split("T")[0],
+        nome: data.toLocaleDateString("pt-BR", { month: "short" }).replace(".", ""),
+      });
+    }
+
+    // Mês atual para filtro
+    const inicioMesAtual = new Date(anoAtual, mesAtual, 1).toISOString().split("T")[0];
+    const fimMesAtual = new Date(anoAtual, mesAtual + 1, 0).toISOString().split("T")[0];
+
+    // === PARALELIZAÇÃO TOTAL: Busca TODOS os dados simultaneamente ===
+    const [
+      // 1. Atendimentos do Mês Atual
+      atendimentosMesAtual,
+      // 2. Atendimentos dos últimos 6 meses (para gráfico)
+      ...atendimentosPorMes
+    ] = await Promise.all([
+      // Total de atendimentos no mês atual
+      directus.request(
+        readItems("atendimentos", {
+          filter: {
+            data_abertura: {
+              _gte: inicioMesAtual,
+              _lte: fimMesAtual,
+            },
+          },
+          limit: 0,
+          meta: "filter_count",
+        })
+      ).catch(() => ({ meta: { filter_count: 0 } })),
+      
+      // Para cada um dos 6 meses, busca a contagem
+      ...mesesParaGrafico.map((mes) =>
+        directus.request(
+          readItems("atendimentos", {
+            filter: {
+              data_abertura: {
+                _gte: mes.inicio,
+                _lte: mes.fim,
+              },
+            },
+            limit: 0,
+            meta: "filter_count",
+          })
+        ).catch(() => ({ meta: { filter_count: 0 } }))
+      ),
+    ]);
+
+    // === BUSCA DADOS DA ESCOLA E EVENTOS EM PARALELO ===
+    const [matriculasAtivas, turmasAbertas, proximoEvento, eventosDoMes] = await Promise.all([
+      // Total de alunas matriculadas com status 'cursando'
+      directus.request(
+        readItems("escola_matriculas", {
+          filter: {
+            status: { _eq: "cursando" },
+          },
+          limit: 0,
+          meta: "filter_count",
+        })
+      ).catch(() => ({ meta: { filter_count: 0 } })),
+
+      // Total de turmas em andamento (sem data de fim ou data de fim futura)
+      directus.request(
+        readItems("escola_turmas", {
+          filter: {
+            _or: [
+              { data_fim: { _null: true } },
+              { data_fim: { _gte: new Date().toISOString().split("T")[0] } },
+            ],
+          },
+          limit: 0,
+          meta: "filter_count",
+        })
+      ).catch(() => ({ meta: { filter_count: 0 } })),
+
+      // Próximo evento (1 único evento mais próximo)
+      directus.request(
+        readItems("eventos_campanhas", {
+          fields: ["id", "data_inicio", "titulo", "local_id.nome"],
+          filter: {
+            data_inicio: { _gte: new Date().toISOString().split("T")[0] },
+          },
+          sort: ["data_inicio"],
+          limit: 1,
+        })
+      ).catch(() => []),
+
+      // Eventos planejados para o mês atual
+      directus.request(
+        readItems("eventos_campanhas", {
+          filter: {
+            data_inicio: {
+              _gte: inicioMesAtual,
+              _lte: fimMesAtual,
+            },
+          },
+          limit: 0,
+          meta: "filter_count",
+        })
+      ).catch(() => ({ meta: { filter_count: 0 } })),
+    ]);
+
+    // === PROCESSAMENTO DOS RESULTADOS ===
+
+    // 1. Atendimentos
+    const totalAtendimentosMes = (atendimentosMesAtual as any)?.meta?.filter_count || 0;
+    
+    const evolucaoMeses = mesesParaGrafico.map((mes, index) => ({
+      name: mes.nome.charAt(0).toUpperCase() + mes.nome.slice(1), // Capitaliza primeira letra
+      total: (atendimentosPorMes[index] as any)?.meta?.filter_count || 0,
+    }));
+
+    // 2. Escola
+    const alunasCursando = (matriculasAtivas as any)?.meta?.filter_count || 0;
+    const turmasAbertasTotal = (turmasAbertas as any)?.meta?.filter_count || 0;
+
+    // 3. Agenda
+    const eventoArray = proximoEvento as any[];
+    const proximoEventoObj = eventoArray.length > 0 ? {
+      data: eventoArray[0].data_inicio,
+      titulo: eventoArray[0].titulo,
+      local: eventoArray[0].local_id?.nome,
+    } : null;
+
+    const eventosMesTotal = (eventosDoMes as any)?.meta?.filter_count || 0;
+
+    // === MONTAGEM DO RESULTADO FINAL ===
+    return {
+      success: true,
+      data: {
+        atendimentos: {
+          totalMes: totalAtendimentosMes,
+          evolucaoMeses,
+        },
+        escola: {
+          alunasCursando,
+          turmasAbertas: turmasAbertasTotal,
+        },
+        agenda: {
+          proximoEvento: proximoEventoObj,
+          eventosMes: eventosMesTotal,
+        },
+      },
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
+    console.error("❌ Erro ao buscar Dashboard Unificado:", errorMessage);
+    console.error("Detalhes:", error);
+    return {
+      success: false,
+      error: `Não foi possível carregar os dados: ${errorMessage}`,
+    };
+  }
+}
+
+// ======= FUNÇÕES LEGADAS (mantidas para compatibilidade) =======
+
 export async function getDashboardStats(): Promise<
   | { success: true; data: DashboardStats }
   | { success: false; error: string }

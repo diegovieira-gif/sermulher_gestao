@@ -1,5 +1,5 @@
-import { getDashboardStats, getGlobalDashboardStats } from "./actions";
-import { OverviewClient } from "./overview-client";
+import { getUnifiedDashboardStats } from "./actions";
+import { UnifiedDashboardClient } from "./unified-dashboard-client";
 
 export default async function DashboardPage() {
   try {
@@ -14,38 +14,29 @@ export default async function DashboardPage() {
       );
     }
 
-    // Tenta carregar o novo dashboard primeiro
-    const result = await getDashboardStats();
+    // Busca dados do novo Dashboard Unificado
+    const result = await getUnifiedDashboardStats();
 
-    if (result.success) {
-      // Se conseguir o novo dashboard, renderiza com o novo componente
-      return <OverviewClient stats={result.data} userName="Secretária" />;
-    }
-
-    // Se não conseguir o novo, tenta o antigo (global)
-    const globalResult = await getGlobalDashboardStats();
-
-    if (!globalResult.success) {
+    if (!result.success) {
       return (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6">
           <h3 className="text-lg font-semibold text-destructive mb-2">
             Erro ao carregar dashboard
           </h3>
           <p className="text-destructive mb-2">
-            {globalResult.error}
+            {result.error}
           </p>
           <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-            <li>Se o Directus está rodando ({process.env.NEXT_PUBLIC_DIRECTUS_URL || "URL não configurada"})</li>
-            <li>Se as variáveis de ambiente estão configuradas (.env.local)</li>
-            <li>Se o token de acesso é válido</li>
-            <li>Se as collections existem</li>
+            <li>Verifique se o Directus está rodando ({process.env.NEXT_PUBLIC_DIRECTUS_URL})</li>
+            <li>Verifique se o token de acesso é válido</li>
+            <li>Verifique se as collections existem (atendimentos, escola_matriculas, escola_turmas, eventos_campanhas)</li>
           </ul>
         </div>
       );
     }
 
-    // Renderiza o dashboard antigo como fallback
-    return <OverviewClient stats={globalResult.data} />;
+    // Renderiza o novo Dashboard Unificado
+    return <UnifiedDashboardClient stats={result.data} />;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
     console.error("Erro ao buscar dados do dashboard:", errorMessage);
@@ -63,7 +54,6 @@ export default async function DashboardPage() {
           <li>Se o Directus está rodando ({process.env.NEXT_PUBLIC_DIRECTUS_URL || "URL não configurada"})</li>
           <li>Se as variáveis de ambiente estão configuradas (.env.local)</li>
           <li>Se o token de acesso é válido</li>
-          <li>Se as collections existem</li>
         </ul>
         <details className="mt-4">
           <summary className="cursor-pointer text-sm font-medium text-destructive hover:underline">
