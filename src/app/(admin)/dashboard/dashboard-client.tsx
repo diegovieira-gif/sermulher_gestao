@@ -1,16 +1,14 @@
 "use client";
 
-import { UnifiedDashboardStats } from "./actions";
+import { DashboardStats } from "./actions";
 import { Activity, GraduationCap, Users, Calendar } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 interface Props {
-  stats: UnifiedDashboardStats;
+  stats: DashboardStats;
 }
 
-export function UnifiedDashboardClient({ stats }: Props) {
-  const { atendimentos, escola, agenda } = stats;
-
+export function DashboardClient({ stats }: Props) {
   return (
     <div className="space-y-6">
       {/* Cabeçalho */}
@@ -29,9 +27,8 @@ export function UnifiedDashboardClient({ stats }: Props) {
         <KPICard
           icon={<Activity className="h-6 w-6 text-pink-600" />}
           title="Atendimentos"
-          value={atendimentos.totalMes}
+          value={stats.atendimentosMes}
           subtitle="este mês"
-          bgColor="bg-pink-50 dark:bg-pink-950"
           iconBgColor="bg-pink-100 dark:bg-pink-900"
         />
 
@@ -39,9 +36,8 @@ export function UnifiedDashboardClient({ stats }: Props) {
         <KPICard
           icon={<GraduationCap className="h-6 w-6 text-blue-600" />}
           title="Alunas Ativas"
-          value={escola.alunasCursando}
+          value={stats.alunasAtivas}
           subtitle="matriculadas"
-          bgColor="bg-blue-50 dark:bg-blue-950"
           iconBgColor="bg-blue-100 dark:bg-blue-900"
         />
 
@@ -49,9 +45,8 @@ export function UnifiedDashboardClient({ stats }: Props) {
         <KPICard
           icon={<Users className="h-6 w-6 text-green-600" />}
           title="Turmas Abertas"
-          value={escola.turmasAbertas}
+          value={stats.turmasAbertas}
           subtitle="em andamento"
-          bgColor="bg-green-50 dark:bg-green-950"
           iconBgColor="bg-green-100 dark:bg-green-900"
         />
 
@@ -67,23 +62,17 @@ export function UnifiedDashboardClient({ stats }: Props) {
                   Próximo Evento
                 </span>
               </div>
-              {agenda.proximoEvento ? (
+              {stats.proximoEvento ? (
                 <div className="mt-3">
                   <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                    {agenda.proximoEvento.titulo}
+                    {stats.proximoEvento.nome}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {new Date(agenda.proximoEvento.data).toLocaleDateString("pt-BR", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })}
+                    {stats.proximoEvento.data}
                   </p>
-                  {agenda.proximoEvento.local && (
-                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-                      📍 {agenda.proximoEvento.local}
-                    </p>
-                  )}
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                    📍 {stats.proximoEvento.local}
+                  </p>
                 </div>
               ) : (
                 <p className="text-sm text-gray-400 dark:text-gray-500 mt-3">
@@ -91,11 +80,6 @@ export function UnifiedDashboardClient({ stats }: Props) {
                 </p>
               )}
             </div>
-          </div>
-          <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              {agenda.eventosMes} evento(s) este mês
-            </span>
           </div>
         </div>
       </div>
@@ -114,7 +98,7 @@ export function UnifiedDashboardClient({ stats }: Props) {
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
-              data={atendimentos.evolucaoMeses}
+              data={stats.chartData}
               margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
             >
               <defs>
@@ -175,13 +159,13 @@ export function UnifiedDashboardClient({ stats }: Props) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                {escola.alunasCursando}
+                {stats.alunasAtivas}
               </p>
               <p className="text-xs text-blue-700 dark:text-blue-300">Alunas cursando</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                {escola.turmasAbertas}
+                {stats.turmasAbertas}
               </p>
               <p className="text-xs text-blue-700 dark:text-blue-300">Turmas ativas</p>
             </div>
@@ -206,13 +190,13 @@ export function UnifiedDashboardClient({ stats }: Props) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-2xl font-bold text-pink-900 dark:text-pink-100">
-                {atendimentos.totalMes}
+                {stats.atendimentosMes}
               </p>
               <p className="text-xs text-pink-700 dark:text-pink-300">Neste mês</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-pink-900 dark:text-pink-100">
-                {atendimentos.evolucaoMeses.reduce((sum, mes) => sum + mes.total, 0)}
+                {stats.chartData.reduce((sum, mes) => sum + mes.total, 0)}
               </p>
               <p className="text-xs text-pink-700 dark:text-pink-300">Últimos 6 meses</p>
             </div>
@@ -230,11 +214,10 @@ interface KPICardProps {
   title: string;
   value: number;
   subtitle: string;
-  bgColor: string;
   iconBgColor: string;
 }
 
-function KPICard({ icon, title, value, subtitle, bgColor, iconBgColor }: KPICardProps) {
+function KPICard({ icon, title, value, subtitle, iconBgColor }: KPICardProps) {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
       <div className="flex items-start justify-between">

@@ -1,5 +1,5 @@
-import { getUnifiedDashboardStats } from "./actions";
-import { UnifiedDashboardClient } from "./unified-dashboard-client";
+import { getDashboardStats } from "./actions";
+import { DashboardClient } from "./dashboard-client";
 
 export default async function DashboardPage() {
   try {
@@ -14,33 +14,14 @@ export default async function DashboardPage() {
       );
     }
 
-    // Busca dados do novo Dashboard Unificado
-    const result = await getUnifiedDashboardStats();
+    // Busca dados do Dashboard
+    const stats = await getDashboardStats();
 
-    if (!result.success) {
-      return (
-        <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6">
-          <h3 className="text-lg font-semibold text-destructive mb-2">
-            Erro ao carregar dashboard
-          </h3>
-          <p className="text-destructive mb-2">
-            {result.error}
-          </p>
-          <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-            <li>Verifique se o Directus está rodando ({process.env.NEXT_PUBLIC_DIRECTUS_URL})</li>
-            <li>Verifique se o token de acesso é válido</li>
-            <li>Verifique se as collections existem (atendimentos, escola_matriculas, escola_turmas, eventos_campanhas)</li>
-          </ul>
-        </div>
-      );
-    }
-
-    // Renderiza o novo Dashboard Unificado
-    return <UnifiedDashboardClient stats={result.data} />;
+    // Renderiza o Dashboard
+    return <DashboardClient stats={stats} />;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
     console.error("Erro ao buscar dados do dashboard:", errorMessage);
-    console.error("Detalhes do erro:", error);
     
     return (
       <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6">
