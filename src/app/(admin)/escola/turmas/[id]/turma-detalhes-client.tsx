@@ -41,6 +41,7 @@ interface TurmaDetalhesClientProps {
     id: number;
     nome_completo: string;
     cpf: string;
+    contato: string;
   }>;
 }
 
@@ -236,7 +237,11 @@ export function TurmaDetalhesClient({
                     </TableCell>
                     <TableCell>{formatCPF(matricula.beneficiaria.cpf)}</TableCell>
                     <TableCell>{formatDate(matricula.data_matricula)}</TableCell>
-                    <TableCell>{matricula.beneficiaria.telefone || "—"}</TableCell>
+                    <TableCell>
+                      {typeof matricula.beneficiaria.contato === 'object' && matricula.beneficiaria.contato !== null
+                        ? (matricula.beneficiaria.contato.telefone || matricula.beneficiaria.contato.email || '—')
+                        : (matricula.beneficiaria.contato || '—')}
+                    </TableCell>
                     <TableCell>
                       <Badge
                         className={

@@ -2,13 +2,14 @@ import { getTurmaById, getMatriculasByTurma, getBeneficiariasOptions } from "../
 import { TurmaDetalhesClient } from "./turma-detalhes-client";
 
 interface TurmaDetalhesPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default async function TurmaDetalhesPage({ params }: TurmaDetalhesPageProps) {
-  const turmaId = Number(params.id);
+  const resolvedParams = await params;
+  const turmaId = Number(resolvedParams.id);
 
   // Busca turma, matrículas e beneficiárias em paralelo
   const [turmaResult, matriculasResult, beneficiariasResult] = await Promise.all([

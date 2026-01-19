@@ -236,7 +236,7 @@ export type Matricula = {
     id: number;
     nome_completo: string;
     cpf: string;
-    telefone: string;
+    contato: string | { telefone?: string; email?: string } | null;
   };
   data_matricula: string;
   status: string;
@@ -263,7 +263,7 @@ export async function getMatriculasByTurma(turmaId: number) {
           "beneficiaria.id",
           "beneficiaria.nome_completo",
           "beneficiaria.cpf",
-          "beneficiaria.telefone",
+          "beneficiaria.contato",
         ],
         sort: ["beneficiaria.nome_completo"],
         limit: -1,
@@ -285,7 +285,7 @@ export async function getBeneficiariasOptions() {
     const beneficiarias = await directus.request(
       readItems("beneficiarias", {
         // @ts-ignore
-        fields: ["id", "nome_completo", "cpf"],
+        fields: ["id", "nome_completo", "cpf", "contato"],
         sort: ["nome_completo"],
         limit: -1,
       })
@@ -297,6 +297,7 @@ export async function getBeneficiariasOptions() {
         id: number;
         nome_completo: string;
         cpf: string;
+        contato: string;
       }>,
     };
   } catch (error) {
