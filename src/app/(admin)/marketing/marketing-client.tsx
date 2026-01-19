@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -20,38 +19,38 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-// Importando ícones mais ricos para o Dashboard
+import { Badge } from "@/components/ui/badge"; // Importe o Badge
 import {
   Plus,
   Trash2,
   Edit,
   BarChart3,
   Eye,
-  TrendingUp, // Linha 1
+  TrendingUp,
   Percent,
   Flag,
-  Smartphone, // Linha 2
+  Smartphone,
   Instagram,
   Globe,
   Newspaper,
   Facebook,
-  Monitor, // Ícones da Tabela
+  Monitor,
 } from "lucide-react";
 import { saveMarketingItem, deleteMarketingItem } from "./actions";
+
+interface MarketingClientProps {
+  items: any[];
+  stats: any;
+  campanhasList: any[]; // Nova prop
+}
 
 export function MarketingClient({
   items,
   stats,
-  campanhasList = [],
-}: {
-  items: any[];
-  stats: any;
-  campanhasList: any[];
-}) {
+  campanhasList,
+}: MarketingClientProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [campanhaFilter, setCampanhaFilter] = useState<string>("");
-  const [plataformaFilter, setPlataformaFilter] = useState<string>("");
 
   const [formData, setFormData] = useState({
     id: null,
@@ -61,7 +60,7 @@ export function MarketingClient({
     link: "",
     alcance: "",
     interacoes: "",
-    campanha_id: null as number | null,
+    campanha_id: "0", // "0" significa sem campanha
   });
 
   const handleEdit = (item: any) => {
@@ -73,7 +72,10 @@ export function MarketingClient({
       link: item.link || "",
       alcance: item.alcance || "0",
       interacoes: item.interacoes || "0",
-      campanha_id: item.campanha_id?.id ?? null,
+      // Se tiver campanha vinculada (objeto ou id), pega o ID, senão "0"
+      campanha_id: item.campanha_id
+        ? String(item.campanha_id.id || item.campanha_id)
+        : "0",
     });
     setIsOpen(true);
   };
@@ -87,7 +89,7 @@ export function MarketingClient({
       link: "",
       alcance: "",
       interacoes: "",
-      campanha_id: null,
+      campanha_id: "0",
     });
     setIsOpen(true);
   };
@@ -97,26 +99,21 @@ export function MarketingClient({
       alert("Preencha Título e Data!");
       return;
     }
-
     setLoading(true);
+
     const payload = {
       ...formData,
       alcance: Number(formData.alcance),
       interacoes: Number(formData.interacoes),
+      // Converte "0" de volta para null
       campanha_id:
-        formData.campanha_id !== null
-          ? Number(formData.campanha_id)
-          : undefined,
+        formData.campanha_id === "0" ? null : Number(formData.campanha_id),
     };
 
     const res = await saveMarketingItem(payload);
     setLoading(false);
-
-    if (res.success) {
-      setIsOpen(false);
-    } else {
-      alert("Erro ao salvar: " + (res.error || "Desconhecido"));
-    }
+    if (res.success) setIsOpen(false);
+    else alert("Erro ao salvar: " + (res.error || "Desconhecido"));
   };
 
   const onDelete = async (id: number) => {
@@ -125,7 +122,6 @@ export function MarketingClient({
     }
   };
 
-  // Helper para ícone da plataforma
   const getPlatformIcon = (plat: string) => {
     switch (plat) {
       case "instagram":
@@ -143,13 +139,12 @@ export function MarketingClient({
 
   return (
     <div className="space-y-6">
-      {/* KPI GRID - Agora com 6 Cards */}
+      {/* KPI GRID */}
       <div className="grid gap-4 md:grid-cols-3">
-        {/* --- LINHA 1 --- */}
         <Card className="relative overflow-hidden border-l-4 border-l-blue-500">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Publicações (Mês)
+              Publicações
             </CardTitle>
             <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
               <BarChart3 className="h-4 w-4 text-blue-600" />
@@ -159,11 +154,10 @@ export function MarketingClient({
             <div className="text-2xl font-bold">{stats.postsMes}</div>
           </CardContent>
         </Card>
-
         <Card className="relative overflow-hidden border-l-4 border-l-green-500">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Alcance Total
+              Alcance
             </CardTitle>
             <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
               <Eye className="h-4 w-4 text-green-600" />
@@ -175,7 +169,6 @@ export function MarketingClient({
             </div>
           </CardContent>
         </Card>
-
         <Card className="relative overflow-hidden border-l-4 border-l-purple-500">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -192,11 +185,11 @@ export function MarketingClient({
           </CardContent>
         </Card>
 
-        {/* --- LINHA 2 (NOVOS) --- */}
+        {/* KPI LINHA 2 */}
         <Card className="relative overflow-hidden border-l-4 border-l-orange-500">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Taxa Engajamento
+              Engajamento
             </CardTitle>
             <div className="h-8 w-8 rounded-full bg-orange-100 flex items-center justify-center">
               <Percent className="h-4 w-4 text-orange-600" />
@@ -204,16 +197,13 @@ export function MarketingClient({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.taxaEngajamento}%</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Qualidade da interação
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">Qualidade</p>
           </CardContent>
         </Card>
-
         <Card className="relative overflow-hidden border-l-4 border-l-pink-500">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Campanhas Ativas
+              Campanhas
             </CardTitle>
             <div className="h-8 w-8 rounded-full bg-pink-100 flex items-center justify-center">
               <Flag className="h-4 w-4 text-pink-600" />
@@ -221,16 +211,13 @@ export function MarketingClient({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.campanhasAtivas}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Temas trabalhados
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">Ativas no mês</p>
           </CardContent>
         </Card>
-
         <Card className="relative overflow-hidden border-l-4 border-l-indigo-500">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Canal Principal
+              Top Canal
             </CardTitle>
             <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center">
               <Smartphone className="h-4 w-4 text-indigo-600" />
@@ -240,63 +227,15 @@ export function MarketingClient({
             <div className="text-2xl font-bold capitalize">
               {stats.topPlataforma}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Maior volume de posts
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">Maior volume</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* 2. Área da Tabela */}
+      {/* Tabela de Gestão */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between gap-3">
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Gestão de Comunicação</CardTitle>
-          <div className="flex items-center gap-3">
-            {/* Filtro por Campanha */}
-            <div className="min-w-[220px]">
-              <Label className="text-xs text-muted-foreground">Campanha</Label>
-              <Select
-                value={campanhaFilter}
-                onValueChange={(val) => setCampanhaFilter(val)}
-              >
-                <SelectTrigger className="h-9">
-                  <SelectValue placeholder="Todas as campanhas" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Todas</SelectItem>
-                  {campanhasList.map((c: any) => (
-                    <SelectItem key={c.id} value={String(c.id)}>
-                      {c.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Filtro por Plataforma */}
-            <div className="min-w-[180px]">
-              <Label className="text-xs text-muted-foreground">
-                Plataforma
-              </Label>
-              <Select
-                value={plataformaFilter}
-                onValueChange={(val) => setPlataformaFilter(val)}
-              >
-                <SelectTrigger className="h-9">
-                  <SelectValue placeholder="Todas" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Todas</SelectItem>
-                  <SelectItem value="instagram">Instagram</SelectItem>
-                  <SelectItem value="facebook">Facebook</SelectItem>
-                  <SelectItem value="site">Site</SelectItem>
-                  <SelectItem value="jornal">Jornal</SelectItem>
-                  <SelectItem value="outros">Outros</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
               <Button onClick={handleNew}>
@@ -309,7 +248,6 @@ export function MarketingClient({
                   {formData.id ? "Editar Publicação" : "Nova Publicação"}
                 </DialogTitle>
               </DialogHeader>
-
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
                   <Label>Título / Manchete</Label>
@@ -318,10 +256,8 @@ export function MarketingClient({
                     onChange={(e) =>
                       setFormData({ ...formData, titulo: e.target.value })
                     }
-                    placeholder="Ex: Post sobre o evento..."
                   />
                 </div>
-
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label>Data</Label>
@@ -345,7 +281,7 @@ export function MarketingClient({
                       }
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecione" />
+                        <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="instagram">Instagram</SelectItem>
@@ -358,44 +294,35 @@ export function MarketingClient({
                   </div>
                 </div>
 
+                {/* DROPDOWN DE CAMPANHA CORRIGIDO */}
                 <div className="grid gap-2">
                   <Label>Campanha</Label>
-                  <div className="flex items-center gap-2">
-                    <Select
-                      value={
-                        formData.campanha_id ? String(formData.campanha_id) : ""
-                      }
-                      onValueChange={(val) =>
-                        setFormData({
-                          ...formData,
-                          campanha_id: val ? Number(val) : null,
-                        })
-                      }
-                    >
-                      <SelectTrigger className="flex-1">
-                        <SelectValue placeholder="Selecione a campanha" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {campanhasList.map((c: any) => (
-                          <SelectItem key={c.id} value={String(c.id)}>
+                  <Select
+                    value={formData.campanha_id}
+                    onValueChange={(val) =>
+                      setFormData({ ...formData, campanha_id: val })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">Nenhuma / Avulso</SelectItem>
+                      {campanhasList.map((c) => (
+                        <SelectItem key={c.id} value={String(c.id)}>
+                          <span className="flex items-center gap-2">
+                            {c.cor && (
+                              <span
+                                className="w-2 h-2 rounded-full"
+                                style={{ backgroundColor: c.cor }}
+                              />
+                            )}
                             {c.nome}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {(() => {
-                      const camp = campanhasList.find(
-                        (c: any) => c.id === formData.campanha_id,
-                      );
-                      return camp?.cor ? (
-                        <span
-                          className="inline-block w-6 h-6 rounded-full border"
-                          title={camp.nome}
-                          style={{ backgroundColor: camp.cor }}
-                        />
-                      ) : null;
-                    })()}
-                  </div>
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -415,15 +342,11 @@ export function MarketingClient({
                       type="number"
                       value={formData.interacoes}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          interacoes: e.target.value,
-                        })
+                        setFormData({ ...formData, interacoes: e.target.value })
                       }
                     />
                   </div>
                 </div>
-
                 <Button onClick={onSave} disabled={loading}>
                   {loading ? "Salvando..." : "Salvar"}
                 </Button>
@@ -431,102 +354,96 @@ export function MarketingClient({
             </DialogContent>
           </Dialog>
         </CardHeader>
-
         <CardContent>
-          {/** Lista filtrada localmente */}
-          {(() => {
-            const filtered = items.filter((item) => {
-              const matchCampanha = campanhaFilter
-                ? String(item.campanha_id?.id ?? "") === campanhaFilter
-                : true;
-              const matchPlat = plataformaFilter
-                ? item.plataforma === plataformaFilter
-                : true;
-              return matchCampanha && matchPlat;
-            });
-            return (
-              <div className="rounded-md border">
-                <table className="w-full text-sm text-left">
-                  <thead className="bg-muted/50 text-muted-foreground">
-                    <tr>
-                      <th className="p-4 font-medium">Data</th>
-                      <th className="p-4 font-medium">Título</th>
-                      <th className="p-4 font-medium">Plataforma</th>
-                      <th className="p-4 font-medium">Campanha</th>
-                      <th className="p-4 font-medium">Alcance</th>
-                      <th className="p-4 text-right">Ações</th>
+          <div className="rounded-md border">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-muted/50 text-muted-foreground">
+                <tr>
+                  <th className="p-4 font-medium">Data</th>
+                  <th className="p-4 font-medium">Título</th>
+                  <th className="p-4 font-medium">Plataforma</th>
+                  <th className="p-4 font-medium">Campanha</th>
+                  <th className="p-4 font-medium">Alcance</th>
+                  <th className="p-4 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="p-8 text-center text-muted-foreground"
+                    >
+                      Nenhum item encontrado.
+                    </td>
+                  </tr>
+                ) : (
+                  items.map((item) => (
+                    <tr
+                      key={item.id}
+                      className="border-t hover:bg-muted/50 transition-colors"
+                    >
+                      <td className="p-4">
+                        {new Date(item.data_publicacao).toLocaleDateString(
+                          "pt-BR",
+                        )}
+                      </td>
+                      <td className="p-4 font-medium">{item.titulo}</td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          {getPlatformIcon(item.plataforma)}
+                          <span className="capitalize">{item.plataforma}</span>
+                        </div>
+                      </td>
+
+                      {/* COLUNA CAMPANHA COM BADGE */}
+                      <td className="p-4">
+                        {item.campanha_id ? (
+                          <Badge
+                            variant="outline"
+                            style={
+                              item.campanha_id.cor
+                                ? {
+                                    backgroundColor:
+                                      item.campanha_id.cor + "20", // 20% opacidade
+                                    color: item.campanha_id.cor,
+                                    borderColor: item.campanha_id.cor,
+                                  }
+                                : {}
+                            }
+                          >
+                            {item.campanha_id.nome}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">
+                            -
+                          </span>
+                        )}
+                      </td>
+
+                      <td className="p-4 font-mono">{item.alcance}</td>
+                      <td className="p-4 text-right flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(item)}
+                        >
+                          <Edit className="w-4 h-4 text-blue-500" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onDelete(item.id)}
+                        >
+                          <Trash2 className="w-4 h-4 text-red-500" />
+                        </Button>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {filtered.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={6}
-                          className="p-8 text-center text-muted-foreground"
-                        >
-                          Nenhum item encontrado.
-                        </td>
-                      </tr>
-                    ) : (
-                      filtered.map((item) => (
-                        <tr
-                          key={item.id}
-                          className="border-t hover:bg-muted/50 transition-colors"
-                        >
-                          <td className="p-4">
-                            {new Date(item.data_publicacao).toLocaleDateString(
-                              "pt-BR",
-                            )}
-                          </td>
-                          <td className="p-4 font-medium">{item.titulo}</td>
-                          <td className="p-4">
-                            <div className="flex items-center gap-2">
-                              {getPlatformIcon(item.plataforma)}
-                              <span className="capitalize">
-                                {item.plataforma}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="p-4 text-muted-foreground">
-                            {item.campanha_id ? (
-                              <Badge
-                                className="font-normal"
-                                style={{
-                                  backgroundColor:
-                                    item.campanha_id.cor || undefined,
-                                }}
-                              >
-                                {item.campanha_id.nome}
-                              </Badge>
-                            ) : (
-                              "-"
-                            )}
-                          </td>
-                          <td className="p-4 font-mono">{item.alcance}</td>
-                          <td className="p-4 text-right flex justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEdit(item)}
-                            >
-                              <Edit className="w-4 h-4 text-blue-500" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => onDelete(item.id)}
-                            >
-                              <Trash2 className="w-4 h-4 text-red-500" />
-                            </Button>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            );
-          })()}
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </CardContent>
       </Card>
     </div>
