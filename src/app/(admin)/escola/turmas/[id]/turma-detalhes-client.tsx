@@ -29,10 +29,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import { BeneficiariaComboBox, type BeneficiariaOption } from "@/app/(admin)/mulheres/atendimentos/beneficiaria-combobox";
 import { saveMatricula, deleteMatricula, type Matricula } from "../../actions";
+import { FrequenciaClient } from "./frequencia-client";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, Trash2, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Loader2, Users, ClipboardList } from "lucide-react";
 
 interface TurmaDetalhesClientProps {
   turma: any;
@@ -200,77 +207,96 @@ export function TurmaDetalhesClient({
         </div>
       </div>
 
-      {/* Alunas Matriculadas */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">
+      {/* Tabs: Matrículas e Diário de Classe */}
+      <Tabs defaultValue="matriculas" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="matriculas" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
             Alunas Matriculadas ({currentMatriculas.length})
-          </h2>
-          <Button onClick={() => setDialogOpen(true)} size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            Nova Matrícula
-          </Button>
-        </div>
+          </TabsTrigger>
+          <TabsTrigger value="frequencia" className="flex items-center gap-2">
+            <ClipboardList className="h-4 w-4" />
+            Diário de Classe
+          </TabsTrigger>
+        </TabsList>
 
-        {currentMatriculas.length === 0 ? (
-          <div className="rounded-md border p-6 text-center text-muted-foreground">
-            Nenhuma aluna matriculada nesta turma
+        {/* Tab: Alunas Matriculadas */}
+        <TabsContent value="matriculas" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">
+              Lista de Alunas
+            </h2>
+            <Button onClick={() => setDialogOpen(true)} size="sm">
+              <Plus className="h-4 w-4 mr-2" />
+              Nova Matrícula
+            </Button>
           </div>
-        ) : (
-          <div className="rounded-md border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>CPF</TableHead>
-                  <TableHead>Data Matrícula</TableHead>
-                  <TableHead>Telefone</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="w-[100px] text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {currentMatriculas.map((matricula) => (
-                  <TableRow key={matricula.id}>
-                    <TableCell className="font-medium">
-                      {matricula.beneficiaria.nome_completo}
-                    </TableCell>
-                    <TableCell>{formatCPF(matricula.beneficiaria.cpf)}</TableCell>
-                    <TableCell>{formatDate(matricula.data_matricula)}</TableCell>
-                    <TableCell>
-                      {typeof matricula.beneficiaria.contato === 'object' && matricula.beneficiaria.contato !== null
-                        ? (matricula.beneficiaria.contato.telefone || matricula.beneficiaria.contato.email || '—')
-                        : (matricula.beneficiaria.contato || '—')}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        className={
-                          MATRICULA_STATUS_COLOR[matricula.status || "ativa"] || ""
-                        }
-                      >
-                        {MATRICULA_STATUS_LABEL[matricula.status as keyof typeof MATRICULA_STATUS_LABEL] ||
-                          matricula.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          setMatriculaToDelete(matricula.id);
-                          setDeleteDialogOpen(true);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </TableCell>
+
+          {currentMatriculas.length === 0 ? (
+            <div className="rounded-md border p-6 text-center text-muted-foreground">
+              Nenhuma aluna matriculada nesta turma
+            </div>
+          ) : (
+            <div className="rounded-md border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>CPF</TableHead>
+                    <TableHead>Data Matrícula</TableHead>
+                    <TableHead>Telefone</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="w-[100px] text-right">Ações</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </div>
+                </TableHeader>
+                <TableBody>
+                  {currentMatriculas.map((matricula) => (
+                    <TableRow key={matricula.id}>
+                      <TableCell className="font-medium">
+                        {matricula.beneficiaria.nome_completo}
+                      </TableCell>
+                      <TableCell>{formatCPF(matricula.beneficiaria.cpf)}</TableCell>
+                      <TableCell>{formatDate(matricula.data_matricula)}</TableCell>
+                      <TableCell>
+                        {typeof matricula.beneficiaria.contato === 'object' && matricula.beneficiaria.contato !== null
+                          ? (matricula.beneficiaria.contato.telefone || matricula.beneficiaria.contato.email || '—')
+                          : (matricula.beneficiaria.contato || '—')}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          className={
+                            MATRICULA_STATUS_COLOR[matricula.status || "ativa"] || ""
+                          }
+                        >
+                          {MATRICULA_STATUS_LABEL[matricula.status as keyof typeof MATRICULA_STATUS_LABEL] ||
+                            matricula.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setMatriculaToDelete(matricula.id);
+                            setDeleteDialogOpen(true);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Tab: Diário de Classe (Frequência) */}
+        <TabsContent value="frequencia">
+          <FrequenciaClient turmaId={turma.id} matriculas={currentMatriculas} />
+        </TabsContent>
+      </Tabs>
 
       {/* Dialog: Nova Matrícula */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

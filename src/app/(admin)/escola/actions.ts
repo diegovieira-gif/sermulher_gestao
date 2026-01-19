@@ -389,3 +389,94 @@ export async function deleteMatricula(id: number) {
     return { success: false, error: "Erro ao deletar matrícula." };
   }
 }
+
+// =========================
+// Gestão de Frequência (escola_frequencia)
+// =========================
+
+export type RegistroFrequencia = {
+  id: number;
+  turma: number;
+  beneficiaria: number;
+  data: string;
+  presente: boolean;
+};
+
+export type PresencaPayload = {
+  beneficiariaId: number;
+  presente: boolean;
+};
+
+/**
+ * Busca registros de frequência de uma turma em uma data específica
+ */
+export async function getFrequenciaByData(turmaId: number, data: string) {
+  try {
+    const frequencias = await directus.request(
+      readItems("escola_frequencia", {
+        filter: {
+          _and: [
+            {
+              turma: {
+                _eq: turmaId,
+              },
+            },
+            {
+              data: {
+                _eq: data,
+              },
+            },
+          ],
+        },
+        // @ts-ignore
+        fields: ["id", "turma", "beneficiaria", "data", "presente"],
+        limit: -1,
+      })
+    );
+
+    return { success: true, data: frequencias as RegistroFrequencia[] };
+  } catch (error) {
+    console.error("Erro ao buscar frequência:", error);
+    return { success: false, error: "Erro ao buscar frequência." };
+  }
+}
+
+/**
+ * Salva registros de frequência (chamada) de uma turma em uma data
+ * Usa estratégia de upsert: deleta todos os registros da data e recria
+ */
+export async function saveFrequencia(
+  turmaId: number,
+  data: string,
+  presencas: PresencaPayload[]
+) {
+  try {
+    // 1. Busca registros existentes nesta data/turma
+    const existingResult = await getFrequenciaByData(turmaId, data);
+    const existing = existingResult.success ? existingResult.data || [] : [];
+
+    // 2. Deleta os registros existentes
+    for (const registro of existing) {
+      await directus.request(deleteItem("escola_frequencia", registro.id));
+    }
+
+    // 3. Cria novos registros
+    for (const presenca of presencas) {
+      await directus.request(
+        createItem("escola_frequencia", {
+          turma: turmaId,
+          beneficiaria: presenca.beneficiariaId,
+          data: data,
+          presente: presenca.presente,
+        })
+      );
+    }
+
+    revalidatePath(`/admin/escola/turmas/${turmaId}`);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao salvar frequência:", error);
+    return { success: false, error: "Erro ao salvar frequência." };
+  }
+}
