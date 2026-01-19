@@ -16,8 +16,6 @@ export type DashboardStats = {
 };
 
 export async function getDashboardStats() {
-  console.log("🔄 Atualizando Dashboard (Via Aggregate)...");
-  
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
   const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
@@ -28,7 +26,7 @@ export async function getDashboardStats() {
   const sixMonthsAgoStr = sixMonthsAgo.toISOString().split('T')[0];
 
   try {
-    const [atendimentosCount, atendimentosGrafico, alunasCount, turmasCount, proximosEventos] = await Promise.all([
+    const [atendimentosCount, atendimentosGrafico, rawMatriculas, turmasCount, proximosEventos] = await Promise.all([
       
       // A. Contagem Atendimentos (Mês Atual)
       directus.request(aggregate('atendimentos', {
@@ -38,7 +36,7 @@ export async function getDashboardStats() {
         }
       })),
 
-      // B. Gráfico (Lista para processar datas) - Mantém readItems
+      // B. Gráfico (Últimos 6 meses)
       directus.request(readItems('atendimentos', {
         filter: { data_abertura: { _gte: sixMonthsAgoStr } },
         fields: ['data_abertura'],
@@ -46,19 +44,17 @@ export async function getDashboardStats() {
         sort: ['data_abertura']
       })),
 
-      // C. Alunas Ativas
-      directus.request(aggregate('escola_matriculas', {
-        aggregate: { count: '*' },
-        query: {
-          filter: { status: { _in: ['cursando', 'Cursando', 'ativo', 'Ativo'] } }
-        }
-      })).catch(() => [{ count: 0 }]),
+      // C. Alunas Ativas (Busca lista para filtrar no código)
+      directus.request(readItems('escola_matriculas', {
+        fields: ['status'],
+        limit: -1 
+      })).catch(() => []),
 
       // D. Turmas Abertas
       directus.request(aggregate('escola_turmas', {
         aggregate: { count: '*' },
         query: {
-          filter: { status: { _in: ['aberta', 'Aberta', 'em_andamento', 'Em Andamento'] } }
+          filter: { status: { _in: ['aberta', 'em_andamento', 'Em Andamento'] } }
         }
       })).catch(() => [{ count: 0 }]),
 
@@ -75,8 +71,17 @@ export async function getDashboardStats() {
     ]);
 
     // --- Processamento ---
-    
-    // Helper para extrair número do aggregate (retorna array [{ count: '10' }])
+
+    // 1. Contagem Manual de Alunas (Correção aplicada: 'ativa')
+    const alunasAtivasCount = Array.isArray(rawMatriculas) 
+      ? rawMatriculas.filter((m: any) => {
+          const s = m.status ? String(m.status).toLowerCase() : '';
+          // Aceita variações comuns
+          return ['ativa', 'ativo', 'cursando', 'matriculada'].includes(s);
+        }).length
+      : 0;
+
+    // 2. Extrair contagem do aggregate
     const getCount = (result: any) => {
       if (Array.isArray(result) && result[0] && result[0].count) {
         return Number(result[0].count);
@@ -84,7 +89,7 @@ export async function getDashboardStats() {
       return 0;
     };
 
-    // Processar Gráfico
+    // 3. Processar Gráfico
     const chartMap = new Map();
     for (let i = 5; i >= 0; i--) {
       const d = new Date();
@@ -108,23 +113,20 @@ export async function getDashboardStats() {
     }
     const chartData = Array.from(chartMap, ([name, total]) => ({ name, total }));
 
-    // Formatar Próximo Evento
+    // 4. Formatar Próximo Evento
     const nextEvent = proximosEventos && proximosEventos[0] ? {
       nome: proximosEventos[0].nome,
       data: new Date(proximosEventos[0].data_inicio).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' }),
       local: proximosEventos[0].local || 'Local a definir'
     } : null;
 
-    const stats = {
+    return {
       atendimentosMes: getCount(atendimentosCount),
-      alunasAtivas: getCount(alunasCount),
+      alunasAtivas: alunasAtivasCount,
       turmasAbertas: getCount(turmasCount),
       proximoEvento: nextEvent,
       chartData
     };
-
-    console.log("📊 Stats Finais:", stats);
-    return stats;
 
   } catch (error) {
     console.error("❌ Erro no Dashboard:", error);
