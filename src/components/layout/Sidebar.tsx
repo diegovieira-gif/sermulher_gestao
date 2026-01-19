@@ -16,7 +16,8 @@ import {
   HeartHandshake,
   BookOpen,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Megaphone
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { logout } from '@/app/login/actions';
@@ -83,6 +84,12 @@ const MENU_ITEMS: MenuItemConfig[] = [
     label: 'Agenda & Eventos',
     href: '/eventos',
     icon: CalendarDays,
+    roles: [], // Todos logados
+  },
+  {
+    label: 'Comunicação',
+    href: '/marketing',
+    icon: Megaphone,
     roles: [], // Todos logados
   },
   {

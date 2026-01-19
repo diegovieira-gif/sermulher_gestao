@@ -35,7 +35,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, Pencil, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -69,7 +75,7 @@ interface GenericCrudTableProps {
   /** Handler custom de persistência, usado em casos fora das configs auxiliares. */
   onSave?: (
     values: any,
-    ctx: { selectedItem: any | null }
+    ctx: { selectedItem: any | null },
   ) => Promise<{ success: boolean; error?: string }>;
   /** Handler custom de deleção. */
   onDelete?: (id: number) => Promise<{ success: boolean; error?: string }>;
@@ -90,8 +96,8 @@ const createSchema = (hasColor: boolean, hasGrupoRma: boolean) =>
 export function GenericCrudTable({
   collectionName,
   title,
-  items,
-  columns,
+  items = [],
+  columns = [],
   hasColorField = false,
   hasGrupoRma = false,
   showStatus = true,
@@ -108,15 +114,15 @@ export function GenericCrudTable({
   const [formOpen, setFormOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
 
-  const effectiveSchema = formSchema ?? createSchema(hasColorField, hasGrupoRma);
-  const baseDefaultValues =
-    defaultValues ?? {
-      nome: "",
-      status: "published",
-      cor: "#000000",
-      peso: 1,
-      grupo_rma: "",
-    };
+  const effectiveSchema =
+    formSchema ?? createSchema(hasColorField, hasGrupoRma);
+  const baseDefaultValues = defaultValues ?? {
+    nome: "",
+    status: "published",
+    cor: "#000000",
+    peso: 1,
+    grupo_rma: "",
+  };
 
   const form = useForm<any>({
     resolver: zodResolver(effectiveSchema as any),
@@ -154,7 +160,7 @@ export function GenericCrudTable({
       const saveHandler = onSave
         ? onSave
         : // @ts-ignore
-          ((payload) => saveAuxItem(collectionName, payload));
+          (payload) => saveAuxItem(collectionName, payload);
 
       const result = await saveHandler(values, { selectedItem });
 
@@ -209,7 +215,7 @@ export function GenericCrudTable({
         <Table>
           <TableHeader>
             <TableRow>
-              {columns.map((col) => (
+              {columns?.map((col) => (
                 <TableHead key={col.key}>{col.label}</TableHead>
               ))}
               {showStatus && <TableHead>Status</TableHead>}
@@ -217,36 +223,38 @@ export function GenericCrudTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {items.length === 0 ? (
+            {(items?.length ?? 0) === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={columns.length + (showStatus ? 2 : 1)}
+                  colSpan={(columns?.length ?? 0) + (showStatus ? 2 : 1)}
                   className="text-center h-24 text-muted-foreground"
                 >
                   Nenhum item encontrado.
                 </TableCell>
               </TableRow>
             ) : (
-              items.map((item) => {
+              items?.map((item) => {
                 // LÓGICA CORRIGIDA: Se status for undefined/null ou 'published', é Ativo.
-                const isActive = !item.status || item.status === 'published';
-                
+                const isActive = !item.status || item.status === "published";
+
                 return (
                   <TableRow key={item.id}>
-                    {columns.map((col) => (
+                    {columns?.map((col) => (
                       <TableCell key={col.key}>
                         {col.render ? col.render(item) : item[col.key]}
                       </TableCell>
                     ))}
-                    
+
                     {/* Coluna de Status */}
                     {showStatus && (
                       <TableCell>
-                        <Badge 
-                          variant={isActive ? 'default' : 'secondary'}
-                          className={isActive ? 'bg-green-600 hover:bg-green-700' : ''}
+                        <Badge
+                          variant={isActive ? "default" : "secondary"}
+                          className={
+                            isActive ? "bg-green-600 hover:bg-green-700" : ""
+                          }
                         >
-                          {isActive ? 'Ativo' : 'Inativo'}
+                          {isActive ? "Ativo" : "Inativo"}
                         </Badge>
                       </TableCell>
                     )}
@@ -283,9 +291,7 @@ export function GenericCrudTable({
             <DialogTitle>
               {selectedItem ? `Editar ${title}` : `Novo ${title}`}
             </DialogTitle>
-            <DialogDescription>
-              Preencha os dados abaixo.
-            </DialogDescription>
+            <DialogDescription>Preencha os dados abaixo.</DialogDescription>
           </DialogHeader>
 
           <Form {...form}>
@@ -316,16 +322,27 @@ export function GenericCrudTable({
                         <FormItem>
                           <FormLabel>Grupo do RMA (Relatório)</FormLabel>
                           <FormControl>
-                            <Select value={field.value} onValueChange={field.onChange}>
+                            <Select
+                              value={field.value}
+                              onValueChange={field.onChange}
+                            >
                               <SelectTrigger>
                                 <SelectValue placeholder="Selecione o grupo" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="assistencia_social">Assistência Social - CRAS/CREAS</SelectItem>
+                                <SelectItem value="assistencia_social">
+                                  Assistência Social - CRAS/CREAS
+                                </SelectItem>
                                 <SelectItem value="saude">Saúde</SelectItem>
-                                <SelectItem value="educacao">Educação</SelectItem>
-                                <SelectItem value="justica">Justiça/Delegacia</SelectItem>
-                                <SelectItem value="terceiro_setor">Terceiro Setor/ONGs</SelectItem>
+                                <SelectItem value="educacao">
+                                  Educação
+                                </SelectItem>
+                                <SelectItem value="justica">
+                                  Justiça/Delegacia
+                                </SelectItem>
+                                <SelectItem value="terceiro_setor">
+                                  Terceiro Setor/ONGs
+                                </SelectItem>
                                 <SelectItem value="outros">Outros</SelectItem>
                               </SelectContent>
                             </Select>
@@ -345,11 +362,15 @@ export function GenericCrudTable({
                           <FormLabel>Cor (Hex)</FormLabel>
                           <div className="flex gap-2">
                             <FormControl>
-                              <Input type="color" className="w-12 h-10 p-1" {...field} />
+                              <Input
+                                type="color"
+                                className="w-12 h-10 p-1"
+                                {...field}
+                              />
                             </FormControl>
-                            <Input 
-                              placeholder="#000000" 
-                              {...field} 
+                            <Input
+                              placeholder="#000000"
+                              {...field}
                               className="flex-1"
                             />
                           </div>
@@ -367,14 +388,21 @@ export function GenericCrudTable({
                         <FormItem>
                           <FormLabel>Status</FormLabel>
                           <FormControl>
-                            <Select value={field.value} onValueChange={field.onChange}>
+                            <Select
+                              value={field.value}
+                              onValueChange={field.onChange}
+                            >
                               <SelectTrigger>
                                 <SelectValue placeholder="Selecione o status" />
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="published">Ativo</SelectItem>
-                                <SelectItem value="draft">Inativo (Rascunho)</SelectItem>
-                                <SelectItem value="archived">Arquivado</SelectItem>
+                                <SelectItem value="draft">
+                                  Inativo (Rascunho)
+                                </SelectItem>
+                                <SelectItem value="archived">
+                                  Arquivado
+                                </SelectItem>
                               </SelectContent>
                             </Select>
                           </FormControl>
@@ -416,7 +444,9 @@ export function GenericCrudTable({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>
+              Cancelar
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
               disabled={isDeleting}
