@@ -1,7 +1,9 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { GenericCrudTable } from "@/app/(admin)/configuracoes/generic-crud-table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   FormControl,
   FormField,
@@ -17,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Eye } from "lucide-react";
 import { z } from "zod";
 import { deleteTurma, saveTurma, type TurmaPayload } from "../actions";
 
@@ -79,6 +82,8 @@ interface TurmasClientProps {
 }
 
 export function TurmasClient({ turmas, cursosOptions }: TurmasClientProps) {
+  const router = useRouter();
+
   return (
     <GenericCrudTable
       collectionName="escola_turmas"
@@ -115,6 +120,20 @@ export function TurmasClient({ turmas, cursosOptions }: TurmasClientProps) {
             <Badge className={STATUS_COLOR[item.status || "aberta"] || ""}>
               {STATUS_LABEL[item.status as keyof typeof STATUS_LABEL] || item.status}
             </Badge>
+          ),
+        },
+        {
+          key: "detalhes",
+          label: "Detalhes",
+          render: (item) => (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.push(`/admin/escola/turmas/${item.id}`)}
+              title="Ver detalhes e gerenciar matrículas"
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
           ),
         },
       ]}

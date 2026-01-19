@@ -198,3 +198,193 @@ export async function deleteTurma(id: number) {
     return { success: false, error: "Erro ao deletar turma." };
   }
 }
+// =========================
+// Gestão de Matrículas (escola_matriculas)
+// =========================
+
+/**
+ * Busca turma por ID com dados do curso relacionado
+ */
+export async function getTurmaById(id: number) {
+  try {
+    const turma = await directus.request(
+      readItems("escola_turmas", {
+        // @ts-ignore
+        fields: ["*", "curso.*"],
+        limit: 1,
+      }),
+    );
+
+    // Filtra pela ID
+    const turmaEspecifica = turma.find((t: any) => t.id === id);
+
+    if (!turmaEspecifica) {
+      return { success: false, error: "Turma não encontrada." };
+    }
+
+    return { success: true, data: turmaEspecifica };
+  } catch (error) {
+    console.error("Erro ao buscar turma:", error);
+    return { success: false, error: "Erro ao buscar turma." };
+  }
+}
+
+export type Matricula = {
+  id: number;
+  turma: number;
+  beneficiaria: {
+    id: number;
+    nome_completo: string;
+    cpf: string;
+    telefone: string;
+  };
+  data_matricula: string;
+  status: string;
+};
+
+/**
+ * Busca matrículas de uma turma com dados da beneficiária
+ */
+export async function getMatriculasByTurma(turmaId: number) {
+  try {
+    const matriculas = await directus.request(
+      readItems("escola_matriculas", {
+        filter: {
+          turma: {
+            _eq: turmaId,
+          },
+        },
+        // @ts-ignore
+        fields: [
+          "id",
+          "turma",
+          "data_matricula",
+          "status",
+          "beneficiaria.id",
+          "beneficiaria.nome_completo",
+          "beneficiaria.cpf",
+          "beneficiaria.telefone",
+        ],
+        sort: ["beneficiaria.nome_completo"],
+        limit: -1,
+      })
+    );
+
+    return { success: true, data: matriculas as Matricula[] };
+  } catch (error) {
+    console.error("Erro ao buscar matrículas:", error);
+    return { success: false, error: "Erro ao buscar matrículas." };
+  }
+}
+
+/**
+ * Busca todas as beneficiárias para o combobox de matrícula
+ */
+export async function getBeneficiariasOptions() {
+  try {
+    const beneficiarias = await directus.request(
+      readItems("beneficiarias", {
+        // @ts-ignore
+        fields: ["id", "nome_completo", "cpf"],
+        sort: ["nome_completo"],
+        limit: -1,
+      })
+    );
+
+    return {
+      success: true,
+      data: beneficiarias as Array<{
+        id: number;
+        nome_completo: string;
+        cpf: string;
+      }>,
+    };
+  } catch (error) {
+    console.error("Erro ao buscar beneficiárias:", error);
+    return { success: false, error: "Erro ao buscar beneficiárias." };
+  }
+}
+
+/**
+ * Cria uma nova matrícula
+ * Verifica se já existe matrícula ativa para evitar duplicação
+ */
+export async function saveMatricula(turmaId: number, beneficiariaId: number) {
+  try {
+    // Verifica se já existe matrícula ativa para essa beneficiaria nessa turma
+    const existing = await directus.request(
+      readItems("escola_matriculas", {
+        filter: {
+          _and: [
+            {
+              turma: {
+                _eq: turmaId,
+              },
+            },
+            {
+              beneficiaria: {
+                _eq: beneficiariaId,
+              },
+            },
+            {
+              status: {
+                _eq: "ativa",
+              },
+            },
+          ],
+        },
+        limit: 1,
+      })
+    );
+
+    if (existing && existing.length > 0) {
+      return {
+        success: false,
+        error: "Esta beneficiária já possui uma matrícula ativa nesta turma.",
+      };
+    }
+
+    // Cria a matrícula
+    await directus.request(
+      createItem("escola_matriculas", {
+        turma: turmaId,
+        beneficiaria: beneficiariaId,
+        data_matricula: new Date().toISOString(),
+        status: "ativa",
+      })
+    );
+
+    revalidatePath(`/admin/escola/turmas/${turmaId}`);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao salvar matrícula:", error);
+    return { success: false, error: "Erro ao salvar matrícula." };
+  }
+}
+
+/**
+ * Deleta uma matrícula
+ */
+export async function deleteMatricula(id: number) {
+  try {
+    // Primeiro, busca a matrícula para pegar o turmaId para revalidação
+    const matriculas = await directus.request(
+      readItems("escola_matriculas", {
+        limit: 1,
+      })
+    );
+    const matricula = matriculas.find((m: any) => m.id === id);
+
+    await directus.request(deleteItem("escola_matriculas", id));
+
+    if (matricula?.turma) {
+      revalidatePath(`/admin/escola/turmas/${matricula.turma}`);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao deletar matrícula:", error);
+    return { success: false, error: "Erro ao deletar matrícula." };
+  }
+}
