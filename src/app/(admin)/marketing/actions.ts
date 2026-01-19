@@ -32,6 +32,8 @@ function parsePayload(data: any) {
   // Tratamento de tipos numéricos
   if (payload.alcance) payload.alcance = Number(payload.alcance);
   if (payload.interacoes) payload.interacoes = Number(payload.interacoes);
+  if (payload.campanha_id !== undefined && payload.campanha_id !== null)
+    payload.campanha_id = Number(payload.campanha_id);
 
   return payload;
 }
@@ -41,6 +43,9 @@ export async function getMarketingItems() {
   try {
     const items = await directus.request(
       readItems(COLLECTION, {
+        // Traz a campanha populada
+        // @ts-ignore fields are dynamic
+        fields: ["*", "campanha_id.*"],
         sort: ["-data_publicacao"],
       }),
     );
@@ -138,7 +143,7 @@ export async function getMarketingStats() {
       // C. Agrupar por Campanha (Para contar quantas ativas)
       directus.request(
         aggregate(COLLECTION, {
-          groupBy: ["campanha"],
+          groupBy: ["campanha_id"],
           aggregate: { count: "*" },
           query: {
             filter: {
@@ -167,9 +172,13 @@ export async function getMarketingStats() {
       ? topPlataformaItem.plataforma
       : "-";
 
-    // Contar campanhas (ignorando nulos/vazios)
-    // @ts-ignore
-    const campanhasAtivas = porCampanha?.filter((c) => c.campanha).length || 0;
+    // Contar campanhas únicas (IDs distintos com campanha_id não nulo)
+    // @ts-ignore group items structure from Directus
+    const campanhasAtivas = Array.isArray(porCampanha)
+      ? new Set(
+          porCampanha.filter((c) => c.campanha_id).map((c) => c.campanha_id),
+        ).size
+      : 0;
 
     return {
       postsMes: posts,

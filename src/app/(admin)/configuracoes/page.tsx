@@ -13,18 +13,19 @@ export default async function ConfiguracoesPage() {
     locaisResult,
     bairrosResult,
     beneficiosResult,
-  ] =
-    await Promise.all([
-      getAuxItems("config_origens"),
-      getAuxItems("config_prioridades"),
-      getAuxItems("config_tipos_evento"),
-      getAuxItems("config_tipos_agressao"),
-      getAuxItems("config_encaminhamentos"),
-      getAuxItems("config_niveis_periculosidade"),
-      getAuxItems("locais"),
-      getAuxItems("config_bairros"),
-      getAuxItems("config_beneficios"),
-    ]);
+    campanhasResult,
+  ] = await Promise.all([
+    getAuxItems("config_origens"),
+    getAuxItems("config_prioridades"),
+    getAuxItems("config_tipos_evento"),
+    getAuxItems("config_tipos_agressao"),
+    getAuxItems("config_encaminhamentos"),
+    getAuxItems("config_niveis_periculosidade"),
+    getAuxItems("locais"),
+    getAuxItems("config_bairros"),
+    getAuxItems("config_beneficios"),
+    getAuxItems("config_campanhas"),
+  ]);
 
   // Verifica se houve erros
   if (
@@ -36,7 +37,8 @@ export default async function ConfiguracoesPage() {
     !periculosidadeResult.success ||
     !locaisResult.success ||
     !bairrosResult.success ||
-    !beneficiosResult.success
+    !beneficiosResult.success ||
+    !campanhasResult.success
   ) {
     return (
       <div className="p-6">
@@ -59,6 +61,7 @@ export default async function ConfiguracoesPage() {
         locais={locaisResult.data || []}
         bairros={bairrosResult.data || []}
         beneficios={beneficiosResult.data || []}
+        campanhas={campanhasResult.data || []}
       />
     </div>
   );

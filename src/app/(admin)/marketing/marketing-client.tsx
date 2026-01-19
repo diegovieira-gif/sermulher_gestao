@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -41,12 +42,16 @@ import { saveMarketingItem, deleteMarketingItem } from "./actions";
 export function MarketingClient({
   items,
   stats,
+  campanhasList = [],
 }: {
   items: any[];
   stats: any;
+  campanhasList: any[];
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [campanhaFilter, setCampanhaFilter] = useState<string>("");
+  const [plataformaFilter, setPlataformaFilter] = useState<string>("");
 
   const [formData, setFormData] = useState({
     id: null,
@@ -56,7 +61,7 @@ export function MarketingClient({
     link: "",
     alcance: "",
     interacoes: "",
-    campanha: "",
+    campanha_id: null as number | null,
   });
 
   const handleEdit = (item: any) => {
@@ -68,7 +73,7 @@ export function MarketingClient({
       link: item.link || "",
       alcance: item.alcance || "0",
       interacoes: item.interacoes || "0",
-      campanha: item.campanha || "",
+      campanha_id: item.campanha_id?.id ?? null,
     });
     setIsOpen(true);
   };
@@ -82,7 +87,7 @@ export function MarketingClient({
       link: "",
       alcance: "",
       interacoes: "",
-      campanha: "",
+      campanha_id: null,
     });
     setIsOpen(true);
   };
@@ -98,6 +103,10 @@ export function MarketingClient({
       ...formData,
       alcance: Number(formData.alcance),
       interacoes: Number(formData.interacoes),
+      campanha_id:
+        formData.campanha_id !== null
+          ? Number(formData.campanha_id)
+          : undefined,
     };
 
     const res = await saveMarketingItem(payload);
@@ -240,8 +249,54 @@ export function MarketingClient({
 
       {/* 2. Área da Tabela */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-row items-center justify-between gap-3">
           <CardTitle>Gestão de Comunicação</CardTitle>
+          <div className="flex items-center gap-3">
+            {/* Filtro por Campanha */}
+            <div className="min-w-[220px]">
+              <Label className="text-xs text-muted-foreground">Campanha</Label>
+              <Select
+                value={campanhaFilter}
+                onValueChange={(val) => setCampanhaFilter(val)}
+              >
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Todas as campanhas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Todas</SelectItem>
+                  {campanhasList.map((c: any) => (
+                    <SelectItem key={c.id} value={String(c.id)}>
+                      {c.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Filtro por Plataforma */}
+            <div className="min-w-[180px]">
+              <Label className="text-xs text-muted-foreground">
+                Plataforma
+              </Label>
+              <Select
+                value={plataformaFilter}
+                onValueChange={(val) => setPlataformaFilter(val)}
+              >
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Todas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Todas</SelectItem>
+                  <SelectItem value="instagram">Instagram</SelectItem>
+                  <SelectItem value="facebook">Facebook</SelectItem>
+                  <SelectItem value="site">Site</SelectItem>
+                  <SelectItem value="jornal">Jornal</SelectItem>
+                  <SelectItem value="outros">Outros</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
               <Button onClick={handleNew}>
@@ -305,13 +360,42 @@ export function MarketingClient({
 
                 <div className="grid gap-2">
                   <Label>Campanha</Label>
-                  <Input
-                    value={formData.campanha}
-                    onChange={(e) =>
-                      setFormData({ ...formData, campanha: e.target.value })
-                    }
-                    placeholder="Ex: Outubro Rosa"
-                  />
+                  <div className="flex items-center gap-2">
+                    <Select
+                      value={
+                        formData.campanha_id ? String(formData.campanha_id) : ""
+                      }
+                      onValueChange={(val) =>
+                        setFormData({
+                          ...formData,
+                          campanha_id: val ? Number(val) : null,
+                        })
+                      }
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Selecione a campanha" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {campanhasList.map((c: any) => (
+                          <SelectItem key={c.id} value={String(c.id)}>
+                            {c.nome}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {(() => {
+                      const camp = campanhasList.find(
+                        (c: any) => c.id === formData.campanha_id,
+                      );
+                      return camp?.cor ? (
+                        <span
+                          className="inline-block w-6 h-6 rounded-full border"
+                          title={camp.nome}
+                          style={{ backgroundColor: camp.cor }}
+                        />
+                      ) : null;
+                    })()}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -331,7 +415,10 @@ export function MarketingClient({
                       type="number"
                       value={formData.interacoes}
                       onChange={(e) =>
-                        setFormData({ ...formData, interacoes: e.target.value })
+                        setFormData({
+                          ...formData,
+                          interacoes: e.target.value,
+                        })
                       }
                     />
                   </div>
@@ -346,72 +433,100 @@ export function MarketingClient({
         </CardHeader>
 
         <CardContent>
-          <div className="rounded-md border">
-            <table className="w-full text-sm text-left">
-              <thead className="bg-muted/50 text-muted-foreground">
-                <tr>
-                  <th className="p-4 font-medium">Data</th>
-                  <th className="p-4 font-medium">Título</th>
-                  <th className="p-4 font-medium">Plataforma</th>
-                  <th className="p-4 font-medium">Campanha</th>
-                  <th className="p-4 font-medium">Alcance</th>
-                  <th className="p-4 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="p-8 text-center text-muted-foreground"
-                    >
-                      Nenhum item encontrado.
-                    </td>
-                  </tr>
-                ) : (
-                  items.map((item) => (
-                    <tr
-                      key={item.id}
-                      className="border-t hover:bg-muted/50 transition-colors"
-                    >
-                      <td className="p-4">
-                        {new Date(item.data_publicacao).toLocaleDateString(
-                          "pt-BR",
-                        )}
-                      </td>
-                      <td className="p-4 font-medium">{item.titulo}</td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-2">
-                          {getPlatformIcon(item.plataforma)}
-                          <span className="capitalize">{item.plataforma}</span>
-                        </div>
-                      </td>
-                      <td className="p-4 text-muted-foreground">
-                        {item.campanha || "-"}
-                      </td>
-                      <td className="p-4 font-mono">{item.alcance}</td>
-                      <td className="p-4 text-right flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(item)}
-                        >
-                          <Edit className="w-4 h-4 text-blue-500" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onDelete(item.id)}
-                        >
-                          <Trash2 className="w-4 h-4 text-red-500" />
-                        </Button>
-                      </td>
+          {/** Lista filtrada localmente */}
+          {(() => {
+            const filtered = items.filter((item) => {
+              const matchCampanha = campanhaFilter
+                ? String(item.campanha_id?.id ?? "") === campanhaFilter
+                : true;
+              const matchPlat = plataformaFilter
+                ? item.plataforma === plataformaFilter
+                : true;
+              return matchCampanha && matchPlat;
+            });
+            return (
+              <div className="rounded-md border">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-muted/50 text-muted-foreground">
+                    <tr>
+                      <th className="p-4 font-medium">Data</th>
+                      <th className="p-4 font-medium">Título</th>
+                      <th className="p-4 font-medium">Plataforma</th>
+                      <th className="p-4 font-medium">Campanha</th>
+                      <th className="p-4 font-medium">Alcance</th>
+                      <th className="p-4 text-right">Ações</th>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody>
+                    {filtered.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={6}
+                          className="p-8 text-center text-muted-foreground"
+                        >
+                          Nenhum item encontrado.
+                        </td>
+                      </tr>
+                    ) : (
+                      filtered.map((item) => (
+                        <tr
+                          key={item.id}
+                          className="border-t hover:bg-muted/50 transition-colors"
+                        >
+                          <td className="p-4">
+                            {new Date(item.data_publicacao).toLocaleDateString(
+                              "pt-BR",
+                            )}
+                          </td>
+                          <td className="p-4 font-medium">{item.titulo}</td>
+                          <td className="p-4">
+                            <div className="flex items-center gap-2">
+                              {getPlatformIcon(item.plataforma)}
+                              <span className="capitalize">
+                                {item.plataforma}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="p-4 text-muted-foreground">
+                            {item.campanha_id ? (
+                              <Badge
+                                className="font-normal"
+                                style={{
+                                  backgroundColor:
+                                    item.campanha_id.cor || undefined,
+                                }}
+                              >
+                                {item.campanha_id.nome}
+                              </Badge>
+                            ) : (
+                              "-"
+                            )}
+                          </td>
+                          <td className="p-4 font-mono">{item.alcance}</td>
+                          <td className="p-4 text-right flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit(item)}
+                            >
+                              <Edit className="w-4 h-4 text-blue-500" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => onDelete(item.id)}
+                            >
+                              <Trash2 className="w-4 h-4 text-red-500" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            );
+          })()}
         </CardContent>
       </Card>
     </div>

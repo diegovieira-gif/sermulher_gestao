@@ -2,6 +2,22 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GenericCrudTable } from "./generic-crud-table";
+import {
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { z } from "zod";
 
 interface ConfiguracoesClientProps {
   origens: any[];
@@ -13,6 +29,7 @@ interface ConfiguracoesClientProps {
   locais: any[];
   bairros: any[];
   beneficios: any[];
+  campanhas: any[];
 }
 
 export function ConfiguracoesClient({
@@ -25,7 +42,23 @@ export function ConfiguracoesClient({
   locais,
   bairros,
   beneficios,
+  campanhas,
 }: ConfiguracoesClientProps) {
+  const monthOptions = [
+    "Janeiro",
+    "Fevereiro",
+    "Março",
+    "Abril",
+    "Maio",
+    "Junho",
+    "Julho",
+    "Agosto",
+    "Setembro",
+    "Outubro",
+    "Novembro",
+    "Dezembro",
+  ];
+
   return (
     <div>
       <div className="mb-6">
@@ -36,7 +69,7 @@ export function ConfiguracoesClient({
       </div>
 
       <Tabs defaultValue="origens" className="w-full">
-        <TabsList className="grid w-full grid-cols-9">
+        <TabsList className="grid w-full grid-cols-10">
           <TabsTrigger value="origens">Origens</TabsTrigger>
           <TabsTrigger value="prioridades">Prioridades</TabsTrigger>
           <TabsTrigger value="tipos-evento">Tipos de Evento</TabsTrigger>
@@ -46,6 +79,7 @@ export function ConfiguracoesClient({
           <TabsTrigger value="locais">Locais</TabsTrigger>
           <TabsTrigger value="bairros">Bairros</TabsTrigger>
           <TabsTrigger value="beneficios">Benefícios</TabsTrigger>
+          <TabsTrigger value="campanhas">Campanhas</TabsTrigger>
         </TabsList>
 
         <TabsContent value="origens" className="mt-6">
@@ -156,6 +190,155 @@ export function ConfiguracoesClient({
               { key: "nome", label: "Nome" },
               { key: "descricao", label: "Descrição" },
             ]}
+          />
+        </TabsContent>
+
+        <TabsContent value="campanhas" className="mt-6">
+          <GenericCrudTable
+            collectionName="campanhas"
+            title="Campanhas"
+            items={campanhas}
+            columns={[
+              { key: "nome", label: "Nome" },
+              { key: "mes", label: "Mês" },
+              {
+                key: "cor",
+                label: "Cor",
+                render: (item) => (
+                  <div className="flex items-center gap-2">
+                    {item.cor && (
+                      <div
+                        className="w-4 h-4 rounded-full border"
+                        style={{ backgroundColor: item.cor }}
+                      />
+                    )}
+                    <span>{item.cor || "-"}</span>
+                  </div>
+                ),
+              },
+            ]}
+            hasColorField={true}
+            defaultValues={{
+              nome: "",
+              mes: "",
+              cor: "#000000",
+              status: "published",
+            }}
+            formSchema={z.object({
+              id: z.number().optional(),
+              nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+              mes: z.string().min(1, "Selecione o mês"),
+              cor: z.string().min(1, "Selecione a cor"),
+              status: z.string().min(1, "Selecione o status"),
+            })}
+            mapItemToFormValues={(item) => ({
+              id: item.id,
+              nome: item.nome,
+              mes: item.mes || "",
+              cor: item.cor || "#000000",
+              status: item.status || "published",
+            })}
+            renderFormFields={(form) => (
+              <>
+                <FormField
+                  control={form.control}
+                  name="nome"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Ex: Campanha Outubro Rosa"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="mes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Mês</FormLabel>
+                      <FormControl>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o mês" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {monthOptions.map((mes) => (
+                              <SelectItem key={mes} value={mes}>
+                                {mes}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="cor"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Cor</FormLabel>
+                      <div className="flex gap-2">
+                        <FormControl>
+                          <Input
+                            type="color"
+                            className="w-12 h-10 p-1"
+                            {...field}
+                          />
+                        </FormControl>
+                        <Input
+                          placeholder="#000000"
+                          {...field}
+                          className="flex-1"
+                        />
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <FormControl>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="published">Ativo</SelectItem>
+                            <SelectItem value="draft">
+                              Inativo (Rascunho)
+                            </SelectItem>
+                            <SelectItem value="archived">Arquivado</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
           />
         </TabsContent>
       </Tabs>

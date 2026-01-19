@@ -18,6 +18,7 @@ export type ConfigCollection =
   | "config_bairros"
   | "config_beneficios"
   | "config_encaminhamentos"
+  | "config_campanhas"
   | "locais";
 
 /**
@@ -51,6 +52,8 @@ function getCollectionName(type: string): string {
       return "config_beneficios";
     case "encaminhamentos":
       return "config_encaminhamentos";
+    case "campanhas":
+      return "config_campanhas";
     case "locais":
       return "locais";
     default:
@@ -64,11 +67,13 @@ function getCollectionName(type: string): string {
 export async function getAuxItems(collectionName: string) {
   try {
     // @ts-ignore
-    const items = await directus.request(readItems(collectionName, {
-      limit: -1,
-      sort: ['nome']
-    }));
-    
+    const items = await directus.request(
+      readItems(collectionName, {
+        limit: -1,
+        sort: ["nome"],
+      }),
+    );
+
     return { success: true, data: items };
   } catch (error) {
     console.error(`Erro ao buscar ${collectionName}:`, error);
@@ -81,7 +86,7 @@ export async function getAuxItems(collectionName: string) {
  */
 export async function saveAuxItem(
   type: string,
-  data: { id?: number; nome: string; [key: string]: any }
+  data: { id?: number; nome: string; [key: string]: any },
 ) {
   try {
     const collection = getCollectionName(type);
@@ -111,7 +116,7 @@ export async function deleteAuxItem(type: string, id: number) {
   try {
     const collection = getCollectionName(type);
     await directus.request(deleteItem(collection, id));
-    
+
     revalidatePath("/configuracoes");
     revalidatePath("/sala-azul/ciclos");
     revalidatePath("/sala-azul/infratores");
