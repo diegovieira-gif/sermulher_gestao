@@ -26,7 +26,10 @@ import {
   Edit,
   BarChart3,
   Eye,
-  TrendingUp, // Ícones dos Cards
+  TrendingUp, // Linha 1
+  Percent,
+  Flag,
+  Smartphone, // Linha 2
   Instagram,
   Globe,
   Newspaper,
@@ -131,10 +134,10 @@ export function MarketingClient({
 
   return (
     <div className="space-y-6">
-      {/* 1. Cards de KPIs (ESTILO NOVO E RICO) */}
+      {/* KPI GRID - Agora com 6 Cards */}
       <div className="grid gap-4 md:grid-cols-3">
-        {/* Card 1: Publicações */}
-        <Card className="relative overflow-hidden">
+        {/* --- LINHA 1 --- */}
+        <Card className="relative overflow-hidden border-l-4 border-l-blue-500">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Publicações (Mês)
@@ -144,15 +147,11 @@ export function MarketingClient({
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{stats.postsMes}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Novas postagens este mês
-            </p>
+            <div className="text-2xl font-bold">{stats.postsMes}</div>
           </CardContent>
         </Card>
 
-        {/* Card 2: Alcance */}
-        <Card className="relative overflow-hidden">
+        <Card className="relative overflow-hidden border-l-4 border-l-green-500">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Alcance Total
@@ -162,17 +161,13 @@ export function MarketingClient({
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">
+            <div className="text-2xl font-bold">
               {stats.alcanceMes.toLocaleString("pt-BR")}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Pessoas impactadas
-            </p>
           </CardContent>
         </Card>
 
-        {/* Card 3: Interações */}
-        <Card className="relative overflow-hidden">
+        <Card className="relative overflow-hidden border-l-4 border-l-purple-500">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Interações
@@ -182,11 +177,62 @@ export function MarketingClient({
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">
+            <div className="text-2xl font-bold">
               {stats.interacoesMes.toLocaleString("pt-BR")}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* --- LINHA 2 (NOVOS) --- */}
+        <Card className="relative overflow-hidden border-l-4 border-l-orange-500">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Taxa Engajamento
+            </CardTitle>
+            <div className="h-8 w-8 rounded-full bg-orange-100 flex items-center justify-center">
+              <Percent className="h-4 w-4 text-orange-600" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.taxaEngajamento}%</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Engajamento (Likes/Coment.)
+              Qualidade da interação
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="relative overflow-hidden border-l-4 border-l-pink-500">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Campanhas Ativas
+            </CardTitle>
+            <div className="h-8 w-8 rounded-full bg-pink-100 flex items-center justify-center">
+              <Flag className="h-4 w-4 text-pink-600" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.campanhasAtivas}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Temas trabalhados
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="relative overflow-hidden border-l-4 border-l-indigo-500">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Canal Principal
+            </CardTitle>
+            <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center">
+              <Smartphone className="h-4 w-4 text-indigo-600" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold capitalize">
+              {stats.topPlataforma}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Maior volume de posts
             </p>
           </CardContent>
         </Card>

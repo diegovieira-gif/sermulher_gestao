@@ -97,7 +97,7 @@ export async function deleteMarketingItem(id: number) {
   }
 }
 
-// 4. Estatísticas
+// 4. Estatísticas Avançadas
 export async function getMarketingStats() {
   try {
     const now = new Date();
@@ -108,29 +108,86 @@ export async function getMarketingStats() {
       .toISOString()
       .split("T")[0];
 
-    const result = await directus.request(
-      aggregate(COLLECTION, {
-        aggregate: {
-          count: "*",
-          sum: ["alcance", "interacoes"],
-        },
-        query: {
-          filter: {
-            data_publicacao: { _between: [startOfMonth, endOfMonth] },
+    // Busca Paralela: Totais e Agrupamentos
+    const [totais, porPlataforma, porCampanha] = await Promise.all([
+      // A. Soma de Alcance e Interações
+      directus.request(
+        aggregate(COLLECTION, {
+          aggregate: { count: "*", sum: ["alcance", "interacoes"] },
+          query: {
+            filter: {
+              data_publicacao: { _between: [startOfMonth, endOfMonth] },
+            },
           },
-        },
-      }),
-    );
+        }),
+      ),
 
-    const stats = result && result[0] ? result[0] : null;
+      // B. Agrupar por Plataforma (Para descobrir a principal)
+      directus.request(
+        aggregate(COLLECTION, {
+          groupBy: ["plataforma"],
+          aggregate: { count: "*" },
+          query: {
+            filter: {
+              data_publicacao: { _between: [startOfMonth, endOfMonth] },
+            },
+          },
+        }),
+      ),
+
+      // C. Agrupar por Campanha (Para contar quantas ativas)
+      directus.request(
+        aggregate(COLLECTION, {
+          groupBy: ["campanha"],
+          aggregate: { count: "*" },
+          query: {
+            filter: {
+              data_publicacao: { _between: [startOfMonth, endOfMonth] },
+            },
+          },
+        }),
+      ),
+    ]);
+
+    const result = totais && totais[0] ? totais[0] : null;
+    const posts = Number(result?.count || 0);
+    const alcance = Number(result?.sum?.alcance || 0);
+    const interacoes = Number(result?.sum?.interacoes || 0);
+
+    // Cálculos Derivados
+    const engajamento =
+      alcance > 0 ? ((interacoes / alcance) * 100).toFixed(1) : "0";
+
+    // Encontrar plataforma top
+    // @ts-ignore
+    const topPlataformaItem = porPlataforma?.sort(
+      (a, b) => Number(b.count) - Number(a.count),
+    )[0];
+    const topPlataforma = topPlataformaItem
+      ? topPlataformaItem.plataforma
+      : "-";
+
+    // Contar campanhas (ignorando nulos/vazios)
+    // @ts-ignore
+    const campanhasAtivas = porCampanha?.filter((c) => c.campanha).length || 0;
 
     return {
-      postsMes: Number(stats?.count || 0),
-      alcanceMes: Number(stats?.sum?.alcance || 0),
-      interacoesMes: Number(stats?.sum?.interacoes || 0),
+      postsMes: posts,
+      alcanceMes: alcance,
+      interacoesMes: interacoes,
+      taxaEngajamento: engajamento,
+      campanhasAtivas: campanhasAtivas,
+      topPlataforma: topPlataforma,
     };
   } catch (error) {
     console.error("Erro stats:", error);
-    return { postsMes: 0, alcanceMes: 0, interacoesMes: 0 };
+    return {
+      postsMes: 0,
+      alcanceMes: 0,
+      interacoesMes: 0,
+      taxaEngajamento: "0",
+      campanhasAtivas: 0,
+      topPlataforma: "-",
+    };
   }
 }
