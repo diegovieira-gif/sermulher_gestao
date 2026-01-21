@@ -33,6 +33,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Loader2, AlertTriangle, ShieldAlert } from "lucide-react";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 
 interface InfratorFormProps {
   open: boolean;
@@ -161,6 +162,7 @@ export function InfratorForm({
                   <FormItem>
                     <FormLabel>
                       CPF <span className="text-destructive">*</span>
+                      <InfoTooltip text="Documento obrigatório para emissão de certificados oficiais." />
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -239,6 +241,7 @@ export function InfratorForm({
                     <FormLabel>
                       Nível de Periculosidade{" "}
                       <span className="text-destructive">*</span>
+                      <InfoTooltip text="Grau de risco identificado na triagem psicossocial." />
                     </FormLabel>
                     <FormControl>
                       <select
@@ -271,6 +274,7 @@ export function InfratorForm({
                     <FormLabel>
                       Tipos de Agressão{" "}
                       <span className="text-destructive">*</span>
+                      <InfoTooltip text="Selecione todas as formas de violência reportadas." />
                     </FormLabel>
                     <FormControl>
                       <div className="space-y-2 border rounded-md p-4">
@@ -316,6 +320,7 @@ export function InfratorForm({
                   <FormItem>
                     <FormLabel>
                       Status Legal <span className="text-destructive">*</span>
+                      <InfoTooltip text="Situação jurídica atual do processo." />
                     </FormLabel>
                     <FormControl>
                       <select

@@ -29,6 +29,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 
 interface LocalOption {
   id: number;
@@ -206,7 +207,10 @@ export function SalaForm({
                 name="facilitador"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Facilitador (Técnico)</FormLabel>
+                    <FormLabel>
+                      Facilitador (Técnico)
+                      <InfoTooltip text="Técnico responsável pela condução das sessões deste grupo." />
+                    </FormLabel>
                     <div className="relative">
                         <select
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -232,7 +236,10 @@ export function SalaForm({
               name="status"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Status</FormLabel>
+                  <FormLabel>
+                    Status
+                    <InfoTooltip text="Define a visibilidade do ciclo para chamadas e relatórios." />
+                  </FormLabel>
                   <div className="relative">
                     <select
                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
