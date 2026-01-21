@@ -117,7 +117,7 @@ export default function CampanhasPage() {
         // Schema específico para campanhas
         formSchema={undefined}
         // Campos customizados do formulário (Nome, Mês, Cor, Status)
-        renderFormFields={(form) => (
+        renderFormFields={(form: any) => (
           <>
             <FormField
               control={form.control}
