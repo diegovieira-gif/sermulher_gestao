@@ -31,7 +31,7 @@ export default async function CiclosPage() {
   return (
     <div className="p-6">
       <SalasClient
-        salas={salasResult.data || []}
+        salas={(salasResult.data as any) || []}
         locais={(optionsResult.data?.locais as any) || []}
         responsaveis={(optionsResult.data?.responsaveis as any) || []}
       />
