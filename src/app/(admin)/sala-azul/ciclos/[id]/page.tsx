@@ -48,9 +48,9 @@ export default async function ParticipantesPage({ params }: PageProps) {
         <TabsContent value="participantes">
           <ParticipantesClient
             sala={salaResult.data.sala as any}
-            participacoes={salaResult.data.participacoes || []}
+            participacoes={(salaResult.data.participacoes as any) || []}
             infratoresDisponiveis={
-              infratoresResult.success ? infratoresResult.data || [] : []
+              infratoresResult.success ? (infratoresResult.data as any) || [] : []
             }
           />
         </TabsContent>
@@ -58,7 +58,7 @@ export default async function ParticipantesPage({ params }: PageProps) {
           <SessoesClient
             salaId={salaResult.data.sala.id}
             sessoes={
-              sessoesResult.success ? sessoesResult.data || [] : []
+              sessoesResult.success ? (sessoesResult.data as any) || [] : []
             }
           />
         </TabsContent>
