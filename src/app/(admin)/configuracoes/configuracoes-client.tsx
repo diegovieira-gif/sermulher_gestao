@@ -238,7 +238,7 @@ export function ConfiguracoesClient({
               cor: item.cor || "#000000",
               status: item.status || "published",
             })}
-            renderFormFields={(form) => (
+            renderFormFields={(form: any) => (
               <>
                 <FormField
                   control={form.control}
