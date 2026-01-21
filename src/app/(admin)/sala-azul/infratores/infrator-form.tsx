@@ -92,7 +92,7 @@ export function InfratorForm({
     setIsSubmitting(true);
 
     try {
-      const result = await saveInfrator(data);
+      const result = await saveInfrator(data as any);
 
       if (result.success) {
         toast.success(result.message);
@@ -184,7 +184,7 @@ export function InfratorForm({
                       <Input 
                         type="date" 
                         {...field} 
-                        value={field.value || ''} 
+                        value={field.value ?? ''} 
                       />
                     </FormControl>
                     <FormMessage />

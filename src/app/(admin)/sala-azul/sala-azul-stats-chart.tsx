@@ -41,7 +41,7 @@ export function SalaAzulStatsChart({ data }: SalaAzulStatsChartProps) {
             borderRadius: "8px",
             color: "hsl(var(--foreground))",
           }}
-          formatter={(value: number) => [value, "Quantidade"]}
+          formatter={(value: any) => [value, "Quantidade"]}
           labelFormatter={(label) => `Nível: ${label}`}
         />
         <Legend

@@ -15,10 +15,10 @@ export const insertInfratorSchema = z.object({
   telefone: z.string().optional(), // Virtual - será salvo dentro de 'contato' (JSON)
   numero_processo: z.string().optional(),
   nivel_id: z.coerce
-    .number({ invalid_type_error: "Selecione o nível" })
+    .number()
     .positive(),
   status_legal_id: z.coerce
-    .number({ invalid_type_error: "Selecione o status" })
+    .number()
     .positive(),
   tipos_agressao_ids: z
     .array(z.number())

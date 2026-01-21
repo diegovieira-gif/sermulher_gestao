@@ -40,7 +40,7 @@ export default async function InfratorDetailsPage({ params }: PageProps) {
       <InfratorDetailsClient
         infrator={infratorResult.data}
         historico={historicoResult.success ? historicoResult.data : []}
-        options={optionsResult.data}
+        options={(optionsResult.data as any) || { niveis: [], statusLegal: [], tiposAgressao: [] }}
       />
     </div>
   );

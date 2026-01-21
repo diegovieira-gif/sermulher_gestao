@@ -31,7 +31,7 @@ export default async function InfratoresPage() {
     <div className="p-6">
       <InfratoresClient
         infratores={infratoresResult.data || []}
-        options={optionsResult.data}
+        options={(optionsResult.data as any) || { niveis: [], statusLegal: [], tiposAgressao: [] }}
       />
     </div>
   );

@@ -230,7 +230,7 @@ export function InfratorDetailsClient({
                         <Input 
                           type="date" 
                           {...field} 
-                          value={field.value || ''} 
+                          value={field.value ?? ''} 
                         />
                       </FormControl>
                       <FormMessage />

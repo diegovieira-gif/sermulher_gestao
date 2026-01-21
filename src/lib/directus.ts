@@ -34,10 +34,7 @@ export async function getAuthenticatedClient() {
 // Função para testar a conexão
 export async function testConnection() {
   try {
-    const result = await directus.request(
-      // Busca informações do servidor
-      fetch(`${directusUrl}/server/info`).then(res => res.json())
-    );
+    const result = await fetch(`${directusUrl}/server/info`).then(res => res.json());
     return { success: true, data: result };
   } catch (error) {
     return { 
