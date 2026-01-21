@@ -23,11 +23,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { SalaForm } from "./sala-form";
 import { deleteSala } from "./actions";
-import { Plus, Pencil, Trash2, Calendar, MapPin, Users, UserPlus } from "lucide-react";
+import { Plus, Pencil, Trash2, Calendar, MapPin, Users, UserPlus, User } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
-import type { StatusSala } from "./schemas";
-import { SalaAzulDB } from "@/types/database";
+import { SalaAzulDB } from "@/types/database"; // Usando o tipo do Catálogo
+import { StatusSala } from "./schemas";
 
 interface LocalOption {
   id: number;
@@ -41,7 +41,7 @@ interface ResponsavelOption {
 }
 
 interface SalasClientProps {
-  salas: SalaAzulDB[]; // Use o tipo correto aqui
+  salas: SalaAzulDB[];
   locais: LocalOption[];
   responsaveis: ResponsavelOption[];
 }
@@ -54,60 +54,43 @@ function formatarData(data: string | Date): string {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
+      timeZone: "UTC",
     }).format(date);
-  } catch {
-    return String(data);
+  } catch (e) {
+    return "";
   }
 }
 
-// Função para formatar período
-function formatarPeriodo(dataInicio: string | Date, dataTermino: string | Date): string {
-  const inicio = formatarData(dataInicio);
-  const termino = formatarData(dataTermino);
-  return `${inicio} até ${termino}`;
-}
-
-// Função para obter a variante do badge baseado no status
-function getBadgeVariant(status: StatusSala): "secondary" | "success" | "info" {
+// Helper para status
+function getStatusBadge(status: string) {
   switch (status) {
-    case "Planejada":
-      return "secondary"; // Cinza
-    case "Em Andamento":
-      return "success"; // Verde
-    case "Finalizada":
-      return "info"; // Azul
+    case StatusSala.PLANEJADA:
+      return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Planejada</Badge>;
+    case StatusSala.EM_ANDAMENTO:
+      return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Em Andamento</Badge>;
+    case StatusSala.FINALIZADA:
+      return <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-200">Finalizada</Badge>;
     default:
-      return "secondary";
+      return <Badge variant="outline">{status}</Badge>;
   }
 }
 
-// Função para formatar nome do responsável
-function formatNomeResponsavel(responsavel: any): string {
-  if (!responsavel) return "-";
-  const firstName = responsavel.first_name || "";
-  const lastName = responsavel.last_name || "";
-  const nomeCompleto = `${firstName} ${lastName}`.trim();
-  return nomeCompleto || "-";
-}
-
-export function SalasClient({
-  salas,
-  locais,
-  responsaveis,
-}: SalasClientProps) {
+export function SalasClient({ salas, locais, responsaveis }: SalasClientProps) {
   const [formOpen, setFormOpen] = useState(false);
   const [selectedSala, setSelectedSala] = useState<SalaAzulDB | null>(null);
+  
+  // Estados para exclusão
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [salaToDelete, setSalaToDelete] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleNew = () => {
-    setSelectedSala(null);
+  const handleEdit = (sala: SalaAzulDB) => {
+    setSelectedSala(sala);
     setFormOpen(true);
   };
 
-  const handleEdit = (sala: SalaAzulDB) => {
-    setSelectedSala(sala);
+  const handleNew = () => {
+    setSelectedSala(null);
     setFormOpen(true);
   };
 
@@ -118,23 +101,21 @@ export function SalasClient({
 
   const handleDeleteConfirm = async () => {
     if (!salaToDelete) return;
-
+    
     setIsDeleting(true);
     try {
       const result = await deleteSala(salaToDelete);
-
       if (result.success) {
         toast.success(result.message);
         setDeleteDialogOpen(false);
-        setSalaToDelete(null);
       } else {
         toast.error(result.error);
       }
     } catch (error) {
-      toast.error("Erro ao excluir ciclo");
-      console.error(error);
+      toast.error("Erro ao excluir ciclo.");
     } finally {
       setIsDeleting(false);
+      setSalaToDelete(null);
     }
   };
 
@@ -142,110 +123,101 @@ export function SalasClient({
     <>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Calendar className="h-8 w-8" />
-            Gestão de Ciclos (Salas Azul)
-          </h1>
+          <h1 className="text-3xl font-bold tracking-tight">Sala Azul - Ciclos</h1>
           <p className="text-muted-foreground">
-            Gerencie os ciclos de salas azul cadastrados no sistema
+            Gerencie os ciclos, turmas e participantes.
           </p>
         </div>
         <Button onClick={handleNew}>
-          <Plus className="mr-2 h-4 w-4" />
-          Novo Ciclo
+          <Plus className="mr-2 h-4 w-4" /> Novo Ciclo
         </Button>
       </div>
 
-      <div className="border rounded-lg">
+      <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Ciclo</TableHead>
+              <TableHead>Ciclo / Nome</TableHead>
               <TableHead>Período</TableHead>
-              <TableHead>Local</TableHead>
-              <TableHead>Responsável</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Participantes</TableHead>
+              <TableHead>Local</TableHead>
+              <TableHead>Facilitador</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {salas.length === 0 ? (
               <TableRow>
-                <TableCell
-                  colSpan={7}
-                  className="text-center text-muted-foreground"
-                >
-                  Nenhum ciclo cadastrado
+                <TableCell colSpan={6} className="h-24 text-center">
+                  Nenhum ciclo encontrado.
                 </TableCell>
               </TableRow>
             ) : (
               salas.map((sala) => (
                 <TableRow key={sala.id}>
-                  <TableCell className="font-medium">
-                    {sala.nome_ciclo}
-                  </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span>
-                        {formatarPeriodo(sala.data_inicio, sala.data_termino)}
-                      </span>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{sala.nome_ciclo}</span>
+                      <span className="text-xs text-muted-foreground">ID: {sala.id}</span>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span>{sala.local_id?.nome || "-"}</span>
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <Calendar className="mr-2 h-4 w-4" />
+                      {formatarData(sala.data_inicio)} - {formatarData(sala.data_termino)}
+                    </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-muted-foreground" />
+                    {getStatusBadge(sala.status)}
+                  </TableCell>
+                  
+                  {/* CORREÇÃO DE BUILD: Verificação de Tipo para Local */}
+                  <TableCell>
+                    <div className="flex items-center text-sm">
+                      <MapPin className="mr-2 h-4 w-4 text-muted-foreground" />
                       <span>
-                        {sala.responsavel_tecnico
-                          ? formatNomeResponsavel(sala.responsavel_tecnico)
+                        {typeof sala.local_id === "object" && sala.local_id
+                          ? sala.local_id.nome
                           : "-"}
                       </span>
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <Badge variant={getBadgeVariant(sala.status)}>
-                      {sala.status}
-                    </Badge>
-                  </TableCell>
+
+                  {/* CORREÇÃO DE BUILD: Verificação de Tipo para Facilitador */}
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="font-mono">
-                        {(() => {
-                          // Agora lemos o alias 'participacoes'
-                          const lista = sala.participacoes;
-                          const qtd = Array.isArray(lista) ? lista.length : 0;
-                          return qtd;
-                        })()}
-                      </Badge>
-                      <span className="text-muted-foreground text-xs">inscritos</span>
+                      <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+                        <User className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <span className="text-sm">
+                        {typeof sala.responsavel_tecnico === "object" && sala.responsavel_tecnico
+                          ? `${sala.responsavel_tecnico.first_name} ${sala.responsavel_tecnico.last_name || ""}`
+                          : "Não atribuído"}
+                      </span>
                     </div>
                   </TableCell>
+
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Link href={`/sala-azul/ciclos/${sala.id}`}>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          title="Gerenciar participantes"
-                        >
-                          <UserPlus className="h-4 w-4" />
+                        <Button variant="outline" size="sm" title="Gerenciar Participantes">
+                          <Users className="h-4 w-4 mr-2" />
+                          Participantes
                         </Button>
                       </Link>
-                      <Button
-                        variant="ghost"
-                        size="icon"
+                      
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
                         onClick={() => handleEdit(sala)}
                         title="Editar ciclo"
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
+                      
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
                         onClick={() => handleDeleteClick(sala.id)}
                         title="Excluir ciclo"
                       >
