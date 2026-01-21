@@ -20,7 +20,7 @@ export enum StatusParticipacao {
 export const insertSalaSchema = z.object({
   id: z.number().optional(),
   nome: z.string().min(3, "Nome obrigatório"),
-  local_id: z.coerce.number({ invalid_type_error: "Selecione o local" }).positive("Selecione o local"),
+  local_id: z.coerce.number().positive("Selecione o local"),
   data_inicio: z.string().min(1, "Data obrigatória"),
   data_fim: z.string().min(1, "Data obrigatória"),
   status: z.string().default(StatusSala.PLANEJADA),
