@@ -4,7 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -314,21 +320,20 @@ export function ParticipantesClient({
           <div className="flex-1">
             <Label htmlFor="infrator">Infrator</Label>
             <Select
-              id="infrator"
               value={selectedInfrator}
-              onChange={(e) => setSelectedInfrator(e.target.value)}
+              onValueChange={setSelectedInfrator}
               disabled={isAdding || infratoresDisponiveis.length === 0}
             >
-              <option value="">
-                {infratoresDisponiveis.length === 0
-                  ? "Nenhum infrator disponível"
-                  : "Selecione um infrator"}
-              </option>
-              {infratoresDisponiveis.map((infrator) => (
-                <option key={infrator.id} value={infrator.id}>
-                  {infrator.nome_completo} {infrator.cpf ? `- CPF: ${infrator.cpf}` : ""} {infrator.nivel_id ? `(${infrator.nivel_id.nome})` : ""}
-                </option>
-              ))}
+              <SelectTrigger id="infrator" className="w-full">
+                <SelectValue placeholder="Selecione um infrator" />
+              </SelectTrigger>
+              <SelectContent>
+                {infratoresDisponiveis.map((infrator: any) => (
+                  <SelectItem key={infrator.id} value={String(infrator.id)}>
+                    {infrator.nome_completo} - {infrator.cpf}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
           <Button
@@ -492,16 +497,17 @@ export function ParticipantesClient({
             </div>
             <div className="grid gap-2">
               <Label htmlFor="status">Status da Participação</Label>
-              <Select
-                id="status"
-                value={statusInput}
-                onChange={(e) => setStatusInput(e.target.value)}
-              >
-                {Object.values(StatusParticipacao).map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
+              <Select value={statusInput} onValueChange={setStatusInput}>
+                <SelectTrigger id="status" className="w-full">
+                  <SelectValue placeholder="Selecione um status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.values(StatusParticipacao).map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {status}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
             </div>
             <div className="grid gap-2">
