@@ -26,7 +26,8 @@ import { deleteSala } from "./actions";
 import { Plus, Pencil, Trash2, Calendar, MapPin, Users, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
-import type { Sala, StatusSala } from "./schemas";
+import type { StatusSala } from "./schemas";
+import { SalaAzulDB } from "@/types/database";
 
 interface LocalOption {
   id: number;
@@ -40,7 +41,7 @@ interface ResponsavelOption {
 }
 
 interface SalasClientProps {
-  salas: any[];
+  salas: SalaAzulDB[]; // Use o tipo correto aqui
   locais: LocalOption[];
   responsaveis: ResponsavelOption[];
 }
@@ -95,7 +96,7 @@ export function SalasClient({
   responsaveis,
 }: SalasClientProps) {
   const [formOpen, setFormOpen] = useState(false);
-  const [selectedSala, setSelectedSala] = useState<Sala | null>(null);
+  const [selectedSala, setSelectedSala] = useState<SalaAzulDB | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [salaToDelete, setSalaToDelete] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -105,7 +106,7 @@ export function SalasClient({
     setFormOpen(true);
   };
 
-  const handleEdit = (sala: any) => {
+  const handleEdit = (sala: SalaAzulDB) => {
     setSelectedSala(sala);
     setFormOpen(true);
   };

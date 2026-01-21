@@ -5,10 +5,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   insertSalaSchema,
-  type Sala,
-  type SalaFormValues,
+  type SalaFormValues, // Tipo do Formulário (Front)
   StatusSala,
 } from "./schemas";
+import { SalaAzulDB } from "@/types/database"; // Tipo do Banco (Back) - IMPORTADO DO CATÁLOGO
 import { saveSala } from "./actions";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,9 +27,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Loader2, Calendar, MapPin, Users } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 interface LocalOption {
   id: number;
@@ -45,7 +44,8 @@ interface ResponsavelOption {
 interface SalaFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  sala?: Sala | null;
+  // AQUI ESTAVA O ERRO: O componente recebe o tipo do BANCO, não do Schema
+  sala?: SalaAzulDB | null; 
   locais: LocalOption[];
   responsaveis: ResponsavelOption[];
 }
@@ -66,22 +66,29 @@ export function SalaForm({
       data_inicio: "",
       data_fim: "",
       status: StatusSala.PLANEJADA,
-      local_id: undefined,
+      local_id: 0,
       facilitador: "",
     },
   });
 
-  // Atualiza o formulário quando a sala muda
+  // MAPEAMENTO INTELIGENTE: Banco (snake_case) -> Formulário (camelCase/simples)
   useEffect(() => {
     if (sala) {
       form.reset({
         id: sala.id,
-        nome: sala.nome_ciclo, // Mapeamento Back -> Front
+        nome: sala.nome_ciclo, // Agora o TS sabe que 'nome_ciclo' existe em SalaAzulDB
         data_inicio: sala.data_inicio,
-        data_fim: sala.data_termino, // Mapeamento Back -> Front
-        status: sala.status as StatusSala,
-        local_id: typeof sala.local_id === 'object' ? sala.local_id?.id : sala.local_id,
-        facilitador: typeof sala.responsavel_tecnico === 'object' ? sala.responsavel_tecnico?.id : sala.responsavel_tecnico,
+        data_fim: sala.data_termino, // Agora o TS sabe que 'data_termino' existe
+        status: sala.status as StatusSala || StatusSala.PLANEJADA,
+        
+        // Lógica segura para extrair IDs de relacionamentos que podem vir como Objetos ou IDs
+        local_id: typeof sala.local_id === 'object' && sala.local_id !== null 
+          ? sala.local_id.id 
+          : (sala.local_id as number) || 0,
+          
+        facilitador: typeof sala.responsavel_tecnico === 'object' && sala.responsavel_tecnico !== null
+          ? sala.responsavel_tecnico.id
+          : (sala.responsavel_tecnico as string) || "",
       });
     } else {
       form.reset({
@@ -95,78 +102,56 @@ export function SalaForm({
     }
   }, [sala, form]);
 
-  const onSubmit = async (data: SalaFormValues) => {
+  async function onSubmit(data: SalaFormValues) {
     setIsSubmitting(true);
-
     try {
       const result = await saveSala(data);
-
       if (result.success) {
         toast.success(result.message);
         onOpenChange(false);
-        form.reset();
       } else {
         toast.error(result.error);
       }
     } catch (error) {
-      toast.error("Erro ao salvar ciclo");
-      console.error(error);
+      toast.error("Erro inesperado ao salvar.");
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  // Função para formatar nome do responsável
-  const formatNomeResponsavel = (responsavel: ResponsavelOption): string => {
-    const firstName = responsavel.first_name || "";
-    const lastName = responsavel.last_name || "";
-    return `${firstName} ${lastName}`.trim() || "Sem nome";
-  };
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            {sala ? "Editar Ciclo" : "Novo Ciclo"}
-          </DialogTitle>
+          <DialogTitle>{sala ? "Editar Ciclo" : "Novo Ciclo"}</DialogTitle>
           <DialogDescription>
-            Preencha os dados do ciclo abaixo. Campos marcados com * são
-            obrigatórios.
+            Preencha os dados do ciclo da Sala Azul.
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Nome do Ciclo */}
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="nome"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    Nome do Ciclo <span className="text-destructive">*</span>
-                  </FormLabel>
+                  <FormLabel>Nome do Ciclo</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ex: Ciclo 2024 - Janeiro" {...field} />
+                    <Input placeholder="Ex: Ciclo 2024.1" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            {/* Datas */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="data_inicio"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      Data de Início <span className="text-destructive">*</span>
-                    </FormLabel>
+                    <FormLabel>Data Início</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
@@ -180,11 +165,7 @@ export function SalaForm({
                 name="data_fim"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      Data de Término{" "}
-                      <span className="text-destructive">*</span>
-                    </FormLabel>
+                    <FormLabel>Data Término</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
@@ -194,36 +175,27 @@ export function SalaForm({
               />
             </div>
 
-            {/* Local e Responsável */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="local_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4" />
-                      Local <span className="text-destructive">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Select
-                        name={field.name}
-                        ref={field.ref}
-                        onBlur={field.onBlur}
-                        value={field.value?.toString() || ""}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          field.onChange(value ? Number(value) : undefined);
-                        }}
-                      >
-                        <option value="">Selecione um local</option>
-                        {locais.map((local) => (
-                          <option key={local.id} value={local.id.toString()}>
-                            {local.nome}
-                          </option>
-                        ))}
-                      </Select>
-                    </FormControl>
+                    <FormLabel>Local</FormLabel>
+                    <div className="relative">
+                        <select
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            value={field.value}
+                            onChange={(e) => field.onChange(Number(e.target.value))}
+                        >
+                            <option value={0}>Selecione um local</option>
+                            {locais.map((local) => (
+                            <option key={local.id} value={local.id}>
+                                {local.nome}
+                            </option>
+                            ))}
+                        </select>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -234,66 +206,50 @@ export function SalaForm({
                 name="facilitador"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center gap-2">
-                      <Users className="h-4 w-4" />
-                      Responsável Técnico{" "}
-                      <span className="text-destructive">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Select
-                        value={field.value || ""}
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        name={field.name}
-                      >
-                        <option value="">Selecione um responsável</option>
-                        {responsaveis.map((responsavel) => (
-                          <option key={responsavel.id} value={responsavel.id}>
-                            {formatNomeResponsavel(responsavel)}
-                          </option>
-                        ))}
-                      </Select>
-                    </FormControl>
+                    <FormLabel>Facilitador (Técnico)</FormLabel>
+                    <div className="relative">
+                        <select
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            value={field.value}
+                            onChange={field.onChange}
+                        >
+                            <option value="">Selecione um técnico</option>
+                            {responsaveis.map((resp) => (
+                            <option key={resp.id} value={resp.id}>
+                                {resp.first_name} {resp.last_name}
+                            </option>
+                            ))}
+                        </select>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
 
-            {/* Status */}
             <FormField
               control={form.control}
               name="status"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    Status <span className="text-destructive">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Select
-                      value={field.value}
-                      onChange={field.onChange}
-                      onBlur={field.onBlur}
-                      name={field.name}
+                  <FormLabel>Status</FormLabel>
+                  <div className="relative">
+                    <select
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        value={field.value}
+                        onChange={field.onChange}
                     >
-                      <option value={StatusSala.PLANEJADA}>
-                        {StatusSala.PLANEJADA}
-                      </option>
-                      <option value={StatusSala.EM_ANDAMENTO}>
-                        {StatusSala.EM_ANDAMENTO}
-                      </option>
-                      <option value={StatusSala.FINALIZADA}>
-                        {StatusSala.FINALIZADA}
-                      </option>
-                    </Select>
-                  </FormControl>
+                      <option value={StatusSala.PLANEJADA}>Planejada</option>
+                      <option value={StatusSala.EM_ANDAMENTO}>Em Andamento</option>
+                      <option value={StatusSala.FINALIZADA}>Finalizada</option>
+                    </select>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            {/* Botões */}
-            <div className="flex justify-end gap-4">
+            <div className="flex justify-end gap-4 pt-4">
               <Button
                 type="button"
                 variant="outline"
