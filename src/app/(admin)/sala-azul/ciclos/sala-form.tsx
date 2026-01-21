@@ -62,45 +62,35 @@ export function SalaForm({
   const form = useForm<SalaFormValues>({
     resolver: zodResolver(insertSalaSchema),
     defaultValues: {
-      nome_ciclo: "",
+      nome: "",
       data_inicio: "",
-      data_termino: "",
+      data_fim: "",
       status: StatusSala.PLANEJADA,
       local_id: undefined,
-      responsavel_tecnico: "",
+      facilitador: "",
     },
   });
 
   // Atualiza o formulário quando a sala muda
   useEffect(() => {
     if (sala) {
-      // Trata local_id: se vier como objeto do Directus, extrai o ID
-      const localId = sala?.local_id?.id || undefined;
-
-      // Trata responsável: se vier como objeto do Directus, extrai o ID (UUID)
-      const responsavelId =
-        typeof sala.responsavel_tecnico === "object" &&
-        sala.responsavel_tecnico !== null
-          ? sala.responsavel_tecnico.id
-          : sala.responsavel_tecnico;
-
       form.reset({
         id: sala.id,
-        nome_ciclo: sala.nome_ciclo,
+        nome: sala.nome_ciclo, // Mapeamento Back -> Front
         data_inicio: sala.data_inicio,
-        data_termino: sala.data_termino,
-        status: sala.status,
-        local_id: localId,
-        responsavel_tecnico: responsavelId || "",
+        data_fim: sala.data_termino, // Mapeamento Back -> Front
+        status: sala.status as StatusSala,
+        local_id: typeof sala.local_id === 'object' ? sala.local_id?.id : sala.local_id,
+        facilitador: typeof sala.responsavel_tecnico === 'object' ? sala.responsavel_tecnico?.id : sala.responsavel_tecnico,
       });
     } else {
       form.reset({
-        nome_ciclo: "",
+        nome: "",
         data_inicio: "",
-        data_termino: "",
+        data_fim: "",
         status: StatusSala.PLANEJADA,
-        local_id: undefined,
-        responsavel_tecnico: "",
+        local_id: 0,
+        facilitador: "",
       });
     }
   }, [sala, form]);
@@ -152,7 +142,7 @@ export function SalaForm({
             {/* Nome do Ciclo */}
             <FormField
               control={form.control}
-              name="nome_ciclo"
+              name="nome"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
@@ -187,7 +177,7 @@ export function SalaForm({
 
               <FormField
                 control={form.control}
-                name="data_termino"
+                name="data_fim"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="flex items-center gap-2">
@@ -241,7 +231,7 @@ export function SalaForm({
 
               <FormField
                 control={form.control}
-                name="responsavel_tecnico"
+                name="facilitador"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="flex items-center gap-2">

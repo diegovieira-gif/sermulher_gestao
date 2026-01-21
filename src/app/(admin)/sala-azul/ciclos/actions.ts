@@ -114,14 +114,14 @@ export async function saveSala(data: unknown) {
     // Valida os dados com Zod
     const validatedData = insertSalaSchema.parse(data);
 
-    // Prepara os dados para o Directus
+    // Prepara os dados para o Directus (Mapeamento Schema -> DB)
     const directusData: any = {
-      nome_ciclo: validatedData.nome_ciclo,
+      nome_ciclo: validatedData.nome,
       data_inicio: validatedData.data_inicio,
-      data_termino: validatedData.data_termino,
+      data_termino: validatedData.data_fim,
       status: validatedData.status,
       local_id: validatedData.local_id,
-      responsavel_tecnico: validatedData.responsavel_tecnico,
+      responsavel_tecnico: validatedData.facilitador, // O form envia o ID do usuário neste campo
     };
 
     if (validatedData.id) {

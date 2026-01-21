@@ -27,7 +27,9 @@ export const insertSalaSchema = z.object({
   facilitador: z.string().optional(),
 });
 
-export type InsertSala = z.infer<typeof insertSalaSchema>;
+// Tipos exportados para uso em Actions e Componentes
+export type Sala = z.infer<typeof insertSalaSchema>;
+export type SalaFormValues = z.input<typeof insertSalaSchema>;
 
 // --- SCHEMAS DE PARTICIPANTES ---
 

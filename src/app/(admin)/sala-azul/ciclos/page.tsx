@@ -32,8 +32,8 @@ export default async function CiclosPage() {
     <div className="p-6">
       <SalasClient
         salas={salasResult.data || []}
-        locais={optionsResult.data?.locais || []}
-        responsaveis={optionsResult.data?.responsaveis || []}
+        locais={(optionsResult.data?.locais as any) || []}
+        responsaveis={(optionsResult.data?.responsaveis as any) || []}
       />
     </div>
   );
