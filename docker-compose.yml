@@ -1,0 +1,29 @@
+services:
+  sermulher-frontend:
+    container_name: sermulher_frontend
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Endereço público do Directus (acessível pelo navegador do usuário)
+        - NEXT_PUBLIC_DIRECTUS_URL=http://192.168.0.115:8055
+    restart: always
+    ports:
+      - "3002:3000" # Acessar via http://192.168.0.115:3002
+    environment:
+      - NODE_ENV=production
+      # Endereço interno (acessível de dentro do container)
+      - DIRECTUS_API_URL=http://192.168.0.115:8055
+      - DIRECTUS_TOKEN=j8EbY77uaPAhN0ZnGrDvoQI9VUGTvl_7
+      # Gere uma string aleatória para segurança da sessão
+      - AUTH_SECRET=j8EbY77uaPAhN0ZnGrDvoQI9VUGTvl_7
+    # Opcional: Se quiser usar o Traefik no futuro, descomente abaixo:
+    # networks:
+    #   - traefik_public
+    # labels:
+    #   - "traefik.enable=true"
+    #   - "traefik.http.routers.sermulher.rule=Host(`gestao.seu-dominio.com`)"
+
+# networks:
+#   traefik_public:
+#     external: true
