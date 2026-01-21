@@ -1,240 +1,158 @@
 "use client";
 
+import { Activity, Users, Calendar, AlertCircle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { DashboardStats } from "./actions";
-import { Activity, GraduationCap, Users, Calendar } from "lucide-react";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
-interface Props {
+interface DashboardClientProps {
   stats: DashboardStats;
 }
 
-export function DashboardClient({ stats }: Props) {
+export function DashboardClient({ stats }: DashboardClientProps) {
+  const { kpis, atendimentosPorDia, proximosEventos } = stats;
+
+  // Formatar data para o gráfico
+  const chartData = atendimentosPorDia.map(item => ({
+    ...item,
+    label: new Date(item.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+  }));
+
   return (
     <div className="space-y-6">
-      {/* Cabeçalho */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Painel de Controle
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">
-          Indicadores unificados de todos os módulos do sistema
-        </p>
+      <div className="flex flex-col gap-1">
+        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <p className="text-muted-foreground">Visão geral dos indicadores e atividades recentes.</p>
       </div>
 
-      {/* Seção 1: KPIs - Grid Responsivo de 4 Cards */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {/* Card 1: Atendimentos do Mês */}
-        <KPICard
-          icon={<Activity className="h-6 w-6 text-pink-600" />}
-          title="Atendimentos"
-          value={stats.atendimentosMes}
-          subtitle="este mês"
-          iconBgColor="bg-pink-100 dark:bg-pink-900"
-        />
+      {/* KPIs Grid */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Atendimentos (Mês)</CardTitle>
+            <Activity className="h-4 w-4 text-pink-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{kpis.totalAtendimentosMes}</div>
+            <p className="text-xs text-muted-foreground">Registros no período atual</p>
+          </CardContent>
+        </Card>
 
-        {/* Card 2: Alunas Ativas */}
-        <KPICard
-          icon={<GraduationCap className="h-6 w-6 text-blue-600" />}
-          title="Alunas Ativas"
-          value={stats.alunasAtivas}
-          subtitle="matriculadas"
-          iconBgColor="bg-blue-100 dark:bg-blue-900"
-        />
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Mulheres Ativas</CardTitle>
+            <Users className="h-4 w-4 text-purple-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{kpis.mulheresAcompanhamento}</div>
+            <p className="text-xs text-muted-foreground">Em acompanhamento escolar/social</p>
+          </CardContent>
+        </Card>
 
-        {/* Card 3: Turmas Abertas */}
-        <KPICard
-          icon={<Users className="h-6 w-6 text-green-600" />}
-          title="Turmas Abertas"
-          value={stats.turmasAbertas}
-          subtitle="em andamento"
-          iconBgColor="bg-green-100 dark:bg-green-900"
-        />
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Próximos Eventos</CardTitle>
+            <Calendar className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{proximosEventos.length}</div>
+            <p className="text-xs text-muted-foreground">Agendados para breve</p>
+          </CardContent>
+        </Card>
 
-        {/* Card 4: Próximo Evento */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900">
-                  <Calendar className="h-6 w-6 text-purple-600" />
-                </div>
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Próximo Evento
-                </span>
-              </div>
-              {stats.proximoEvento ? (
-                <div className="mt-3">
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                    {stats.proximoEvento.nome}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {stats.proximoEvento.data}
-                  </p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-                    📍 {stats.proximoEvento.local}
-                  </p>
-                </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pendências</CardTitle>
+            <AlertCircle className="h-4 w-4 text-orange-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{kpis.demandaReprimida}</div>
+            <p className="text-xs text-muted-foreground">Casos aguardando ação</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Gráfico e Lista */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+        <Card className="col-span-4">
+          <CardHeader>
+            <CardTitle>Evolução de Atendimentos</CardTitle>
+          </CardHeader>
+          <CardContent className="pl-2">
+            <div className="h-[300px] w-full">
+              {chartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis 
+                      dataKey="label" 
+                      stroke="#888888" 
+                      fontSize={12} 
+                      tickLine={false} 
+                      axisLine={false} 
+                    />
+                    <YAxis 
+                      stroke="#888888" 
+                      fontSize={12} 
+                      tickLine={false} 
+                      axisLine={false} 
+                      tickFormatter={(value) => `${value}`} 
+                    />
+                    <Tooltip 
+                      cursor={{ fill: 'transparent' }}
+                      contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                    />
+                    <Bar dataKey="quantidade" fill="#ec4899" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
               ) : (
-                <p className="text-sm text-gray-400 dark:text-gray-500 mt-3">
-                  Nenhum evento agendado
+                <div className="flex h-full items-center justify-center text-muted-foreground">
+                  Sem dados suficientes para o gráfico
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="col-span-3">
+          <CardHeader>
+            <CardTitle>Agenda Recente</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-8">
+              {proximosEventos.length > 0 ? (
+                proximosEventos.map((evento) => (
+                  <div key={evento.id} className="flex items-center">
+                    <div className="ml-4 space-y-1">
+                      <p className="text-sm font-medium leading-none">{evento.titulo}</p>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>{new Date(evento.data_inicio).toLocaleDateString('pt-BR')}</span>
+                        {evento.tipo_id && (
+                          <Badge variant="secondary" className="text-[10px] h-5">
+                            {evento.tipo_id.nome}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  Nenhum evento próximo encontrado.
                 </p>
               )}
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Seção 2: Gráfico de Evolução */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-            Evolução de Atendimentos
-          </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Últimos 6 meses
-          </p>
-        </div>
-
-        <div className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart
-              data={stats.chartData}
-              margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-            >
-              <defs>
-                <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#ec4899" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#ec4899" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
-              <XAxis
-                dataKey="name"
-                className="text-xs text-gray-600 dark:text-gray-400"
-                tick={{ fill: "currentColor" }}
-              />
-              <YAxis
-                className="text-xs text-gray-600 dark:text-gray-400"
-                tick={{ fill: "currentColor" }}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "rgb(255, 255, 255)",
-                  border: "1px solid rgb(229, 231, 235)",
-                  borderRadius: "0.5rem",
-                }}
-                labelStyle={{ color: "rgb(17, 24, 39)", fontWeight: 600 }}
-              />
-              <Area
-                type="monotone"
-                dataKey="total"
-                stroke="#ec4899"
-                strokeWidth={2}
-                fillOpacity={1}
-                fill="url(#colorTotal)"
-                name="Atendimentos"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Seção 3: Cards Informativos Adicionais */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {/* Card de Resumo da Escola */}
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 rounded-xl shadow-sm border border-blue-200 dark:border-blue-800 p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 rounded-xl bg-white dark:bg-blue-950 shadow-sm">
-              <GraduationCap className="h-8 w-8 text-blue-600" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100">
-                Escola da Mulher
-              </h3>
-              <p className="text-sm text-blue-700 dark:text-blue-300">
-                Capacitação em andamento
-              </p>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                {stats.alunasAtivas}
-              </p>
-              <p className="text-xs text-blue-700 dark:text-blue-300">Alunas cursando</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                {stats.turmasAbertas}
-              </p>
-              <p className="text-xs text-blue-700 dark:text-blue-300">Turmas ativas</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Card de Resumo RMA */}
-        <div className="bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-950 dark:to-pink-900 rounded-xl shadow-sm border border-pink-200 dark:border-pink-800 p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 rounded-xl bg-white dark:bg-pink-950 shadow-sm">
-              <Activity className="h-8 w-8 text-pink-600" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-pink-900 dark:text-pink-100">
-                Rede Mulher Atendida
-              </h3>
-              <p className="text-sm text-pink-700 dark:text-pink-300">
-                Atendimentos realizados
-              </p>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-2xl font-bold text-pink-900 dark:text-pink-100">
-                {stats.atendimentosMes}
-              </p>
-              <p className="text-xs text-pink-700 dark:text-pink-300">Neste mês</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-pink-900 dark:text-pink-100">
-                {stats.chartData.reduce((sum, mes) => sum + mes.total, 0)}
-              </p>
-              <p className="text-xs text-pink-700 dark:text-pink-300">Últimos 6 meses</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ======= COMPONENTE AUXILIAR: KPI CARD =======
-
-interface KPICardProps {
-  icon: React.ReactNode;
-  title: string;
-  value: number;
-  subtitle: string;
-  iconBgColor: string;
-}
-
-function KPICard({ icon, title, value, subtitle, iconBgColor }: KPICardProps) {
-  return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className={`inline-flex p-3 rounded-xl ${iconBgColor} mb-4`}>
-            {icon}
-          </div>
-          <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
-            {title}
-          </p>
-          <p className="text-3xl font-bold text-gray-900 dark:text-white">
-            {value}
-          </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            {subtitle}
-          </p>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
