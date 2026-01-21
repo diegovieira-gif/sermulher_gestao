@@ -330,7 +330,10 @@ export function TramitacoesClient({
                 name="tipo_demanda"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tipo de Demanda *</FormLabel>
+                    <FormLabel>
+                      Tipo de Demanda *
+                      <InfoTooltip text="Classificação do tipo de demanda ou solicitação do atendimento." />
+                    </FormLabel>
                     <FormControl>
                       <Select
                         value={field.value || ""}
@@ -358,7 +361,10 @@ export function TramitacoesClient({
                 name="setor_responsavel"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Setor Responsável</FormLabel>
+                    <FormLabel>
+                      Setor Responsável
+                      <InfoTooltip text="Setor ou equipe responsável pelo acompanhamento desta etapa." />
+                    </FormLabel>
                     <FormControl>
                       <Select
                         value={field.value || ""}
@@ -386,7 +392,10 @@ export function TramitacoesClient({
                 name="status_etapa"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Status da Etapa</FormLabel>
+                    <FormLabel>
+                      Status da Etapa
+                      <InfoTooltip text="Situação atual da etapa de tramitação (Em Análise, Em Andamento, Concluída, etc)." />
+                    </FormLabel>
                     <FormControl>
                       <Select
                         value={field.value || ""}

@@ -35,6 +35,7 @@ import {
 import { saveSessao, deleteSessao, getChamada, saveChamada } from "./actions";
 import { Plus, Pencil, Trash2, Calendar, CheckSquare, User } from "lucide-react";
 import { toast } from "sonner";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import type { SessaoData } from "./schemas";
 
 interface Sessao {
@@ -241,8 +242,14 @@ export function SessoesClient({ salaId, sessoes }: SessoesClientProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Data</TableHead>
-              <TableHead>Tema</TableHead>
+              <TableHead>
+                Data
+                <InfoTooltip text="Data em que a sessão foi ou será realizada." />
+              </TableHead>
+              <TableHead>
+                Tema
+                <InfoTooltip text="Tema ou assunto abordado na sessão." />
+              </TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>

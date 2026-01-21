@@ -59,6 +59,7 @@ import {
 import { toast } from "sonner";
 import { StatusParticipacao } from "./schemas";
 import Link from "next/link";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 
 interface Participante {
   id: number;
@@ -351,12 +352,30 @@ export function ParticipantesClient({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Infrator</TableHead>
-              <TableHead>Nível de Risco</TableHead>
-              <TableHead>Status Legal</TableHead>
-              <TableHead>Contato</TableHead>
-              <TableHead>Frequência</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>
+                Infrator
+                <InfoTooltip text="Nome completo do participante do ciclo." />
+              </TableHead>
+              <TableHead>
+                Nível de Risco
+                <InfoTooltip text="Grau de periculosidade identificado na triagem." />
+              </TableHead>
+              <TableHead>
+                Status Legal
+                <InfoTooltip text="Situação jurídica atual do processo." />
+              </TableHead>
+              <TableHead>
+                Contato
+                <InfoTooltip text="Telefone para comunicação com o infrator." />
+              </TableHead>
+              <TableHead>
+                Frequência
+                <InfoTooltip text="Percentual de presença nas sessões realizadas." />
+              </TableHead>
+              <TableHead>
+                Status
+                <InfoTooltip text="Situação da participação no ciclo (Ativo, Inativo, Concluído)." />
+              </TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>

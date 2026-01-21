@@ -50,6 +50,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { saveAuxItem, deleteAuxItem, type ConfigCollection } from "./actions";
 import { Badge } from "@/components/ui/badge";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 
 interface GenericCrudTableProps {
   collectionName: ConfigCollection | string;
@@ -218,7 +219,12 @@ export function GenericCrudTable({
               {columns?.map((col) => (
                 <TableHead key={col.key}>{col.label}</TableHead>
               ))}
-              {showStatus && <TableHead>Status</TableHead>}
+              {showStatus && (
+                <TableHead>
+                  Status
+                  <InfoTooltip text="Situação atual do item no sistema (Ativo, Inativo, Arquivado)." />
+                </TableHead>
+              )}
               <TableHead className="w-[100px] text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -305,7 +311,10 @@ export function GenericCrudTable({
                     name="nome"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Nome</FormLabel>
+                        <FormLabel>
+                          Nome
+                          <InfoTooltip text="Nome identificador do item de configuração." />
+                        </FormLabel>
                         <FormControl>
                           <Input placeholder="Ex: Item A" {...field} />
                         </FormControl>
@@ -320,7 +329,10 @@ export function GenericCrudTable({
                       name="grupo_rma"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Grupo do RMA (Relatório)</FormLabel>
+                          <FormLabel>
+                            Grupo do RMA (Relatório)
+                            <InfoTooltip text="Grupo de classificação para o Relatório Mensal de Atendimentos (RMA)." />
+                          </FormLabel>
                           <FormControl>
                             <Select
                               value={field.value}
@@ -386,7 +398,10 @@ export function GenericCrudTable({
                       name="status"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Status</FormLabel>
+                          <FormLabel>
+                            Status
+                            <InfoTooltip text="Define se o item está ativo, inativo ou arquivado no sistema." />
+                          </FormLabel>
                           <FormControl>
                             <Select
                               value={field.value}

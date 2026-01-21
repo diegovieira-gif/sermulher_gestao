@@ -41,6 +41,7 @@ import { FrequenciaClient } from "./frequencia-client";
 import { ResultadosClient } from "./resultados-client";
 import { toast } from "sonner";
 import { ArrowLeft, Plus, Trash2, Loader2, Users, ClipboardList, Award } from "lucide-react";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 
 interface TurmaDetalhesClientProps {
   turma: any;
@@ -265,11 +266,26 @@ export function TurmaDetalhesClient({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>CPF</TableHead>
-                    <TableHead>Data Matrícula</TableHead>
-                    <TableHead>Telefone</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>
+                      Nome
+                      <InfoTooltip text="Nome completo da aluna matriculada." />
+                    </TableHead>
+                    <TableHead>
+                      CPF
+                      <InfoTooltip text="Cadastro de Pessoa Física da aluna." />
+                    </TableHead>
+                    <TableHead>
+                      Data Matrícula
+                      <InfoTooltip text="Data em que a aluna foi matriculada na turma." />
+                    </TableHead>
+                    <TableHead>
+                      Telefone
+                      <InfoTooltip text="Número de telefone para contato." />
+                    </TableHead>
+                    <TableHead>
+                      Status
+                      <InfoTooltip text="Situação da matrícula (Ativa, Inativa, Concluída)." />
+                    </TableHead>
                     <TableHead className="w-[100px] text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>

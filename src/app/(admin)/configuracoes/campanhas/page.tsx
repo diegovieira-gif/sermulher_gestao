@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 
 const MESES = [
   "Janeiro",
@@ -138,7 +139,10 @@ export default function CampanhasPage() {
               name="mes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Mês de Referência</FormLabel>
+                  <FormLabel>
+                    Mês de Referência
+                    <InfoTooltip text="Mês de referência da campanha para organização e relatórios." />
+                  </FormLabel>
                   <FormControl>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger>
@@ -188,7 +192,10 @@ export default function CampanhasPage() {
               name="status"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Status</FormLabel>
+                  <FormLabel>
+                    Status
+                    <InfoTooltip text="Define se a campanha está ativa ou inativa no sistema." />
+                  </FormLabel>
                   <FormControl>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger>

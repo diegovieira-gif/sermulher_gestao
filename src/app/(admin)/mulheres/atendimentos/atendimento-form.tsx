@@ -38,6 +38,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 
 interface AtendimentoFormProps {
   open: boolean;
@@ -242,7 +243,10 @@ export function AtendimentoForm({
                 name="beneficiaria"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Beneficiária *</FormLabel>
+                    <FormLabel>
+                      Beneficiária *
+                      <InfoTooltip text="Selecione a mulher assistida que está recebendo o atendimento." />
+                    </FormLabel>
                     <FormControl>
                       <BeneficiariaComboBox
                         options={beneficiariasOptions}
@@ -267,7 +271,10 @@ export function AtendimentoForm({
                   name="origem_id"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Origem</FormLabel>
+                      <FormLabel>
+                        Origem
+                        <InfoTooltip text="Canal ou local de onde veio o encaminhamento (CRAS, Delegacia, etc)." />
+                      </FormLabel>
                       <FormControl>
                         <Select
                           value={field.value ? String(field.value) : ""}
@@ -297,7 +304,10 @@ export function AtendimentoForm({
                   name="prioridade_id"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Prioridade</FormLabel>
+                      <FormLabel>
+                        Prioridade
+                        <InfoTooltip text="Nível de urgência do atendimento (Alta, Média, Baixa)." />
+                      </FormLabel>
                       <FormControl>
                         <Select
                           value={field.value ? String(field.value) : ""}
@@ -343,7 +353,10 @@ export function AtendimentoForm({
                   name="status"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Status</FormLabel>
+                      <FormLabel>
+                        Status
+                        <InfoTooltip text="Situação atual do atendimento (Aberto, Em Andamento, Concluído, Cancelado)." />
+                      </FormLabel>
                       <FormControl>
                         <Select
                           value={field.value || StatusAtendimento.ABERTO}
@@ -372,7 +385,10 @@ export function AtendimentoForm({
                 name="encaminhamento_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Encaminhamento (config)</FormLabel>
+                    <FormLabel>
+                      Encaminhamento (config)
+                      <InfoTooltip text="Tipo de encaminhamento para o Relatório Mensal de Atendimentos (RMA)." />
+                    </FormLabel>
                     <FormControl>
                       <Select
                         value={field.value ? String(field.value) : ""}

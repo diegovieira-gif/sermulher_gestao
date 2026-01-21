@@ -32,6 +32,7 @@ import { EventoForm } from "./evento-form";
 import { deleteEvento } from "./actions";
 import { Plus, Edit, Trash2, Calendar, Repeat } from "lucide-react";
 import { toast } from "sonner";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { statusEventoEnum } from "./schemas";
 import type { Evento } from "./schemas";
 
@@ -227,11 +228,26 @@ export function EventosClient({ eventos, tiposEventoOptions }: EventosClientProp
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Título</TableHead>
-              <TableHead>Data</TableHead>
-              <TableHead>Tipo</TableHead>
-              <TableHead>Situação</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>
+                Título
+                <InfoTooltip text="Nome ou título identificador do evento." />
+              </TableHead>
+              <TableHead>
+                Data
+                <InfoTooltip text="Data de início do evento." />
+              </TableHead>
+              <TableHead>
+                Tipo
+                <InfoTooltip text="Categoria do evento conforme configurações." />
+              </TableHead>
+              <TableHead>
+                Situação
+                <InfoTooltip text="Status atual do evento (Planejado, Em Andamento, Concluído, Cancelado)." />
+              </TableHead>
+              <TableHead>
+                Status
+                <InfoTooltip text="Situação de publicação do evento no sistema." />
+              </TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>

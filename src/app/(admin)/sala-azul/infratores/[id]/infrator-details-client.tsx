@@ -36,6 +36,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 
 interface InfratorDetailsClientProps {
   infrator: any;
@@ -191,6 +192,7 @@ export function InfratorDetailsClient({
                     <FormItem>
                       <FormLabel>
                         Nome Completo <span className="text-destructive">*</span>
+                        <InfoTooltip text="Nome completo do infrator conforme documentos oficiais." />
                       </FormLabel>
                       <FormControl>
                         <Input placeholder="João Silva" {...field} />
@@ -207,6 +209,7 @@ export function InfratorDetailsClient({
                     <FormItem>
                       <FormLabel>
                         CPF <span className="text-destructive">*</span>
+                        <InfoTooltip text="Cadastro de Pessoa Física do infrator. Documento obrigatório para emissão de certificados oficiais." />
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -225,7 +228,10 @@ export function InfratorDetailsClient({
                   name="data_nascimento"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Data de Nascimento</FormLabel>
+                      <FormLabel>
+                        Data de Nascimento
+                        <InfoTooltip text="Data de nascimento do infrator para cálculo de idade e relatórios." />
+                      </FormLabel>
                       <FormControl>
                         <Input 
                           type="date" 
@@ -243,7 +249,10 @@ export function InfratorDetailsClient({
                   name="telefone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Telefone</FormLabel>
+                      <FormLabel>
+                        Telefone
+                        <InfoTooltip text="Número de telefone para contato e comunicação." />
+                      </FormLabel>
                       <FormControl>
                         <Input placeholder="(00) 00000-0000" {...field} />
                       </FormControl>
@@ -257,7 +266,10 @@ export function InfratorDetailsClient({
                   name="numero_processo"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Número do Processo</FormLabel>
+                      <FormLabel>
+                        Número do Processo
+                        <InfoTooltip text="Número do processo judicial relacionado ao caso." />
+                      </FormLabel>
                       <FormControl>
                         <Input
                           placeholder="0000000-00.0000.0.00.0000"
@@ -282,6 +294,7 @@ export function InfratorDetailsClient({
                       <FormLabel>
                         Nível de Periculosidade{" "}
                         <span className="text-destructive">*</span>
+                        <InfoTooltip text="Grau de risco identificado na triagem psicossocial." />
                       </FormLabel>
                       <FormControl>
                         <select
@@ -359,6 +372,7 @@ export function InfratorDetailsClient({
                     <FormItem>
                       <FormLabel>
                         Status Legal <span className="text-destructive">*</span>
+                        <InfoTooltip text="Situação jurídica atual do processo." />
                       </FormLabel>
                       <FormControl>
                         <select
@@ -419,11 +433,26 @@ export function InfratorDetailsClient({
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Nome do Ciclo</TableHead>
-                      <TableHead>Período</TableHead>
-                      <TableHead>Situação</TableHead>
-                      <TableHead>Status Participação</TableHead>
-                      <TableHead>Frequência</TableHead>
+                      <TableHead>
+                        Nome do Ciclo
+                        <InfoTooltip text="Identificação do ciclo de atendimento." />
+                      </TableHead>
+                      <TableHead>
+                        Período
+                        <InfoTooltip text="Intervalo de datas do ciclo." />
+                      </TableHead>
+                      <TableHead>
+                        Situação
+                        <InfoTooltip text="Status atual do ciclo (Planejada, Em Andamento, Finalizada)." />
+                      </TableHead>
+                      <TableHead>
+                        Status Participação
+                        <InfoTooltip text="Situação da participação do infrator no ciclo." />
+                      </TableHead>
+                      <TableHead>
+                        Frequência
+                        <InfoTooltip text="Percentual de presença nas sessões do ciclo." />
+                      </TableHead>
                       <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>

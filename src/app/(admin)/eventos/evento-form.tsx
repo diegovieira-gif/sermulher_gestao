@@ -39,6 +39,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 
 type TipoEventoOption = { id: number; nome: string; icone?: string };
 
@@ -167,7 +168,10 @@ export function EventoForm({
               name="nome"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Título *</FormLabel>
+                  <FormLabel>
+                    Título *
+                    <InfoTooltip text="Nome ou título identificador do evento ou campanha." />
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="Ex: Campanha de Doação" {...field} />
                   </FormControl>
@@ -223,7 +227,10 @@ export function EventoForm({
                 name="status"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Status</FormLabel>
+                    <FormLabel>
+                      Status
+                      <InfoTooltip text="Situação atual do evento (Planejado, Em Andamento, Concluído, Cancelado)." />
+                    </FormLabel>
                     <FormControl>
                       <Select
                         value={field.value || "planejado"}
@@ -273,7 +280,10 @@ export function EventoForm({
                 name="data_fim"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Data de Fim *</FormLabel>
+                    <FormLabel>
+                      Data de Fim *
+                      <InfoTooltip text="Data e hora de término do evento." />
+                    </FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
@@ -291,7 +301,10 @@ export function EventoForm({
                 name="recorrencia"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Recorrência</FormLabel>
+                    <FormLabel>
+                      Recorrência
+                      <InfoTooltip text="Define se o evento se repete (Diário, Semanal, Mensal) ou não." />
+                    </FormLabel>
                     <FormControl>
                       <Select
                         value={field.value || "nao_recorrente"}
@@ -323,7 +336,10 @@ export function EventoForm({
                 name="local"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Local</FormLabel>
+                    <FormLabel>
+                      Local
+                      <InfoTooltip text="Local físico onde o evento será realizado." />
+                    </FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Ex: Centro de Referência"
@@ -344,7 +360,10 @@ export function EventoForm({
                 name="tipo"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Categoria</FormLabel>
+                    <FormLabel>
+                      Categoria
+                      <InfoTooltip text="Classificação geral do evento (Evento, Campanha, etc)." />
+                    </FormLabel>
                     <FormControl>
                       <Select
                         value={field.value || "evento"}
@@ -376,7 +395,10 @@ export function EventoForm({
                 name="publico_alvo"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Público Alvo</FormLabel>
+                    <FormLabel>
+                      Público Alvo
+                      <InfoTooltip text="Grupo de pessoas para quem o evento é direcionado." />
+                    </FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Ex: Mulheres, Famílias..."
@@ -395,7 +417,10 @@ export function EventoForm({
               name="descricao"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Descrição</FormLabel>
+                  <FormLabel>
+                    Descrição
+                    <InfoTooltip text="Descrição detalhada do evento, objetivos e informações relevantes." />
+                  </FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Descreva o evento ou campanha em detalhes..."

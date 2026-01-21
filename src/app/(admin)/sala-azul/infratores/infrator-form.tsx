@@ -146,6 +146,7 @@ export function InfratorForm({
                   <FormItem>
                     <FormLabel>
                       Nome Completo <span className="text-destructive">*</span>
+                      <InfoTooltip text="Nome completo do infrator conforme documentos oficiais." />
                     </FormLabel>
                     <FormControl>
                       <Input placeholder="João Silva" {...field} />
@@ -181,7 +182,10 @@ export function InfratorForm({
                 name="data_nascimento"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Data de Nascimento</FormLabel>
+                    <FormLabel>
+                      Data de Nascimento
+                      <InfoTooltip text="Data de nascimento do infrator para cálculo de idade e relatórios." />
+                    </FormLabel>
                     <FormControl>
                       <Input 
                         type="date" 
@@ -199,7 +203,10 @@ export function InfratorForm({
                 name="telefone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Telefone</FormLabel>
+                    <FormLabel>
+                      Telefone
+                      <InfoTooltip text="Número de telefone para contato e comunicação." />
+                    </FormLabel>
                     <FormControl>
                       <Input
                         placeholder="(00) 00000-0000"
@@ -216,7 +223,10 @@ export function InfratorForm({
                 name="numero_processo"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Número do Processo</FormLabel>
+                    <FormLabel>
+                      Número do Processo
+                      <InfoTooltip text="Número do processo judicial relacionado ao caso." />
+                    </FormLabel>
                     <FormControl>
                       <Input
                         placeholder="0000000-00.0000.0.00.0000"

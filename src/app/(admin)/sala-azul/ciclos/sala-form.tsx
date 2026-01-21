@@ -137,7 +137,10 @@ export function SalaForm({
               name="nome"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nome do Ciclo</FormLabel>
+                  <FormLabel>
+                    Nome do Ciclo
+                    <InfoTooltip text="Identificação única do ciclo de atendimento na Sala Azul." />
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="Ex: Ciclo 2024.1" {...field} />
                   </FormControl>
@@ -152,7 +155,10 @@ export function SalaForm({
                 name="data_inicio"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Data Início</FormLabel>
+                    <FormLabel>
+                      Data Início
+                      <InfoTooltip text="Data de início do ciclo de atendimento." />
+                    </FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
@@ -182,7 +188,10 @@ export function SalaForm({
                 name="local_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Local</FormLabel>
+                    <FormLabel>
+                      Local
+                      <InfoTooltip text="Local físico onde as sessões do ciclo serão realizadas." />
+                    </FormLabel>
                     <div className="relative">
                         <select
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"

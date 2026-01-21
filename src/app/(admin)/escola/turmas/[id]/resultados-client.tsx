@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Printer, CheckCircle2, XCircle } from "lucide-react";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import type { MatriculaComPerformance } from "../../actions";
 
 interface ResultadosClientProps {
@@ -48,10 +49,22 @@ export function ResultadosClient({ performance }: ResultadosClientProps) {
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead>Nome da Aluna</TableHead>
-              <TableHead className="text-right">Presenças</TableHead>
-              <TableHead className="text-right">Frequência</TableHead>
-              <TableHead className="text-center">Status</TableHead>
+              <TableHead>
+                Nome da Aluna
+                <InfoTooltip text="Nome completo da aluna matriculada." />
+              </TableHead>
+              <TableHead className="text-right">
+                Presenças
+                <InfoTooltip text="Número total de presenças registradas." />
+              </TableHead>
+              <TableHead className="text-right">
+                Frequência
+                <InfoTooltip text="Percentual de frequência nas aulas." />
+              </TableHead>
+              <TableHead className="text-center">
+                Status
+                <InfoTooltip text="Situação da aluna na turma (Aprovada, Reprovada, Em Andamento)." />
+              </TableHead>
               <TableHead className="text-center">Ação</TableHead>
             </TableRow>
           </TableHeader>

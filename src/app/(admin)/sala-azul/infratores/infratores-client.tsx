@@ -26,6 +26,7 @@ import { deleteInfrator } from "./actions";
 import { Plus, Pencil, Trash2, AlertTriangle, ShieldAlert, Eye } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import type { Infrator } from "./schemas";
 import type {
   NivelOption,
@@ -175,13 +176,34 @@ export function InfratoresClient({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>CPF</TableHead>
-              <TableHead>Info Pessoal</TableHead>
-              <TableHead>Status Legal</TableHead>
-              <TableHead>Nível de Periculosidade</TableHead>
-              <TableHead>Tipos de Agressão</TableHead>
-              <TableHead>Número do Processo</TableHead>
+              <TableHead>
+                Nome
+                <InfoTooltip text="Nome completo do infrator." />
+              </TableHead>
+              <TableHead>
+                CPF
+                <InfoTooltip text="Cadastro de Pessoa Física do infrator." />
+              </TableHead>
+              <TableHead>
+                Info Pessoal
+                <InfoTooltip text="Data de nascimento e telefone de contato." />
+              </TableHead>
+              <TableHead>
+                Status Legal
+                <InfoTooltip text="Situação jurídica atual do processo." />
+              </TableHead>
+              <TableHead>
+                Nível de Periculosidade
+                <InfoTooltip text="Grau de risco identificado na triagem psicossocial." />
+              </TableHead>
+              <TableHead>
+                Tipos de Agressão
+                <InfoTooltip text="Formas de violência reportadas no caso." />
+              </TableHead>
+              <TableHead>
+                Número do Processo
+                <InfoTooltip text="Número do processo judicial relacionado." />
+              </TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>

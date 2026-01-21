@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Eye } from "lucide-react";
 import { z } from "zod";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { deleteTurma, saveTurma, type TurmaPayload } from "../actions";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -144,7 +145,10 @@ export function TurmasClient({ turmas, cursosOptions }: TurmasClientProps) {
             name="nome"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Nome da Turma</FormLabel>
+                <FormLabel>
+                  Nome da Turma
+                  <InfoTooltip text="Identificação da turma para organização e controle." />
+                </FormLabel>
                 <FormControl>
                   <Input placeholder="Ex: Manhã A" {...field} />
                 </FormControl>
@@ -186,7 +190,10 @@ export function TurmasClient({ turmas, cursosOptions }: TurmasClientProps) {
             name="instrutor"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Instrutor</FormLabel>
+                <FormLabel>
+                  Instrutor
+                  <InfoTooltip text="Nome do profissional responsável pela turma." />
+                </FormLabel>
                 <FormControl>
                   <Input placeholder="Nome do instrutor" {...field} />
                 </FormControl>
@@ -200,7 +207,10 @@ export function TurmasClient({ turmas, cursosOptions }: TurmasClientProps) {
             name="vagas"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Vagas</FormLabel>
+                <FormLabel>
+                  Vagas
+                  <InfoTooltip text="Número máximo de alunos que podem ser matriculados na turma." />
+                </FormLabel>
                 <FormControl>
                   <Input
                     type="number"
@@ -235,7 +245,10 @@ export function TurmasClient({ turmas, cursosOptions }: TurmasClientProps) {
               name="data_fim"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Data de Fim</FormLabel>
+                  <FormLabel>
+                    Data de Fim
+                    <InfoTooltip text="Data prevista de encerramento das aulas." />
+                  </FormLabel>
                   <FormControl>
                     <Input type="date" {...field} />
                   </FormControl>
@@ -250,7 +263,10 @@ export function TurmasClient({ turmas, cursosOptions }: TurmasClientProps) {
             name="status"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Status</FormLabel>
+                <FormLabel>
+                  Status
+                  <InfoTooltip text="Situação atual da turma (Planejada, Em Andamento, Finalizada, Cancelada)." />
+                </FormLabel>
                 <FormControl>
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger>

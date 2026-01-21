@@ -28,6 +28,7 @@ import { toast } from "sonner";
 import Link from "next/link";
 import { SalaAzulDB } from "@/types/database"; // Usando o tipo do Catálogo
 import { StatusSala } from "./schemas";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 
 interface LocalOption {
   id: number;
@@ -137,11 +138,26 @@ export function SalasClient({ salas, locais, responsaveis }: SalasClientProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Ciclo / Nome</TableHead>
-              <TableHead>Período</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Local</TableHead>
-              <TableHead>Facilitador</TableHead>
+              <TableHead>
+                Ciclo / Nome
+                <InfoTooltip text="Identificação única do ciclo de atendimento." />
+              </TableHead>
+              <TableHead>
+                Período
+                <InfoTooltip text="Intervalo de datas de início e término do ciclo." />
+              </TableHead>
+              <TableHead>
+                Status
+                <InfoTooltip text="Situação atual do ciclo (Planejada, Em Andamento, Finalizada)." />
+              </TableHead>
+              <TableHead>
+                Local
+                <InfoTooltip text="Local físico onde as sessões são realizadas." />
+              </TableHead>
+              <TableHead>
+                Facilitador
+                <InfoTooltip text="Técnico responsável pela condução das sessões." />
+              </TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>

@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { z } from "zod";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 
 interface ConfiguracoesClientProps {
   origens: any[];
@@ -245,7 +246,10 @@ export function ConfiguracoesClient({
                   name="nome"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nome</FormLabel>
+                      <FormLabel>
+                        Nome
+                        <InfoTooltip text="Nome identificador da campanha temática." />
+                      </FormLabel>
                       <FormControl>
                         <Input
                           placeholder="Ex: Campanha Outubro Rosa"
@@ -262,7 +266,10 @@ export function ConfiguracoesClient({
                   name="mes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Mês</FormLabel>
+                      <FormLabel>
+                        Mês
+                        <InfoTooltip text="Mês de referência da campanha para organização e relatórios." />
+                      </FormLabel>
                       <FormControl>
                         <Select
                           value={field.value}
@@ -290,7 +297,10 @@ export function ConfiguracoesClient({
                   name="cor"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Cor</FormLabel>
+                      <FormLabel>
+                        Cor
+                        <InfoTooltip text="Cor hexadecimal para identificação visual da campanha em gráficos e relatórios." />
+                      </FormLabel>
                       <div className="flex gap-2">
                         <FormControl>
                           <Input
@@ -315,7 +325,10 @@ export function ConfiguracoesClient({
                   name="status"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Status</FormLabel>
+                      <FormLabel>
+                        Status
+                        <InfoTooltip text="Define se a campanha está ativa, inativa ou arquivada no sistema." />
+                      </FormLabel>
                       <FormControl>
                         <Select
                           value={field.value}

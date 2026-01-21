@@ -20,6 +20,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { deleteCurso, saveCurso, type CursoPayload } from "../actions";
 import { z } from "zod";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 
 const AREA_LABEL: Record<string, string> = {
   beleza: "Beleza",
@@ -112,7 +113,10 @@ export function CursosClient({ cursos }: CursosClientProps) {
             name="nome"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Nome</FormLabel>
+                <FormLabel>
+                  Nome
+                  <InfoTooltip text="Nome identificador do curso oferecido." />
+                </FormLabel>
                 <FormControl>
                   <Input placeholder="Ex: Curso de Inclusão Digital" {...field} />
                 </FormControl>
@@ -126,7 +130,10 @@ export function CursosClient({ cursos }: CursosClientProps) {
             name="area_atuacao"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Área de Atuação</FormLabel>
+                <FormLabel>
+                  Área de Atuação
+                  <InfoTooltip text="Categoria ou área de conhecimento do curso." />
+                </FormLabel>
                 <FormControl>
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger>
@@ -152,7 +159,10 @@ export function CursosClient({ cursos }: CursosClientProps) {
             name="carga_horaria"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Carga Horária</FormLabel>
+                <FormLabel>
+                  Carga Horária
+                  <InfoTooltip text="Total de horas de duração do curso." />
+                </FormLabel>
                 <FormControl>
                   <Input
                     type="number"
@@ -172,7 +182,10 @@ export function CursosClient({ cursos }: CursosClientProps) {
             name="ementa"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Ementa</FormLabel>
+                <FormLabel>
+                  Ementa
+                  <InfoTooltip text="Descrição dos conteúdos e tópicos abordados no curso." />
+                </FormLabel>
                 <FormControl>
                   <Textarea
                     placeholder="Descreva os tópicos principais do curso"

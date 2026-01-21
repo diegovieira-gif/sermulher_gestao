@@ -29,6 +29,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 
 interface BeneficiariaFormProps {
   open: boolean;
@@ -160,7 +161,10 @@ export function BeneficiariaForm({
                   name="nome_completo"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nome Completo *</FormLabel>
+                      <FormLabel>
+                        Nome Completo *
+                        <InfoTooltip text="Nome completo da beneficiária conforme documentos oficiais." />
+                      </FormLabel>
                       <FormControl>
                         <Input placeholder="Maria Silva" {...field} />
                       </FormControl>
@@ -175,7 +179,10 @@ export function BeneficiariaForm({
                     name="cpf"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>CPF</FormLabel>
+                        <FormLabel>
+                          CPF
+                          <InfoTooltip text="Cadastro de Pessoa Física da beneficiária." />
+                        </FormLabel>
                         <FormControl>
                           <Input
                             placeholder="000.000.000-00"
@@ -199,7 +206,10 @@ export function BeneficiariaForm({
                     name="data_nascimento"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Data de Nascimento *</FormLabel>
+                        <FormLabel>
+                          Data de Nascimento *
+                          <InfoTooltip text="Data de nascimento para cálculo de idade e relatórios." />
+                        </FormLabel>
                         <FormControl>
                           <Input type="date" {...field} />
                         </FormControl>
@@ -214,7 +224,10 @@ export function BeneficiariaForm({
                   name="perfil_socioeconomico"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Perfil Socioeconômico</FormLabel>
+                      <FormLabel>
+                        Perfil Socioeconômico
+                        <InfoTooltip text="Informações sobre a situação socioeconômica, renda familiar e condições de vida." />
+                      </FormLabel>
                       <FormControl>
                         <Textarea
                           placeholder="Informações sobre a situação socioeconômica da beneficiária..."
@@ -239,7 +252,10 @@ export function BeneficiariaForm({
                       name="contato.telefone"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Telefone *</FormLabel>
+                          <FormLabel>
+                            Telefone *
+                            <InfoTooltip text="Número de telefone para contato e comunicação." />
+                          </FormLabel>
                           <FormControl>
                             <Input placeholder="(11) 98765-4321" {...field} />
                           </FormControl>
@@ -253,7 +269,10 @@ export function BeneficiariaForm({
                       name="contato.email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Email</FormLabel>
+                          <FormLabel>
+                            Email
+                            <InfoTooltip text="Endereço de e-mail para comunicação e envio de informações." />
+                          </FormLabel>
                           <FormControl>
                             <Input
                               type="email"
@@ -276,7 +295,10 @@ export function BeneficiariaForm({
                     name="endereco.logradouro"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Logradouro *</FormLabel>
+                        <FormLabel>
+                          Logradouro *
+                          <InfoTooltip text="Nome da rua, avenida ou logradouro do endereço." />
+                        </FormLabel>
                         <FormControl>
                           <Input placeholder="Rua das Flores" {...field} />
                         </FormControl>
@@ -291,7 +313,10 @@ export function BeneficiariaForm({
                       name="endereco.numero"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Número *</FormLabel>
+                          <FormLabel>
+                            Número *
+                            <InfoTooltip text="Número do endereço residencial." />
+                          </FormLabel>
                           <FormControl>
                             <Input placeholder="123" {...field} />
                           </FormControl>
@@ -313,7 +338,10 @@ export function BeneficiariaForm({
 
                         return (
                           <FormItem>
-                            <FormLabel>Bairro *</FormLabel>
+                            <FormLabel>
+                              Bairro *
+                              <InfoTooltip text="Bairro onde a beneficiária reside." />
+                            </FormLabel>
                             <FormControl>
                               <Combobox
                                 options={bairroOptions}
@@ -340,7 +368,10 @@ export function BeneficiariaForm({
                       name="endereco.cidade"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Cidade *</FormLabel>
+                          <FormLabel>
+                            Cidade *
+                            <InfoTooltip text="Cidade onde a beneficiária reside." />
+                          </FormLabel>
                           <FormControl>
                             <Input placeholder="São Paulo" {...field} />
                           </FormControl>

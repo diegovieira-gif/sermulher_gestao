@@ -15,6 +15,7 @@ import {
 import { getFrequenciaByData, saveFrequencia, type Matricula, type PresencaPayload } from "../../actions";
 import { toast } from "sonner";
 import { Loader2, Save, Calendar } from "lucide-react";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 
 interface FrequenciaClientProps {
   turmaId: number;
@@ -179,8 +180,14 @@ export function FrequenciaClient({ turmaId, matriculas }: FrequenciaClientProps)
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[60px] text-center">#</TableHead>
-                <TableHead>Nome da Aluna</TableHead>
-                <TableHead className="w-[150px] text-center">Presente</TableHead>
+                <TableHead>
+                  Nome da Aluna
+                  <InfoTooltip text="Nome completo da aluna matriculada." />
+                </TableHead>
+                <TableHead className="w-[150px] text-center">
+                  Presente
+                  <InfoTooltip text="Indica se a aluna está presente na sessão atual." />
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
