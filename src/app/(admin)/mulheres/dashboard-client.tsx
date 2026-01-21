@@ -1,6 +1,7 @@
 "use client";
 
 import { Users, FileText, Activity, Calendar } from "lucide-react";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import {
   PieChart,
   Pie,
@@ -166,10 +167,22 @@ export function DashboardClient({ stats }: DashboardClientProps) {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Beneficiária</TableHead>
-                    <TableHead>Tipo Atendimento</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>
+                      Data
+                      <InfoTooltip text="Data de abertura do atendimento." />
+                    </TableHead>
+                    <TableHead>
+                      Beneficiária
+                      <InfoTooltip text="Nome da mulher assistida." />
+                    </TableHead>
+                    <TableHead>
+                      Tipo Atendimento
+                      <InfoTooltip text="Categoria do atendimento realizado." />
+                    </TableHead>
+                    <TableHead>
+                      Status
+                      <InfoTooltip text="Situação atual do atendimento." />
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

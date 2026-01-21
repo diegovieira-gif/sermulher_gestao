@@ -25,6 +25,7 @@ import {
 import { AtendimentoForm } from "./atendimento-form";
 import { deleteAtendimento } from "./actions";
 import { Plus, Pencil, Trash2, Eye, FileText } from "lucide-react";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { toast } from "sonner";
 import Link from "next/link";
 import type {
@@ -307,11 +308,26 @@ export function AtendimentosClient({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Beneficiária</TableHead>
-              <TableHead>Data</TableHead>
-              <TableHead>Prioridade</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Origem</TableHead>
+              <TableHead>
+                Beneficiária
+                <InfoTooltip text="Nome da mulher assistida no atendimento." />
+              </TableHead>
+              <TableHead>
+                Data
+                <InfoTooltip text="Data de abertura do atendimento." />
+              </TableHead>
+              <TableHead>
+                Prioridade
+                <InfoTooltip text="Nível de urgência do atendimento (Alta, Média, Baixa)." />
+              </TableHead>
+              <TableHead>
+                Status
+                <InfoTooltip text="Situação atual do atendimento (Aberto, Em Andamento, Concluído, Cancelado)." />
+              </TableHead>
+              <TableHead>
+                Origem
+                <InfoTooltip text="Canal ou local de onde veio o encaminhamento." />
+              </TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>

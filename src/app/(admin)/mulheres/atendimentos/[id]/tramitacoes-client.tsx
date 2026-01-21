@@ -28,6 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Clock, Building2, User, Scale, Heart, Shield, Stethoscope, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import Link from "next/link";
 import {
   getTramitacoes,
@@ -423,7 +424,10 @@ export function TramitacoesClient({
                 name="relato_tecnico"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Relato Técnico *</FormLabel>
+                    <FormLabel>
+                      Relato Técnico *
+                      <InfoTooltip text="Descrição técnica detalhada da etapa, ações realizadas e observações relevantes." />
+                    </FormLabel>
                     <FormControl>
                       <Textarea
                         {...field}

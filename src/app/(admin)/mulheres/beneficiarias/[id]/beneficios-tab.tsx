@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { entregaBeneficioSchema, type EntregaBeneficioFormValues } from "../schemas";
 import { registrarEntrega, deletarEntrega } from "../actions";
 import { Gift, Package, Trash2, Loader2, Calendar, User } from "lucide-react";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -172,7 +173,10 @@ export function BeneficiosTab({
                   name="beneficio"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Benefício *</FormLabel>
+                      <FormLabel>
+                        Benefício *
+                        <InfoTooltip text="Tipo de benefício ou auxílio entregue à beneficiária." />
+                      </FormLabel>
                       <FormControl>
                         <Select
                           value={field.value ? String(field.value) : undefined}
@@ -218,7 +222,10 @@ export function BeneficiosTab({
                     name="quantidade"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Quantidade</FormLabel>
+                        <FormLabel>
+                          Quantidade
+                          <InfoTooltip text="Quantidade de unidades do benefício entregue." />
+                        </FormLabel>
                         <FormControl>
                           {/* @ts-ignore */}
                           <Input
@@ -269,10 +276,22 @@ export function BeneficiosTab({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Data</TableHead>
-              <TableHead>Benefício</TableHead>
-              <TableHead>Qtd</TableHead>
-              <TableHead>Entregue por</TableHead>
+              <TableHead>
+                Data
+                <InfoTooltip text="Data em que o benefício foi entregue." />
+              </TableHead>
+              <TableHead>
+                Benefício
+                <InfoTooltip text="Tipo de benefício entregue." />
+              </TableHead>
+              <TableHead>
+                Qtd
+                <InfoTooltip text="Quantidade de unidades entregues." />
+              </TableHead>
+              <TableHead>
+                Entregue por
+                <InfoTooltip text="Profissional responsável pela entrega." />
+              </TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>

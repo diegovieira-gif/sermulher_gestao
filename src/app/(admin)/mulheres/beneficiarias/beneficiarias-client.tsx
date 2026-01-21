@@ -30,6 +30,7 @@ import Link from "next/link";
 import { BeneficiariaForm } from "./beneficiaria-form";
 import { deleteBeneficiaria } from "./actions";
 import { Plus, Pencil, Trash2, ShieldAlert, HandCoins, Banknote, Eye } from "lucide-react";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { toast } from "sonner";
 import type { Beneficiaria } from "./schemas";
 
@@ -195,11 +196,26 @@ export function BeneficiariasClient({ beneficiarias }: BeneficiariasClientProps)
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>CPF</TableHead>
-              <TableHead>Telefone</TableHead>
-              <TableHead>Idade</TableHead>
-              <TableHead>Status/Benefícios</TableHead>
+              <TableHead>
+                Nome
+                <InfoTooltip text="Nome completo da beneficiária." />
+              </TableHead>
+              <TableHead>
+                CPF
+                <InfoTooltip text="Cadastro de Pessoa Física da beneficiária." />
+              </TableHead>
+              <TableHead>
+                Telefone
+                <InfoTooltip text="Número de telefone para contato." />
+              </TableHead>
+              <TableHead>
+                Idade
+                <InfoTooltip text="Idade calculada a partir da data de nascimento." />
+              </TableHead>
+              <TableHead>
+                Status/Benefícios
+                <InfoTooltip text="Situação atual e benefícios recebidos pela beneficiária." />
+              </TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
