@@ -87,7 +87,7 @@ export function InfratorDetailsClient({
     setIsSubmitting(true);
 
     try {
-      const result = await saveInfrator({ ...data, id: infrator.id });
+      const result = await saveInfrator({ ...data, id: infrator.id } as any);
 
       if (result.success) {
         toast.success(result.message);
@@ -227,7 +227,11 @@ export function InfratorDetailsClient({
                     <FormItem>
                       <FormLabel>Data de Nascimento</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <Input 
+                          type="date" 
+                          {...field} 
+                          value={field.value || ''} 
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
