@@ -65,7 +65,10 @@ export function DashboardClient({ stats }: DashboardClientProps) {
     if (statusLower.includes("andamento")) {
       return "bg-blue-100 text-blue-800";
     }
-    if (statusLower.includes("concluído") || statusLower.includes("concluido")) {
+    if (
+      statusLower.includes("concluído") ||
+      statusLower.includes("concluido")
+    ) {
       return "bg-green-100 text-green-800";
     }
     if (statusLower.includes("aberto")) {
@@ -111,45 +114,47 @@ export function DashboardClient({ stats }: DashboardClientProps) {
           <CardTitle>Tipos de Violência</CardTitle>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={350}>
-            <PieChart>
-              <Pie
-                data={tiposViolencia}
-                cx="50%"
-                cy="50%"
-                innerRadius={70}
-                outerRadius={120}
-                paddingAngle={5}
-                dataKey="value"
-              >
-                {tiposViolencia.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.fill} />
-                ))}
-              </Pie>
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "8px",
-                  color: "hsl(var(--foreground))",
-                }}
-                formatter={(value: number | undefined) => [
-                  `${value || 0} casos`,
-                  "Quantidade",
-                ]}
-              />
-              <Legend
-                verticalAlign="bottom"
-                height={36}
-                iconType="circle"
-                formatter={(value, entry: any) => (
-                  <span className="text-sm text-muted-foreground">
-                    {value}: {entry.payload.value}
-                  </span>
-                )}
-              />
-            </PieChart>
-          </ResponsiveContainer>
+          <div style={{ width: "100%", height: 350 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={tiposViolencia}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={70}
+                  outerRadius={120}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {tiposViolencia.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "8px",
+                    color: "hsl(var(--foreground))",
+                  }}
+                  formatter={(value: number | undefined) => [
+                    `${value || 0} casos`,
+                    "Quantidade",
+                  ]}
+                />
+                <Legend
+                  verticalAlign="bottom"
+                  height={36}
+                  iconType="circle"
+                  formatter={(value, entry: any) => (
+                    <span className="text-sm text-muted-foreground">
+                      {value}: {entry.payload.value}
+                    </span>
+                  )}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
         </CardContent>
       </Card>
 
@@ -204,9 +209,7 @@ export function DashboardClient({ stats }: DashboardClientProps) {
               </Table>
               <div className="mt-4 flex justify-end">
                 <Link href="/mulheres/atendimentos">
-                  <Button variant="outline">
-                    Ver Todos
-                  </Button>
+                  <Button variant="outline">Ver Todos</Button>
                 </Link>
               </div>
             </>

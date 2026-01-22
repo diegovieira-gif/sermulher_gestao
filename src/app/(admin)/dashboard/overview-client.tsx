@@ -47,7 +47,10 @@ function isGlobalDashboardStats(stats: any): stats is GlobalDashboardStats {
   return "totais" in stats && "agenda" in stats && "casosCriticos" in stats;
 }
 
-export function OverviewClient({ stats, userName = "Secretaria" }: OverviewClientProps) {
+export function OverviewClient({
+  stats,
+  userName = "Secretaria",
+}: OverviewClientProps) {
   const dataAtual = new Date().toLocaleDateString("pt-BR", {
     weekday: "long",
     year: "numeric",
@@ -286,7 +289,7 @@ export function OverviewClient({ stats, userName = "Secretaria" }: OverviewClien
                     {casosCriticos.map((caso) => {
                       const prioridadeColorClass = getPrioridadeColor(
                         caso.prioridade,
-                        caso.prioridade_cor
+                        caso.prioridade_cor,
                       );
                       const isAltaPrioridade =
                         caso.prioridade?.toLowerCase().includes("emergencia") ||
@@ -323,8 +326,7 @@ export function OverviewClient({ stats, userName = "Secretaria" }: OverviewClien
                                   style={
                                     caso.prioridade_cor && !prioridadeColorClass
                                       ? {
-                                          backgroundColor:
-                                            caso.prioridade_cor,
+                                          backgroundColor: caso.prioridade_cor,
                                           color: "white",
                                           borderColor: caso.prioridade_cor,
                                         }
@@ -372,8 +374,12 @@ export function OverviewClient({ stats, userName = "Secretaria" }: OverviewClien
   }
 
   if (isDashboardStats(stats)) {
-    const { kpis, atendimentosPorDia, proximosEventos, alertasMedidasProtetivas } =
-      stats;
+    const {
+      kpis,
+      atendimentosPorDia,
+      proximosEventos,
+      alertasMedidasProtetivas,
+    } = stats;
 
     return (
       <div className="space-y-6">
@@ -447,9 +453,7 @@ export function OverviewClient({ stats, userName = "Secretaria" }: OverviewClien
             } hover:shadow-lg transition-shadow`}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Pendencias
-              </CardTitle>
+              <CardTitle className="text-sm font-medium">Pendencias</CardTitle>
               <AlertCircle
                 className={`h-4 w-4 ${
                   kpis.demandaReprimida > 0
@@ -459,9 +463,7 @@ export function OverviewClient({ stats, userName = "Secretaria" }: OverviewClien
               />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {kpis.demandaReprimida}
-              </div>
+              <div className="text-2xl font-bold">{kpis.demandaReprimida}</div>
               <p className="text-xs text-muted-foreground mt-2">
                 casos aguardando
               </p>
@@ -487,38 +489,40 @@ export function OverviewClient({ stats, userName = "Secretaria" }: OverviewClien
               </CardHeader>
               <CardContent>
                 {atendimentosPorDia.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart
-                      data={atendimentosPorDia}
-                      margin={{ top: 10, right: 30, left: 0, bottom: 10 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis
-                        dataKey="data"
-                        stroke="#9ca3af"
-                        style={{ fontSize: "0.75rem" }}
-                        tickFormatter={(value) => formatarDataCurta(value)}
-                      />
-                      <YAxis
-                        stroke="#9ca3af"
-                        style={{ fontSize: "0.75rem" }}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "#ffffff",
-                          border: `2px solid ${COLORS.primary}`,
-                          borderRadius: "0.5rem",
-                        }}
-                        labelFormatter={(value) => formatarDataCurta(value)}
-                        formatter={(value) => [value, "Atendimentos"]}
-                      />
-                      <Bar
-                        dataKey="quantidade"
-                        fill={COLORS.primary}
-                        radius={[8, 8, 0, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
+                  <div style={{ width: "100%", height: 300 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={atendimentosPorDia}
+                        margin={{ top: 10, right: 30, left: 0, bottom: 10 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis
+                          dataKey="data"
+                          stroke="#9ca3af"
+                          style={{ fontSize: "0.75rem" }}
+                          tickFormatter={(value) => formatarDataCurta(value)}
+                        />
+                        <YAxis
+                          stroke="#9ca3af"
+                          style={{ fontSize: "0.75rem" }}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "#ffffff",
+                            border: `2px solid ${COLORS.primary}`,
+                            borderRadius: "0.5rem",
+                          }}
+                          labelFormatter={(value) => formatarDataCurta(value)}
+                          formatter={(value) => [value, "Atendimentos"]}
+                        />
+                        <Bar
+                          dataKey="quantidade"
+                          fill={COLORS.primary}
+                          radius={[8, 8, 0, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
                 ) : (
                   <div className="flex items-center justify-center h-64 text-muted-foreground">
                     Sem dados de atendimentos no periodo
@@ -558,10 +562,7 @@ export function OverviewClient({ stats, userName = "Secretaria" }: OverviewClien
                             {getLabelDataRelativa(evento.data_inicio)}
                           </p>
                           {evento.tipo_id && (
-                            <Badge
-                              variant="secondary"
-                              className="mt-2 text-xs"
-                            >
+                            <Badge variant="secondary" className="mt-2 text-xs">
                               {evento.tipo_id.nome}
                             </Badge>
                           )}
@@ -588,7 +589,8 @@ export function OverviewClient({ stats, userName = "Secretaria" }: OverviewClien
                 Alertas de Medidas Protetivas
               </CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                Beneficiarias com medidas protetivas cadastradas (ultimos 7 dias)
+                Beneficiarias com medidas protetivas cadastradas (ultimos 7
+                dias)
               </p>
             </CardHeader>
             <CardContent>
@@ -629,7 +631,9 @@ export function OverviewClient({ stats, userName = "Secretaria" }: OverviewClien
 
   return (
     <div className="text-center py-8">
-      <p className="text-muted-foreground">Dados do dashboard nao disponiveis</p>
+      <p className="text-muted-foreground">
+        Dados do dashboard nao disponiveis
+      </p>
     </div>
   );
 }

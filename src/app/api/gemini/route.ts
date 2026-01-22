@@ -1,98 +1,80 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { NextResponse } from "next/server";
 import { DB_SCHEMA_CONTEXT } from "@/lib/ai-context";
 
-const client = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+// Inicializa a API
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || "");
 
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    const { question } = await request.json();
+    const { question } = await req.json();
 
-    if (!question || typeof question !== "string") {
-      return Response.json(
-        { error: 'Campo "question" é obrigatório e deve ser uma string.' },
+    if (!question) {
+      return NextResponse.json(
+        { error: "Pergunta obrigatória" },
         { status: 400 },
       );
     }
 
-    if (!process.env.GOOGLE_API_KEY) {
-      return Response.json(
-        { error: "Chave de API do Google não configurada." },
-        { status: 500 },
-      );
-    }
+    // ATUALIZAÇÃO 2026: Usando Gemini 2.5 Flash (Rápido e Free Tier)
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-    const model = client.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const prompt = `
+    ${DB_SCHEMA_CONTEXT}
 
-    const systemPrompt = `${DB_SCHEMA_CONTEXT}
+    PERGUNTA DO USUÁRIO: "${question}"
 
-INSTRUÇÃO FINAL:
-Analise a pergunta do usuário e retorne APENAS um objeto JSON válido (sem markdown, sem explicações, sem blocos de código) contendo:
-- "collection": nome da tabela principal para consulta.
-- "filter": objeto de filtro no padrão Directus (use operadores como _eq, _neq, _gt, _gte, _lt, _lte, _in, _nin, _like, _between para datas, etc.).
-- "aggregate": objeto de agregação (ex: { "count": "*" }) SE a pergunta mencionar 'quantos', 'total', 'quantidade', contagem, etc. Caso contrário, null.
+    ATENÇÃO:
+    - Você é uma API JSON. Retorne APENAS um JSON válido.
+    - NÃO use markdown. NÃO use blocos de código (\`\`\`json).
+    - Se a pergunta for sobre quantidade (total, quantos), preencha o campo "aggregate".
+    - Se a pergunta for uma listagem (quais, quem, últimos), deixe "aggregate" como null e use "filter".
+    
+    Exemplos de Saída:
+    1. Quantidade: { "collection": "beneficiarias", "filter": {}, "aggregate": { "count": "*" } }
+    2. Listagem: { "collection": "atendimentos", "filter": { "status": { "_eq": "realizado" } }, "aggregate": null }
+    `;
 
-Garanta que o JSON seja válido e parseável.`;
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    let text = response.text();
 
-    const response = await model.generateContent({
-      contents: [
-        {
-          role: "user",
-          parts: [
-            {
-              text: systemPrompt,
-            },
-            {
-              text: `Pergunta do usuário: ${question}`,
-            },
-          ],
-        },
-      ],
-    });
+    // Limpeza de segurança para remover Markdown
+    text = text
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
 
-    const responseText =
-      response.content.parts[0].type === "text"
-        ? response.content.parts[0].text
-        : "";
+    console.log("🤖 Gemini 2.5 Respondeu:", text);
 
-    // Tenta extrair JSON válido da resposta
-    let parsedResponse;
     try {
-      // Remove possíveis marcadores de código markdown
-      const cleanedResponse = responseText
-        .replace(/```json\n?/g, "")
-        .replace(/```\n?/g, "")
-        .trim();
-
-      parsedResponse = JSON.parse(cleanedResponse);
-    } catch (parseError) {
-      return Response.json(
-        {
-          error: "Erro ao processar resposta do modelo.",
-          details: "O modelo retornou um JSON inválido.",
-        },
+      const jsonResponse = JSON.parse(text);
+      return NextResponse.json(jsonResponse);
+    } catch (e) {
+      console.error("Erro de Parse JSON:", text);
+      return NextResponse.json(
+        { error: "A IA não retornou um JSON válido." },
         { status: 500 },
       );
     }
+  } catch (error: any) {
+    console.error("Erro Gemini 2.5:", error);
 
-    // Valida estrutura mínima
-    if (!parsedResponse.collection) {
-      return Response.json(
+    // Tratamento específico para cota excedida
+    if (error.status === 429) {
+      return NextResponse.json(
         {
-          error: "Resposta incompleta do modelo.",
-          details: 'Falta o campo "collection".',
+          error:
+            "Limite de uso gratuito excedido. Tente novamente em alguns instantes.",
         },
-        { status: 500 },
+        { status: 429 },
       );
     }
 
-    return Response.json(parsedResponse, { status: 200 });
-  } catch (error) {
-    console.error("Erro na rota de Gemini:", error);
-
-    return Response.json(
+    return NextResponse.json(
       {
-        error: "Erro ao processar requisição.",
-        details: error instanceof Error ? error.message : "Erro desconhecido",
+        error: "Erro na comunicação com IA",
+        details: error.message,
       },
       { status: 500 },
     );
