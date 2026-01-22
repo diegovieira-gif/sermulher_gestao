@@ -1,82 +1,118 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 import { DB_SCHEMA_CONTEXT } from "@/lib/ai-context";
+import {
+  createDirectus,
+  rest,
+  staticToken,
+  readItems,
+  aggregate,
+} from "@directus/sdk";
 
-// Inicializa a API
+// 1. Configura Gemini
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || "");
+
+// 2. Configura Directus (Privado/Admin)
+const directusUrl =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.NEXT_PUBLIC_DIRECTUS_URL ||
+  "http://192.168.0.115:8055";
+const directusToken = process.env.DIRECTUS_TOKEN || "";
+
+const directus = createDirectus(directusUrl)
+  .with(rest())
+  .with(staticToken(directusToken));
 
 export async function POST(req: Request) {
   try {
     const { question } = await req.json();
 
-    if (!question) {
-      return NextResponse.json(
-        { error: "Pergunta obrigatória" },
-        { status: 400 },
-      );
-    }
+    if (!question)
+      return NextResponse.json({ error: "Pergunta vazia" }, { status: 400 });
 
-    // ATUALIZAÇÃO 2026: Usando Gemini 2.5 Flash (Rápido e Free Tier)
+    // --- FASE 1: INTELIGÊNCIA (GEMINI 2.5) ---
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const prompt = `
     ${DB_SCHEMA_CONTEXT}
-
-    PERGUNTA DO USUÁRIO: "${question}"
-
-    ATENÇÃO:
-    - Você é uma API JSON. Retorne APENAS um JSON válido.
-    - NÃO use markdown. NÃO use blocos de código (\`\`\`json).
-    - Se a pergunta for sobre quantidade (total, quantos), preencha o campo "aggregate".
-    - Se a pergunta for uma listagem (quais, quem, últimos), deixe "aggregate" como null e use "filter".
+    PERGUNTA: "${question}"
     
-    Exemplos de Saída:
-    1. Quantidade: { "collection": "beneficiarias", "filter": {}, "aggregate": { "count": "*" } }
-    2. Listagem: { "collection": "atendimentos", "filter": { "status": { "_eq": "realizado" } }, "aggregate": null }
+    Regras:
+    - Retorne JSON puro. Sem markdown.
+    - Se for contagem, use "aggregate": { "count": "*" }.
+    - Se for lista, use "aggregate": null e preencha "filter".
+    - Ex: { "collection": "beneficiarias", "filter": {}, "aggregate": { "count": "*" } }
     `;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    let text = response.text();
-
-    // Limpeza de segurança para remover Markdown
-    text = text
+    const resultAI = await model.generateContent(prompt);
+    const textAI = resultAI.response
+      .text()
       .replace(/```json/g, "")
       .replace(/```/g, "")
       .trim();
 
-    console.log("🤖 Gemini 2.5 Respondeu:", text);
+    console.log("🤖 IA Plano:", textAI);
 
+    let plan;
     try {
-      const jsonResponse = JSON.parse(text);
-      return NextResponse.json(jsonResponse);
+      plan = JSON.parse(textAI);
     } catch (e) {
-      console.error("Erro de Parse JSON:", text);
       return NextResponse.json(
-        { error: "A IA não retornou um JSON válido." },
+        { error: "Falha ao interpretar a pergunta." },
         { status: 500 },
       );
     }
-  } catch (error: any) {
-    console.error("Erro Gemini 2.5:", error);
 
-    // Tratamento específico para cota excedida
-    if (error.status === 429) {
+    if (!plan.collection) {
       return NextResponse.json(
-        {
-          error:
-            "Limite de uso gratuito excedido. Tente novamente em alguns instantes.",
-        },
-        { status: 429 },
+        { error: "Não entendi qual tabela consultar." },
+        { status: 400 },
       );
     }
 
-    return NextResponse.json(
-      {
-        error: "Erro na comunicação com IA",
-        details: error.message,
-      },
-      { status: 500 },
-    );
+    // --- FASE 2: EXECUÇÃO (DIRECTUS) ---
+    let dbResult;
+    let responseType = "list";
+
+    try {
+      if (plan.aggregate) {
+        // Contagem
+        responseType = "count";
+        const res = await directus.request(
+          aggregate(plan.collection, {
+            aggregate: plan.aggregate,
+            query: { filter: plan.filter || {} },
+          }),
+        );
+        // Normaliza retorno do Directus (pode vir como array de objetos)
+        const countVal = res[0]?.count || res[0]?.countAll || 0;
+        dbResult = Number(countVal); // Garante número
+      } else {
+        // Listagem
+        responseType = "list";
+        dbResult = await directus.request(
+          readItems(plan.collection, {
+            filter: plan.filter || {},
+            limit: 5, // Segurança
+          }),
+        );
+      }
+    } catch (dbError: any) {
+      console.error("❌ Erro Directus:", dbError);
+      return NextResponse.json(
+        { error: "Erro ao consultar banco de dados. Verifique permissões." },
+        { status: 500 },
+      );
+    }
+
+    // --- FASE 3: RETORNO ---
+    return NextResponse.json({
+      type: responseType,
+      value: dbResult,
+      debug: `Tabela: ${plan.collection}`,
+    });
+  } catch (error: any) {
+    console.error("❌ Erro Geral:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
