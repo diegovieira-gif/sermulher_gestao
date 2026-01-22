@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import type React from "react";
 import {
   Table,
   TableBody,
@@ -56,7 +57,7 @@ export interface GenericCrudTableProps {
   items: any[];
   columns: Array<{
     key: string;
-    label: string;
+    label: React.ReactNode;
     render?: (item: any) => React.ReactNode;
   }>;
   /** Persistência: criar ou atualizar. O componente não conhece a origem dos dados. */
@@ -204,7 +205,9 @@ export function GenericCrudTable({
           <TableHeader>
             <TableRow>
               {columns?.map((col) => (
-                <TableHead key={col.key} className="text-muted-foreground">{col.label}</TableHead>
+                <TableHead key={col.key} className="text-muted-foreground">
+                  {col.label}
+                </TableHead>
               ))}
               {showStatus && (
                 <TableHead className="text-muted-foreground">
@@ -212,7 +215,9 @@ export function GenericCrudTable({
                   <InfoTooltip text="Situação atual do item no sistema (Ativo, Inativo, Arquivado)." />
                 </TableHead>
               )}
-              <TableHead className="w-[100px] text-right text-muted-foreground">Ações</TableHead>
+              <TableHead className="w-[100px] text-right text-muted-foreground">
+                Ações
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

@@ -41,6 +41,8 @@ export interface EscolaCursoDB {
   nome: string;
   descricao?: string;
   carga_horaria?: number;
+  area_atuacao?: string;
+  ementa?: string;
   status: string; // 'ativo' | 'inativo'
 }
 

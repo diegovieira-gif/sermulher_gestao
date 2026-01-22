@@ -23,6 +23,7 @@ import { Eye } from "lucide-react";
 import { z } from "zod";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { deleteTurma, saveTurma, type TurmaPayload } from "../actions";
+import { EscolaCursoDB, EscolaTurmaDB } from "@/types/database";
 
 const STATUS_LABEL: Record<string, string> = {
   aberta: "Aberta",
@@ -65,21 +66,17 @@ function dateOnly(v?: string | null) {
   return d.length >= 10 ? d.slice(0, 10) : d;
 }
 
-export interface Turma {
-  id?: number;
-  nome: string;
+export type Turma = Omit<EscolaTurmaDB, "curso_id"> & {
+  curso?: EscolaCursoDB | number | null;
+  curso_id?: EscolaCursoDB | number | null;
+  curso_nome?: string;
   instrutor?: string;
   vagas?: number;
-  data_inicio?: string;
-  data_fim?: string;
-  status?: string;
-  curso?: any; // pode ser id ou objeto { id, nome }
-  curso_nome?: string;
-}
+};
 
 interface TurmasClientProps {
   turmas: Turma[];
-  cursosOptions: Array<{ label: string; value: number | string }>;
+  cursosOptions: Array<{ label: string; value: EscolaCursoDB["id"] | string }>;
 }
 
 export function TurmasClient({ turmas, cursosOptions }: TurmasClientProps) {
@@ -100,31 +97,79 @@ export function TurmasClient({ turmas, cursosOptions }: TurmasClientProps) {
         vagas: item.vagas ? Number(item.vagas) : 0,
         data_inicio: dateOnly(item.data_inicio),
         data_fim: dateOnly(item.data_fim),
-        status: (item.status as any) || "aberta",
+        status: item.status ?? "aberta",
       })}
       onSave={async (values) => saveTurma(values)}
       onDelete={async (id) => deleteTurma(id)}
       columns={[
-        { key: "nome", label: "Nome da Turma" },
+        {
+          key: "nome",
+          label: (
+            <span className="inline-flex items-center gap-1">
+              Nome da Turma
+              <InfoTooltip text="Identificação da turma para organização e controle." />
+            </span>
+          ),
+        },
         {
           key: "curso_nome",
-          label: "Curso",
-          render: (item) => item.curso_nome || item?.curso?.nome || "—",
+          label: (
+            <span className="inline-flex items-center gap-1">
+              Curso
+              <InfoTooltip text="Curso associado a esta turma." />
+            </span>
+          ),
+          render: (item) =>
+            item.curso_nome ||
+            (typeof item.curso === "object" && item.curso
+              ? item.curso.nome
+              : undefined) ||
+            (typeof item.curso_id === "object" && item.curso_id
+              ? item.curso_id.nome
+              : undefined) ||
+            "—",
         },
-        { key: "instrutor", label: "Instrutor" },
-        { key: "vagas", label: "Vagas" },
+        {
+          key: "instrutor",
+          label: (
+            <span className="inline-flex items-center gap-1">
+              Instrutor
+              <InfoTooltip text="Nome do profissional responsável pela turma." />
+            </span>
+          ),
+        },
+        {
+          key: "vagas",
+          label: (
+            <span className="inline-flex items-center gap-1">
+              Capacidade Máxima
+              <InfoTooltip text="Número máximo de alunos permitidos na turma." />
+            </span>
+          ),
+        },
         {
           key: "status",
-          label: "Status",
+          label: (
+            <span className="inline-flex items-center gap-1">
+              Status
+              <InfoTooltip text="Situação atual da turma (Aberta, Em andamento, Concluída, Cancelada)." />
+            </span>
+          ),
           render: (item) => (
             <Badge className={STATUS_COLOR[item.status || "aberta"] || ""}>
-              {STATUS_LABEL[item.status as keyof typeof STATUS_LABEL] || item.status}
+              {STATUS_LABEL[item.status as keyof typeof STATUS_LABEL] ||
+                item.status}
             </Badge>
           ),
         },
         {
           key: "detalhes",
-          label: "Detalhes",
+          label: (
+            <span className="inline-flex items-center gap-1">
+              Detalhes
+              <InfoTooltip text="Acessar detalhes da turma e gerenciar matrículas." />
+            </span>
+          ),
           render: (item) => (
             <Button
               variant="ghost"
@@ -149,7 +194,11 @@ export function TurmasClient({ turmas, cursosOptions }: TurmasClientProps) {
                   <InfoTooltip text="Identificação da turma para organização e controle." />
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="Ex: Manhã A" {...field} />
+                  <Input
+                    placeholder="Ex: Manhã A"
+                    {...field}
+                    value={field.value ?? ""}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -161,7 +210,10 @@ export function TurmasClient({ turmas, cursosOptions }: TurmasClientProps) {
             name="curso"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Curso</FormLabel>
+                <FormLabel>
+                  Curso
+                  <InfoTooltip text="Curso associado a esta turma." />
+                </FormLabel>
                 <FormControl>
                   <Select
                     value={String(field.value ?? "")}
@@ -194,7 +246,11 @@ export function TurmasClient({ turmas, cursosOptions }: TurmasClientProps) {
                   <InfoTooltip text="Nome do profissional responsável pela turma." />
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="Nome do instrutor" {...field} />
+                  <Input
+                    placeholder="Nome do instrutor"
+                    {...field}
+                    value={field.value ?? ""}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -215,7 +271,7 @@ export function TurmasClient({ turmas, cursosOptions }: TurmasClientProps) {
                     type="number"
                     min={1}
                     placeholder="Ex: 20"
-                    value={field.value}
+                    value={field.value ?? ""}
                     onChange={(e) => field.onChange(Number(e.target.value))}
                   />
                 </FormControl>
@@ -230,9 +286,12 @@ export function TurmasClient({ turmas, cursosOptions }: TurmasClientProps) {
               name="data_inicio"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Data de Início</FormLabel>
+                  <FormLabel>
+                    Data de Início
+                    <InfoTooltip text="Data planejada para início das aulas." />
+                  </FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <Input type="date" {...field} value={field.value ?? ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -249,7 +308,7 @@ export function TurmasClient({ turmas, cursosOptions }: TurmasClientProps) {
                     <InfoTooltip text="Data prevista de encerramento das aulas." />
                   </FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <Input type="date" {...field} value={field.value ?? ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -267,7 +326,10 @@ export function TurmasClient({ turmas, cursosOptions }: TurmasClientProps) {
                   <InfoTooltip text="Situação atual da turma (Planejada, Em Andamento, Finalizada, Cancelada)." />
                 </FormLabel>
                 <FormControl>
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select
+                    value={field.value ?? ""}
+                    onValueChange={field.onChange}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione o status" />
                     </SelectTrigger>

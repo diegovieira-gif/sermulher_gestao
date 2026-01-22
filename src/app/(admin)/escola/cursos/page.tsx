@@ -1,5 +1,6 @@
 import { getCursos } from "../actions";
 import { CursosClient } from "./cursos-client";
+import type { EscolaCursoDB } from "@/types/database";
 
 export default async function CursosPage() {
   const cursosResult = await getCursos();
@@ -16,7 +17,7 @@ export default async function CursosPage() {
 
   return (
     <div className="p-6">
-      <CursosClient cursos={cursosResult.data || []} />
+      <CursosClient cursos={(cursosResult.data as EscolaCursoDB[]) || []} />
     </div>
   );
 }

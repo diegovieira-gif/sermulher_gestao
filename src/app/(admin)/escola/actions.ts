@@ -1,11 +1,18 @@
 "use server";
 
 import { directus } from "@/lib/directus";
+import { EscolaAlunoDB, EscolaCursoDB, EscolaTurmaDB } from "@/types/database";
 import { createItem, deleteItem, readItems, updateItem } from "@directus/sdk";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-const CURSO_FIELDS = ["id", "nome", "area_atuacao", "carga_horaria", "ementa"] as const;
+const CURSO_FIELDS = [
+  "id",
+  "nome",
+  "area_atuacao",
+  "carga_horaria",
+  "ementa",
+] as const;
 
 const cursoSchema = z.object({
   id: z.number().optional(),
@@ -32,16 +39,29 @@ export type CursoPayload = z.infer<typeof cursoSchema>;
  */
 export async function getCursos() {
   try {
-    const cursos = await directus.request(
+    const cursos = await directus.request<
+      Array<Partial<EscolaCursoDB> & { area_atuacao?: string; ementa?: string }>
+    >(
       readItems("escola_cursos", {
         limit: -1,
         sort: ["nome"],
         // @ts-ignore
         fields: CURSO_FIELDS,
-      })
+      }),
     );
 
-    return { success: true, data: cursos as CursoPayload[] };
+    const data: EscolaCursoDB[] = (cursos ?? []).map((item) => ({
+      id: Number(item.id),
+      nome: item.nome ?? "",
+      descricao: item.descricao,
+      carga_horaria: item.carga_horaria ?? 0,
+      status: item.status || "ativo",
+      // Campos opcionais não presentes na interface original, mas consumidos pelo front
+      area_atuacao: item.area_atuacao ?? "outros",
+      ementa: item.ementa ?? "",
+    }));
+
+    return { success: true, data };
   } catch (error) {
     console.error("Erro ao buscar cursos:", error);
     return { success: false, error: "Erro ao buscar cursos." };
@@ -96,21 +116,25 @@ export async function deleteCurso(id: number) {
  */
 export async function getCursosOptions() {
   try {
-    const cursos = await directus.request(
+    const cursos = await directus.request<
+      Array<Pick<EscolaCursoDB, "id" | "nome">>
+    >(
       readItems("escola_cursos", {
         limit: -1,
         sort: ["nome"],
         // @ts-ignore
         fields: ["id", "nome"],
-      })
+      }),
     );
 
-    const options = (cursos || []).map((c: any) => ({
-      label: c.nome,
-      value: c.id,
+    const options: Array<{ label: string; value: number | string }> = (
+      cursos || []
+    ).map((curso) => ({
+      label: curso.nome,
+      value: curso.id,
     }));
 
-    return { success: true, data: options as Array<{ label: string; value: number | string }> };
+    return { success: true, data: options };
   } catch (error) {
     console.error("Erro ao buscar opções de cursos:", error);
     return { success: false, error: "Erro ao buscar cursos." };
@@ -134,22 +158,36 @@ const turmaSchema = z.object({
 
 export type TurmaPayload = z.infer<typeof turmaSchema>;
 
+type TurmaWithCurso = Omit<EscolaTurmaDB, "curso_id" | "capacidade_maxima"> & {
+  curso: EscolaTurmaDB["curso_id"];
+  instrutor?: string;
+  vagas?: number;
+  capacidade_maxima?: number;
+};
+
+type BeneficiariaOption = Pick<
+  EscolaAlunoDB,
+  "id" | "nome_completo" | "cpf"
+> & {
+  contato: string | null;
+};
+
 /**
  * Busca todas as turmas com o nome do curso relacionado.
  */
 export async function getTurmas() {
   try {
-    const turmas = await directus.request(
+    const turmas = await directus.request<TurmaWithCurso[]>(
       readItems("escola_turmas", {
         limit: -1,
         sort: ["nome"],
         // Importante: trazer o nome do curso relacionado
         // @ts-ignore
         fields: ["*", "curso.nome"],
-      })
+      }),
     );
 
-    return { success: true, data: turmas as any[] };
+    return { success: true, data: turmas };
   } catch (error) {
     console.error("Erro ao buscar turmas:", error);
     return { success: false, error: "Erro ao buscar turmas." };
@@ -207,16 +245,21 @@ export async function deleteTurma(id: number) {
  */
 export async function getTurmaById(id: number) {
   try {
-    const turma = await directus.request(
+    const turma = await directus.request<TurmaWithCurso[]>(
       readItems("escola_turmas", {
+        filter: {
+          id: {
+            _eq: id,
+          },
+        },
         // @ts-ignore
         fields: ["*", "curso.*"],
         limit: 1,
       }),
     );
 
-    // Filtra pela ID
-    const turmaEspecifica = turma.find((t: any) => t.id === id);
+    // Filtra pela ID (defensivo caso o filtro não seja aplicado pelo Directus)
+    const turmaEspecifica = turma.find((t) => t.id === id);
 
     if (!turmaEspecifica) {
       return { success: false, error: "Turma não encontrada." };
@@ -267,7 +310,7 @@ export async function getMatriculasByTurma(turmaId: number) {
         ],
         sort: ["beneficiaria.nome_completo"],
         limit: -1,
-      })
+      }),
     );
 
     return { success: true, data: matriculas as Matricula[] };
@@ -282,23 +325,18 @@ export async function getMatriculasByTurma(turmaId: number) {
  */
 export async function getBeneficiariasOptions() {
   try {
-    const beneficiarias = await directus.request(
+    const beneficiarias = await directus.request<BeneficiariaOption[]>(
       readItems("beneficiarias", {
         // @ts-ignore
         fields: ["id", "nome_completo", "cpf", "contato"],
         sort: ["nome_completo"],
         limit: -1,
-      })
+      }),
     );
 
     return {
       success: true,
-      data: beneficiarias as Array<{
-        id: number;
-        nome_completo: string;
-        cpf: string;
-        contato: string;
-      }>,
+      data: beneficiarias,
     };
   } catch (error) {
     console.error("Erro ao buscar beneficiárias:", error);
@@ -335,7 +373,7 @@ export async function saveMatricula(turmaId: number, beneficiariaId: number) {
           ],
         },
         limit: 1,
-      })
+      }),
     );
 
     if (existing && existing.length > 0) {
@@ -352,10 +390,10 @@ export async function saveMatricula(turmaId: number, beneficiariaId: number) {
         beneficiaria: beneficiariaId,
         data_matricula: new Date().toISOString(),
         status: "ativa",
-      })
+      }),
     );
 
-    revalidatePath(`/admin/escola/turmas/${turmaId}`);
+    revalidatePath(`/escola/turmas/${turmaId}`);
 
     return { success: true };
   } catch (error) {
@@ -370,17 +408,24 @@ export async function saveMatricula(turmaId: number, beneficiariaId: number) {
 export async function deleteMatricula(id: number) {
   try {
     // Primeiro, busca a matrícula para pegar o turmaId para revalidação
-    const matriculas = await directus.request(
+    const matriculas = await directus.request<
+      Array<{ id: number; turma?: number | null }>
+    >(
       readItems("escola_matriculas", {
+        filter: {
+          id: {
+            _eq: id,
+          },
+        },
         limit: 1,
-      })
+      }),
     );
-    const matricula = matriculas.find((m: any) => m.id === id);
+    const matricula = matriculas.find((m) => m.id === id);
 
     await directus.request(deleteItem("escola_matriculas", id));
 
     if (matricula?.turma) {
-      revalidatePath(`/admin/escola/turmas/${matricula.turma}`);
+      revalidatePath(`/escola/turmas/${matricula.turma}`);
     }
 
     return { success: true };
@@ -431,7 +476,7 @@ export async function getFrequenciaByData(turmaId: number, data: string) {
         // @ts-ignore
         fields: ["id", "turma", "beneficiaria", "data", "presente"],
         limit: -1,
-      })
+      }),
     );
 
     return { success: true, data: frequencias as RegistroFrequencia[] };
@@ -448,7 +493,7 @@ export async function getFrequenciaByData(turmaId: number, data: string) {
 export async function saveFrequencia(
   turmaId: number,
   data: string,
-  presencas: PresencaPayload[]
+  presencas: PresencaPayload[],
 ) {
   try {
     // 1. Busca registros existentes nesta data/turma
@@ -468,11 +513,11 @@ export async function saveFrequencia(
           beneficiaria: presenca.beneficiariaId,
           data: data,
           presente: presenca.presente,
-        })
+        }),
       );
     }
 
-    revalidatePath(`/admin/escola/turmas/${turmaId}`);
+    revalidatePath(`/escola/turmas/${turmaId}`);
 
     return { success: true };
   } catch (error) {
@@ -517,7 +562,7 @@ export async function getTurmaPerformance(turmaId: number) {
         // @ts-ignore
         fields: ["id", "turma", "beneficiaria", "data", "presente"],
         limit: -1,
-      })
+      }),
     );
 
     const frequencias = (frequenciasResult || []) as RegistroFrequencia[];
@@ -527,27 +572,30 @@ export async function getTurmaPerformance(turmaId: number) {
     const aulas_totais = aulasSet.size;
 
     // 4. Monta array de performance para cada matrícula
-    const performance: MatriculaComPerformance[] = matriculas.map((matricula) => {
-      // Conta presenças da aluna (presente = true)
-      const presencas = frequencias.filter(
-        (f) => f.beneficiaria === matricula.beneficiaria.id && f.presente === true
-      ).length;
+    const performance: MatriculaComPerformance[] = matriculas.map(
+      (matricula) => {
+        // Conta presenças da aluna (presente = true)
+        const presencas = frequencias.filter(
+          (f) =>
+            f.beneficiaria === matricula.beneficiaria.id && f.presente === true,
+        ).length;
 
-      // Calcula frequência percentual
-      const frequencia_percentual =
-        aulas_totais > 0 ? (presencas / aulas_totais) * 100 : 0;
+        // Calcula frequência percentual
+        const frequencia_percentual =
+          aulas_totais > 0 ? (presencas / aulas_totais) * 100 : 0;
 
-      // Determina se aprovada (>= 75%)
-      const aprovada = frequencia_percentual >= 75;
+        // Determina se aprovada (>= 75%)
+        const aprovada = frequencia_percentual >= 75;
 
-      return {
-        ...matricula,
-        aulas_totais,
-        presencas,
-        frequencia_percentual: Math.round(frequencia_percentual * 100) / 100,
-        aprovada,
-      };
-    });
+        return {
+          ...matricula,
+          aulas_totais,
+          presencas,
+          frequencia_percentual: Math.round(frequencia_percentual * 100) / 100,
+          aprovada,
+        };
+      },
+    );
 
     return { success: true, data: performance };
   } catch (error) {

@@ -18,9 +18,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { deleteCurso, saveCurso, type CursoPayload } from "../actions";
-import { z } from "zod";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
+import { deleteCurso, saveCurso, type CursoPayload } from "../actions";
+import { EscolaCursoDB } from "@/types/database";
+import { z } from "zod";
 
 const AREA_LABEL: Record<string, string> = {
   beleza: "Beleza",
@@ -65,10 +66,8 @@ const defaultFormValues: CursoPayload = {
   ementa: "",
 };
 
-export type Curso = CursoPayload;
-
 interface CursosClientProps {
-  cursos: Curso[];
+  cursos: EscolaCursoDB[];
 }
 
 export function CursosClient({ cursos }: CursosClientProps) {
@@ -89,19 +88,41 @@ export function CursosClient({ cursos }: CursosClientProps) {
       onSave={async (values) => saveCurso(values)}
       onDelete={async (id) => deleteCurso(id)}
       columns={[
-        { key: "nome", label: "Nome" },
+        {
+          key: "nome",
+          label: (
+            <span className="inline-flex items-center gap-1">
+              Nome
+              <InfoTooltip text="Nome identificador do curso oferecido." />
+            </span>
+          ),
+        },
         {
           key: "area_atuacao",
-          label: "Área de Atuação",
+          label: (
+            <span className="inline-flex items-center gap-1">
+              Área de Atuação
+              <InfoTooltip text="Categoria ou área de conhecimento do curso." />
+            </span>
+          ),
           render: (item) => (
-            <Badge className={AREA_COLOR[item.area_atuacao] || "bg-slate-100 text-slate-800"}>
+            <Badge
+              className={
+                AREA_COLOR[item.area_atuacao] || "bg-slate-100 text-slate-800"
+              }
+            >
               {AREA_LABEL[item.area_atuacao] || item.area_atuacao}
             </Badge>
           ),
         },
         {
           key: "carga_horaria",
-          label: "Carga Horária",
+          label: (
+            <span className="inline-flex items-center gap-1">
+              Carga Horária (h)
+              <InfoTooltip text="Total de horas de duração do curso." />
+            </span>
+          ),
           render: (item) => `${item.carga_horaria || 0}h`,
         },
       ]}
@@ -117,7 +138,11 @@ export function CursosClient({ cursos }: CursosClientProps) {
                   <InfoTooltip text="Nome identificador do curso oferecido." />
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="Ex: Curso de Inclusão Digital" {...field} />
+                  <Input
+                    placeholder="Ex: Curso de Inclusão Digital"
+                    {...field}
+                    value={field.value ?? ""}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -134,7 +159,10 @@ export function CursosClient({ cursos }: CursosClientProps) {
                   <InfoTooltip text="Categoria ou área de conhecimento do curso." />
                 </FormLabel>
                 <FormControl>
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select
+                    value={field.value ?? ""}
+                    onValueChange={field.onChange}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione a área" />
                     </SelectTrigger>
@@ -167,7 +195,7 @@ export function CursosClient({ cursos }: CursosClientProps) {
                     type="number"
                     min={1}
                     placeholder="Ex: 40"
-                    value={field.value}
+                    value={field.value ?? ""}
                     onChange={(e) => field.onChange(Number(e.target.value))}
                   />
                 </FormControl>
@@ -189,6 +217,7 @@ export function CursosClient({ cursos }: CursosClientProps) {
                   <Textarea
                     placeholder="Descreva os tópicos principais do curso"
                     {...field}
+                    value={field.value ?? ""}
                   />
                 </FormControl>
                 <FormMessage />
