@@ -23,9 +23,11 @@ export type ConfigCollection =
 
 /**
  * Whitelist de tipos permitidos para operações CRUD
+ * Aceita ambos os formatos: nomes curtos (ex: "origens") e nomes longos (ex: "config_origens")
  * Esta é a única fonte de verdade para validação de segurança
  */
 const ALLOWED_TYPES = [
+  // Nomes curtos (usados nas tabs e URLs)
   "origens",
   "prioridades",
   "tipos-evento",
@@ -42,12 +44,24 @@ const ALLOWED_TYPES = [
   "encaminhamentos",
   "campanhas",
   "locais",
+  // Nomes longos (como vêm da API)
+  "config_origens",
+  "config_prioridades",
+  "config_tipos_evento",
+  "config_tipos_agressao",
+  "config_niveis_periculosidade",
+  "config_status_legal",
+  "config_bairros",
+  "config_beneficios",
+  "config_encaminhamentos",
+  "config_campanhas",
 ] as const;
 
 /**
  * Retorna o nome da collection baseado no tipo
  * Função interna apenas para as Actions usarem.
  * Valida contra whitelist para segurança.
+ * Suporta ambos os formatos: nomes curtos ("origens") e longos ("config_origens")
  */
 function getCollectionName(type: string): ConfigCollection {
   // Validação de segurança: apenas tipos permitidos
@@ -55,6 +69,12 @@ function getCollectionName(type: string): ConfigCollection {
     throw new Error(`Tipo "${type}" não é permitido para operações CRUD`);
   }
 
+  // Se já for o nome da collection (começa com "config_" ou é "locais"), retorna ele mesmo
+  if (type.startsWith("config_") || type === "locais") {
+    return type as ConfigCollection;
+  }
+
+  // Caso contrário, faz o mapeamento do nome curto para o nome da collection
   switch (type) {
     case "origens":
       return "config_origens";
@@ -83,8 +103,6 @@ function getCollectionName(type: string): ConfigCollection {
       return "config_encaminhamentos";
     case "campanhas":
       return "config_campanhas";
-    case "locais":
-      return "locais";
     default:
       throw new Error(`Tipo "${type}" não possui mapeamento para collection`);
   }
@@ -98,7 +116,7 @@ function getCollectionName(type: string): ConfigCollection {
 export async function getAuxItems(type: string) {
   try {
     const collectionName = getCollectionName(type);
-    
+
     // @ts-ignore
     const items = await directus.request(
       readItems(collectionName, {
@@ -111,7 +129,11 @@ export async function getAuxItems(type: string) {
   } catch (error) {
     console.error(`Erro ao buscar ${type}:`, error);
     // Retorna array vazio em caso de erro para não quebrar a página
-    return { success: false, data: [], error: error instanceof Error ? error.message : "Erro ao buscar dados." };
+    return {
+      success: false,
+      data: [],
+      error: error instanceof Error ? error.message : "Erro ao buscar dados.",
+    };
   }
 }
 
@@ -140,9 +162,9 @@ export async function saveAuxItem(
     return { success: true };
   } catch (error) {
     console.error(`Erro ao salvar ${type}:`, error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : "Erro ao salvar." 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Erro ao salvar.",
     };
   }
 }
@@ -163,9 +185,9 @@ export async function deleteAuxItem(type: string, id: number) {
     return { success: true };
   } catch (error) {
     console.error(`Erro ao excluir ${type}:`, error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : "Erro ao excluir." 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Erro ao excluir.",
     };
   }
 }
