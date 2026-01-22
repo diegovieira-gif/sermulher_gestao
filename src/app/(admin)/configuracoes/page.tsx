@@ -2,7 +2,8 @@ import { getAuxItems } from "./actions";
 import { ConfiguracoesClient } from "./configuracoes-client";
 
 export default async function ConfiguracoesPage() {
-  // Busca todos os dados das collections de configuração
+  // Busca todos os dados das collections de configuração usando tipos
+  // Cada chamada retorna um array vazio em caso de erro, não quebrando a página
   const [
     origensResult,
     prioridadesResult,
@@ -10,45 +11,27 @@ export default async function ConfiguracoesPage() {
     tiposAgressaoResult,
     encaminhamentosResult,
     periculosidadeResult,
+    statusLegalResult,
     locaisResult,
     bairrosResult,
     beneficiosResult,
     campanhasResult,
   ] = await Promise.all([
-    getAuxItems("config_origens"),
-    getAuxItems("config_prioridades"),
-    getAuxItems("config_tipos_evento"),
-    getAuxItems("config_tipos_agressao"),
-    getAuxItems("config_encaminhamentos"),
-    getAuxItems("config_niveis_periculosidade"),
+    getAuxItems("origens"),
+    getAuxItems("prioridades"),
+    getAuxItems("tipos-evento"),
+    getAuxItems("tipos-violencia"),
+    getAuxItems("encaminhamentos"),
+    getAuxItems("periculosidade"),
+    getAuxItems("status-legal"),
     getAuxItems("locais"),
-    getAuxItems("config_bairros"),
-    getAuxItems("config_beneficios"),
-    getAuxItems("config_campanhas"),
+    getAuxItems("bairros"),
+    getAuxItems("beneficios"),
+    getAuxItems("campanhas"),
   ]);
 
-  // Verifica se houve erros
-  if (
-    !origensResult.success ||
-    !prioridadesResult.success ||
-    !tiposEventoResult.success ||
-    !tiposAgressaoResult.success ||
-    !encaminhamentosResult.success ||
-    !periculosidadeResult.success ||
-    !locaisResult.success ||
-    !bairrosResult.success ||
-    !beneficiosResult.success ||
-    !campanhasResult.success
-  ) {
-    return (
-      <div className="p-6">
-        <div className="bg-destructive/10 text-destructive px-4 py-3 rounded">
-          Erro ao carregar configurações. Tente novamente.
-        </div>
-      </div>
-    );
-  }
-
+  // Extrai os dados, usando array vazio se houver erro
+  // Isso permite que a página carregue mesmo se uma tabela falhar
   return (
     <div className="p-6">
       <ConfiguracoesClient
@@ -58,6 +41,7 @@ export default async function ConfiguracoesPage() {
         tiposAgressao={tiposAgressaoResult.data || []}
         encaminhamentos={encaminhamentosResult.data || []}
         periculosidade={periculosidadeResult.data || []}
+        statusLegal={statusLegalResult.data || []}
         locais={locaisResult.data || []}
         bairros={bairrosResult.data || []}
         beneficios={beneficiosResult.data || []}

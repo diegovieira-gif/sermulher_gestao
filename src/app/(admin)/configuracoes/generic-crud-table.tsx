@@ -48,12 +48,13 @@ import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { saveAuxItem, deleteAuxItem, type ConfigCollection } from "./actions";
+import { saveAuxItem, deleteAuxItem } from "./actions";
 import { Badge } from "@/components/ui/badge";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 
 interface GenericCrudTableProps {
-  collectionName: ConfigCollection | string;
+  /** Tipo da collection (ex: "origens", "prioridades") - será validado no servidor */
+  type: string;
   title: string;
   items: any[];
   columns: Array<{
@@ -95,7 +96,7 @@ const createSchema = (hasColor: boolean, hasGrupoRma: boolean) =>
   });
 
 export function GenericCrudTable({
-  collectionName,
+  type,
   title,
   items = [],
   columns = [],
@@ -160,8 +161,7 @@ export function GenericCrudTable({
     try {
       const saveHandler = onSave
         ? onSave
-        : // @ts-ignore
-          (payload) => saveAuxItem(collectionName, payload);
+        : (payload) => saveAuxItem(type, payload);
 
       const result = await saveHandler(values, { selectedItem });
 
@@ -187,13 +187,13 @@ export function GenericCrudTable({
     try {
       const deleteHandler = onDelete
         ? onDelete
-        : (id: number) => deleteAuxItem(collectionName, id);
+        : (id: number) => deleteAuxItem(type, id);
 
       const result = await deleteHandler(itemToDelete);
       if (result.success) {
         toast.success("Item excluído!");
       } else {
-        toast.error("Erro ao excluir.");
+        toast.error(result.error || "Erro ao excluir.");
       }
     } finally {
       setIsDeleting(false);

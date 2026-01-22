@@ -1,7 +1,8 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { GenericCrudTable } from "./generic-crud-table";
+import { GenericCrudTable } from "@/components/shared/generic-crud-table";
+import { saveAuxItem, deleteAuxItem } from "./actions";
 import {
   FormField,
   FormItem,
@@ -19,6 +20,19 @@ import {
 } from "@/components/ui/select";
 import { z } from "zod";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
+import {
+  Building2,
+  AlertCircle,
+  CalendarDays,
+  ShieldAlert,
+  ArrowUpRight,
+  Siren,
+  Scale,
+  MapPin,
+  Map,
+  HeartHandshake,
+  Megaphone,
+} from "lucide-react";
 
 interface ConfiguracoesClientProps {
   origens: any[];
@@ -27,6 +41,7 @@ interface ConfiguracoesClientProps {
   tiposAgressao: any[];
   encaminhamentos: any[];
   periculosidade: any[];
+  statusLegal: any[];
   locais: any[];
   bairros: any[];
   beneficios: any[];
@@ -40,6 +55,7 @@ export function ConfiguracoesClient({
   tiposAgressao,
   encaminhamentos,
   periculosidade,
+  statusLegal,
   locais,
   bairros,
   beneficios,
@@ -69,134 +85,233 @@ export function ConfiguracoesClient({
         </p>
       </div>
 
-      <Tabs defaultValue="origens" className="w-full">
-        <TabsList className="grid w-full grid-cols-10">
-          <TabsTrigger value="origens">Origens</TabsTrigger>
-          <TabsTrigger value="prioridades">Prioridades</TabsTrigger>
-          <TabsTrigger value="tipos-evento">Tipos de Evento</TabsTrigger>
-          <TabsTrigger value="tipos-violencia">Tipos de Violência</TabsTrigger>
-          <TabsTrigger value="encaminhamentos">Encaminhamentos</TabsTrigger>
-          <TabsTrigger value="periculosidade">Periculosidade</TabsTrigger>
-          <TabsTrigger value="locais">Locais</TabsTrigger>
-          <TabsTrigger value="bairros">Bairros</TabsTrigger>
-          <TabsTrigger value="beneficios">Benefícios</TabsTrigger>
-          <TabsTrigger value="campanhas">Campanhas</TabsTrigger>
-        </TabsList>
+      <Tabs
+        defaultValue="origens"
+        className="flex flex-col md:flex-row gap-6"
+      >
+        <aside className="w-full md:w-64 shrink-0">
+          <TabsList className="flex md:flex-col h-auto bg-transparent p-0 gap-1 overflow-x-auto md:overflow-visible w-full flex-nowrap md:flex-wrap">
+            <TabsTrigger
+              value="origens"
+              className="flex items-center gap-2 justify-start w-full md:w-full px-4 py-3 data-[state=active]:bg-muted data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
+            >
+              <Building2 className="w-4 h-4" />
+              <span>Origens</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="prioridades"
+              className="flex items-center gap-2 justify-start w-full md:w-full px-4 py-3 data-[state=active]:bg-muted data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
+            >
+              <AlertCircle className="w-4 h-4" />
+              <span>Prioridades</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="tipos-evento"
+              className="flex items-center gap-2 justify-start w-full md:w-full px-4 py-3 data-[state=active]:bg-muted data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
+            >
+              <CalendarDays className="w-4 h-4" />
+              <span>Tipos de Evento</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="tipos-violencia"
+              className="flex items-center gap-2 justify-start w-full md:w-full px-4 py-3 data-[state=active]:bg-muted data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
+            >
+              <ShieldAlert className="w-4 h-4" />
+              <span>Tipos de Violência</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="encaminhamentos"
+              className="flex items-center gap-2 justify-start w-full md:w-full px-4 py-3 data-[state=active]:bg-muted data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
+            >
+              <ArrowUpRight className="w-4 h-4" />
+              <span>Encaminhamentos</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="periculosidade"
+              className="flex items-center gap-2 justify-start w-full md:w-full px-4 py-3 data-[state=active]:bg-muted data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
+            >
+              <Siren className="w-4 h-4" />
+              <span>Periculosidade</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="status-legal"
+              className="flex items-center gap-2 justify-start w-full md:w-full px-4 py-3 data-[state=active]:bg-muted data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
+            >
+              <Scale className="w-4 h-4" />
+              <span>Status Legal</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="locais"
+              className="flex items-center gap-2 justify-start w-full md:w-full px-4 py-3 data-[state=active]:bg-muted data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
+            >
+              <MapPin className="w-4 h-4" />
+              <span>Locais</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="bairros"
+              className="flex items-center gap-2 justify-start w-full md:w-full px-4 py-3 data-[state=active]:bg-muted data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
+            >
+              <Map className="w-4 h-4" />
+              <span>Bairros</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="beneficios"
+              className="flex items-center gap-2 justify-start w-full md:w-full px-4 py-3 data-[state=active]:bg-muted data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
+            >
+              <HeartHandshake className="w-4 h-4" />
+              <span>Benefícios</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="campanhas"
+              className="flex items-center gap-2 justify-start w-full md:w-full px-4 py-3 data-[state=active]:bg-muted data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
+            >
+              <Megaphone className="w-4 h-4" />
+              <span>Campanhas</span>
+            </TabsTrigger>
+          </TabsList>
+        </aside>
 
-        <TabsContent value="origens" className="mt-6">
+        <div className="flex-1 min-w-0">
+          <TabsContent value="origens" className="mt-0 md:mt-0">
           <GenericCrudTable
-            collectionName="config_origens"
+            type="origens"
             title="Origens de Encaminhamento"
             items={origens}
-            // REMOVIDO: { key: "status", label: "Status" } -> O componente já gera automático
             columns={[{ key: "nome", label: "Nome" }]}
           />
         </TabsContent>
 
-        <TabsContent value="prioridades" className="mt-6">
+          <TabsContent value="prioridades" className="mt-0 md:mt-0">
           <GenericCrudTable
-            collectionName="config_prioridades"
+            type="prioridades"
             title="Níveis de Prioridade"
             items={prioridades}
             columns={[{ key: "nome", label: "Nome" }]}
           />
         </TabsContent>
 
-        <TabsContent value="tipos-evento" className="mt-6">
+          <TabsContent value="tipos-evento" className="mt-0 md:mt-0">
           <GenericCrudTable
-            collectionName="config_tipos_evento"
+            type="tipos-evento"
             title="Tipos de Evento"
             items={tiposEvento}
             columns={[{ key: "nome", label: "Nome" }]}
           />
         </TabsContent>
 
-        <TabsContent value="tipos-violencia" className="mt-6">
-          <GenericCrudTable
-            collectionName="config_tipos_agressao"
-            title="Tipos de Violência"
-            items={tiposAgressao}
-            columns={[{ key: "nome", label: "Nome" }]}
-          />
-        </TabsContent>
+          <TabsContent value="tipos-violencia" className="mt-0 md:mt-0">
+            <GenericCrudTable
+              type="tipos-violencia"
+              title="Tipos de Violência"
+              items={tiposAgressao}
+              columns={[{ key: "nome", label: "Nome" }]}
+            />
+          </TabsContent>
 
-        <TabsContent value="encaminhamentos" className="mt-6">
-          <GenericCrudTable
-            collectionName="config_encaminhamentos"
-            title="Encaminhamentos (RMA)"
-            items={encaminhamentos}
-            columns={[
-              { key: "nome", label: "Nome" },
-              { key: "grupo_rma", label: "Grupo RMA" },
-            ]}
-            hasGrupoRma={true}
-          />
-        </TabsContent>
+          <TabsContent value="encaminhamentos" className="mt-0 md:mt-0">
+            <GenericCrudTable
+              type="encaminhamentos"
+              title="Encaminhamentos (RMA)"
+              items={encaminhamentos}
+              columns={[
+                { key: "nome", label: "Nome" },
+                { key: "grupo_rma", label: "Grupo RMA" },
+              ]}
+              hasGrupoRma={true}
+            />
+          </TabsContent>
 
-        <TabsContent value="periculosidade" className="mt-6">
-          <GenericCrudTable
-            collectionName="config_niveis_periculosidade"
-            title="Níveis de Periculosidade"
-            items={periculosidade}
-            columns={[
-              { key: "nome", label: "Nome" },
-              {
-                key: "cor",
-                label: "Cor",
-                render: (item) => (
-                  <div className="flex items-center gap-2">
-                    {item.cor && (
-                      <div
-                        className="w-6 h-6 rounded border"
-                        style={{ backgroundColor: item.cor }}
-                      />
-                    )}
-                    <span>{item.cor || "-"}</span>
-                  </div>
-                ),
-              },
-              { key: "peso", label: "Peso" },
-            ]}
-            hasColorField={true}
-          />
-        </TabsContent>
+          <TabsContent value="periculosidade" className="mt-0 md:mt-0">
+            <GenericCrudTable
+              type="periculosidade"
+              title="Níveis de Periculosidade"
+              items={periculosidade}
+              columns={[
+                { key: "nome", label: "Nome" },
+                {
+                  key: "cor",
+                  label: "Cor",
+                  render: (item) => (
+                    <div className="flex items-center gap-2">
+                      {item.cor && (
+                        <div
+                          className="w-6 h-6 rounded border"
+                          style={{ backgroundColor: item.cor }}
+                        />
+                      )}
+                      <span>{item.cor || "-"}</span>
+                    </div>
+                  ),
+                },
+                { key: "peso", label: "Peso" },
+              ]}
+              hasColorField={true}
+            />
+          </TabsContent>
 
-        <TabsContent value="locais" className="mt-6">
-          <GenericCrudTable
-            collectionName="locais"
-            title="Locais (Salas)"
-            items={locais}
-            columns={[{ key: "nome", label: "Nome" }]}
-          />
-        </TabsContent>
+          <TabsContent value="status-legal" className="mt-0 md:mt-0">
+            <GenericCrudTable
+              type="status-legal"
+              title="Status Legal"
+              items={statusLegal}
+              columns={[
+                { key: "nome", label: "Nome" },
+                {
+                  key: "cor",
+                  label: "Cor",
+                  render: (item) => (
+                    <div className="flex items-center gap-2">
+                      {item.cor && (
+                        <div
+                          className="w-6 h-6 rounded border"
+                          style={{ backgroundColor: item.cor }}
+                        />
+                      )}
+                      <span>{item.cor || "-"}</span>
+                    </div>
+                  ),
+                },
+              ]}
+              hasColorField={true}
+            />
+          </TabsContent>
 
-        <TabsContent value="bairros" className="mt-6">
-          <GenericCrudTable
-            collectionName="config_bairros"
-            title="Bairros"
-            items={bairros}
-            columns={[
-              { key: "nome", label: "Nome" },
-              { key: "zona", label: "Zona" },
-            ]}
-          />
-        </TabsContent>
+          <TabsContent value="locais" className="mt-0 md:mt-0">
+            <GenericCrudTable
+              type="locais"
+              title="Locais (Salas)"
+              items={locais}
+              columns={[{ key: "nome", label: "Nome" }]}
+            />
+          </TabsContent>
 
-        <TabsContent value="beneficios" className="mt-6">
-          <GenericCrudTable
-            collectionName="config_beneficios"
-            title="Benefícios"
-            items={beneficios}
-            columns={[
-              { key: "nome", label: "Nome" },
-              { key: "descricao", label: "Descrição" },
-            ]}
-          />
-        </TabsContent>
+          <TabsContent value="bairros" className="mt-0 md:mt-0">
+            <GenericCrudTable
+              type="bairros"
+              title="Bairros"
+              items={bairros}
+              columns={[
+                { key: "nome", label: "Nome" },
+                { key: "zona", label: "Zona" },
+              ]}
+            />
+          </TabsContent>
 
-        <TabsContent value="campanhas" className="mt-6">
+          <TabsContent value="beneficios" className="mt-0 md:mt-0">
+            <GenericCrudTable
+              type="beneficios"
+              title="Benefícios"
+              items={beneficios}
+              columns={[
+                { key: "nome", label: "Nome" },
+                { key: "descricao", label: "Descrição" },
+              ]}
+            />
+          </TabsContent>
+
+          <TabsContent value="campanhas" className="mt-0 md:mt-0">
           <GenericCrudTable
-            collectionName="campanhas"
+            type="campanhas"
             title="Campanhas"
             items={campanhas}
             columns={[
@@ -353,7 +468,8 @@ export function ConfiguracoesClient({
               </>
             )}
           />
-        </TabsContent>
+          </TabsContent>
+        </div>
       </Tabs>
     </div>
   );
