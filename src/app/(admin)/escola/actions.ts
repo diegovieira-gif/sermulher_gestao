@@ -169,7 +169,7 @@ type BeneficiariaOption = Pick<
   EscolaAlunoDB,
   "id" | "nome_completo" | "cpf"
 > & {
-  contato: string | null;
+  contato: string;
 };
 
 /**
@@ -325,7 +325,13 @@ export async function getMatriculasByTurma(turmaId: number) {
  */
 export async function getBeneficiariasOptions() {
   try {
-    const beneficiarias = await directus.request<BeneficiariaOption[]>(
+    const beneficiarias = await directus.request<
+      Array<
+        Pick<BeneficiariaOption, "id" | "nome_completo" | "cpf"> & {
+          contato: string | null;
+        }
+      >
+    >(
       readItems("beneficiarias", {
         // @ts-ignore
         fields: ["id", "nome_completo", "cpf", "contato"],
@@ -334,9 +340,14 @@ export async function getBeneficiariasOptions() {
       }),
     );
 
+    const data: BeneficiariaOption[] = (beneficiarias ?? []).map((b) => ({
+      ...b,
+      contato: b.contato ?? "",
+    }));
+
     return {
       success: true,
-      data: beneficiarias,
+      data,
     };
   } catch (error) {
     console.error("Erro ao buscar beneficiárias:", error);
