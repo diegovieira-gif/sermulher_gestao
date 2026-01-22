@@ -174,7 +174,7 @@ export function TurmasClient({ turmas, cursosOptions }: TurmasClientProps) {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => router.push(`/admin/escola/turmas/${item.id}`)}
+              onClick={() => router.push(`/escola/turmas/${item.id}`)}
               title="Ver detalhes e gerenciar matrículas"
             >
               <Eye className="h-4 w-4" />
