@@ -78,11 +78,7 @@ export function ConfiguracoesClient({
 
   return (
     <div>
-
-      <Tabs
-        defaultValue="origens"
-        className="flex flex-col md:flex-row gap-6"
-      >
+      <Tabs defaultValue="origens" className="flex flex-col md:flex-row gap-6">
         <aside className="w-full md:w-64 shrink-0">
           <TabsList className="flex md:flex-col h-auto bg-transparent p-0 gap-1 overflow-x-auto md:overflow-visible w-full flex-nowrap md:flex-wrap">
             <TabsTrigger
@@ -167,41 +163,41 @@ export function ConfiguracoesClient({
 
         <div className="flex-1 min-w-0">
           <TabsContent value="origens" className="mt-0 md:mt-0">
-          <GenericCrudTable
-            title="Origens de Encaminhamento"
-            items={origens}
-            columns={[{ key: "nome", label: "Nome" }]}
-            onSave={(values) => saveAuxItem("origens", values)}
-            onDelete={(id) => deleteAuxItem("origens", id)}
-          />
-        </TabsContent>
+            <GenericCrudTable
+              title="Origens de Encaminhamento"
+              items={origens}
+              columns={[{ key: "nome", label: "Nome" }]}
+              onSave={(values, ctx) => saveAuxItem("origens", values)}
+              onDelete={(id) => deleteAuxItem("origens", id)}
+            />
+          </TabsContent>
 
           <TabsContent value="prioridades" className="mt-0 md:mt-0">
-          <GenericCrudTable
-            title="Níveis de Prioridade"
-            items={prioridades}
-            columns={[{ key: "nome", label: "Nome" }]}
-            onSave={(values) => saveAuxItem("prioridades", values)}
-            onDelete={(id) => deleteAuxItem("prioridades", id)}
-          />
-        </TabsContent>
+            <GenericCrudTable
+              title="Níveis de Prioridade"
+              items={prioridades}
+              columns={[{ key: "nome", label: "Nome" }]}
+              onSave={(values, ctx) => saveAuxItem("prioridades", values)}
+              onDelete={(id) => deleteAuxItem("prioridades", id)}
+            />
+          </TabsContent>
 
           <TabsContent value="tipos-evento" className="mt-0 md:mt-0">
-          <GenericCrudTable
-            title="Tipos de Evento"
-            items={tiposEvento}
-            columns={[{ key: "nome", label: "Nome" }]}
-            onSave={(values) => saveAuxItem("tipos-evento", values)}
-            onDelete={(id) => deleteAuxItem("tipos-evento", id)}
-          />
-        </TabsContent>
+            <GenericCrudTable
+              title="Tipos de Evento"
+              items={tiposEvento}
+              columns={[{ key: "nome", label: "Nome" }]}
+              onSave={(values, ctx) => saveAuxItem("tipos-evento", values)}
+              onDelete={(id) => deleteAuxItem("tipos-evento", id)}
+            />
+          </TabsContent>
 
           <TabsContent value="tipos-violencia" className="mt-0 md:mt-0">
             <GenericCrudTable
               title="Tipos de Violência"
               items={tiposAgressao}
               columns={[{ key: "nome", label: "Nome" }]}
-              onSave={(values) => saveAuxItem("tipos-violencia", values)}
+              onSave={(values, ctx) => saveAuxItem("tipos-violencia", values)}
               onDelete={(id) => deleteAuxItem("tipos-violencia", id)}
             />
           </TabsContent>
@@ -215,7 +211,7 @@ export function ConfiguracoesClient({
                 { key: "grupo_rma", label: "Grupo RMA" },
               ]}
               hasGrupoRma={true}
-              onSave={(values) => saveAuxItem("encaminhamentos", values)}
+              onSave={(values, ctx) => saveAuxItem("encaminhamentos", values)}
               onDelete={(id) => deleteAuxItem("encaminhamentos", id)}
             />
           </TabsContent>
@@ -244,7 +240,7 @@ export function ConfiguracoesClient({
                 { key: "peso", label: "Peso" },
               ]}
               hasColorField={true}
-              onSave={(values) => saveAuxItem("periculosidade", values)}
+              onSave={(values, ctx) => saveAuxItem("periculosidade", values)}
               onDelete={(id) => deleteAuxItem("periculosidade", id)}
             />
           </TabsContent>
@@ -272,7 +268,7 @@ export function ConfiguracoesClient({
                 },
               ]}
               hasColorField={true}
-              onSave={(values) => saveAuxItem("status-legal", values)}
+              onSave={(values, ctx) => saveAuxItem("status-legal", values)}
               onDelete={(id) => deleteAuxItem("status-legal", id)}
             />
           </TabsContent>
@@ -282,7 +278,7 @@ export function ConfiguracoesClient({
               title="Locais (Salas)"
               items={locais}
               columns={[{ key: "nome", label: "Nome" }]}
-              onSave={(values) => saveAuxItem("locais", values)}
+              onSave={(values, ctx) => saveAuxItem("locais", values)}
               onDelete={(id) => deleteAuxItem("locais", id)}
             />
           </TabsContent>
@@ -295,7 +291,7 @@ export function ConfiguracoesClient({
                 { key: "nome", label: "Nome" },
                 { key: "zona", label: "Zona" },
               ]}
-              onSave={(values) => saveAuxItem("bairros", values)}
+              onSave={(values, ctx) => saveAuxItem("bairros", values)}
               onDelete={(id) => deleteAuxItem("bairros", id)}
             />
           </TabsContent>
@@ -308,171 +304,175 @@ export function ConfiguracoesClient({
                 { key: "nome", label: "Nome" },
                 { key: "descricao", label: "Descrição" },
               ]}
-              onSave={(values) => saveAuxItem("beneficios", values)}
+              onSave={(values, ctx) => saveAuxItem("beneficios", values)}
               onDelete={(id) => deleteAuxItem("beneficios", id)}
             />
           </TabsContent>
 
           <TabsContent value="campanhas" className="mt-0 md:mt-0">
-          <GenericCrudTable
-            title="Campanhas"
-            items={campanhas}
-            columns={[
-              { key: "nome", label: "Nome" },
-              { key: "mes", label: "Mês" },
-              {
-                key: "cor",
-                label: "Cor",
-                render: (item) => (
-                  <div className="flex items-center gap-2">
-                    {item.cor && (
-                      <div
-                        className="w-4 h-4 rounded-full border"
-                        style={{ backgroundColor: item.cor }}
-                      />
-                    )}
-                    <span>{item.cor || "-"}</span>
-                  </div>
-                ),
-              },
-            ]}
-            hasColorField={true}
-            defaultValues={{
-              nome: "",
-              mes: "",
-              cor: "#000000",
-              status: "published",
-            }}
-            formSchema={z.object({
-              id: z.number().optional(),
-              nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
-              mes: z.string().min(1, "Selecione o mês"),
-              cor: z.string().min(1, "Selecione a cor"),
-              status: z.string().min(1, "Selecione o status"),
-            })}
-            mapItemToFormValues={(item) => ({
-              id: item.id,
-              nome: item.nome,
-              mes: item.mes || "",
-              cor: item.cor || "#000000",
-              status: item.status || "published",
-            })}
-            onSave={(values) => saveAuxItem("campanhas", values)}
-            onDelete={(id) => deleteAuxItem("campanhas", id)}
-            renderFormFields={(form: any) => (
-              <>
-                <FormField
-                  control={form.control}
-                  name="nome"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Nome
-                        <InfoTooltip text="Nome identificador da campanha temática." />
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Ex: Campanha Outubro Rosa"
-                          {...field}
+            <GenericCrudTable
+              title="Campanhas"
+              items={campanhas}
+              columns={[
+                { key: "nome", label: "Nome" },
+                { key: "mes", label: "Mês" },
+                {
+                  key: "cor",
+                  label: "Cor",
+                  render: (item) => (
+                    <div className="flex items-center gap-2">
+                      {item.cor && (
+                        <div
+                          className="w-4 h-4 rounded-full border"
+                          style={{ backgroundColor: item.cor }}
                         />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="mes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Mês
-                        <InfoTooltip text="Mês de referência da campanha para organização e relatórios." />
-                      </FormLabel>
-                      <FormControl>
-                        <Select
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o mês" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {monthOptions.map((mes) => (
-                              <SelectItem key={mes} value={mes}>
-                                {mes}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="cor"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Cor
-                        <InfoTooltip text="Cor hexadecimal para identificação visual da campanha em gráficos e relatórios." />
-                      </FormLabel>
-                      <div className="flex gap-2">
+                      )}
+                      <span>{item.cor || "-"}</span>
+                    </div>
+                  ),
+                },
+              ]}
+              hasColorField={true}
+              defaultValues={{
+                nome: "",
+                mes: "",
+                cor: "#000000",
+                status: "published",
+              }}
+              formSchema={z.object({
+                id: z.number().optional(),
+                nome: z
+                  .string()
+                  .min(2, "Nome deve ter pelo menos 2 caracteres"),
+                mes: z.string().min(1, "Selecione o mês"),
+                cor: z.string().min(1, "Selecione a cor"),
+                status: z.string().min(1, "Selecione o status"),
+              })}
+              mapItemToFormValues={(item) => ({
+                id: item.id,
+                nome: item.nome,
+                mes: item.mes || "",
+                cor: item.cor || "#000000",
+                status: item.status || "published",
+              })}
+              onSave={(values, ctx) => saveAuxItem("campanhas", values)}
+              onDelete={(id) => deleteAuxItem("campanhas", id)}
+              renderFormFields={(form: any) => (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="nome"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Nome
+                          <InfoTooltip text="Nome identificador da campanha temática." />
+                        </FormLabel>
                         <FormControl>
                           <Input
-                            type="color"
-                            className="w-12 h-10 p-1"
+                            placeholder="Ex: Campanha Outubro Rosa"
                             {...field}
                           />
                         </FormControl>
-                        <Input
-                          placeholder="#000000"
-                          {...field}
-                          className="flex-1"
-                        />
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Status
-                        <InfoTooltip text="Define se a campanha está ativa, inativa ou arquivada no sistema." />
-                      </FormLabel>
-                      <FormControl>
-                        <Select
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="published">Ativo</SelectItem>
-                            <SelectItem value="draft">
-                              Inativo (Rascunho)
-                            </SelectItem>
-                            <SelectItem value="archived">Arquivado</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </>
-            )}
-          />
+                  <FormField
+                    control={form.control}
+                    name="mes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Mês
+                          <InfoTooltip text="Mês de referência da campanha para organização e relatórios." />
+                        </FormLabel>
+                        <FormControl>
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione o mês" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {monthOptions.map((mes) => (
+                                <SelectItem key={mes} value={mes}>
+                                  {mes}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="cor"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Cor
+                          <InfoTooltip text="Cor hexadecimal para identificação visual da campanha em gráficos e relatórios." />
+                        </FormLabel>
+                        <div className="flex gap-2">
+                          <FormControl>
+                            <Input
+                              type="color"
+                              className="w-12 h-10 p-1"
+                              {...field}
+                            />
+                          </FormControl>
+                          <Input
+                            placeholder="#000000"
+                            {...field}
+                            className="flex-1"
+                          />
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Status
+                          <InfoTooltip text="Define se a campanha está ativa, inativa ou arquivada no sistema." />
+                        </FormLabel>
+                        <FormControl>
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione o status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="published">Ativo</SelectItem>
+                              <SelectItem value="draft">
+                                Inativo (Rascunho)
+                              </SelectItem>
+                              <SelectItem value="archived">
+                                Arquivado
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
+            />
           </TabsContent>
         </div>
       </Tabs>

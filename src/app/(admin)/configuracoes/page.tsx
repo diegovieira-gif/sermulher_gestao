@@ -3,17 +3,17 @@ import { ConfiguracoesClient } from "./configuracoes-client";
 
 export default async function ConfiguracoesPage() {
   // Inicializa arrays vazios
-  let origens = [],
-    prioridades = [],
-    tiposEvento = [],
-    tiposAgressao = [],
-    encaminhamentos = [],
-    periculosidade = [],
-    statusLegal = [],
-    locais = [],
-    bairros = [],
-    beneficios = [],
-    campanhas = [];
+  let origens: any[] = [],
+    prioridades: any[] = [],
+    tiposEvento: any[] = [],
+    tiposAgressao: any[] = [],
+    encaminhamentos: any[] = [],
+    periculosidade: any[] = [],
+    statusLegal: any[] = [],
+    locais: any[] = [],
+    bairros: any[] = [],
+    beneficios: any[] = [],
+    campanhas: any[] = [];
 
   try {
     // Busca Sequencial (Um por vez para não afogar a conexão)
