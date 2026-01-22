@@ -33,7 +33,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
@@ -75,22 +81,28 @@ export function AtendimentoForm({
   const normalizedValues = useMemo(() => {
     if (atendimento) {
       const beneficiariaId =
-        typeof atendimento.beneficiaria === "object" && atendimento.beneficiaria !== null
+        typeof atendimento.beneficiaria === "object" &&
+        atendimento.beneficiaria !== null
           ? atendimento.beneficiaria?.id
           : atendimento.beneficiaria;
 
       const origemId =
-        typeof atendimento.origem_id === "object" && atendimento.origem_id !== null
+        typeof atendimento.origem_id === "object" &&
+        atendimento.origem_id !== null
           ? atendimento.origem_id?.id
           : atendimento.origem_id;
 
       const prioridadeId =
-        typeof atendimento.prioridade_id === "object" && atendimento.prioridade_id !== null
+        typeof atendimento.prioridade_id === "object" &&
+        atendimento.prioridade_id !== null
           ? atendimento.prioridade_id?.id
           : atendimento.prioridade_id;
 
       const encaminhamentoId = (() => {
-        if (typeof atendimento.encaminhamento_id === "object" && atendimento.encaminhamento_id !== null) {
+        if (
+          typeof atendimento.encaminhamento_id === "object" &&
+          atendimento.encaminhamento_id !== null
+        ) {
           return atendimento.encaminhamento_id?.id;
         }
         if (typeof atendimento.encaminhamento_id === "number") {
@@ -114,12 +126,14 @@ export function AtendimentoForm({
             .map((item: any) => {
               // Estrutura M2M do Directus (junction table)
               if (item?.config_tipos_agressao_id) {
-                return typeof item.config_tipos_agressao_id === 'object' 
-                  ? item.config_tipos_agressao_id.id 
+                return typeof item.config_tipos_agressao_id === "object"
+                  ? item.config_tipos_agressao_id.id
                   : item.config_tipos_agressao_id;
               }
               // Fallback: item simples
-              return typeof item === "object" && item !== null ? item.id : Number(item);
+              return typeof item === "object" && item !== null
+                ? item.id
+                : Number(item);
             })
             .filter(Boolean) as number[];
         }
@@ -130,12 +144,14 @@ export function AtendimentoForm({
               typeof item === "object" && item !== null
                 ? item.id
                 : typeof item === "number"
-                ? item
-                : (() => {
-                    const slug = slugify(String(item));
-                    const match = tiposViolenciaOptions.find((opt) => slugify(opt.nome) === slug);
-                    return match?.id;
-                  })()
+                  ? item
+                  : (() => {
+                      const slug = slugify(String(item));
+                      const match = tiposViolenciaOptions.find(
+                        (opt) => slugify(opt.nome) === slug,
+                      );
+                      return match?.id;
+                    })(),
             )
             .filter(Boolean) as number[];
         }
@@ -146,7 +162,9 @@ export function AtendimentoForm({
             .map((v: string) => v.trim())
             .map((v: string) => {
               const slug = slugify(v);
-              const match = tiposViolenciaOptions.find((opt) => slugify(opt.nome) === slug);
+              const match = tiposViolenciaOptions.find(
+                (opt) => slugify(opt.nome) === slug,
+              );
               return match?.id;
             })
             .filter(Boolean) as number[];
@@ -172,7 +190,8 @@ export function AtendimentoForm({
         origem_id: origemId || undefined,
         prioridade_id: prioridadeId || undefined,
         status: atendimento.status || StatusAtendimento.ABERTO,
-        data_abertura: dataAberturaFormatted || new Date().toISOString().split("T")[0],
+        data_abertura:
+          dataAberturaFormatted || new Date().toISOString().split("T")[0],
         encaminhamento_id: encaminhamentoId || undefined,
         tipos_violencia: tiposViolenciaIds,
       };
@@ -237,7 +256,7 @@ export function AtendimentoForm({
             {/* Card: Quem é a vítima? */}
             <div className="border rounded-lg p-4 space-y-4">
               <h3 className="text-sm font-semibold">Quem é a vítima?</h3>
-              
+
               <FormField
                 control={form.control}
                 name="beneficiaria"
@@ -264,7 +283,7 @@ export function AtendimentoForm({
             {/* Card: Dados da Triagem */}
             <div className="border rounded-lg p-4 space-y-4">
               <h3 className="text-sm font-semibold">Dados da Triagem</h3>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -341,7 +360,11 @@ export function AtendimentoForm({
                     <FormItem>
                       <FormLabel>Data de Abertura</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <Input
+                          type="date"
+                          {...field}
+                          value={field.value ?? ""}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -387,7 +410,7 @@ export function AtendimentoForm({
                   <FormItem>
                     <FormLabel>
                       Encaminhamento (config)
-                      <InfoTooltip text="Tipo de encaminhamento para o Relatório Mensal de Atendimentos (RMA)." />
+                      <InfoTooltip text="Órgãos para onde a assistida foi direcionada." />
                     </FormLabel>
                     <FormControl>
                       <Select
@@ -417,7 +440,7 @@ export function AtendimentoForm({
             {/* Card: Tipos de Violência */}
             <div className="border rounded-lg p-4 space-y-4">
               <h3 className="text-sm font-semibold">Tipos de Violência</h3>
-              
+
               <FormField
                 control={form.control}
                 name="tipos_violencia"
@@ -442,10 +465,16 @@ export function AtendimentoForm({
                                   <Checkbox
                                     checked={isChecked}
                                     onCheckedChange={(checked: boolean) => {
-                                      const currentValue = Array.isArray(field.value) ? field.value : [];
+                                      const currentValue = Array.isArray(
+                                        field.value,
+                                      )
+                                        ? field.value
+                                        : [];
                                       const newValue = checked
                                         ? [...currentValue, tipo.id]
-                                        : currentValue.filter((value) => value !== tipo.id);
+                                        : currentValue.filter(
+                                            (value) => value !== tipo.id,
+                                          );
                                       field.onChange(newValue);
                                     }}
                                   />

@@ -79,3 +79,51 @@ export interface EscolaMatriculaDB {
   nota_final?: number;
   frequencia_percentual?: number;
 }
+
+// --- MODULO MULHERES ---
+
+export interface MulheresBeneficiariaDB {
+  id: number;
+  nome_completo: string;
+  nome_social?: string;
+  data_nascimento: string;
+  cpf?: string;
+  rg?: string;
+  telefone?: string;
+  contato: {
+    telefone: string;
+    email?: string;
+  };
+  endereco_completo?: string;
+  endereco: {
+    logradouro: string;
+    numero: string;
+    bairro: string;
+    cidade: string;
+  };
+  bairro?: string; // Pode ser string ou ID de config_bairros dependendo da sua implementacao
+  perfil_socioeconomico?: string;
+  recebe_bolsa_familia?: boolean;
+  recebe_bpc?: boolean;
+  possui_medida_protetiva?: boolean;
+  historico_violencia?: string;
+  status: string; // 'ativa' | 'arquivada'
+  foto?: string;
+}
+
+export interface MulheresAtendimentoDB {
+  id: number;
+  beneficiaria_id: number | MulheresBeneficiariaDB;
+  beneficiaria?: number | MulheresBeneficiariaDB; // Campo usado no formulario/schema
+  data_atendimento?: string;
+  data_abertura: string;
+  origem_id?: number;
+  prioridade_id?: number;
+  encaminhamento_id?: number;
+  tecnico_responsavel?: string;
+  tipo_demanda?: string; // ex: 'psicologico', 'juridico'
+  relato_sumario?: string;
+  encaminhamentos?: Array<string | number>;
+  tipos_violencia?: number[] | string[] | string;
+  status: string; // 'Aberto' | 'Em andamento' | 'Concluido' | 'Arquivado' | variantes legadas
+}

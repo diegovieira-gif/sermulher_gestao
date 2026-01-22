@@ -3,7 +3,11 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { beneficiariaSchema, type Beneficiaria, type BeneficiariaFormValues } from "./schemas";
+import {
+  beneficiariaSchema,
+  type Beneficiaria,
+  type BeneficiariaFormValues,
+} from "./schemas";
 import { saveBeneficiaria } from "./actions";
 import { BAIRROS_ARACAJU } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -150,7 +154,9 @@ export function BeneficiariaForm({
             <Tabs defaultValue="dados-pessoais" className="w-full">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="dados-pessoais">Dados Pessoais</TabsTrigger>
-                <TabsTrigger value="endereco-contato">Endereço e Contato</TabsTrigger>
+                <TabsTrigger value="endereco-contato">
+                  Endereço e Contato
+                </TabsTrigger>
                 <TabsTrigger value="dados-sociais">Dados Sociais</TabsTrigger>
               </TabsList>
 
@@ -166,7 +172,11 @@ export function BeneficiariaForm({
                         <InfoTooltip text="Nome completo da beneficiária conforme documentos oficiais." />
                       </FormLabel>
                       <FormControl>
-                        <Input placeholder="Maria Silva" {...field} />
+                        <Input
+                          placeholder="Maria Silva"
+                          {...field}
+                          value={field.value ?? ""}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -187,6 +197,7 @@ export function BeneficiariaForm({
                           <Input
                             placeholder="000.000.000-00"
                             {...field}
+                            value={field.value ?? ""}
                             onChange={(e) => {
                               // Remove caracteres não numéricos
                               const value = e.target.value.replace(/\D/g, "");
@@ -211,7 +222,11 @@ export function BeneficiariaForm({
                           <InfoTooltip text="Data de nascimento para cálculo de idade e relatórios." />
                         </FormLabel>
                         <FormControl>
-                          <Input type="date" {...field} />
+                          <Input
+                            type="date"
+                            {...field}
+                            value={field.value ?? ""}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -233,6 +248,7 @@ export function BeneficiariaForm({
                           placeholder="Informações sobre a situação socioeconômica da beneficiária..."
                           className="min-h-[100px]"
                           {...field}
+                          value={field.value ?? ""}
                         />
                       </FormControl>
                       <FormMessage />
@@ -245,7 +261,7 @@ export function BeneficiariaForm({
               <TabsContent value="endereco-contato" className="space-y-4 mt-4">
                 <div className="space-y-4">
                   <h3 className="text-sm font-semibold">Contato</h3>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -257,7 +273,11 @@ export function BeneficiariaForm({
                             <InfoTooltip text="Número de telefone para contato e comunicação." />
                           </FormLabel>
                           <FormControl>
-                            <Input placeholder="(11) 98765-4321" {...field} />
+                            <Input
+                              placeholder="(11) 98765-4321"
+                              {...field}
+                              value={field.value ?? ""}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -278,6 +298,7 @@ export function BeneficiariaForm({
                               type="email"
                               placeholder="maria@email.com"
                               {...field}
+                              value={field.value ?? ""}
                             />
                           </FormControl>
                           <FormMessage />
@@ -289,7 +310,7 @@ export function BeneficiariaForm({
 
                 <div className="space-y-4">
                   <h3 className="text-sm font-semibold">Endereço</h3>
-                  
+
                   <FormField
                     control={form.control}
                     name="endereco.logradouro"
@@ -300,7 +321,11 @@ export function BeneficiariaForm({
                           <InfoTooltip text="Nome da rua, avenida ou logradouro do endereço." />
                         </FormLabel>
                         <FormControl>
-                          <Input placeholder="Rua das Flores" {...field} />
+                          <Input
+                            placeholder="Rua das Flores"
+                            {...field}
+                            value={field.value ?? ""}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -318,7 +343,11 @@ export function BeneficiariaForm({
                             <InfoTooltip text="Número do endereço residencial." />
                           </FormLabel>
                           <FormControl>
-                            <Input placeholder="123" {...field} />
+                            <Input
+                              placeholder="123"
+                              {...field}
+                              value={field.value ?? ""}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -329,12 +358,11 @@ export function BeneficiariaForm({
                       control={form.control}
                       name="endereco.bairro"
                       render={({ field }) => {
-                        const bairroOptions: ComboboxOption[] = BAIRROS_ARACAJU.map(
-                          (bairro) => ({
+                        const bairroOptions: ComboboxOption[] =
+                          BAIRROS_ARACAJU.map((bairro) => ({
                             value: bairro,
                             label: bairro,
-                          })
-                        );
+                          }));
 
                         return (
                           <FormItem>
@@ -345,7 +373,7 @@ export function BeneficiariaForm({
                             <FormControl>
                               <Combobox
                                 options={bairroOptions}
-                                value={field.value}
+                                value={field.value ?? ""}
                                 onValueChange={field.onChange}
                                 placeholder="Selecione um bairro"
                                 searchPlaceholder="Buscar bairro..."
@@ -353,7 +381,9 @@ export function BeneficiariaForm({
                                 allowCreate={true}
                                 onCreateOption={(newBairro) => {
                                   field.onChange(newBairro);
-                                  toast.info(`Bairro "${newBairro}" adicionado`);
+                                  toast.info(
+                                    `Bairro "${newBairro}" adicionado`,
+                                  );
                                 }}
                               />
                             </FormControl>
@@ -373,7 +403,11 @@ export function BeneficiariaForm({
                             <InfoTooltip text="Cidade onde a beneficiária reside." />
                           </FormLabel>
                           <FormControl>
-                            <Input placeholder="São Paulo" {...field} />
+                            <Input
+                              placeholder="São Paulo"
+                              {...field}
+                              value={field.value ?? ""}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -386,8 +420,10 @@ export function BeneficiariaForm({
               {/* Aba: Dados Sociais e Proteção */}
               <TabsContent value="dados-sociais" className="space-y-4 mt-4">
                 <div className="border rounded-lg p-4 space-y-4">
-                  <h3 className="text-sm font-semibold">Dados Sociais e Proteção</h3>
-                  
+                  <h3 className="text-sm font-semibold">
+                    Dados Sociais e Proteção
+                  </h3>
+
                   <FormField
                     control={form.control}
                     name="recebe_bolsa_familia"
@@ -400,7 +436,7 @@ export function BeneficiariaForm({
                         </div>
                         <FormControl>
                           <Switch
-                            checked={field.value}
+                            checked={field.value ?? false}
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
@@ -420,7 +456,7 @@ export function BeneficiariaForm({
                         </div>
                         <FormControl>
                           <Switch
-                            checked={field.value}
+                            checked={field.value ?? false}
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
@@ -440,7 +476,7 @@ export function BeneficiariaForm({
                         </div>
                         <FormControl>
                           <Switch
-                            checked={field.value}
+                            checked={field.value ?? false}
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>

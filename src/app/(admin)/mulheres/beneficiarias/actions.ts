@@ -2,21 +2,37 @@
 
 import { revalidatePath } from "next/cache";
 import { directus } from "@/lib/directus";
-import { readItems, createItem, updateItem, deleteItem, readItem } from "@directus/sdk";
-import { beneficiariaSchema, entregaBeneficioSchema, type Beneficiaria } from "./schemas";
+import {
+  readItems,
+  createItem,
+  updateItem,
+  deleteItem,
+  readItem,
+} from "@directus/sdk";
+import {
+  beneficiariaSchema,
+  entregaBeneficioSchema,
+  type Beneficiaria,
+} from "./schemas";
 
 const BENEFICIARIA_FIELDS = [
-  'id',
-  'nome_completo',
-  'cpf',
-  'data_nascimento',
-  'contato',
-  'endereco',
-  'perfil_socioeconomico',
-  'recebe_bolsa_familia',
-  'recebe_bpc',
-  'possui_medida_protetiva',
+  "id",
+  "nome_completo",
+  "cpf",
+  "data_nascimento",
+  "contato",
+  "endereco",
+  "perfil_socioeconomico",
+  "recebe_bolsa_familia",
+  "recebe_bpc",
+  "possui_medida_protetiva",
 ];
+
+const normalizeDate = (value?: string | null) => {
+  if (value === null || value === undefined) return null;
+  const trimmed = value.trim();
+  return trimmed === "" ? null : trimmed;
+};
 
 /**
  * Busca todas as beneficiárias do Directus
@@ -27,7 +43,7 @@ export async function getBeneficiarias() {
       readItems("beneficiarias", {
         fields: BENEFICIARIA_FIELDS,
         sort: ["nome_completo"],
-      })
+      }),
     );
 
     return { success: true, data: beneficiarias };
@@ -63,7 +79,7 @@ export async function getHistoricoBeneficios(beneficiariaId: string) {
           "user_created.last_name",
           "user_created.email", // Fallback caso não tenha nome
         ],
-      })
+      }),
     );
 
     return { success: true, data: historico };
@@ -90,7 +106,7 @@ export async function registrarEntrega(data: unknown) {
         data_entrega: payload.data_entrega,
         quantidade: payload.quantidade ?? 1,
         observacao: payload.observacao || null,
-      })
+      }),
     );
 
     // Busca o registro recém-criado com campos expandidos para atualizar a UI
@@ -106,7 +122,7 @@ export async function registrarEntrega(data: unknown) {
           "user_created.first_name",
           "user_created.last_name",
         ],
-      })
+      }),
     );
 
     revalidatePath(`/mulheres/beneficiarias/${payload.beneficiaria}`);
@@ -136,7 +152,10 @@ export async function registrarEntrega(data: unknown) {
 /**
  * Remove uma entrega de benefício
  */
-export async function deletarEntrega(entregaId: number, beneficiariaId: number) {
+export async function deletarEntrega(
+  entregaId: number,
+  beneficiariaId: number,
+) {
   try {
     await directus.request(deleteItem("entregas_beneficios", entregaId));
 
@@ -160,7 +179,7 @@ export async function getBeneficiaria(id: number) {
     const beneficiaria = await directus.request(
       readItem("beneficiarias", id, {
         fields: BENEFICIARIA_FIELDS,
-      })
+      }),
     );
 
     return { success: true, data: beneficiaria };
@@ -182,9 +201,9 @@ export async function saveBeneficiaria(data: unknown) {
     const validatedData = beneficiariaSchema.parse(data);
 
     // Prepara o payload para o Directus
-    const payload: any = {
+    const payload: Record<string, unknown> = {
       nome_completo: validatedData.nome_completo,
-      data_nascimento: validatedData.data_nascimento,
+      data_nascimento: normalizeDate(validatedData.data_nascimento),
       contato: validatedData.contato,
       endereco: validatedData.endereco,
       perfil_socioeconomico: validatedData.perfil_socioeconomico || null,
@@ -210,7 +229,7 @@ export async function saveBeneficiaria(data: unknown) {
     if (validatedData.id) {
       // Atualiza beneficiária existente
       await directus.request(
-        updateItem("beneficiarias", validatedData.id, payload)
+        updateItem("beneficiarias", validatedData.id, payload),
       );
 
       revalidatePath("/mulheres/beneficiarias");
@@ -220,9 +239,7 @@ export async function saveBeneficiaria(data: unknown) {
       };
     } else {
       // Cria nova beneficiária
-      await directus.request(
-        createItem("beneficiarias", payload)
-      );
+      await directus.request(createItem("beneficiarias", payload));
 
       revalidatePath("/mulheres/beneficiarias");
       return {

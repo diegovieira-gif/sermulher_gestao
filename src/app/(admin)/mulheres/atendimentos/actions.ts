@@ -13,32 +13,38 @@ const slugify = (value: string) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
 
+const normalizeDate = (value?: string | null) => {
+  if (value === null || value === undefined) return null;
+  const trimmed = value.trim();
+  return trimmed === "" ? null : trimmed;
+};
+
 const ATENDIMENTO_FIELDS = [
-  'id',
-  'beneficiaria',
-  'origem_id',
-  'prioridade_id',
-  'status',
-  'data_abertura',
-  'encaminhamento_rma',
-  'encaminhamento_id',
-  'tipos_violencia',
+  "id",
+  "beneficiaria",
+  "origem_id",
+  "prioridade_id",
+  "status",
+  "data_abertura",
+  "encaminhamento_rma",
+  "encaminhamento_id",
+  "tipos_violencia",
   // Relacionamentos
-  'beneficiaria.id',
-  'beneficiaria.nome_completo',
-  'beneficiaria.cpf',
-  'origem_id.id',
-  'origem_id.nome',
-  'prioridade_id.id',
-  'prioridade_id.nome',
-  'prioridade_id.cor',
-  'encaminhamento_id.id',
-  'encaminhamento_id.nome',
-  'encaminhamento_id.grupo_rma',
+  "beneficiaria.id",
+  "beneficiaria.nome_completo",
+  "beneficiaria.cpf",
+  "origem_id.id",
+  "origem_id.nome",
+  "prioridade_id.id",
+  "prioridade_id.nome",
+  "prioridade_id.cor",
+  "encaminhamento_id.id",
+  "encaminhamento_id.nome",
+  "encaminhamento_id.grupo_rma",
   // Sintaxe correta para M2M no Directus:
-  'tipos_violencia_lista.atendimentos_id',
-  'tipos_violencia_lista.config_tipos_agressao_id.id',
-  'tipos_violencia_lista.config_tipos_agressao_id.nome',
+  "tipos_violencia_lista.atendimentos_id",
+  "tipos_violencia_lista.config_tipos_agressao_id.id",
+  "tipos_violencia_lista.config_tipos_agressao_id.nome",
 ];
 
 // Tipos exportados para uso nos componentes
@@ -79,7 +85,7 @@ export async function getAtendimentos() {
       readItems("atendimentos", {
         fields: ATENDIMENTO_FIELDS,
         sort: ["-data_abertura"],
-      })
+      }),
     );
 
     return { success: true, data: atendimentos };
@@ -97,36 +103,42 @@ export async function getAtendimentos() {
  */
 export async function getFormOptions() {
   try {
-    const [beneficiarias, origens, prioridades, encaminhamentos, tiposViolencia] = await Promise.all([
+    const [
+      beneficiarias,
+      origens,
+      prioridades,
+      encaminhamentos,
+      tiposViolencia,
+    ] = await Promise.all([
       directus.request(
         readItems("beneficiarias", {
           fields: ["id", "nome_completo", "cpf"],
           sort: ["nome_completo"],
-        })
+        }),
       ) as Promise<BeneficiariaOption[]>,
       directus.request(
         readItems("config_origens", {
           fields: ["id", "nome"],
           sort: ["nome"],
-        })
+        }),
       ) as Promise<OrigemOption[]>,
       directus.request(
         readItems("config_prioridades", {
           fields: ["id", "nome", "cor"],
           sort: ["nivel"],
-        })
+        }),
       ) as Promise<PrioridadeOption[]>,
       directus.request(
         readItems("config_encaminhamentos", {
           fields: ["id", "nome", "grupo_rma"],
           sort: ["nome"],
-        })
+        }),
       ) as Promise<EncaminhamentoOption[]>,
       directus.request(
         readItems("config_tipos_agressao", {
           fields: ["id", "nome"],
           sort: ["nome"],
-        })
+        }),
       ) as Promise<TipoViolenciaOption[]>,
     ]);
 
@@ -158,10 +170,12 @@ export async function saveAtendimento(data: unknown) {
     const validatedData = atendimentoFormSchema.parse(data);
 
     // Prepara o payload para o Directus
-    const payload: any = {
+    const payload: Record<string, unknown> = {
       beneficiaria: validatedData.beneficiaria,
       status: validatedData.status,
-      data_abertura: validatedData.data_abertura || new Date().toISOString().split("T")[0],
+      data_abertura:
+        normalizeDate(validatedData.data_abertura) ||
+        new Date().toISOString().split("T")[0],
     };
 
     // Campos opcionais
@@ -180,7 +194,7 @@ export async function saveAtendimento(data: unknown) {
             fields: ["nome"],
             filter: { id: { _eq: validatedData.encaminhamento_id } },
             limit: 1,
-          })
+          }),
         );
         const encNome = enc?.[0]?.nome;
         if (encNome) {
@@ -190,23 +204,26 @@ export async function saveAtendimento(data: unknown) {
         // mantém compatibilidade mesmo se não achar o nome
       }
     }
-    if (validatedData.tipos_violencia && Array.isArray(validatedData.tipos_violencia)) {
+    if (
+      validatedData.tipos_violencia &&
+      Array.isArray(validatedData.tipos_violencia)
+    ) {
       // Para M2M no Directus, precisamos passar objetos com a FK da related collection
-      payload.tipos_violencia_lista = validatedData.tipos_violencia.map(id => ({
-        config_tipos_agressao_id: id
-      }));
+      payload.tipos_violencia_lista = validatedData.tipos_violencia.map(
+        (id) => ({
+          config_tipos_agressao_id: id,
+        }),
+      );
 
       try {
         const violencias = await directus.request(
           readItems("config_tipos_agressao", {
             fields: ["nome"],
             filter: { id: { _in: validatedData.tipos_violencia } },
-          })
+          }),
         );
         const nomes = Array.isArray(violencias)
-          ? violencias
-              .map((item: any) => item?.nome)
-              .filter(Boolean)
+          ? violencias.map((item: any) => item?.nome).filter(Boolean)
           : [];
         if (nomes.length) {
           payload.tipos_violencia = nomes.join(",");
@@ -219,7 +236,7 @@ export async function saveAtendimento(data: unknown) {
     if (validatedData.id) {
       // Atualiza atendimento existente
       await directus.request(
-        updateItem("atendimentos", validatedData.id, payload)
+        updateItem("atendimentos", validatedData.id, payload),
       );
 
       revalidatePath("/mulheres/atendimentos");
@@ -229,9 +246,7 @@ export async function saveAtendimento(data: unknown) {
       };
     } else {
       // Cria novo atendimento
-      await directus.request(
-        createItem("atendimentos", payload)
-      );
+      await directus.request(createItem("atendimentos", payload));
 
       revalidatePath("/mulheres/atendimentos");
       return {
