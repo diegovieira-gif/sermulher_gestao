@@ -1,51 +1,61 @@
 import { getAuxItems } from "./actions";
 import { ConfiguracoesClient } from "./configuracoes-client";
 
-export default async function ConfiguracoesPage() {
-  // Busca todos os dados das collections de configuração usando tipos
-  // Cada chamada retorna um array vazio em caso de erro, não quebrando a página
-  const [
-    origensResult,
-    prioridadesResult,
-    tiposEventoResult,
-    tiposAgressaoResult,
-    encaminhamentosResult,
-    periculosidadeResult,
-    statusLegalResult,
-    locaisResult,
-    bairrosResult,
-    beneficiosResult,
-    campanhasResult,
-  ] = await Promise.all([
-    getAuxItems("origens"),
-    getAuxItems("prioridades"),
-    getAuxItems("tipos-evento"),
-    getAuxItems("tipos-violencia"),
-    getAuxItems("encaminhamentos"),
-    getAuxItems("periculosidade"),
-    getAuxItems("status-legal"),
-    getAuxItems("locais"),
-    getAuxItems("bairros"),
-    getAuxItems("beneficios"),
-    getAuxItems("campanhas"),
-  ]);
+/**
+ * Função auxiliar para buscar dados com tratamento de erro individual
+ * Retorna array vazio se falhar, permitindo que a página continue funcionando
+ */
+async function safeGetAuxItems(type: string, isCritical: boolean = false) {
+  try {
+    const result = await getAuxItems(type);
+    if (!result.success && isCritical) {
+      console.error(`Erro crítico ao buscar ${type}:`, result.error);
+    }
+    return result.data || [];
+  } catch (error) {
+    console.error(`Erro ao buscar ${type}:`, error);
+    if (isCritical) {
+      console.error(`Falha crítica em ${type} - a página pode não funcionar corretamente`);
+    }
+    return [];
+  }
+}
 
-  // Extrai os dados, usando array vazio se houver erro
-  // Isso permite que a página carregue mesmo se uma tabela falhar
+export default async function ConfiguracoesPage() {
+  // Buscas críticas (sequencial para garantir conexão estável)
+  const origensResult = await safeGetAuxItems("origens", true);
+  const locaisResult = await safeGetAuxItems("locais", true);
+
+  // Buscas secundárias (sequencial para evitar sobrecarga de conexão)
+  // Cada uma é independente - se uma falhar, as outras continuam
+  const prioridadesResult = await safeGetAuxItems("prioridades");
+  const tiposEventoResult = await safeGetAuxItems("tipos-evento");
+  const tiposAgressaoResult = await safeGetAuxItems("tipos-violencia");
+  const encaminhamentosResult = await safeGetAuxItems("encaminhamentos");
+  const periculosidadeResult = await safeGetAuxItems("periculosidade");
+  const statusLegalResult = await safeGetAuxItems("status-legal");
+  const bairrosResult = await safeGetAuxItems("bairros");
+  const beneficiosResult = await safeGetAuxItems("beneficios");
+  const campanhasResult = await safeGetAuxItems("campanhas");
+
   return (
     <div className="p-6">
+      <h1 className="text-3xl font-bold text-foreground mb-2">Configurações</h1>
+      <p className="text-muted-foreground mb-6">
+        Gerencie as tabelas auxiliares do sistema
+      </p>
       <ConfiguracoesClient
-        origens={origensResult.data || []}
-        prioridades={prioridadesResult.data || []}
-        tiposEvento={tiposEventoResult.data || []}
-        tiposAgressao={tiposAgressaoResult.data || []}
-        encaminhamentos={encaminhamentosResult.data || []}
-        periculosidade={periculosidadeResult.data || []}
-        statusLegal={statusLegalResult.data || []}
-        locais={locaisResult.data || []}
-        bairros={bairrosResult.data || []}
-        beneficios={beneficiosResult.data || []}
-        campanhas={campanhasResult.data || []}
+        origens={origensResult}
+        prioridades={prioridadesResult}
+        tiposEvento={tiposEventoResult}
+        tiposAgressao={tiposAgressaoResult}
+        encaminhamentos={encaminhamentosResult}
+        periculosidade={periculosidadeResult}
+        statusLegal={statusLegalResult}
+        locais={locaisResult}
+        bairros={bairrosResult}
+        beneficios={beneficiosResult}
+        campanhas={campanhasResult}
       />
     </div>
   );

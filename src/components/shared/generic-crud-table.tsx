@@ -48,13 +48,10 @@ import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { saveAuxItem, deleteAuxItem } from "./actions";
 import { Badge } from "@/components/ui/badge";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 
-interface GenericCrudTableProps {
-  /** Tipo da collection (ex: "origens", "prioridades") - será validado no servidor */
-  type: string;
+export interface GenericCrudTableProps {
   title: string;
   items: any[];
   columns: Array<{
@@ -62,6 +59,13 @@ interface GenericCrudTableProps {
     label: string;
     render?: (item: any) => React.ReactNode;
   }>;
+  /** Persistência: criar ou atualizar. O componente não conhece a origem dos dados. */
+  onSave: (
+    values: any,
+    ctx: { selectedItem: any | null },
+  ) => Promise<{ success: boolean; error?: string }>;
+  /** Exclusão. O componente não conhece a origem dos dados. */
+  onDelete: (id: number) => Promise<{ success: boolean; error?: string }>;
   hasColorField?: boolean;
   hasGrupoRma?: boolean;
   /** Permite esconder a coluna/campo de status quando o chamador cuida disso. */
@@ -74,13 +78,6 @@ interface GenericCrudTableProps {
   mapItemToFormValues?: (item: any) => Record<string, any>;
   /** Renderização alternativa dos campos do formulário. */
   renderFormFields?: (form: ReturnType<typeof useForm>) => React.ReactNode;
-  /** Handler custom de persistência, usado em casos fora das configs auxiliares. */
-  onSave?: (
-    values: any,
-    ctx: { selectedItem: any | null },
-  ) => Promise<{ success: boolean; error?: string }>;
-  /** Handler custom de deleção. */
-  onDelete?: (id: number) => Promise<{ success: boolean; error?: string }>;
 }
 
 const createSchema = (hasColor: boolean, hasGrupoRma: boolean) =>
@@ -96,10 +93,11 @@ const createSchema = (hasColor: boolean, hasGrupoRma: boolean) =>
   });
 
 export function GenericCrudTable({
-  type,
   title,
   items = [],
   columns = [],
+  onSave,
+  onDelete,
   hasColorField = false,
   hasGrupoRma = false,
   showStatus = true,
@@ -107,8 +105,6 @@ export function GenericCrudTable({
   formSchema,
   mapItemToFormValues,
   renderFormFields,
-  onSave,
-  onDelete,
 }: GenericCrudTableProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -140,7 +136,6 @@ export function GenericCrudTable({
       : {
           id: item.id,
           nome: item.nome,
-          // Se não tiver status no banco, assume published no form
           status: item.status || "published",
           cor: item.cor || "#000000",
           peso: item.peso || 1,
@@ -159,11 +154,7 @@ export function GenericCrudTable({
 
   async function onSubmit(values: any) {
     try {
-      const saveHandler = onSave
-        ? onSave
-        : (payload) => saveAuxItem(type, payload);
-
-      const result = await saveHandler(values, { selectedItem });
+      const result = await onSave(values, { selectedItem });
 
       if (result.success) {
         toast.success(selectedItem ? "Item atualizado!" : "Item criado!");
@@ -171,7 +162,7 @@ export function GenericCrudTable({
       } else {
         toast.error(result.error || "Erro ao salvar.");
       }
-    } catch (error) {
+    } catch {
       toast.error("Erro inesperado.");
     }
   }
@@ -185,11 +176,7 @@ export function GenericCrudTable({
     if (!itemToDelete) return;
     setIsDeleting(true);
     try {
-      const deleteHandler = onDelete
-        ? onDelete
-        : (id: number) => deleteAuxItem(type, id);
-
-      const result = await deleteHandler(itemToDelete);
+      const result = await onDelete(itemToDelete);
       if (result.success) {
         toast.success("Item excluído!");
       } else {
@@ -205,7 +192,7 @@ export function GenericCrudTable({
   return (
     <>
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">{title}</h2>
+        <h2 className="text-xl font-semibold text-foreground">{title}</h2>
         <Button onClick={handleCreate} size="sm">
           <Plus className="h-4 w-4 mr-2" />
           Novo
@@ -217,15 +204,15 @@ export function GenericCrudTable({
           <TableHeader>
             <TableRow>
               {columns?.map((col) => (
-                <TableHead key={col.key}>{col.label}</TableHead>
+                <TableHead key={col.key} className="text-muted-foreground">{col.label}</TableHead>
               ))}
               {showStatus && (
-                <TableHead>
+                <TableHead className="text-muted-foreground">
                   Status
                   <InfoTooltip text="Situação atual do item no sistema (Ativo, Inativo, Arquivado)." />
                 </TableHead>
               )}
-              <TableHead className="w-[100px] text-right">Ações</TableHead>
+              <TableHead className="w-[100px] text-right text-muted-foreground">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -240,18 +227,16 @@ export function GenericCrudTable({
               </TableRow>
             ) : (
               items?.map((item) => {
-                // LÓGICA CORRIGIDA: Se status for undefined/null ou 'published', é Ativo.
                 const isActive = !item.status || item.status === "published";
 
                 return (
                   <TableRow key={item.id}>
                     {columns?.map((col) => (
-                      <TableCell key={col.key}>
+                      <TableCell key={col.key} className="text-foreground">
                         {col.render ? col.render(item) : item[col.key]}
                       </TableCell>
                     ))}
 
-                    {/* Coluna de Status */}
                     {showStatus && (
                       <TableCell>
                         <Badge
@@ -449,7 +434,7 @@ export function GenericCrudTable({
           </Form>
         </DialogContent>
       </Dialog>
-      {/* Dialog Delete mantido... */}
+
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

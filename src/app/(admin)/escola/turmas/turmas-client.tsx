@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { GenericCrudTable } from "@/app/(admin)/configuracoes/generic-crud-table";
+import { GenericCrudTable } from "@/components/shared/generic-crud-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -87,7 +87,6 @@ export function TurmasClient({ turmas, cursosOptions }: TurmasClientProps) {
 
   return (
     <GenericCrudTable
-      collectionName="escola_turmas"
       title="Gestão de Turmas"
       items={turmas}
       showStatus={false}
@@ -103,8 +102,8 @@ export function TurmasClient({ turmas, cursosOptions }: TurmasClientProps) {
         data_fim: dateOnly(item.data_fim),
         status: (item.status as any) || "aberta",
       })}
-      onSave={(values) => saveTurma(values)}
-      onDelete={(id) => deleteTurma(id)}
+      onSave={async (values) => saveTurma(values)}
+      onDelete={async (id) => deleteTurma(id)}
       columns={[
         { key: "nome", label: "Nome da Turma" },
         {

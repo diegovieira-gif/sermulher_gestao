@@ -1,6 +1,6 @@
 "use client";
 
-import { GenericCrudTable } from "@/app/(admin)/configuracoes/generic-crud-table";
+import { GenericCrudTable } from "@/components/shared/generic-crud-table";
 import { Badge } from "@/components/ui/badge";
 import {
   FormControl,
@@ -74,7 +74,6 @@ interface CursosClientProps {
 export function CursosClient({ cursos }: CursosClientProps) {
   return (
     <GenericCrudTable
-      collectionName="escola_cursos"
       title="Catálogo de Cursos"
       items={cursos}
       showStatus={false}
@@ -87,8 +86,8 @@ export function CursosClient({ cursos }: CursosClientProps) {
         carga_horaria: item.carga_horaria ? Number(item.carga_horaria) : 0,
         ementa: item.ementa || "",
       })}
-      onSave={(values) => saveCurso(values)}
-      onDelete={(id) => deleteCurso(id)}
+      onSave={async (values) => saveCurso(values)}
+      onDelete={async (id) => deleteCurso(id)}
       columns={[
         { key: "nome", label: "Nome" },
         {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { GenericCrudTable } from "../generic-crud-table";
+import { GenericCrudTable } from "@/components/shared/generic-crud-table";
 import {
   getCampanhas,
   saveCampanha,
@@ -63,7 +63,6 @@ export default function CampanhasPage() {
       </div>
 
       <GenericCrudTable
-        collectionName="config_campanhas"
         title="Campanha"
         items={items}
         hasColorField={true}

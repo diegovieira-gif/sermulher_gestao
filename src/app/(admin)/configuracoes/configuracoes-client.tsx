@@ -78,12 +78,6 @@ export function ConfiguracoesClient({
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Configurações</h1>
-        <p className="text-muted-foreground">
-          Gerencie as tabelas auxiliares do sistema
-        </p>
-      </div>
 
       <Tabs
         defaultValue="origens"
@@ -93,14 +87,14 @@ export function ConfiguracoesClient({
           <TabsList className="flex md:flex-col h-auto bg-transparent p-0 gap-1 overflow-x-auto md:overflow-visible w-full flex-nowrap md:flex-wrap">
             <TabsTrigger
               value="origens"
-              className="flex items-center gap-2 justify-start w-full md:w-full px-4 py-3 data-[state=active]:bg-muted data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
+              className="flex items-center gap-2 justify-start w-full md:w-full px-4 py-3 text-muted-foreground data-[state=active]:bg-muted data-[state=active]:text-foreground data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
             >
               <Building2 className="w-4 h-4" />
               <span>Origens</span>
             </TabsTrigger>
             <TabsTrigger
               value="prioridades"
-              className="flex items-center gap-2 justify-start w-full md:w-full px-4 py-3 data-[state=active]:bg-muted data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
+              className="flex items-center gap-2 justify-start w-full md:w-full px-4 py-3 text-muted-foreground data-[state=active]:bg-muted data-[state=active]:text-foreground data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
             >
               <AlertCircle className="w-4 h-4" />
               <span>Prioridades</span>
@@ -114,14 +108,14 @@ export function ConfiguracoesClient({
             </TabsTrigger>
             <TabsTrigger
               value="tipos-violencia"
-              className="flex items-center gap-2 justify-start w-full md:w-full px-4 py-3 data-[state=active]:bg-muted data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
+              className="flex items-center gap-2 justify-start w-full md:w-full px-4 py-3 text-muted-foreground data-[state=active]:bg-muted data-[state=active]:text-foreground data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
             >
               <ShieldAlert className="w-4 h-4" />
               <span>Tipos de Violência</span>
             </TabsTrigger>
             <TabsTrigger
               value="encaminhamentos"
-              className="flex items-center gap-2 justify-start w-full md:w-full px-4 py-3 data-[state=active]:bg-muted data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
+              className="flex items-center gap-2 justify-start w-full md:w-full px-4 py-3 text-muted-foreground data-[state=active]:bg-muted data-[state=active]:text-foreground data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
             >
               <ArrowUpRight className="w-4 h-4" />
               <span>Encaminhamentos</span>
@@ -135,7 +129,7 @@ export function ConfiguracoesClient({
             </TabsTrigger>
             <TabsTrigger
               value="status-legal"
-              className="flex items-center gap-2 justify-start w-full md:w-full px-4 py-3 data-[state=active]:bg-muted data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
+              className="flex items-center gap-2 justify-start w-full md:w-full px-4 py-3 text-muted-foreground data-[state=active]:bg-muted data-[state=active]:text-foreground data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
             >
               <Scale className="w-4 h-4" />
               <span>Status Legal</span>
@@ -149,7 +143,7 @@ export function ConfiguracoesClient({
             </TabsTrigger>
             <TabsTrigger
               value="bairros"
-              className="flex items-center gap-2 justify-start w-full md:w-full px-4 py-3 data-[state=active]:bg-muted data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
+              className="flex items-center gap-2 justify-start w-full md:w-full px-4 py-3 text-muted-foreground data-[state=active]:bg-muted data-[state=active]:text-foreground data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
             >
               <Map className="w-4 h-4" />
               <span>Bairros</span>
@@ -163,7 +157,7 @@ export function ConfiguracoesClient({
             </TabsTrigger>
             <TabsTrigger
               value="campanhas"
-              className="flex items-center gap-2 justify-start w-full md:w-full px-4 py-3 data-[state=active]:bg-muted data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
+              className="flex items-center gap-2 justify-start w-full md:w-full px-4 py-3 text-muted-foreground data-[state=active]:bg-muted data-[state=active]:text-foreground data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
             >
               <Megaphone className="w-4 h-4" />
               <span>Campanhas</span>
@@ -174,43 +168,46 @@ export function ConfiguracoesClient({
         <div className="flex-1 min-w-0">
           <TabsContent value="origens" className="mt-0 md:mt-0">
           <GenericCrudTable
-            type="origens"
             title="Origens de Encaminhamento"
             items={origens}
             columns={[{ key: "nome", label: "Nome" }]}
+            onSave={(values) => saveAuxItem("origens", values)}
+            onDelete={(id) => deleteAuxItem("origens", id)}
           />
         </TabsContent>
 
           <TabsContent value="prioridades" className="mt-0 md:mt-0">
           <GenericCrudTable
-            type="prioridades"
             title="Níveis de Prioridade"
             items={prioridades}
             columns={[{ key: "nome", label: "Nome" }]}
+            onSave={(values) => saveAuxItem("prioridades", values)}
+            onDelete={(id) => deleteAuxItem("prioridades", id)}
           />
         </TabsContent>
 
           <TabsContent value="tipos-evento" className="mt-0 md:mt-0">
           <GenericCrudTable
-            type="tipos-evento"
             title="Tipos de Evento"
             items={tiposEvento}
             columns={[{ key: "nome", label: "Nome" }]}
+            onSave={(values) => saveAuxItem("tipos-evento", values)}
+            onDelete={(id) => deleteAuxItem("tipos-evento", id)}
           />
         </TabsContent>
 
           <TabsContent value="tipos-violencia" className="mt-0 md:mt-0">
             <GenericCrudTable
-              type="tipos-violencia"
               title="Tipos de Violência"
               items={tiposAgressao}
               columns={[{ key: "nome", label: "Nome" }]}
+              onSave={(values) => saveAuxItem("tipos-violencia", values)}
+              onDelete={(id) => deleteAuxItem("tipos-violencia", id)}
             />
           </TabsContent>
 
           <TabsContent value="encaminhamentos" className="mt-0 md:mt-0">
             <GenericCrudTable
-              type="encaminhamentos"
               title="Encaminhamentos (RMA)"
               items={encaminhamentos}
               columns={[
@@ -218,12 +215,13 @@ export function ConfiguracoesClient({
                 { key: "grupo_rma", label: "Grupo RMA" },
               ]}
               hasGrupoRma={true}
+              onSave={(values) => saveAuxItem("encaminhamentos", values)}
+              onDelete={(id) => deleteAuxItem("encaminhamentos", id)}
             />
           </TabsContent>
 
           <TabsContent value="periculosidade" className="mt-0 md:mt-0">
             <GenericCrudTable
-              type="periculosidade"
               title="Níveis de Periculosidade"
               items={periculosidade}
               columns={[
@@ -246,12 +244,13 @@ export function ConfiguracoesClient({
                 { key: "peso", label: "Peso" },
               ]}
               hasColorField={true}
+              onSave={(values) => saveAuxItem("periculosidade", values)}
+              onDelete={(id) => deleteAuxItem("periculosidade", id)}
             />
           </TabsContent>
 
           <TabsContent value="status-legal" className="mt-0 md:mt-0">
             <GenericCrudTable
-              type="status-legal"
               title="Status Legal"
               items={statusLegal}
               columns={[
@@ -273,45 +272,49 @@ export function ConfiguracoesClient({
                 },
               ]}
               hasColorField={true}
+              onSave={(values) => saveAuxItem("status-legal", values)}
+              onDelete={(id) => deleteAuxItem("status-legal", id)}
             />
           </TabsContent>
 
           <TabsContent value="locais" className="mt-0 md:mt-0">
             <GenericCrudTable
-              type="locais"
               title="Locais (Salas)"
               items={locais}
               columns={[{ key: "nome", label: "Nome" }]}
+              onSave={(values) => saveAuxItem("locais", values)}
+              onDelete={(id) => deleteAuxItem("locais", id)}
             />
           </TabsContent>
 
           <TabsContent value="bairros" className="mt-0 md:mt-0">
             <GenericCrudTable
-              type="bairros"
               title="Bairros"
               items={bairros}
               columns={[
                 { key: "nome", label: "Nome" },
                 { key: "zona", label: "Zona" },
               ]}
+              onSave={(values) => saveAuxItem("bairros", values)}
+              onDelete={(id) => deleteAuxItem("bairros", id)}
             />
           </TabsContent>
 
           <TabsContent value="beneficios" className="mt-0 md:mt-0">
             <GenericCrudTable
-              type="beneficios"
               title="Benefícios"
               items={beneficios}
               columns={[
                 { key: "nome", label: "Nome" },
                 { key: "descricao", label: "Descrição" },
               ]}
+              onSave={(values) => saveAuxItem("beneficios", values)}
+              onDelete={(id) => deleteAuxItem("beneficios", id)}
             />
           </TabsContent>
 
           <TabsContent value="campanhas" className="mt-0 md:mt-0">
           <GenericCrudTable
-            type="campanhas"
             title="Campanhas"
             items={campanhas}
             columns={[
@@ -354,6 +357,8 @@ export function ConfiguracoesClient({
               cor: item.cor || "#000000",
               status: item.status || "published",
             })}
+            onSave={(values) => saveAuxItem("campanhas", values)}
+            onDelete={(id) => deleteAuxItem("campanhas", id)}
             renderFormFields={(form: any) => (
               <>
                 <FormField
