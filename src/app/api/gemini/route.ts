@@ -9,10 +9,8 @@ import {
   aggregate,
 } from "@directus/sdk";
 
-// 1. Configura Gemini
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || "");
 
-// 2. Configura Directus (Privado/Admin)
 const directusUrl =
   process.env.NEXT_PUBLIC_API_URL ||
   process.env.NEXT_PUBLIC_DIRECTUS_URL ||
@@ -30,18 +28,29 @@ export async function POST(req: Request) {
     if (!question)
       return NextResponse.json({ error: "Pergunta vazia" }, { status: 400 });
 
-    // --- FASE 1: INTELIGÊNCIA (GEMINI 2.5) ---
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const prompt = `
     ${DB_SCHEMA_CONTEXT}
-    PERGUNTA: "${question}"
+    PERGUNTA ATUAL: "${question}"
     
-    Regras:
-    - Retorne JSON puro. Sem markdown.
-    - Se for contagem, use "aggregate": { "count": "*" }.
-    - Se for lista, use "aggregate": null e preencha "filter".
-    - Ex: { "collection": "beneficiarias", "filter": {}, "aggregate": { "count": "*" } }
+    TAREFA:
+    1. Gere a query para o Directus no campo "query".
+    2. Gere 3 sugestões curtas de próximas perguntas relacionadas que o usuário poderia querer fazer em seguida no campo "suggestions".
+    
+    Formato de Saída (JSON Puro):
+    {
+      "query": { 
+         "collection": "...", 
+         "filter": {}, 
+         "aggregate": { "count": "*" } 
+      },
+      "suggestions": [
+         "Pergunta relacionada 1?",
+         "Pergunta relacionada 2?",
+         "Pergunta relacionada 3?"
+      ]
+    }
     `;
 
     const resultAI = await model.generateContent(prompt);
@@ -50,8 +59,6 @@ export async function POST(req: Request) {
       .replace(/```json/g, "")
       .replace(/```/g, "")
       .trim();
-
-    console.log("🤖 IA Plano:", textAI);
 
     let plan;
     try {
@@ -63,53 +70,51 @@ export async function POST(req: Request) {
       );
     }
 
-    if (!plan.collection) {
+    if (!plan.query || !plan.query.collection) {
       return NextResponse.json(
         { error: "Não entendi qual tabela consultar." },
         { status: 400 },
       );
     }
 
-    // --- FASE 2: EXECUÇÃO (DIRECTUS) ---
+    // --- EXECUÇÃO (DIRECTUS) ---
     let dbResult;
     let responseType = "list";
+    const query = plan.query;
 
     try {
-      if (plan.aggregate) {
-        // Contagem
+      if (query.aggregate) {
         responseType = "count";
         const res = await directus.request(
-          aggregate(plan.collection, {
-            aggregate: plan.aggregate,
-            query: { filter: plan.filter || {} },
+          aggregate(query.collection, {
+            aggregate: query.aggregate,
+            query: { filter: query.filter || {} },
           }),
         );
-        // Normaliza retorno do Directus (pode vir como array de objetos)
         const countVal = res[0]?.count || res[0]?.countAll || 0;
-        dbResult = Number(countVal); // Garante número
+        dbResult = Number(countVal);
       } else {
-        // Listagem
         responseType = "list";
         dbResult = await directus.request(
-          readItems(plan.collection, {
-            filter: plan.filter || {},
-            limit: 5, // Segurança
+          readItems(query.collection, {
+            filter: query.filter || {},
+            limit: 5,
           }),
         );
       }
     } catch (dbError: any) {
       console.error("❌ Erro Directus:", dbError);
       return NextResponse.json(
-        { error: "Erro ao consultar banco de dados. Verifique permissões." },
+        { error: "Erro ao consultar banco de dados." },
         { status: 500 },
       );
     }
 
-    // --- FASE 3: RETORNO ---
     return NextResponse.json({
       type: responseType,
       value: dbResult,
-      debug: `Tabela: ${plan.collection}`,
+      suggestions: plan.suggestions || [],
+      debug: `Tabela: ${query.collection}`,
     });
   } catch (error: any) {
     console.error("❌ Erro Geral:", error);
