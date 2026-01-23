@@ -1,6 +1,5 @@
-"use client";
+﻿"use client";
 
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -19,11 +18,9 @@ interface ResultadosClientProps {
 }
 
 export function ResultadosClient({ performance }: ResultadosClientProps) {
-  const router = useRouter();
-
   const handlePrintCertificado = (matriculaId: number) => {
     // Abre nova aba com o certificado
-    window.open(`/admin/escola/certificado/${matriculaId}`, "_blank");
+    window.open(`/escola/certificado/${matriculaId}`, "_blank");
   };
 
   if (performance.length === 0) {

@@ -285,6 +285,16 @@ export type Matricula = {
   status: string;
 };
 
+const MATRICULA_STATUS_ALLOWED = new Set([
+  "ativa",
+  "concluida",
+  "concluída",
+  "cancelada",
+  "aprovada",
+  "reprovada",
+  "evadida",
+]);
+
 /**
  * Busca matrículas de uma turma com dados da beneficiária
  */
@@ -443,6 +453,35 @@ export async function deleteMatricula(id: number) {
   } catch (error) {
     console.error("Erro ao deletar matrícula:", error);
     return { success: false, error: "Erro ao deletar matrícula." };
+  }
+}
+
+/**
+ * Atualiza o status de uma matrícula
+ */
+export async function updateMatriculaStatus(
+  matriculaId: number,
+  turmaId: number,
+  status: string,
+) {
+  const normalizedStatus = status.toLowerCase();
+  if (!MATRICULA_STATUS_ALLOWED.has(normalizedStatus)) {
+    return { success: false, error: "Status de matrícula inválido." };
+  }
+
+  try {
+    await directus.request(
+      updateItem("escola_matriculas", matriculaId, {
+        status: normalizedStatus,
+      }),
+    );
+
+    revalidatePath(`/escola/turmas/${turmaId}`);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao atualizar status da matrícula:", error);
+    return { success: false, error: "Erro ao atualizar status da matrícula." };
   }
 }
 

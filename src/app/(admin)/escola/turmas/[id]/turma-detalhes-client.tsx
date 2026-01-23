@@ -13,6 +13,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -29,18 +37,34 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import { BeneficiariaComboBox, type BeneficiariaOption } from "@/app/(admin)/mulheres/atendimentos/beneficiaria-combobox";
-import { saveMatricula, deleteMatricula, getTurmaPerformance, type Matricula } from "../../actions";
+  BeneficiariaComboBox,
+  type BeneficiariaOption,
+} from "@/app/(admin)/mulheres/atendimentos/beneficiaria-combobox";
+import {
+  saveMatricula,
+  deleteMatricula,
+  getTurmaPerformance,
+  updateMatriculaStatus,
+  type Matricula,
+} from "../../actions";
 import { FrequenciaClient } from "./frequencia-client";
 import { ResultadosClient } from "./resultados-client";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, Trash2, Loader2, Users, ClipboardList, Award } from "lucide-react";
+import {
+  ArrowLeft,
+  Plus,
+  Trash2,
+  Loader2,
+  Users,
+  ClipboardList,
+  Award,
+  MoreVertical,
+  Check,
+  X,
+  LogOut,
+} from "lucide-react";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 
 interface TurmaDetalhesClientProps {
@@ -68,15 +92,25 @@ const STATUS_COLOR: Record<string, string> = {
   cancelada: "bg-red-600 hover:bg-red-700 text-white",
 };
 
-const MATRICULA_STATUS_LABEL: Record<string, string> = {
+const MATRICULA_STATUS_LABEL = {
   ativa: "Ativa",
   concluida: "Concluída",
+  concluída: "Concluída",
+  aprovada: "Aprovada",
+  reprovada: "Reprovada",
+  evadida: "Evadida",
   cancelada: "Cancelada",
-};
+} as const;
 
-const MATRICULA_STATUS_COLOR: Record<string, string> = {
+type MatriculaStatusKey = keyof typeof MATRICULA_STATUS_LABEL;
+
+const MATRICULA_STATUS_COLOR: Record<MatriculaStatusKey, string> = {
   ativa: "bg-green-600 hover:bg-green-700 text-white",
   concluida: "bg-gray-600 hover:bg-gray-700 text-white",
+  concluída: "bg-gray-600 hover:bg-gray-700 text-white",
+  aprovada: "bg-emerald-600 hover:bg-emerald-700 text-white",
+  reprovada: "bg-amber-600 hover:bg-amber-700 text-white",
+  evadida: "bg-yellow-600 hover:bg-yellow-700 text-white",
   cancelada: "bg-red-600 hover:bg-red-700 text-white",
 };
 
@@ -104,12 +138,18 @@ export function TurmaDetalhesClient({
 }: TurmaDetalhesClientProps) {
   const router = useRouter();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedBeneficiaria, setSelectedBeneficiaria] = useState<number | undefined>();
+  const [selectedBeneficiaria, setSelectedBeneficiaria] = useState<
+    number | undefined
+  >();
   const [isLoading, setIsLoading] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [matriculaToDelete, setMatriculaToDelete] = useState<number | null>(null);
+  const [matriculaToDelete, setMatriculaToDelete] = useState<number | null>(
+    null,
+  );
   const [isDeleting, setIsDeleting] = useState(false);
-  const [currentMatriculas, setCurrentMatriculas] = useState<Matricula[]>(matriculas);
+  const [statusUpdatingId, setStatusUpdatingId] = useState<number | null>(null);
+  const [currentMatriculas, setCurrentMatriculas] =
+    useState<Matricula[]>(matriculas);
   const [performanceData, setPerformanceData] = useState<any[]>([]);
   const [isLoadingPerformance, setIsLoadingPerformance] = useState(false);
 
@@ -130,6 +170,36 @@ export function TurmaDetalhesClient({
     }
   }
 
+  async function handleUpdateMatriculaStatus(
+    matriculaId: number,
+    status: MatriculaStatusKey,
+  ) {
+    setStatusUpdatingId(matriculaId);
+    try {
+      const result = await updateMatriculaStatus(matriculaId, turma.id, status);
+
+      if (result.success) {
+        setCurrentMatriculas((prev) =>
+          prev.map((matricula) =>
+            matricula.id === matriculaId ? { ...matricula, status } : matricula,
+          ),
+        );
+        toast.success(
+          `Status atualizado para "${
+            MATRICULA_STATUS_LABEL[status] || status
+          }"`,
+        );
+        router.refresh();
+      } else {
+        toast.error(result.error || "Erro ao atualizar status da matrícula");
+      }
+    } catch (error) {
+      toast.error("Erro inesperado ao atualizar status da matrícula");
+    } finally {
+      setStatusUpdatingId(null);
+    }
+  }
+
   // Opções para o combobox
   const beneficiariasOptions: BeneficiariaOption[] = beneficiarias.map((b) => ({
     id: b.id,
@@ -138,7 +208,9 @@ export function TurmaDetalhesClient({
   }));
 
   // Beneficiárias já matriculadas (para filtrar do combobox se necessário)
-  const alreadyEnrolled = new Set(currentMatriculas.map((m) => m.beneficiaria.id));
+  const alreadyEnrolled = new Set(
+    currentMatriculas.map((m) => m.beneficiaria.id),
+  );
 
   async function handleAddMatricula() {
     if (!selectedBeneficiaria) {
@@ -175,7 +247,9 @@ export function TurmaDetalhesClient({
 
       if (result.success) {
         toast.success("Matrícula removida com sucesso!");
-        setCurrentMatriculas((prev) => prev.filter((m) => m.id !== matriculaToDelete));
+        setCurrentMatriculas((prev) =>
+          prev.filter((m) => m.id !== matriculaToDelete),
+        );
         router.refresh();
       } else {
         toast.error(result.error || "Erro ao remover matrícula");
@@ -217,7 +291,8 @@ export function TurmaDetalhesClient({
             <div>
               <p className="text-sm text-muted-foreground">Status</p>
               <Badge className={STATUS_COLOR[turma.status || "aberta"] || ""}>
-                {STATUS_LABEL[turma.status as keyof typeof STATUS_LABEL] || turma.status}
+                {STATUS_LABEL[turma.status as keyof typeof STATUS_LABEL] ||
+                  turma.status}
               </Badge>
             </div>
             <div>
@@ -239,7 +314,11 @@ export function TurmaDetalhesClient({
             <ClipboardList className="h-4 w-4" />
             Diário de Classe
           </TabsTrigger>
-          <TabsTrigger value="resultados" className="flex items-center gap-2" onClick={loadPerformance}>
+          <TabsTrigger
+            value="resultados"
+            className="flex items-center gap-2"
+            onClick={loadPerformance}
+          >
             <Award className="h-4 w-4" />
             Resultados
           </TabsTrigger>
@@ -248,9 +327,7 @@ export function TurmaDetalhesClient({
         {/* Tab: Alunas Matriculadas */}
         <TabsContent value="matriculas" className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">
-              Lista de Alunas
-            </h2>
+            <h2 className="text-xl font-semibold">Lista de Alunas</h2>
             <Button onClick={() => setDialogOpen(true)} size="sm">
               <Plus className="h-4 w-4 mr-2" />
               Nova Matrícula
@@ -284,9 +361,11 @@ export function TurmaDetalhesClient({
                     </TableHead>
                     <TableHead>
                       Status
-                      <InfoTooltip text="Situação da matrícula (Ativa, Inativa, Concluída)." />
+                      <InfoTooltip text="Situação da matrícula (Ativa, Aprovada, Reprovada, Evadida, Concluída, Cancelada)." />
                     </TableHead>
-                    <TableHead className="w-[100px] text-right">Ações</TableHead>
+                    <TableHead className="w-[140px] text-right">
+                      Ações
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -295,34 +374,111 @@ export function TurmaDetalhesClient({
                       <TableCell className="font-medium">
                         {matricula.beneficiaria.nome_completo}
                       </TableCell>
-                      <TableCell>{formatCPF(matricula.beneficiaria.cpf)}</TableCell>
-                      <TableCell>{formatDate(matricula.data_matricula)}</TableCell>
                       <TableCell>
-                        {typeof matricula.beneficiaria.contato === 'object' && matricula.beneficiaria.contato !== null
-                          ? (matricula.beneficiaria.contato.telefone || matricula.beneficiaria.contato.email || '—')
-                          : (matricula.beneficiaria.contato || '—')}
+                        {formatCPF(matricula.beneficiaria.cpf)}
                       </TableCell>
                       <TableCell>
-                        <Badge
-                          className={
-                            MATRICULA_STATUS_COLOR[matricula.status || "ativa"] || ""
-                          }
-                        >
-                          {MATRICULA_STATUS_LABEL[matricula.status as keyof typeof MATRICULA_STATUS_LABEL] ||
-                            matricula.status}
-                        </Badge>
+                        {formatDate(matricula.data_matricula)}
+                      </TableCell>
+                      <TableCell>
+                        {typeof matricula.beneficiaria.contato === "object" &&
+                        matricula.beneficiaria.contato !== null
+                          ? matricula.beneficiaria.contato.telefone ||
+                            matricula.beneficiaria.contato.email ||
+                            "—"
+                          : matricula.beneficiaria.contato || "—"}
+                      </TableCell>
+                      <TableCell>
+                        {(() => {
+                          const statusKey = (
+                            matricula.status || "ativa"
+                          ).toLowerCase() as MatriculaStatusKey;
+
+                          return (
+                            <Badge
+                              className={
+                                MATRICULA_STATUS_COLOR[statusKey] ||
+                                MATRICULA_STATUS_COLOR.ativa
+                              }
+                            >
+                              {MATRICULA_STATUS_LABEL[statusKey] ||
+                                matricula.status}
+                            </Badge>
+                          );
+                        })()}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setMatriculaToDelete(matricula.id);
-                            setDeleteDialogOpen(true);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              disabled={statusUpdatingId === matricula.id}
+                              aria-label="Ações da matrícula"
+                            >
+                              {statusUpdatingId === matricula.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <MoreVertical className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                            <DropdownMenuItem
+                              disabled={statusUpdatingId === matricula.id}
+                              onSelect={(event) => {
+                                event.preventDefault();
+                                handleUpdateMatriculaStatus(
+                                  matricula.id,
+                                  "aprovada",
+                                );
+                              }}
+                            >
+                              <Check className="mr-2 h-4 w-4 text-emerald-600" />
+                              Aprovar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              disabled={statusUpdatingId === matricula.id}
+                              onSelect={(event) => {
+                                event.preventDefault();
+                                handleUpdateMatriculaStatus(
+                                  matricula.id,
+                                  "reprovada",
+                                );
+                              }}
+                            >
+                              <X className="mr-2 h-4 w-4 text-red-600" />
+                              Reprovar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              disabled={statusUpdatingId === matricula.id}
+                              onSelect={(event) => {
+                                event.preventDefault();
+                                handleUpdateMatriculaStatus(
+                                  matricula.id,
+                                  "evadida",
+                                );
+                              }}
+                            >
+                              <LogOut className="mr-2 h-4 w-4 text-yellow-600" />
+                              🏃 Evadiu
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-destructive focus:text-destructive"
+                              disabled={isDeleting}
+                              onSelect={(event) => {
+                                event.preventDefault();
+                                setMatriculaToDelete(matricula.id);
+                                setDeleteDialogOpen(true);
+                              }}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Remover matrícula
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -342,7 +498,9 @@ export function TurmaDetalhesClient({
           {isLoadingPerformance ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              <span className="ml-2 text-muted-foreground">Carregando resultados...</span>
+              <span className="ml-2 text-muted-foreground">
+                Carregando resultados...
+              </span>
             </div>
           ) : performanceData.length > 0 ? (
             <ResultadosClient performance={performanceData} />
@@ -402,11 +560,14 @@ export function TurmaDetalhesClient({
           <AlertDialogHeader>
             <AlertDialogTitle>Remover Matrícula</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja remover esta aluna da turma? Esta ação não pode ser desfeita.
+              Tem certeza que deseja remover esta aluna da turma? Esta ação não
+              pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>
+              Cancelar
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteMatricula}
               disabled={isDeleting}

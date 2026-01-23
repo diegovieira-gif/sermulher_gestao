@@ -1,8 +1,11 @@
 "use client";
 
+import { useRef } from "react";
+import { useReactToPrint } from "react-to-print";
 import { Button } from "@/components/ui/button";
-import { Printer } from "lucide-react";
-import "./certificado.css";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Printer, FileCheck, AlertCircle } from "lucide-react";
+import { CertificateTemplate } from "@/components/escola/certificate-template";
 
 interface CertificadoClientProps {
   matricula: any;
@@ -17,87 +20,115 @@ export default function CertificadoClient({
   turma,
   curso,
 }: CertificadoClientProps) {
-  const handlePrint = () => {
-    window.print();
+  const certificateRef = useRef<HTMLDivElement>(null);
+
+  // Validação: verifica se o status da matrícula é "Concluída"
+  const isConcluida =
+    matricula?.status?.toLowerCase() === "concluída" ||
+    matricula?.status?.toLowerCase() === "concluido";
+
+  const handlePrint = useReactToPrint({
+    contentRef: certificateRef,
+    documentTitle: `Certificado_${beneficiaria.nome_completo.replace(/\s+/g, "_")}.pdf`,
+    pageStyle: `
+      @page {
+        size: A4 landscape;
+        margin: 0;
+      }
+      @media print {
+        body {
+          margin: 0;
+          padding: 0;
+          background: white;
+        }
+      }
+    `,
+  });
+
+  const fallbackStart = turma?.data_inicio
+    ? new Date(turma.data_inicio)
+    : new Date();
+  const fallbackEnd = turma?.data_fim
+    ? new Date(turma.data_fim)
+    : fallbackStart;
+  const fallbackInstructor =
+    turma?.instrutor_nome || "Instrutor(a) Responsável";
+
+  const certificateData = {
+    studentName: beneficiaria.nome_completo,
+    studentCpf: beneficiaria.cpf || "---",
+    courseName: curso?.nome || "Curso de Formação",
+    hours: Number(curso?.carga_horaria) || 0,
+    startDate: fallbackStart,
+    endDate: fallbackEnd,
+    instructorName: fallbackInstructor,
+    directorName: undefined,
   };
 
-  // Formata a data
-  const dataAtual = new Date();
-  const dia = dataAtual.getDate();
-  const mes = dataAtual.toLocaleDateString("pt-BR", { month: "long" });
-  const ano = dataAtual.getFullYear();
+  if (!isConcluida) {
+    return (
+      <div className="w-full bg-background min-h-screen p-4 md:p-8">
+        <Alert variant="destructive" className="max-w-2xl">
+          <AlertCircle className="h-5 w-5" />
+          <AlertTitle>Certificado Indisponível</AlertTitle>
+          <AlertDescription>
+            O curso ainda não foi concluído. O certificado só pode ser emitido
+            após a conclusão da matrícula com status "Concluída".
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full bg-background min-h-screen p-4 md:p-8">
-      {/* Botão de Impressão - Visível apenas na tela */}
-      <div className="hidden-print flex gap-3 mb-6">
+      {/* Barra de Ações */}
+      <div className="flex gap-3 mb-8 sticky top-8 z-10">
         <Button
-          onClick={handlePrint}
+          onClick={() => handlePrint()}
           size="lg"
-          className="gap-2"
+          className="gap-2 bg-green-600 hover:bg-green-700"
         >
           <Printer className="h-5 w-5" />
-          Imprimir Certificado
+          Imprimir / Salvar PDF
         </Button>
-        <Button variant="outline" size="lg" onClick={() => window.close()}>
-          Fechar
+        <Button variant="outline" size="lg">
+          <FileCheck className="h-5 w-5 mr-2" />
+          Certificado Liberado
         </Button>
       </div>
 
-      {/* Certificado - Otimizado para Impressão */}
-      <div className="certificado-container">
-        <div className="certificado-content">
-          {/* Borda Ornamental */}
-          <div className="certificado-border">
-            {/* Header */}
-            <div className="certificado-header">
-              <h1 className="certificado-title">Certificado</h1>
-            </div>
+      {/* Área de Preview */}
+      <div className="flex justify-center bg-gray-100 rounded-lg p-4 md:p-8 print:bg-white print:p-0 print:rounded-none">
+        <div className="shadow-lg print:shadow-none">
+          <CertificateTemplate ref={certificateRef} data={certificateData} />
+        </div>
+      </div>
 
-            {/* Corpo do Certificado */}
-            <div className="certificado-body">
-              <p className="certificado-text certificado-intro">
-                Certificamos que
-              </p>
-
-              <p className="certificado-name">
-                {beneficiaria.nome_completo.toUpperCase()}
-              </p>
-
-              <p className="certificado-text">
-                concluiu com êxito o curso de
-              </p>
-
-              <p className="certificado-course">
-                {curso.nome.toUpperCase()}
-              </p>
-
-              <p className="certificado-text">
-                com carga horária de <strong>{curso.carga_horaria} horas</strong>
-              </p>
-
-              {turma.data_fim && (
-                <p className="certificado-text">
-                  realizado no período de{" "}
-                  <strong>{new Date(turma.data_inicio).toLocaleDateString("pt-BR")}</strong> a{" "}
-                  <strong>{new Date(turma.data_fim).toLocaleDateString("pt-BR")}</strong>
-                </p>
-              )}
-            </div>
-
-            {/* Assinatura e Data */}
-            <div className="certificado-footer">
-              <div className="certificado-signature">
-                <div className="signature-line"></div>
-                <p className="signature-text">Assinatura da Coordenadora</p>
-              </div>
-
-              <div className="certificado-date">
-                <p className="date-text">
-                  São Paulo, {dia} de {mes} de {ano}
-                </p>
-              </div>
-            </div>
+      {/* Informações Adicionais */}
+      <div className="mt-8 max-w-4xl mx-auto print:hidden">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="p-4 bg-card rounded-lg border">
+            <p className="text-xs text-muted-foreground uppercase">Aluno</p>
+            <p className="font-semibold truncate">
+              {beneficiaria.nome_completo}
+            </p>
+          </div>
+          <div className="p-4 bg-card rounded-lg border">
+            <p className="text-xs text-muted-foreground uppercase">Curso</p>
+            <p className="font-semibold truncate">
+              {certificateData.courseName}
+            </p>
+          </div>
+          <div className="p-4 bg-card rounded-lg border">
+            <p className="text-xs text-muted-foreground uppercase">
+              Carga Horária
+            </p>
+            <p className="font-semibold">{certificateData.hours}h</p>
+          </div>
+          <div className="p-4 bg-card rounded-lg border">
+            <p className="text-xs text-muted-foreground uppercase">Status</p>
+            <p className="font-semibold text-green-600">Concluída</p>
           </div>
         </div>
       </div>
