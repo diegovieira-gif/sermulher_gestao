@@ -55,7 +55,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface InfratoresClientProps {
-  initialData: Infrator[];
+  initialData: any[];
   niveis: any[];
   statusLegais: any[];
 }
@@ -212,14 +212,14 @@ export function InfratoresClient({
                     <TableCell>
                       <Badge variant="outline" className="bg-slate-50">
                         <Gavel className="h-3 w-3 mr-1 text-slate-500" />
-                        {item.status_legal_id?.nome || "Não informado"}
+                        Status Legal
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <span
-                        className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${getNivelColor(item.nivel_id?.nome)}`}
+                        className={`px-2.5 py-0.5 rounded-full text-xs font-medium border`}
                       >
-                        {item.nivel_id?.nome || "---"}
+                        Nível
                       </span>
                     </TableCell>
                     <TableCell className="text-sm text-gray-600 font-mono">
@@ -316,18 +316,10 @@ export function InfratoresClient({
                 <td className="py-3 font-mono text-gray-700">
                   {item.numero_processo || "---"}
                 </td>
-                <td className="py-3 text-gray-700">
-                  {item.status_legal_id?.nome || "---"}
-                </td>
+                <td className="py-3 text-gray-700">Status Legal</td>
                 <td className="py-3">
-                  <span
-                    className={`text-xs font-bold uppercase ${
-                      item.nivel_id?.nome === "Alto"
-                        ? "text-red-700"
-                        : "text-gray-700"
-                    }`}
-                  >
-                    {item.nivel_id?.nome || "---"}
+                  <span className={`text-xs font-bold uppercase text-gray-700`}>
+                    Nível
                   </span>
                 </td>
               </tr>
