@@ -1,4 +1,4 @@
-import { getGlobalEvents } from "./actions";
+import { getGlobalEvents, getTiposOptions } from "./actions";
 import { EventosCalendarioClient } from "./eventos-calendario-client";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
@@ -6,21 +6,30 @@ import { AlertCircle } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export default async function EventosPage() {
-  const result = await getGlobalEvents();
+  // Busca paralela de eventos e opções
+  const [eventsResult, optionsResult] = await Promise.all([
+    getGlobalEvents(),
+    getTiposOptions(),
+  ]);
 
-  if (!result.success) {
+  if (!eventsResult.success) {
     return (
       <div className="p-6">
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Erro no Calendário</AlertTitle>
           <AlertDescription>
-            {result.error || "Não foi possível carregar a agenda unificada."}
+            {eventsResult.error ||
+              "Não foi possível carregar a agenda unificada."}
           </AlertDescription>
         </Alert>
       </div>
     );
   }
+
+  // Prepara as opções (fallback para array vazio se der erro)
+  const tiposOptions =
+    optionsResult.success && optionsResult.data ? optionsResult.data : [];
 
   return (
     <div className="p-6 h-screen flex flex-col bg-gray-50/50">
@@ -34,7 +43,10 @@ export default async function EventosPage() {
       </div>
 
       <div className="flex-1">
-        <EventosCalendarioClient initialEvents={result.data || []} />
+        <EventosCalendarioClient
+          initialEvents={eventsResult.data || []}
+          tiposEventoOptions={tiposOptions}
+        />
       </div>
     </div>
   );

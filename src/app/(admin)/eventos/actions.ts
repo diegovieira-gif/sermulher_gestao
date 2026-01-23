@@ -18,9 +18,34 @@ export type CalendarEvent = {
   status?: string;
 };
 
-// --- CRUD de Eventos Manuais ---
+export type TipoEventoOption = { id: number; nome: string; icone?: string };
 
-// Função Wrapper que o Form espera
+// --- Opções Auxiliares (Correção do Erro de Export) ---
+
+export async function getTiposOptions(): Promise<{
+  success: boolean;
+  data?: TipoEventoOption[];
+  error?: string;
+}> {
+  try {
+    // Busca os tipos de evento para o select
+    const tipos = await directus.request(
+      readItems("config_tipos_evento", {
+        fields: ["id", "nome", "icone"],
+        sort: ["nome"],
+      }),
+    );
+    // @ts-ignore
+    return { success: true, data: tipos };
+  } catch (error) {
+    console.error("Erro ao buscar tipos de evento:", error);
+    // Retorna array vazio em vez de erro para não quebrar a página toda
+    return { success: true, data: [] };
+  }
+}
+
+// --- CRUD de Eventos (Tabela: eventos_campanhas) ---
+
 export async function saveEvento(data: InsertEvento & { id?: number }) {
   if (data.id) {
     return updateEvento(data.id, data);
@@ -34,10 +59,11 @@ export async function createEvento(data: InsertEvento) {
   if (!validation.success) return { success: false, error: "Dados inválidos" };
 
   try {
-    await directus.request(createItem("eventos", validation.data));
+    await directus.request(createItem("eventos_campanhas", validation.data));
     revalidatePath("/eventos");
     return { success: true };
   } catch (error) {
+    console.error("Erro ao criar evento:", error);
     return { success: false, error: "Erro ao criar evento" };
   }
 }
@@ -49,25 +75,29 @@ export async function updateEvento(id: number, data: InsertEvento) {
   try {
     // @ts-ignore
     const { id: _, ...payload } = data;
-    await directus.request(updateItem("eventos", id, validation.data));
+    await directus.request(
+      updateItem("eventos_campanhas", id, validation.data),
+    );
     revalidatePath("/eventos");
     return { success: true };
   } catch (error) {
+    console.error("Erro ao atualizar evento:", error);
     return { success: false, error: "Erro ao atualizar evento" };
   }
 }
 
 export async function deleteEvento(id: number) {
   try {
-    await directus.request(deleteItem("eventos", id));
+    await directus.request(deleteItem("eventos_campanhas", id));
     revalidatePath("/eventos");
     return { success: true };
   } catch (error) {
+    console.error("Erro ao excluir evento:", error);
     return { success: false, error: "Erro ao excluir evento" };
   }
 }
 
-// --- BUSCA UNIFICADA ---
+// --- BUSCA UNIFICADA (Calendário) ---
 
 export async function getGlobalEvents(): Promise<{
   success: boolean;
@@ -77,13 +107,27 @@ export async function getGlobalEvents(): Promise<{
   try {
     const globalEvents: CalendarEvent[] = [];
 
-    // 1. Buscar Eventos Manuais (Tabela 'eventos')
-    // Usamos Promise.allSettled para que o erro em uma tabela não quebre as outras
+    // Usamos Promise.allSettled para tolerância a falhas
     const [manuaisResult, turmasResult, sessoesResult] =
       await Promise.allSettled([
-        directus.request(readItems("eventos", { limit: -1 })),
+        // 1. Eventos Manuais (eventos_campanhas)
+        // @ts-ignore
+        directus.request(
+          readItems("eventos_campanhas", {
+            fields: [
+              "id",
+              "nome",
+              "data_inicio",
+              "data_fim",
+              "descricao",
+              "tipo_id.nome",
+              "status",
+            ],
+            limit: -1,
+          }),
+        ),
 
-        // Tenta buscar turmas (Pode falhar se campos de data não existirem ainda)
+        // 2. Turmas (escola_turmas)
         // @ts-ignore
         directus.request(
           readItems("escola_turmas", {
@@ -102,7 +146,7 @@ export async function getGlobalEvents(): Promise<{
           }),
         ),
 
-        // Busca Sessões da Sala Azul (Tabela 'ciclo_sessoes')
+        // 3. Sessões (ciclo_sessoes)
         // @ts-ignore
         directus.request(
           readItems("ciclo_sessoes", {
@@ -117,19 +161,19 @@ export async function getGlobalEvents(): Promise<{
       manuaisResult.value.forEach((evt: any) => {
         globalEvents.push({
           id: `manual-${evt.id}`,
-          title: evt.titulo,
+          title: evt.nome, // Campo correto é 'nome'
           start: new Date(evt.data_inicio),
           end: new Date(evt.data_fim || evt.data_inicio),
-          allDay: evt.dia_inteiro || false,
+          allDay: false,
           type: "manual",
-          color: evt.cor || "#6366f1",
+          color: "#a855f7", // Purple (Identidade visual da página)
           description: evt.descricao,
-          status: "ativo",
+          status: evt.status,
         });
       });
     }
 
-    // Processar Turmas (Se sucesso)
+    // Processar Turmas
     if (turmasResult.status === "fulfilled" && turmasResult.value) {
       turmasResult.value.forEach((turma: any) => {
         if (turma.data_inicio) {
@@ -140,7 +184,7 @@ export async function getGlobalEvents(): Promise<{
             end: new Date(turma.data_inicio),
             allDay: true,
             type: "escola",
-            color: "#059669",
+            color: "#059669", // Emerald
             description: `Curso: ${turma.curso?.nome}`,
             status: turma.status,
           });
@@ -159,34 +203,25 @@ export async function getGlobalEvents(): Promise<{
           });
         }
       });
-    } else {
-      console.warn(
-        "Não foi possível carregar turmas (verifique se os campos data_inicio/data_fim existem).",
-      );
     }
 
-    // Processar Sessões Sala Azul (Se sucesso)
+    // Processar Sessões Sala Azul
     if (sessoesResult.status === "fulfilled" && sessoesResult.value) {
       sessoesResult.value.forEach((sessao: any) => {
         if (sessao.data) {
           globalEvents.push({
             id: `sessao-${sessao.id}`,
             title: `Sala Azul: ${sessao.tema || "Encontro"}`,
-            start: new Date(sessao.data), // Campo correto é 'data'
+            start: new Date(sessao.data),
             end: new Date(sessao.data),
             allDay: false,
             type: "sala_azul",
-            color: "#2563eb",
+            color: "#2563eb", // Blue
             description: `Ciclo: ${sessao.sala_id?.nome_ciclo || "Geral"}`,
             status: "agendada",
           });
         }
       });
-    } else {
-      console.error(
-        "Erro ao carregar sessões:",
-        sessoesResult.status === "rejected" ? sessoesResult.reason : "Unknown",
-      );
     }
 
     return { success: true, data: globalEvents };

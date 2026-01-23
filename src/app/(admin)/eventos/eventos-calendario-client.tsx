@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   format,
   startOfMonth,
@@ -22,23 +23,19 @@ import {
   Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { EventoForm } from "./evento-form";
 import type { CalendarEvent } from "./actions";
 
 interface EventosCalendarioClientProps {
   initialEvents: CalendarEvent[];
+  tiposEventoOptions: { id: number; nome: string; icone?: string }[];
 }
 
 export function EventosCalendarioClient({
   initialEvents,
+  tiposEventoOptions,
 }: EventosCalendarioClientProps) {
+  const router = useRouter();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -109,31 +106,27 @@ export function EventosCalendarioClient({
             </div>
           </div>
 
-          <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-purple-600 hover:bg-purple-700 gap-2">
-                <Plus className="h-4 w-4" />
-                Novo Evento
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Adicionar Evento na Agenda</DialogTitle>
-              </DialogHeader>
-              <EventoForm
-                onSuccess={() => {
-                  setIsFormOpen(false);
-                  window.location.reload();
-                }}
-              />
-            </DialogContent>
-          </Dialog>
+          {/* Botão Novo Evento */}
+          <Button
+            className="bg-purple-600 hover:bg-purple-700 gap-2"
+            onClick={() => setIsFormOpen(true)}
+          >
+            <Plus className="h-4 w-4" />
+            Novo Evento
+          </Button>
+
+          {/* Formulário (Modal) */}
+          <EventoForm
+            open={isFormOpen}
+            onOpenChange={setIsFormOpen}
+            tiposEventoOptions={tiposEventoOptions}
+            onSuccess={() => router.refresh()}
+          />
         </div>
       </div>
 
       {/* --- GRID DO CALENDÁRIO --- */}
       <div className="flex-1 flex flex-col min-h-0">
-        {/* Dias da Semana */}
         <div className="grid grid-cols-7 border-b bg-gray-50">
           {weekDays.map((day) => (
             <div
@@ -145,7 +138,6 @@ export function EventosCalendarioClient({
           ))}
         </div>
 
-        {/* Células */}
         <div className="grid grid-cols-7 flex-1 auto-rows-fr bg-gray-200 gap-px overflow-y-auto">
           {calendarDays.map((day, idx) => {
             const isCurrentMonth = isSameMonth(day, monthStart);
@@ -170,7 +162,6 @@ export function EventosCalendarioClient({
                   </span>
                 </div>
 
-                {/* Substituição do ScrollArea por Div padrão */}
                 <div className="flex-1 w-full overflow-y-auto max-h-[100px] custom-scrollbar">
                   <div className="flex flex-col gap-1 mt-1">
                     {dayEvents.map((evt) => (

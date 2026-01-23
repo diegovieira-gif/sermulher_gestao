@@ -1,22 +1,18 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   insertEventoSchema,
   type Evento,
   type EventoFormValues,
-  tipoEventoEnum,
-  statusEventoEnum,
-  recorrenciaEnum,
 } from "./schemas";
 import { saveEvento } from "./actions";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -38,7 +34,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Info } from "lucide-react";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 
 type TipoEventoOption = { id: number; nome: string; icone?: string };
@@ -48,6 +44,7 @@ interface EventoFormProps {
   onOpenChange: (open: boolean) => void;
   tiposEventoOptions: TipoEventoOption[];
   evento?: Evento | null;
+  onSuccess?: () => void;
 }
 
 export function EventoForm({
@@ -55,94 +52,49 @@ export function EventoForm({
   onOpenChange,
   tiposEventoOptions,
   evento,
+  onSuccess,
 }: EventoFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // LÓGICA DE NORMALIZAÇÃO: Converte objetos de relacionamento em IDs e formata datas
-  const normalizedValues = useMemo(() => {
-    if (evento) {
-      // Se tipo_id for objeto (vindo do get), pega o ID. Se for valor, mantém.
-      const tipoId =
-        typeof evento.tipo_id === "object" && evento.tipo_id !== null
-          ? (evento.tipo_id as any)?.id
-          : evento.tipo_id;
-
-      // Formata datas para YYYY-MM-DD que o input date aceita
-      let dataInicioFormatted = "";
-      if (evento.data_inicio) {
-        const dateStr = String(evento.data_inicio);
-        if (dateStr.includes('T')) {
-          dataInicioFormatted = dateStr.split('T')[0];
-        } else if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-          dataInicioFormatted = dateStr;
-        }
-      }
-
-      let dataFimFormatted = "";
-      if (evento.data_fim) {
-        const dateStr = String(evento.data_fim);
-        if (dateStr.includes('T')) {
-          dataFimFormatted = dateStr.split('T')[0];
-        } else if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-          dataFimFormatted = dateStr;
-        }
-      }
-
-      return {
-        id: evento.id,
-        nome: evento.nome,
-        tipo_id: tipoId ?? "",
-        data_inicio: dataInicioFormatted,
-        data_fim: dataFimFormatted,
-        descricao: evento.descricao || "",
-        recorrencia: evento.recorrencia || "nao_recorrente",
-        publico_alvo: evento.publico_alvo || "",
-        tipo: evento.tipo || "evento",
-        status: evento.status || "planejado",
-        local: evento.local || "",
-      };
-    }
-
-    // Valores padrão para criação
-    return {
-      nome: "",
-      tipo_id: "",
-      data_inicio: "",
-      data_fim: "",
-      descricao: "",
-      recorrencia: "nao_recorrente",
-      publico_alvo: "",
-      tipo: "evento",
-      status: "planejado",
-      local: "",
-    };
-  }, [evento]);
-
   const form = useForm<EventoFormValues>({
-    resolver: zodResolver(insertEventoSchema) as any,
-    defaultValues: normalizedValues as any,
+    resolver: zodResolver(insertEventoSchema),
+    defaultValues: {
+      nome: evento?.nome || "",
+      tipo_id: evento?.tipo_id?.id || undefined,
+      data_inicio: evento?.data_inicio
+        ? new Date(evento.data_inicio).toISOString().slice(0, 16)
+        : "",
+      data_fim: evento?.data_fim
+        ? new Date(evento.data_fim).toISOString().slice(0, 16)
+        : "",
+      descricao: evento?.descricao || "",
+      local: evento?.local || "",
+      status: (evento?.status as any) || "planejado",
+    },
   });
-
-  useEffect(() => {
-    form.reset(normalizedValues as any);
-  }, [normalizedValues, form]);
 
   const onSubmit = async (data: EventoFormValues) => {
     setIsSubmitting(true);
-
     try {
-      const result = await saveEvento(data);
+      const payload = {
+        ...data,
+        id: evento?.id, // Passa ID se for edição
+      };
+
+      const result = await saveEvento(payload);
 
       if (result.success) {
-        toast.success(result.message);
+        toast.success(
+          evento ? "Evento atualizado!" : "Evento criado com sucesso!",
+        );
         onOpenChange(false);
         form.reset();
+        if (onSuccess) onSuccess();
       } else {
-        toast.error(result.error);
+        toast.error("Erro ao salvar: " + result.error);
       }
     } catch (error) {
-      toast.error("Erro ao salvar evento");
-      console.error(error);
+      toast.error("Erro inesperado ao salvar evento.");
     } finally {
       setIsSubmitting(false);
     }
@@ -150,142 +102,82 @@ export function EventoForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {evento ? "Editar Evento/Campanha" : "Novo Evento/Campanha"}
-          </DialogTitle>
-          <DialogDescription>
-            Preencha os dados do evento ou campanha abaixo.
-          </DialogDescription>
+          <DialogTitle>{evento ? "Editar Evento" : "Novo Evento"}</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Título */}
-            <FormField
-              control={form.control}
-              name="nome"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Título *
-                    <InfoTooltip text="Nome ou título identificador do evento ou campanha." />
-                  </FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ex: Campanha de Doação" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {/* Nome e Tipo */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="nome"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome do Evento</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ex: Outubro Rosa" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            {/* Primeira linha: 2 colunas */}
-            <div className="grid grid-cols-2 gap-4">
-              {/* Tipo de evento (da tabela config_tipos_evento) */}
               <FormField
                 control={form.control}
                 name="tipo_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tipo de Evento *</FormLabel>
-                    <FormControl>
-                      <Select
-                        value={
-                          typeof field.value === "string" ||
-                          typeof field.value === "number"
-                            ? String(field.value)
-                            : ""
-                        }
-                        onValueChange={(value) =>
-                          field.onChange(value ? Number(value) : "")
-                        }
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Selecione o tipo..." />
+                    <FormLabel>Tipo de Evento</FormLabel>
+                    <Select
+                      onValueChange={(val) => field.onChange(Number(val))}
+                      defaultValue={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione..." />
                         </SelectTrigger>
-                        <SelectContent>
-                          {tiposEventoOptions.map((opt) => (
-                            <SelectItem
-                              key={opt.id}
-                              value={opt.id.toString()}
-                            >
-                              {opt.nome}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Status */}
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Status
-                      <InfoTooltip text="Situação atual do evento (Planejado, Em Andamento, Concluído, Cancelado)." />
-                    </FormLabel>
-                    <FormControl>
-                      <Select
-                        value={field.value || "planejado"}
-                        onValueChange={field.onChange}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Selecione o status..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {statusEventoEnum.map((option) => (
-                            <SelectItem
-                              key={option.value}
-                              value={option.value}
-                            >
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
+                      </FormControl>
+                      <SelectContent>
+                        {tiposEventoOptions.map((tipo) => (
+                          <SelectItem key={tipo.id} value={tipo.id.toString()}>
+                            {tipo.nome}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
 
-            {/* Segunda linha: 2 colunas */}
-            <div className="grid grid-cols-2 gap-4">
-              {/* Data Inicial */}
+            {/* Datas */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="data_inicio"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Data de Início *</FormLabel>
+                    <FormLabel>Início</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input type="datetime-local" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              {/* Data Final */}
               <FormField
                 control={form.control}
                 name="data_fim"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      Data de Fim *
-                      <InfoTooltip text="Data e hora de término do evento." />
-                    </FormLabel>
+                    <FormLabel>Fim (Término)</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input type="datetime-local" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -293,125 +185,51 @@ export function EventoForm({
               />
             </div>
 
-            {/* Terceira linha: 2 colunas */}
-            <div className="grid grid-cols-2 gap-4">
-              {/* Recorrência */}
-              <FormField
-                control={form.control}
-                name="recorrencia"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Recorrência
-                      <InfoTooltip text="Define se o evento se repete (Diário, Semanal, Mensal) ou não." />
-                    </FormLabel>
-                    <FormControl>
-                      <Select
-                        value={field.value || "nao_recorrente"}
-                        onValueChange={field.onChange}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Selecione a recorrência..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {recorrenciaEnum.map((option) => (
-                            <SelectItem
-                              key={option.value}
-                              value={option.value}
-                            >
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Local */}
+            {/* Local e Status */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="local"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      Local
-                      <InfoTooltip text="Local físico onde o evento será realizado." />
-                    </FormLabel>
+                    <FormLabel>Local</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="Ex: Centro de Referência"
-                        {...field}
-                      />
+                      <Input placeholder="Ex: Auditório A" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
 
-            {/* Quarta linha: 2 colunas */}
-            <div className="grid grid-cols-2 gap-4">
-              {/* Categoria de Tipo (campanha, evento, etc) */}
               <FormField
                 control={form.control}
-                name="tipo"
+                name="status"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      Categoria
-                      <InfoTooltip text="Classificação geral do evento (Evento, Campanha, etc)." />
-                    </FormLabel>
-                    <FormControl>
-                      <Select
-                        value={field.value || "evento"}
-                        onValueChange={field.onChange}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Selecione a categoria..." />
+                    <FormLabel>Status</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione..." />
                         </SelectTrigger>
-                        <SelectContent>
-                          {tipoEventoEnum.map((option) => (
-                            <SelectItem
-                              key={option.value}
-                              value={option.value}
-                            >
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Público Alvo */}
-              <FormField
-                control={form.control}
-                name="publico_alvo"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Público Alvo
-                      <InfoTooltip text="Grupo de pessoas para quem o evento é direcionado." />
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Ex: Mulheres, Famílias..."
-                        {...field}
-                      />
-                    </FormControl>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="planejado">Planejado</SelectItem>
+                        <SelectItem value="confirmado">Confirmado</SelectItem>
+                        <SelectItem value="realizado">Realizado</SelectItem>
+                        <SelectItem value="cancelado">Cancelado</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
 
-            {/* Descrição (full width) */}
+            {/* Descrição */}
             <FormField
               control={form.control}
               name="descricao"
@@ -419,11 +237,12 @@ export function EventoForm({
                 <FormItem>
                   <FormLabel>
                     Descrição
-                    <InfoTooltip text="Descrição detalhada do evento, objetivos e informações relevantes." />
+                    <InfoTooltip text="Detalhes do evento para o público interno." />
                   </FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Descreva o evento ou campanha em detalhes..."
+                      placeholder="Detalhes sobre o evento..."
+                      className="resize-none"
                       rows={4}
                       {...field}
                     />
@@ -433,21 +252,23 @@ export function EventoForm({
               )}
             />
 
-            {/* Botões */}
-            <div className="flex justify-end gap-4 pt-4">
+            <div className="flex justify-end gap-2 pt-4">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
-                disabled={isSubmitting}
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
                 {isSubmitting && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                {evento ? "Atualizar" : "Cadastrar"}
+                Salvar Evento
               </Button>
             </div>
           </form>
