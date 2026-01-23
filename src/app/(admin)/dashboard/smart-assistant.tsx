@@ -20,7 +20,6 @@ export function SmartAssistant() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
-  const [aiDebug, setAiDebug] = useState<string | null>(null);
 
   // Estado para as sugestões dinâmicas
   const [currentSuggestions, setCurrentSuggestions] =
@@ -35,7 +34,6 @@ export function SmartAssistant() {
     setLoading(true);
     setError(null);
     setResult(null);
-    setAiDebug(null);
 
     try {
       const response = await fetch("/api/ai", {
@@ -51,8 +49,14 @@ export function SmartAssistant() {
       }
 
       setResult(data);
-      if (data.query) {
-        setAiDebug(JSON.stringify(data.query, null, 2));
+
+      // ATUALIZAÇÃO: Se a IA devolveu sugestões de follow-up, atualiza os botões
+      if (
+        data.suggestions &&
+        Array.isArray(data.suggestions) &&
+        data.suggestions.length > 0
+      ) {
+        setCurrentSuggestions(data.suggestions);
       }
     } catch (err: any) {
       setError(err.message);
@@ -72,12 +76,12 @@ export function SmartAssistant() {
       <CardContent className="space-y-4">
         <div className="flex gap-2">
           <Input
-            placeholder="Faça uma pergunta sobre os dados (ex: Quantas mulheres foram atendidas este mês?)"
+            placeholder="Faça uma pergunta sobre os dados..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleAskQuestion()}
             disabled={loading}
-            className="bg-white"
+            className="bg-white border-purple-200 focus-visible:ring-purple-500"
           />
           <Button
             onClick={() => handleAskQuestion()}
@@ -94,14 +98,14 @@ export function SmartAssistant() {
           </Button>
         </div>
 
-        {/* Sugestões Rápidas */}
-        {!result && !loading && (
-          <div className="flex flex-wrap gap-2">
+        {/* Sugestões Rápidas (Dinâmicas) */}
+        {!loading && (
+          <div className="flex flex-wrap gap-2 animate-in fade-in duration-300">
             {currentSuggestions.map((suggestion, idx) => (
               <Badge
                 key={idx}
                 variant="outline"
-                className="cursor-pointer hover:bg-purple-100 text-purple-700 border-purple-200 py-1 px-3"
+                className="cursor-pointer bg-white hover:bg-purple-100 text-purple-700 border-purple-200 py-1.5 px-3 transition-colors"
                 onClick={() => handleAskQuestion(suggestion)}
               >
                 {suggestion}
@@ -114,7 +118,7 @@ export function SmartAssistant() {
         {error && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Erro</AlertTitle>
+            <AlertTitle>Atenção</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
@@ -124,13 +128,20 @@ export function SmartAssistant() {
           <div className="mt-4 space-y-4 animate-in fade-in slide-in-from-bottom-2">
             {/* Resposta em Texto / Count */}
             {(result.type === "text" || result.type === "count") && (
-              <div className="p-4 bg-white rounded-lg border border-purple-100 shadow-sm">
+              <div className="p-5 bg-white rounded-lg border border-purple-100 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1 h-full bg-purple-500" />
                 <p className="text-lg text-gray-800 font-medium leading-relaxed">
                   {result.answer}
                 </p>
-                {result.type === "count" && result.data !== undefined && (
-                  <p className="text-3xl font-bold text-purple-600 mt-2">
-                    {result.data}
+                {/* CORREÇÃO: Verifica se é número antes de formatar */}
+                {result.type === "count" && typeof result.data === "number" && (
+                  <p className="text-4xl font-bold text-purple-600 mt-3 tracking-tight">
+                    {result.data.toLocaleString("pt-BR")}
+                  </p>
+                )}
+                {result.debug_model && (
+                  <p className="text-[10px] text-gray-300 mt-4 text-right">
+                    Respondido por: {result.debug_model}
                   </p>
                 )}
               </div>
@@ -146,9 +157,9 @@ export function SmartAssistant() {
                   {result.data.map((item: any, idx: number) => (
                     <div
                       key={idx}
-                      className="p-3 bg-gray-50 hover:bg-purple-50/50 rounded-lg border border-gray-100 transition-colors flex flex-col gap-1"
+                      className="p-3 bg-white hover:bg-purple-50/50 rounded-lg border border-gray-200 shadow-sm transition-colors flex flex-col gap-1"
                     >
-                      <span className="font-semibold text-gray-800 truncate">
+                      <span className="font-semibold text-purple-900 truncate">
                         {item.nome ||
                           item.nome_completo ||
                           item.nome_ciclo ||
@@ -160,7 +171,9 @@ export function SmartAssistant() {
                         {item.status && (
                           <p>
                             Status:{" "}
-                            <span className="font-medium">{item.status}</span>
+                            <span className="font-medium uppercase text-gray-700">
+                              {item.status}
+                            </span>
                           </p>
                         )}
                         {item.cpf && <p>CPF: {item.cpf}</p>}

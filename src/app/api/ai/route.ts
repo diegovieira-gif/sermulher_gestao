@@ -87,24 +87,28 @@ export async function POST(req: Request) {
       });
     }
 
-    // 1. Descobre qual modelo usar (Priorizando Flash)
+    // 1. Descobre Modelo
     const modelName = await getBestAvailableModel(API_KEY);
-    console.log(`🤖 Modelo selecionado (Econômico): ${modelName}`);
 
-    // 2. Inicializa a IA
+    // 2. Inicializa IA
     const genAI = new GoogleGenerativeAI(API_KEY);
     const model = genAI.getGenerativeModel({ model: modelName });
 
+    // 3. Prompt Enriquecido com Pedido de Sugestões
     const prompt = `
     ${DB_SCHEMA_CONTEXT}
     PERGUNTA: "${question}"
     
-    TAREFA: Gere JSON para consultar o Directus.
+    TAREFA: 
+    1. Gere JSON para consultar o Directus.
+    2. Gere 3 sugestões de próximas perguntas relacionadas (curtas) para o usuário continuar a análise.
+
     FORMATO JSON OBRIGATÓRIO:
     {
       "query": { "collection": "nome_tabela", "aggregate": {}, "filter": {} },
       "type": "count" | "list" | "text",
-      "answer": "Texto amigável"
+      "answer": "Texto amigável explicando o dado",
+      "suggestions": ["pergunta 1", "pergunta 2", "pergunta 3"]
     }
     `;
 
@@ -162,17 +166,16 @@ export async function POST(req: Request) {
       type: plan.type,
       answer: plan.answer,
       data: dbResult,
+      suggestions: plan.suggestions || [], // Retorna as sugestões
       debug_model: modelName,
     });
   } catch (error: any) {
     console.error("Erro Fatal AI:", error.message);
 
-    // Tratamento específico para cota excedida
     if (error.message?.includes("429") || error.message?.includes("quota")) {
       return NextResponse.json({
         type: "text",
-        answer:
-          "⚠️ A cota gratuita da IA foi atingida momentaneamente. Tente novamente em alguns segundos.",
+        answer: "⚠️ Cota gratuita atingida. Aguarde um momento.",
       });
     }
 
