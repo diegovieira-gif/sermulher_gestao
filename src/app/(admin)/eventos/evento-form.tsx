@@ -60,7 +60,7 @@ export function EventoForm({
     resolver: zodResolver(insertEventoSchema),
     defaultValues: {
       nome: evento?.nome || "",
-      tipo_id: evento?.tipo_id?.id || undefined,
+      tipo_id: evento?.tipo_id || undefined,
       data_inicio: evento?.data_inicio
         ? new Date(evento.data_inicio).toISOString().slice(0, 16)
         : "",
@@ -78,6 +78,7 @@ export function EventoForm({
     try {
       const payload = {
         ...data,
+        tipo_id: Number(data.tipo_id),
         id: evento?.id, // Passa ID se for edição
       };
 

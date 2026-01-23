@@ -80,7 +80,9 @@ function formatarData(data: string): string {
 }
 
 // Função para obter a variante do badge baseado no status
-function getBadgeVariant(status: StatusEvento): "secondary" | "success" | "info" {
+function getBadgeVariant(
+  status: StatusEvento,
+): "secondary" | "success" | "info" {
   switch (status) {
     case "Encerrado":
       return "secondary";
@@ -111,11 +113,14 @@ function getStatusBadgeVariant(status?: string) {
 
 // Função para obter o rótulo do status
 function getStatusLabel(status?: string): string {
-  const statusOption = statusEventoEnum.find(s => s.value === status);
+  const statusOption = statusEventoEnum.find((s) => s.value === status);
   return statusOption ? statusOption.label : "Planejado";
 }
 
-export function EventosClient({ eventos, tiposEventoOptions }: EventosClientProps) {
+export function EventosClient({
+  eventos,
+  tiposEventoOptions,
+}: EventosClientProps) {
   const [formOpen, setFormOpen] = useState(false);
   const [selectedEvento, setSelectedEvento] = useState<Evento | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -147,7 +152,7 @@ export function EventosClient({ eventos, tiposEventoOptions }: EventosClientProp
       const result = await deleteEvento(eventoToDelete);
 
       if (result.success) {
-        toast.success(result.message);
+        toast.success("Evento excluído com sucesso!");
         setDeleteDialogOpen(false);
         setEventoToDelete(null);
       } else {
@@ -168,7 +173,7 @@ export function EventosClient({ eventos, tiposEventoOptions }: EventosClientProp
       String(
         typeof evento.tipo_id === "object" && evento.tipo_id !== null
           ? evento.tipo_id.id
-          : evento.tipo_id
+          : evento.tipo_id,
       ) === tipoFilter;
 
     const statusMatch =
@@ -254,7 +259,10 @@ export function EventosClient({ eventos, tiposEventoOptions }: EventosClientProp
           <TableBody>
             {eventosFiltrados.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground">
+                <TableCell
+                  colSpan={6}
+                  className="text-center text-muted-foreground"
+                >
                   Nenhum evento cadastrado
                 </TableCell>
               </TableRow>
@@ -262,22 +270,23 @@ export function EventosClient({ eventos, tiposEventoOptions }: EventosClientProp
               eventosFiltrados.map((evento) => {
                 const status = calcularStatus(
                   evento.data_inicio,
-                  evento.data_fim
+                  evento.data_fim,
                 );
                 const dataFormatada = formatarData(evento.data_inicio);
 
                 // Acessa tipo_id - pode vir como objeto expandido ou apenas ID
-                const tipoObj = 
+                const tipoObj =
                   typeof evento.tipo_id === "object" && evento.tipo_id !== null
                     ? evento.tipo_id
                     : typeof evento.tipo_id === "number"
-                    ? tiposEventoOptions.find((t) => t.id === evento.tipo_id)
-                    : null;
+                      ? tiposEventoOptions.find((t) => t.id === evento.tipo_id)
+                      : null;
 
                 const tipoNome = tipoObj?.nome;
 
                 // Verifica se é evento recorrente
-                const isRecorrente = evento.recorrencia && evento.recorrencia !== "nao_recorrente";
+                const isRecorrente =
+                  evento.recorrencia && evento.recorrencia !== "nao_recorrente";
 
                 return (
                   <TableRow key={evento.id}>
@@ -285,7 +294,9 @@ export function EventosClient({ eventos, tiposEventoOptions }: EventosClientProp
                       <div className="flex items-center gap-2">
                         {evento.nome}
                         {isRecorrente && (
-                          <div title={`Evento recorrente (${evento.recorrencia})`}>
+                          <div
+                            title={`Evento recorrente (${evento.recorrencia})`}
+                          >
                             <Repeat className="h-4 w-4 text-muted-foreground" />
                           </div>
                         )}
@@ -305,9 +316,7 @@ export function EventosClient({ eventos, tiposEventoOptions }: EventosClientProp
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={getBadgeVariant(status)}>
-                        {status}
-                      </Badge>
+                      <Badge variant={getBadgeVariant(status)}>{status}</Badge>
                     </TableCell>
                     <TableCell>
                       <Badge variant={getStatusBadgeVariant(evento.status)}>
@@ -352,11 +361,14 @@ export function EventosClient({ eventos, tiposEventoOptions }: EventosClientProp
           <AlertDialogHeader>
             <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta ação não pode ser desfeita. O evento será excluído permanentemente.
+              Esta ação não pode ser desfeita. O evento será excluído
+              permanentemente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>
+              Cancelar
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
               disabled={isDeleting}

@@ -1,14 +1,24 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
-import type { AgendaEvent } from "./actions";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Calendar as CalendarIcon,
+} from "lucide-react";
+import type { CalendarEvent } from "./actions";
 
 interface AgendaClientProps {
-  events: AgendaEvent[];
+  events: CalendarEvent[];
 }
 
 // Formatar data para exibição
@@ -60,38 +70,48 @@ export function AgendaClient({ events }: AgendaClientProps) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const [currentMonth, setCurrentMonth] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
+  const [currentMonth, setCurrentMonth] = useState(
+    new Date(today.getFullYear(), today.getMonth(), 1),
+  );
   const [selectedDate, setSelectedDate] = useState<Date | null>(today);
 
   // Navegar para o mês anterior
   const goToPreviousMonth = () => {
     setCurrentMonth(
-      new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1)
+      new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1),
     );
   };
 
   // Navegar para o próximo mês
   const goToNextMonth = () => {
     setCurrentMonth(
-      new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1)
+      new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1),
     );
   };
 
   // Eventos do dia selecionado
   const eventsForSelectedDate = useMemo(() => {
     if (!selectedDate) return [];
-    return events.filter((event) => isSameDay(event.date, selectedDate));
+    return events.filter((event) => isSameDay(event.start, selectedDate));
   }, [events, selectedDate]);
 
   // Próximos eventos do mês atual
   const upcomingEvents = useMemo(() => {
-    const monthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
-    const monthEnd = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+    const monthStart = new Date(
+      currentMonth.getFullYear(),
+      currentMonth.getMonth(),
+      1,
+    );
+    const monthEnd = new Date(
+      currentMonth.getFullYear(),
+      currentMonth.getMonth() + 1,
+      0,
+    );
     monthEnd.setHours(23, 59, 59, 999);
 
     return events
-      .filter((event) => event.date >= monthStart && event.date <= monthEnd)
-      .sort((a, b) => a.date.getTime() - b.date.getTime())
+      .filter((event) => event.start >= monthStart && event.start <= monthEnd)
+      .sort((a, b) => a.start.getTime() - b.start.getTime())
       .slice(0, 10); // Limitar a 10 eventos
   }, [events, currentMonth]);
 
@@ -99,20 +119,28 @@ export function AgendaClient({ events }: AgendaClientProps) {
   const calendarDays = useMemo(() => {
     return generateCalendar(
       currentMonth.getFullYear(),
-      currentMonth.getMonth()
+      currentMonth.getMonth(),
     );
   }, [currentMonth]);
 
   // Dias com eventos no calendário
   const daysWithEvents = useMemo(() => {
-    const monthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
-    const monthEnd = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+    const monthStart = new Date(
+      currentMonth.getFullYear(),
+      currentMonth.getMonth(),
+      1,
+    );
+    const monthEnd = new Date(
+      currentMonth.getFullYear(),
+      currentMonth.getMonth() + 1,
+      0,
+    );
     monthEnd.setHours(23, 59, 59, 999);
 
     return events
-      .filter((event) => event.date >= monthStart && event.date <= monthEnd)
+      .filter((event) => event.start >= monthStart && event.start <= monthEnd)
       .map((event) => {
-        const day = new Date(event.date);
+        const day = new Date(event.start);
         day.setHours(0, 0, 0, 0);
         return day.getTime();
       });
@@ -149,11 +177,7 @@ export function AgendaClient({ events }: AgendaClientProps) {
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={goToNextMonth}
-                  >
+                  <Button variant="outline" size="icon" onClick={goToNextMonth}>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
@@ -174,9 +198,11 @@ export function AgendaClient({ events }: AgendaClientProps) {
                 {/* Dias do calendário */}
                 {calendarDays.map((day, index) => {
                   const dayTime = day.getTime();
-                  const isCurrentMonth = day.getMonth() === currentMonth.getMonth();
+                  const isCurrentMonth =
+                    day.getMonth() === currentMonth.getMonth();
                   const isToday = isSameDay(day, today);
-                  const isSelected = selectedDate && isSameDay(day, selectedDate);
+                  const isSelected =
+                    selectedDate && isSameDay(day, selectedDate);
                   const hasEvents = daysWithEvents.includes(dayTime);
 
                   return (
@@ -226,9 +252,11 @@ export function AgendaClient({ events }: AgendaClientProps) {
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-base">{event.title}</h3>
+                        <h3 className="font-semibold text-base">
+                          {event.title}
+                        </h3>
                         <p className="text-sm text-muted-foreground">
-                          {event.subtitle}
+                          {event.description}
                         </p>
                       </div>
                       <Badge variant="outline" className="shrink-0">
@@ -266,15 +294,17 @@ export function AgendaClient({ events }: AgendaClientProps) {
                 <div
                   key={event.id}
                   className="p-4 border rounded-lg space-y-2 hover:bg-accent/50 transition-colors cursor-pointer"
-                  onClick={() => setSelectedDate(event.date)}
+                  onClick={() => setSelectedDate(event.start)}
                 >
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <CalendarIcon className="h-4 w-4" />
-                    <span className="font-medium">{formatDateShort(event.date)}</span>
+                    <span className="font-medium">
+                      {formatDateShort(event.start)}
+                    </span>
                   </div>
                   <h4 className="font-medium text-base">{event.title}</h4>
                   <p className="text-sm text-muted-foreground line-clamp-2">
-                    {event.subtitle}
+                    {event.description}
                   </p>
                   <Badge variant="outline" className="mt-2">
                     {event.type}

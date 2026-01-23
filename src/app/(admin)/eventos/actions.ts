@@ -3,7 +3,7 @@
 import { directus } from "@/lib/directus";
 import { createItem, deleteItem, readItems, updateItem } from "@directus/sdk";
 import { revalidatePath } from "next/cache";
-import { InsertEvento, insertEventoSchema } from "./schemas";
+import { Evento, insertEventoSchema } from "./schemas";
 
 // --- Tipos Unificados ---
 export type CalendarEvent = {
@@ -46,7 +46,7 @@ export async function getTiposOptions(): Promise<{
 
 // --- CRUD de Eventos (Tabela: eventos_campanhas) ---
 
-export async function saveEvento(data: InsertEvento & { id?: number }) {
+export async function saveEvento(data: Evento & { id?: number }) {
   if (data.id) {
     return updateEvento(data.id, data);
   } else {
@@ -54,7 +54,7 @@ export async function saveEvento(data: InsertEvento & { id?: number }) {
   }
 }
 
-export async function createEvento(data: InsertEvento) {
+export async function createEvento(data: Evento) {
   const validation = insertEventoSchema.safeParse(data);
   if (!validation.success) return { success: false, error: "Dados inválidos" };
 
@@ -68,7 +68,7 @@ export async function createEvento(data: InsertEvento) {
   }
 }
 
-export async function updateEvento(id: number, data: InsertEvento) {
+export async function updateEvento(id: number, data: Evento) {
   const validation = insertEventoSchema.safeParse(data);
   if (!validation.success) return { success: false, error: "Dados inválidos" };
 
