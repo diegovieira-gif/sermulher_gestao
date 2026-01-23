@@ -7,14 +7,15 @@ import {
   AlertCircle,
   TrendingUp,
   Clock,
+  ArrowRight,
   HeartHandshake,
-  AlertTriangle,
+  ShieldAlert,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import type { DashboardStats, GlobalDashboardStats } from "./actions";
+import type { DashboardStats } from "./actions";
 import {
   BarChart,
   Bar,
@@ -26,31 +27,41 @@ import {
 } from "recharts";
 
 interface OverviewClientProps {
-  stats: GlobalDashboardStats | DashboardStats;
+  stats: DashboardStats;
   userName?: string;
 }
 
 const COLORS = {
-  primary: "#a855f7",
-  secondary: "#ec4899",
-  accent: "#d946ef",
-  danger: "#ef4444",
-  success: "#10b981",
-  neutral: "#6b7280",
+  primary: "#a855f7", // Purple
+  secondary: "#ec4899", // Pink
+  accent: "#d946ef", // Fuchsia
 };
-
-function isDashboardStats(stats: any): stats is DashboardStats {
-  return "kpis" in stats && "atendimentosPorDia" in stats;
-}
-
-function isGlobalDashboardStats(stats: any): stats is GlobalDashboardStats {
-  return "totais" in stats && "agenda" in stats && "casosCriticos" in stats;
-}
 
 export function OverviewClient({
   stats,
-  userName = "Secretaria",
+  userName = "Gestão",
 }: OverviewClientProps) {
+  // 1. Proteção contra dados vazios
+  if (!stats) {
+    return (
+      <div className="flex items-center justify-center h-96 text-muted-foreground bg-gray-50 rounded-lg border border-dashed">
+        <p>Aguardando dados...</p>
+      </div>
+    );
+  }
+
+  // 2. Extração segura dos dados com fallbacks
+  const {
+    kpis = {
+      totalAtendimentosMes: 0,
+      novosCasos: 0,
+      mulheresAcompanhamento: 0,
+      demandaReprimida: 0,
+    },
+    atendimentosPorDia = [],
+    proximosEventos = [],
+  } = stats;
+
   const dataAtual = new Date().toLocaleDateString("pt-BR", {
     weekday: "long",
     year: "numeric",
@@ -59,581 +70,266 @@ export function OverviewClient({
   });
 
   const formatarDataCurta = (dataStr: string) => {
-    const data = new Date(dataStr + "T00:00:00");
+    if (!dataStr) return "--/--";
+    const data = new Date(dataStr + "T00:00:00"); // Fix timezone issue
     return data.toLocaleDateString("pt-BR", {
       day: "2-digit",
       month: "short",
     });
   };
 
-  const ehHoje = (dataStr: string) => {
-    const data = new Date(dataStr + "T00:00:00");
+  const getLabelDataRelativa = (dataStr: string) => {
+    if (!dataStr) return "";
+    const data = new Date(dataStr);
     const hoje = new Date();
-    return data.toDateString() === hoje.toDateString();
-  };
-
-  const ehAmanha = (dataStr: string) => {
-    const data = new Date(dataStr + "T00:00:00");
     const amanha = new Date();
     amanha.setDate(amanha.getDate() + 1);
-    return data.toDateString() === amanha.toDateString();
+
+    if (data.toDateString() === hoje.toDateString()) return "Hoje";
+    if (data.toDateString() === amanha.toDateString()) return "Amanhã";
+    return data.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
   };
 
-  const getLabelDataRelativa = (dataStr: string) => {
-    if (ehHoje(dataStr)) return "Hoje";
-    if (ehAmanha(dataStr)) return "Amanha";
-    return formatarDataCurta(dataStr);
-  };
-
-  const formatarDataAtendimento = (data: string) => {
-    if (!data) return "-";
-    const dataObj = new Date(data);
-    return dataObj.toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
-
-  if (isGlobalDashboardStats(stats)) {
-    const { totais, agenda, casosCriticos } = stats;
-
-    const formatarDataSessao = (data: string) => {
-      const dataObj = new Date(data);
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
-      const amanha = new Date(hoje);
-      amanha.setDate(amanha.getDate() + 1);
-
-      if (dataObj.toDateString() === hoje.toDateString()) {
-        return "Hoje";
-      } else if (dataObj.toDateString() === amanha.toDateString()) {
-        return "Amanha";
-      } else {
-        return dataObj.toLocaleDateString("pt-BR", {
-          day: "2-digit",
-          month: "short",
-        });
-      }
-    };
-
-    const getPrioridadeColor = (prioridade: string, cor?: string) => {
-      if (cor) return undefined;
-      const prioridadeLower = prioridade?.toLowerCase() || "";
-      if (
-        prioridadeLower.includes("emergencia") ||
-        prioridadeLower.includes("critico")
-      ) {
-        return "bg-red-100 text-red-800 border-red-200";
-      }
-      if (
-        prioridadeLower.includes("urgente") ||
-        prioridadeLower.includes("alto")
-      ) {
-        return "bg-orange-100 text-orange-800 border-orange-200";
-      }
-      return "bg-gray-100 text-gray-800 border-gray-200";
-    };
-
-    return (
-      <div className="space-y-6 p-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            Ola, Gestor
-          </h1>
-          <p className="text-muted-foreground capitalize">{dataAtual}</p>
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-2">
-          <Link href="/mulheres">
-            <Card className="cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] border-l-4 border-l-purple-500 bg-gradient-to-br from-pink-50 to-purple-50 dark:from-pink-950/20 dark:to-purple-950/20">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-xl text-purple-900 dark:text-purple-100">
-                    Gestao de Mulheres
-                  </CardTitle>
-                  <div className="rounded-full bg-purple-500 p-3">
-                    <HeartHandshake className="h-6 w-6 text-white" />
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <p className="text-4xl font-bold text-purple-900 dark:text-purple-100">
-                    {totais.beneficiarias.toLocaleString("pt-BR")}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Beneficiarias cadastradas
-                  </p>
-                  <Button
-                    variant="ghost"
-                    className="mt-4 text-purple-700 hover:text-purple-900 hover:bg-purple-100 dark:text-purple-300 dark:hover:bg-purple-900"
-                  >
-                    Ver todas
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link href="/sala-azul">
-            <Card className="cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] border-l-4 border-l-blue-500 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-xl text-blue-900 dark:text-blue-100">
-                    Sala Azul
-                  </CardTitle>
-                  <div className="rounded-full bg-blue-500 p-3">
-                    <Users className="h-6 w-6 text-white" />
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <p className="text-4xl font-bold text-blue-900 dark:text-blue-100">
-                    {totais.infratores.toLocaleString("pt-BR")}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Infratores cadastrados
-                  </p>
-                  <Button
-                    variant="ghost"
-                    className="mt-4 text-blue-700 hover:text-blue-900 hover:bg-blue-100 dark:text-blue-300 dark:hover:bg-blue-900"
-                  >
-                    Ver todos
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        </div>
-
-        <div className="mt-8">
-          <h2 className="text-2xl font-semibold text-foreground mb-4">
-            Atencao Necessaria
-          </h2>
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-blue-600" />
-                  <CardTitle>Proximas Sessoes de Grupo</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {agenda.length > 0 ? (
-                  <div className="space-y-3">
-                    {agenda.map((sessao) => (
-                      <div
-                        key={sessao.id}
-                        className="flex items-start gap-3 p-3 rounded-lg border border-border hover:bg-accent/50 transition-colors"
-                      >
-                        <div className="flex-shrink-0 mt-0.5">
-                          <div className="w-2 h-2 rounded-full bg-blue-500" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Badge
-                              variant="outline"
-                              className="text-xs bg-blue-50 text-blue-700 border-blue-200"
-                            >
-                              {formatarDataSessao(sessao.data)}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-muted-foreground font-medium mb-1">
-                            {sessao.tema}
-                          </p>
-                          <div className="space-y-0.5">
-                            {sessao.nome_ciclo && (
-                              <p className="text-xs text-foreground font-medium">
-                                {sessao.nome_ciclo}
-                              </p>
-                            )}
-                            <p className="text-xs text-muted-foreground">
-                              Localizacao: {sessao.local}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                    <Link href="/sala-azul/ciclos">
-                      <Button
-                        variant="outline"
-                        className="w-full mt-2 text-blue-600 border-blue-200 hover:bg-blue-50"
-                      >
-                        Ver todas as sessoes
-                      </Button>
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Calendar className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">
-                      Nenhuma sessao agendada para os proximos 15 dias
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5 text-orange-600" />
-                  <CardTitle>Casos em Andamento (Mulheres)</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {casosCriticos.length > 0 ? (
-                  <div className="space-y-3">
-                    {casosCriticos.map((caso) => {
-                      const prioridadeColorClass = getPrioridadeColor(
-                        caso.prioridade,
-                        caso.prioridade_cor,
-                      );
-                      const isAltaPrioridade =
-                        caso.prioridade?.toLowerCase().includes("emergencia") ||
-                        caso.prioridade?.toLowerCase().includes("urgente") ||
-                        caso.prioridade?.toLowerCase().includes("critico") ||
-                        caso.prioridade?.toLowerCase().includes("alto");
-
-                      return (
-                        <Link
-                          key={caso.id}
-                          href="/mulheres/atendimentos"
-                          className="block"
-                        >
-                          <div
-                            className={`flex items-start gap-3 p-3 rounded-lg border transition-colors ${
-                              isAltaPrioridade
-                                ? "border-orange-200 bg-orange-50/50 hover:bg-orange-100/50 dark:bg-orange-950/10 dark:border-orange-900 dark:hover:bg-orange-950/20"
-                                : "border-border hover:bg-accent/50"
-                            }`}
-                          >
-                            <div className="flex-shrink-0 mt-0.5">
-                              {isAltaPrioridade ? (
-                                <AlertTriangle className="h-4 w-4 text-orange-600" />
-                              ) : (
-                                <div className="w-2 h-2 rounded-full bg-gray-400" />
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <Badge
-                                  className={`text-xs ${
-                                    prioridadeColorClass || ""
-                                  }`}
-                                  style={
-                                    caso.prioridade_cor && !prioridadeColorClass
-                                      ? {
-                                          backgroundColor: caso.prioridade_cor,
-                                          color: "white",
-                                          borderColor: caso.prioridade_cor,
-                                        }
-                                      : undefined
-                                  }
-                                >
-                                  {caso.prioridade}
-                                </Badge>
-                                <p className="text-xs text-muted-foreground">
-                                  {formatarDataAtendimento(caso.data_abertura)}
-                                </p>
-                              </div>
-                              <p className="text-sm font-medium text-foreground">
-                                {caso.beneficiaria_nome}
-                              </p>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                Status: {caso.status}
-                              </p>
-                            </div>
-                          </div>
-                        </Link>
-                      );
-                    })}
-                    <Link href="/mulheres/atendimentos">
-                      <Button
-                        variant="outline"
-                        className="w-full mt-2 text-orange-600 border-orange-200 hover:bg-orange-50"
-                      >
-                        Ver todos os atendimentos
-                      </Button>
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <AlertTriangle className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">Nenhum caso em andamento</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+  return (
+    <div className="space-y-6 animate-in fade-in duration-500">
+      {/* Cabeçalho */}
+      <div className="flex flex-col gap-1">
+        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+          Olá, {userName}!
+        </h1>
+        <p className="text-sm text-gray-500 capitalize font-medium">
+          {dataAtual}
+        </p>
       </div>
-    );
-  }
 
-  if (isDashboardStats(stats)) {
-    const {
-      kpis,
-      atendimentosPorDia,
-      proximosEventos,
-      alertasMedidasProtetivas,
-    } = stats;
+      {/* Cards de KPIs */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {/* KPI 1 */}
+        <Card className="border-l-4 border-l-purple-500 shadow-sm hover:shadow-md transition-all">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">
+              Atendimentos (Mês)
+            </CardTitle>
+            <Activity className="h-4 w-4 text-purple-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-gray-900">
+              {kpis.totalAtendimentosMes}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              <span className="text-green-600 font-medium">
+                +{kpis.novosCasos}
+              </span>{" "}
+              novos casos
+            </p>
+          </CardContent>
+        </Card>
 
-    return (
-      <div className="space-y-6">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold text-foreground">
-            Ola, {userName}!
-          </h1>
-          <p className="text-sm text-muted-foreground capitalize">
-            {dataAtual}
-          </p>
+        {/* KPI 2 */}
+        <Card className="border-l-4 border-l-pink-500 shadow-sm hover:shadow-md transition-all">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">
+              Mulheres Ativas
+            </CardTitle>
+            <Users className="h-4 w-4 text-pink-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-gray-900">
+              {kpis.mulheresAcompanhamento}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              em acompanhamento regular
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* KPI 3 */}
+        <Card className="border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition-all">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">
+              Eventos
+            </CardTitle>
+            <Calendar className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-gray-900">
+              {proximosEventos.length}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">agendados p/ 7 dias</p>
+          </CardContent>
+        </Card>
+
+        {/* KPI 4 */}
+        <Card
+          className={`border-l-4 shadow-sm hover:shadow-md transition-all ${kpis.demandaReprimida > 0 ? "border-l-orange-500 bg-orange-50/30" : "border-l-gray-300"}`}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">
+              Pendências
+            </CardTitle>
+            <AlertCircle
+              className={`h-4 w-4 ${kpis.demandaReprimida > 0 ? "text-orange-500" : "text-gray-400"}`}
+            />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-gray-900">
+              {kpis.demandaReprimida}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              casos aguardando triagem
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Gráficos e Listas */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Coluna Principal: Gráfico */}
+        <div className="lg:col-span-2 space-y-6">
+          <Card className="h-[400px] flex flex-col shadow-sm">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-purple-600" />
+                <CardTitle>Fluxo de Atendimentos</CardTitle>
+              </div>
+              <p className="text-sm text-gray-500">
+                Volume diário nos últimos 30 dias
+              </p>
+            </CardHeader>
+            <CardContent className="flex-1 min-h-0">
+              {atendimentosPorDia.length > 0 ? (
+                <div className="w-full h-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={atendimentosPorDia}
+                      margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                    >
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        vertical={false}
+                        stroke="#e5e7eb"
+                      />
+                      <XAxis
+                        dataKey="data"
+                        stroke="#9ca3af"
+                        fontSize={11}
+                        tickFormatter={(value) => formatarDataCurta(value)}
+                        axisLine={false}
+                        tickLine={false}
+                        dy={10}
+                      />
+                      <YAxis
+                        stroke="#9ca3af"
+                        fontSize={11}
+                        axisLine={false}
+                        tickLine={false}
+                      />
+                      <Tooltip
+                        cursor={{ fill: "#f9fafb" }}
+                        contentStyle={{
+                          borderRadius: "8px",
+                          border: "none",
+                          boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                        }}
+                        labelFormatter={(value) => formatarDataCurta(value)}
+                      />
+                      <Bar
+                        dataKey="quantidade"
+                        fill={COLORS.primary}
+                        radius={[4, 4, 0, 0]}
+                        barSize={32}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="h-full flex items-center justify-center text-gray-400 text-sm border-2 border-dashed border-gray-100 rounded-lg">
+                  Sem dados para exibir no período
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="border-l-4 border-l-primary hover:shadow-lg transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Atendimentos (Mes)
-              </CardTitle>
-              <Activity className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-baseline gap-2">
-                <div className="text-2xl font-bold">
-                  {kpis.totalAtendimentosMes}
-                </div>
-                <span className="text-xs text-muted-foreground">total</span>
+        {/* Coluna Lateral: Agenda e Ações */}
+        <div className="space-y-6">
+          <Card className="h-[400px] flex flex-col shadow-sm">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Clock className="h-5 w-5 text-pink-500" />
+                <CardTitle>Agenda Rápida</CardTitle>
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                +{kpis.novosCasos} novos casos
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-l-4 border-l-secondary hover:shadow-lg transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Mulheres Ativas
-              </CardTitle>
-              <Users className="h-4 w-4 text-secondary" />
+              <p className="text-sm text-gray-500">Próximos compromissos</p>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {kpis.mulheresAcompanhamento}
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                em acompanhamento
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-l-4 border-l-accent hover:shadow-lg transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Proximos Eventos
-              </CardTitle>
-              <Calendar className="h-4 w-4 text-accent" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{proximosEventos.length}</div>
-              <p className="text-xs text-muted-foreground mt-2">
-                proximos 7 dias
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card
-            className={`border-l-4 ${
-              kpis.demandaReprimida > 0
-                ? "border-l-orange-500 bg-orange-50 dark:bg-orange-950/20"
-                : "border-l-muted"
-            } hover:shadow-lg transition-shadow`}
-          >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pendencias</CardTitle>
-              <AlertCircle
-                className={`h-4 w-4 ${
-                  kpis.demandaReprimida > 0
-                    ? "text-orange-600"
-                    : "text-muted-foreground"
-                }`}
-              />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{kpis.demandaReprimida}</div>
-              <p className="text-xs text-muted-foreground mt-2">
-                casos aguardando
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <TrendingUp className="h-5 w-5 text-primary" />
-                      Atendimentos por Dia
-                    </CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Ultimos 15 dias
-                    </p>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {atendimentosPorDia.length > 0 ? (
-                  <div style={{ width: "100%", height: 300 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={atendimentosPorDia}
-                        margin={{ top: 10, right: 30, left: 0, bottom: 10 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                        <XAxis
-                          dataKey="data"
-                          stroke="#9ca3af"
-                          style={{ fontSize: "0.75rem" }}
-                          tickFormatter={(value) => formatarDataCurta(value)}
-                        />
-                        <YAxis
-                          stroke="#9ca3af"
-                          style={{ fontSize: "0.75rem" }}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: "#ffffff",
-                            border: `2px solid ${COLORS.primary}`,
-                            borderRadius: "0.5rem",
-                          }}
-                          labelFormatter={(value) => formatarDataCurta(value)}
-                          formatter={(value) => [value, "Atendimentos"]}
-                        />
-                        <Bar
-                          dataKey="quantidade"
-                          fill={COLORS.primary}
-                          radius={[8, 8, 0, 0]}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center h-64 text-muted-foreground">
-                    Sem dados de atendimentos no periodo
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          <div>
-            <Card className="h-full">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-secondary" />
-                  Agenda Imediata
-                </CardTitle>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Proximos 7 dias
-                </p>
-              </CardHeader>
-              <CardContent>
-                {proximosEventos.length > 0 ? (
-                  <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-                    {proximosEventos.map((evento) => (
-                      <div
-                        key={evento.id}
-                        className="flex gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="flex-shrink-0 pt-1">
-                          <Calendar className="h-4 w-4 text-secondary" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">
-                            {evento.titulo}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">
+            <CardContent className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+              {proximosEventos.length > 0 ? (
+                <div className="space-y-3">
+                  {proximosEventos.map((evento) => (
+                    <div
+                      key={evento.id}
+                      className="group flex gap-3 p-3 rounded-lg border border-gray-100 bg-gray-50/50 hover:bg-white hover:border-purple-100 hover:shadow-sm transition-all"
+                    >
+                      <div className="flex-shrink-0 mt-1">
+                        <div className="w-2 h-2 rounded-full bg-pink-500 ring-4 ring-pink-50" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate group-hover:text-purple-700 transition-colors">
+                          {evento.titulo}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1.5">
+                          <span className="text-[10px] font-semibold text-gray-500 bg-white px-1.5 py-0.5 rounded border border-gray-200 uppercase tracking-wide">
                             {getLabelDataRelativa(evento.data_inicio)}
-                          </p>
+                          </span>
                           {evento.tipo_id && (
-                            <Badge variant="secondary" className="mt-2 text-xs">
+                            <span className="text-[10px] text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-100 truncate max-w-[100px]">
                               {evento.tipo_id.nome}
-                            </Badge>
+                            </span>
                           )}
                         </div>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-40 text-center text-muted-foreground">
-                    <Calendar className="h-8 w-8 opacity-30 mb-2" />
-                    <p className="text-sm">Sem agenda para hoje</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-center p-4">
+                  <Calendar className="h-10 w-10 text-gray-200 mb-3" />
+                  <p className="text-sm text-gray-500">Nenhum evento próximo</p>
+                </div>
+              )}
+            </CardContent>
+            <div className="p-4 border-t bg-gray-50/50 rounded-b-xl">
+              <Link href="/eventos" className="w-full">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-2 text-gray-600 hover:text-purple-700"
+                >
+                  Ver agenda completa <ArrowRight className="h-3 w-3" />
+                </Button>
+              </Link>
+            </div>
+          </Card>
+
+          {/* Atalhos */}
+          <div className="grid grid-cols-2 gap-3">
+            <Link href="/mulheres/atendimentos">
+              <Button className="w-full bg-purple-600 hover:bg-purple-700 shadow-sm h-auto py-3 flex-col gap-1">
+                <HeartHandshake className="h-5 w-5" />
+                <span className="text-xs font-normal">Novo Atendimento</span>
+              </Button>
+            </Link>
+            <Link href="/sala-azul">
+              <Button
+                variant="outline"
+                className="w-full border-blue-200 text-blue-700 hover:bg-blue-50 shadow-sm h-auto py-3 flex-col gap-1"
+              >
+                <ShieldAlert className="h-5 w-5" />
+                <span className="text-xs font-normal">Sala Azul</span>
+              </Button>
+            </Link>
           </div>
         </div>
-
-        {alertasMedidasProtetivas.length > 0 && (
-          <Card className="border-l-4 border-l-red-500 bg-red-50 dark:bg-red-950/20">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-red-600">
-                <AlertCircle className="h-5 w-5" />
-                Alertas de Medidas Protetivas
-              </CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                Beneficiarias com medidas protetivas cadastradas (ultimos 7
-                dias)
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {alertasMedidasProtetivas.map((beneficiaria) => (
-                  <div
-                    key={beneficiaria.id}
-                    className="flex items-center justify-between p-2 bg-background rounded border border-red-200"
-                  >
-                    <span className="text-sm font-medium">
-                      {beneficiaria.nome_completo}
-                    </span>
-                    <Badge variant="destructive" className="text-xs">
-                      Medida Protetiva
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        <div className="flex gap-2 justify-center pt-4">
-          <Link href="/mulheres/atendimentos">
-            <button className="px-6 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 font-medium transition-colors">
-              Novo Atendimento
-            </button>
-          </Link>
-          <Link href="/eventos">
-            <button className="px-6 py-2 rounded-lg border border-border hover:bg-muted font-medium transition-colors">
-              Ver Agenda
-            </button>
-          </Link>
-        </div>
       </div>
-    );
-  }
-
-  return (
-    <div className="text-center py-8">
-      <p className="text-muted-foreground">
-        Dados do dashboard nao disponiveis
-      </p>
     </div>
   );
 }
