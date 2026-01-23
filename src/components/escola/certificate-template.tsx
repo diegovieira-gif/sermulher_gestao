@@ -1,5 +1,3 @@
-"use client";
-
 import { forwardRef } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -9,9 +7,9 @@ interface CertificateTemplateProps {
     studentName: string;
     studentCpf: string;
     courseName: string;
-    hours: number;
-    startDate: string | Date;
-    endDate: string | Date;
+    hours: number | string;
+    startDate: Date | string;
+    endDate: Date | string;
     instructorName?: string;
     directorName?: string;
   };
@@ -21,157 +19,104 @@ export const CertificateTemplate = forwardRef<
   HTMLDivElement,
   CertificateTemplateProps
 >(({ data }, ref) => {
-  const formatDate = (date: string | Date) => {
-    const dateObj = typeof date === "string" ? new Date(date) : date;
-    return format(dateObj, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+  // Formatação de datas
+  const formatDate = (date: Date | string) => {
+    if (!date) return "--/--/----";
+    return format(new Date(date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
   };
-
-  const startFormatted = formatDate(data.startDate);
-  const endFormatted = formatDate(data.endDate);
 
   return (
     <div
       ref={ref}
-      className="w-full bg-white print:bg-white"
-      style={{
-        width: "297mm",
-        height: "210mm",
-        padding: "40px",
-        boxSizing: "border-box",
-        fontFamily: '"Georgia", "Times New Roman", serif',
-      }}
+      className="w-[297mm] h-[210mm] bg-white p-8 mx-auto relative text-black"
     >
-      {/* Container Principal */}
-      <div className="h-full flex flex-col items-center justify-center relative">
-        {/* Borda Ornamental */}
-        <div className="absolute inset-0 border-2 border-amber-900/40 pointer-events-none" />
-        <div className="absolute inset-1 border border-amber-900/20 pointer-events-none" />
+      {/* Borda Ornamental */}
+      <div className="w-full h-full border-[12px] border-double border-purple-900 p-8 flex flex-col justify-between relative bg-white">
+        {/* Elementos Decorativos de Canto */}
+        <div className="absolute top-4 left-4 w-16 h-16 border-t-4 border-l-4 border-purple-600" />
+        <div className="absolute top-4 right-4 w-16 h-16 border-t-4 border-r-4 border-purple-600" />
+        <div className="absolute bottom-4 left-4 w-16 h-16 border-b-4 border-l-4 border-purple-600" />
+        <div className="absolute bottom-4 right-4 w-16 h-16 border-b-4 border-r-4 border-purple-600" />
 
-        {/* Conteúdo */}
-        <div className="relative z-10 w-full max-w-4xl text-center space-y-6">
-          {/* Logo/Cabeçalho */}
-          <div className="space-y-2 mb-8">
-            <div className="text-5xl font-bold text-amber-900 tracking-wider">
-              SER MULHER
-            </div>
-            <div className="h-1 w-24 bg-gradient-to-r from-purple-600 to-amber-600 mx-auto rounded-full" />
-            <p className="text-sm text-amber-900/60 tracking-wide">
-              Projeto de Empoderamento e Gestão
+        {/* Cabeçalho */}
+        <header className="text-center mt-8">
+          <h1 className="text-6xl font-serif font-bold text-purple-800 tracking-wide mb-2">
+            SerMulher
+          </h1>
+          <h2 className="text-xl uppercase tracking-widest text-gray-600 font-semibold border-b-2 border-purple-200 inline-block pb-2 px-8">
+            Secretaria Municipal do Respeito às Políticas para as Mulheres
+          </h2>
+        </header>
+
+        {/* Título Principal */}
+        <div className="text-center my-8">
+          <h3 className="text-5xl font-serif text-purple-900 italic font-bold decoration-double">
+            Certificado de Conclusão
+          </h3>
+        </div>
+
+        {/* Corpo do Texto */}
+        <div className="text-center px-12 space-y-6">
+          <p className="text-xl leading-relaxed text-gray-800 font-serif">
+            Certificamos para os devidos fins que
+          </p>
+
+          <div className="text-4xl font-bold text-purple-900 border-b border-gray-300 pb-2 mx-12 font-serif italic">
+            {data.studentName}
+          </div>
+
+          <p className="text-lg leading-relaxed text-gray-700 max-w-4xl mx-auto">
+            inscrita no CPF nº <strong>{data.studentCpf}</strong>, concluiu com
+            êxito o curso de qualificação profissional em
+          </p>
+
+          <div className="text-3xl font-bold text-purple-800 my-2 font-serif">
+            {data.courseName}
+          </div>
+
+          <p className="text-lg leading-relaxed text-gray-700 max-w-5xl mx-auto">
+            promovido pelo projeto <strong>SERMULHER</strong>, realizado no
+            período de <strong>{formatDate(data.startDate)}</strong> a{" "}
+            <strong>{formatDate(data.endDate)}</strong>, com carga horária total
+            de <strong>{data.hours} horas</strong>.
+          </p>
+        </div>
+
+        {/* Data e Local */}
+        <div className="text-center mt-8 mb-12">
+          <p className="text-lg text-gray-600">
+            Aracaju,{" "}
+            {format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}.
+          </p>
+        </div>
+
+        {/* Assinaturas */}
+        <div className="flex justify-around items-end mb-12 px-16">
+          <div className="text-center w-64">
+            <div className="border-b border-black mb-2 h-10" />
+            <p className="font-bold text-purple-900">{data.instructorName}</p>
+            <p className="text-xs text-gray-500 uppercase">
+              Coordenação Pedagógica
             </p>
           </div>
 
-          {/* Título Principal */}
-          <div className="space-y-4 my-10">
-            <h1 className="text-4xl font-bold text-amber-900 tracking-wide">
-              CERTIFICADO DE CONCLUSÃO
-            </h1>
-            <div className="flex justify-center gap-2">
-              <div className="w-12 h-0.5 bg-amber-900/30" />
-              <div className="w-12 h-0.5 bg-amber-900/30" />
-              <div className="w-12 h-0.5 bg-amber-900/30" />
-            </div>
-          </div>
-
-          {/* Texto Principal */}
-          <div className="space-y-6 my-10 text-justify px-8">
-            <p className="text-base leading-relaxed text-gray-800">
-              Certificamos que{" "}
-              <span className="font-bold text-amber-900">
-                {data.studentName}
-              </span>
-              , portadora do CPF{" "}
-              <span className="font-bold text-amber-900">
-                {data.studentCpf}
-              </span>
-              , concluiu com êxito o curso de{" "}
-              <span className="font-bold text-amber-900 italic">
-                {data.courseName}
-              </span>
-              , oferecido pelo projeto SER MULHER, cumprindo todas as exigências
-              curriculares e demonstrando competência nas habilidades
-              desenvolvidas durante o período de realização do curso.
+          <div className="text-center w-64">
+            <div className="border-b border-black mb-2 h-10" />
+            <p className="font-bold text-purple-900">Diretoria SERMULHER</p>
+            <p className="text-xs text-gray-500 uppercase">
+              Secretaria da Mulher
             </p>
-          </div>
-
-          {/* Dados do Curso */}
-          <div className="grid grid-cols-3 gap-8 my-10 px-8">
-            <div className="space-y-1 border-t-2 border-amber-900/30 pt-4">
-              <p className="text-xs text-amber-900/70 uppercase tracking-widest font-semibold">
-                Carga Horária
-              </p>
-              <p className="text-lg font-semibold text-amber-900">
-                {data.hours}h
-              </p>
-            </div>
-
-            <div className="space-y-1 border-t-2 border-amber-900/30 pt-4">
-              <p className="text-xs text-amber-900/70 uppercase tracking-widest font-semibold">
-                Período
-              </p>
-              <p className="text-sm font-semibold text-amber-900">
-                {startFormatted.split(" ")[0]} - {endFormatted.split(" ")[0]}
-              </p>
-            </div>
-
-            <div className="space-y-1 border-t-2 border-amber-900/30 pt-4">
-              <p className="text-xs text-amber-900/70 uppercase tracking-widest font-semibold">
-                Data de Emissão
-              </p>
-              <p className="text-sm font-semibold text-amber-900">
-                {endFormatted}
-              </p>
-            </div>
-          </div>
-
-          {/* Assinaturas */}
-          <div className="grid grid-cols-3 gap-12 mt-16 px-8">
-            {/* Diretora */}
-            <div className="space-y-2">
-              <div className="h-16 flex items-end justify-center">
-                <div className="w-full border-t-2 border-gray-800" />
-              </div>
-              <p className="text-xs font-semibold text-gray-800 uppercase tracking-wide">
-                Diretora do Projeto
-              </p>
-              <p className="text-xs text-gray-600">SER MULHER</p>
-            </div>
-
-            {/* Carimbo/Espaço */}
-            <div className="space-y-2 flex flex-col items-center justify-end">
-              <div className="w-20 h-20 border-2 border-dashed border-gray-300 flex items-center justify-center text-xs text-gray-400">
-                CARIMBO
-              </div>
-            </div>
-
-            {/* Instrutora */}
-            <div className="space-y-2">
-              <div className="h-16 flex items-end justify-center">
-                <div className="w-full border-t-2 border-gray-800" />
-              </div>
-              <p className="text-xs font-semibold text-gray-800 uppercase tracking-wide">
-                {data.instructorName ? "Instrutora" : "Instrutor/a"}
-              </p>
-              {data.instructorName && (
-                <p className="text-xs text-gray-600">{data.instructorName}</p>
-              )}
-            </div>
           </div>
         </div>
-      </div>
 
-      {/* Estilos de Impressão */}
-      <style>{`
-        @media print {
-          body {
-            margin: 0;
-            padding: 0;
-            background: white;
-          }
-          * {
-            box-shadow: none !important;
-          }
-        }
-      `}</style>
+        {/* Rodapé / Validação */}
+        <div className="absolute bottom-2 left-0 right-0 text-center">
+          <p className="text-[10px] text-gray-400">
+            Este certificado tem validade para fins curriculares de
+            aperfeiçoamento profissional. Sistema de Gestão Integrada SerMulher.
+          </p>
+        </div>
+      </div>
     </div>
   );
 });
