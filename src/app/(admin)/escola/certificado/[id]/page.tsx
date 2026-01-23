@@ -3,6 +3,7 @@ import { readItems } from "@directus/sdk";
 import CertificadoClient from "./certificado-client";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface CertificadoPageProps {
   params: Promise<{
@@ -47,24 +48,25 @@ export default async function CertificadoPage({
 
     const matricula = matriculas[0] as any;
 
-    // Validação: permite certificado para status Concluída ou Aprovada
-    const normalizedStatus = (matricula?.status || "").toString().toLowerCase();
-    const isElegivel = [
-      "concluída",
-      "concluido",
-      "concluida",
-      "aprovada",
-    ].includes(normalizedStatus);
+    // Normaliza o status para evitar erros de Case Sensitive ou Acentos
+    const status = matricula.status?.toString().toLowerCase().trim() || "";
+    const statusValidos = ["aprovada", "concluida", "concluída", "approved"];
 
-    if (!isElegivel) {
+    if (!statusValidos.includes(status)) {
       return (
-        <div className="p-6 max-w-2xl">
+        <div className="p-8 max-w-2xl mx-auto">
           <Alert variant="destructive">
-            <AlertCircle className="h-5 w-5" />
+            <AlertCircle className="h-4 w-4" />
             <AlertTitle>Certificado Indisponível</AlertTitle>
             <AlertDescription>
-              A matrícula está com status "{matricula.status}". O certificado só
-              pode ser emitido quando o status for "Concluída" ou "Aprovada".
+              O status atual da matrícula é{" "}
+              <strong>"{matricula.status}"</strong>. O certificado só pode ser
+              emitido para alunas com status <strong>"Aprovada"</strong>.
+              <div className="mt-4">
+                <Button variant="outline" onClick={() => window.history.back()}>
+                  Voltar
+                </Button>
+              </div>
             </AlertDescription>
           </Alert>
         </div>
