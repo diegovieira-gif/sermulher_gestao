@@ -104,7 +104,7 @@ export const CertificateTemplate = forwardRef<
             <div className="border-b border-black mb-2 h-10" />
             <p className="font-bold text-purple-900">Diretoria SERMULHER</p>
             <p className="text-xs text-gray-500 uppercase">
-              Secretaria da Mulher
+              Secretaria Municipal do Respeito às Políticas para as Mulheres
             </p>
           </div>
         </div>
