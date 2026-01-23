@@ -47,28 +47,36 @@ export default async function CertificadoPage({
     }
 
     const matricula = matriculas[0] as any;
+    const data = matricula;
 
-    // Normaliza o status para evitar erros de Case Sensitive ou Acentos
-    const status = matricula.status?.toString().toLowerCase().trim() || "";
-    const statusValidos = ["aprovada", "concluida", "concluída", "approved"];
+    // Normaliza o status para garantir a validação (remove espaços e caixa alta/baixa)
+    const statusAtual = data?.status?.toString().toLowerCase().trim();
 
-    if (!statusValidos.includes(status)) {
+    // Lista de status que permitem a emissão do certificado
+    // "aprovada" é o padrão do banco, "concluida" é um fallback
+    const statusPermitidos = ["aprovada", "concluida", "concluída"];
+
+    if (!statusPermitidos.includes(statusAtual)) {
       return (
-        <div className="p-8 max-w-2xl mx-auto">
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Certificado Indisponível</AlertTitle>
-            <AlertDescription>
-              O status atual da matrícula é{" "}
-              <strong>"{matricula.status}"</strong>. O certificado só pode ser
-              emitido para alunas com status <strong>"Aprovada"</strong>.
-              <div className="mt-4">
-                <Button variant="outline" onClick={() => window.history.back()}>
-                  Voltar
-                </Button>
-              </div>
-            </AlertDescription>
-          </Alert>
+        <div className="flex h-screen w-full flex-col items-center justify-center gap-4 bg-gray-50">
+          <div className="max-w-md text-center">
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Certificado Indisponível</AlertTitle>
+              <AlertDescription>
+                A matrícula está com status <strong>"{data?.status}"</strong>.
+                <br />O certificado só pode ser emitido para alunas com status{" "}
+                <strong>"Aprovada"</strong>.
+              </AlertDescription>
+            </Alert>
+            <Button
+              className="mt-4"
+              variant="outline"
+              onClick={() => window.close()}
+            >
+              Fechar Janela
+            </Button>
+          </div>
         </div>
       );
     }
