@@ -1,26 +1,26 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useState } from 'react';
-import { 
-  LayoutDashboard, 
-  Users, 
-  FileText, 
-  AlertTriangle, 
-  Calendar, 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
+import {
+  LayoutDashboard,
+  Users,
+  FileText,
+  AlertTriangle,
+  Calendar,
   CalendarDays,
   BarChart3,
-  Settings, 
+  Settings,
   LogOut,
   HeartHandshake,
   BookOpen,
   ChevronDown,
   ChevronRight,
-  Megaphone
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { logout } from '@/app/login/actions';
+  Megaphone,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { logout } from "@/app/login/actions";
 
 interface MenuItemConfig {
   label: string;
@@ -33,76 +33,76 @@ interface MenuItemConfig {
 // Constante MENU_ITEMS com regras de acesso baseado em role
 const MENU_ITEMS: MenuItemConfig[] = [
   {
-    label: 'Dashboard',
-    href: '/dashboard',
+    label: "Dashboard",
+    href: "/dashboard",
     icon: LayoutDashboard,
     roles: [], // Todos logados
   },
   {
-    label: 'Gestão de Mulheres',
-    href: '/mulheres',
+    label: "Gestão de Mulheres",
+    href: "/mulheres",
     icon: HeartHandshake,
     roles: [], // Todos logados
     items: [
       {
-        label: 'Indicadores',
-        href: '/mulheres',
+        label: "Indicadores",
+        href: "/mulheres",
       },
       {
-        label: 'Beneficiárias',
-        href: '/mulheres/beneficiarias',
+        label: "Beneficiárias",
+        href: "/mulheres/beneficiarias",
       },
       {
-        label: 'Atendimentos',
-        href: '/mulheres/atendimentos',
+        label: "Atendimentos",
+        href: "/mulheres/atendimentos",
       },
     ],
   },
   {
-    label: 'Escola da Mulher',
-    href: '/escola',
+    label: "Escola da Mulher",
+    href: "/escola",
     icon: BookOpen,
     roles: [], // Todos logados
     items: [
       {
-        label: 'Catálogo de Cursos',
-        href: '/escola/cursos',
+        label: "Catálogo de Cursos",
+        href: "/escola/cursos",
       },
       {
-        label: 'Gestão de Turmas',
-        href: '/escola/turmas',
+        label: "Gestão de Turmas",
+        href: "/escola/turmas",
       },
     ],
   },
   {
-    label: 'Sala Azul',
-    href: '/sala-azul',
+    label: "Sala Azul",
+    href: "/sala-azul",
     icon: AlertTriangle,
     roles: [], // Todos logados
   },
   {
-    label: 'Agenda & Eventos',
-    href: '/eventos',
+    label: "Agenda & Eventos",
+    href: "/eventos",
     icon: CalendarDays,
     roles: [], // Todos logados
   },
   {
-    label: 'Comunicação',
-    href: '/marketing',
+    label: "Comunicação",
+    href: "/marketing",
     icon: Megaphone,
     roles: [], // Todos logados
   },
   {
-    label: 'Relatório RMA',
-    href: '/relatorios/rma',
+    label: "Relatório RMA",
+    href: "/relatorios/rma",
     icon: BarChart3,
-    roles: ['admin', 'gestao', 'assistente_social'], // Recepção não vê
+    roles: ["admin", "gestao", "assistente_social"], // Recepção não vê
   },
   {
-    label: 'Configurações',
-    href: '/configuracoes',
+    label: "Configurações",
+    href: "/configuracoes",
     icon: Settings,
-    roles: ['admin', 'gestao'], // Apenas admin e gestão
+    roles: ["admin", "gestao"], // Apenas admin e gestão
   },
 ];
 
@@ -116,7 +116,11 @@ function canAccessMenuItem(userRole: string, itemRoles?: string[]): boolean {
   }
   // Verifica se o userRole está no array de roles permitidas
   // Admin sempre tem acesso
-  return itemRoles.includes(userRole) || userRole === 'admin' || userRole === 'Administrator';
+  return (
+    itemRoles.includes(userRole) ||
+    userRole === "admin" ||
+    userRole === "Administrator"
+  );
 }
 
 interface SidebarProps {
@@ -125,18 +129,21 @@ interface SidebarProps {
 
 export function Sidebar({ userRole }: SidebarProps) {
   const pathname = usePathname();
-  
+
   // Filtrar itens do menu baseado nas roles do usuário
-  const filteredMenuItems = MENU_ITEMS.filter(item => 
-    canAccessMenuItem(userRole, item.roles)
+  const filteredMenuItems = MENU_ITEMS.filter((item) =>
+    canAccessMenuItem(userRole, item.roles),
   );
 
   // Estado para controlar quais menus estão abertos
   // Inicializa aberto se a rota atual estiver dentro do submenu
   const [openMenus, setOpenMenus] = useState<string[]>(() => {
     const openInit: string[] = [];
-    filteredMenuItems.forEach(item => {
-      if (item.items && item.items.some(sub => pathname.startsWith(sub.href))) {
+    filteredMenuItems.forEach((item) => {
+      if (
+        item.items &&
+        item.items.some((sub) => pathname.startsWith(sub.href))
+      ) {
         openInit.push(item.label);
       }
     });
@@ -144,10 +151,8 @@ export function Sidebar({ userRole }: SidebarProps) {
   });
 
   const toggleMenu = (label: string) => {
-    setOpenMenus(prev => 
-      prev.includes(label) 
-        ? prev.filter(t => t !== label) 
-        : [...prev, label]
+    setOpenMenus((prev) =>
+      prev.includes(label) ? prev.filter((t) => t !== label) : [...prev, label],
     );
   };
 
@@ -160,7 +165,9 @@ export function Sidebar({ userRole }: SidebarProps) {
       <div className="flex h-full flex-col">
         {/* Logo/Header */}
         <div className="flex h-16 items-center border-b border-slate-800 px-6">
-          <h1 className="text-xl font-bold text-white">SerMulher</h1>
+          <h1 className="text-xl font-bold text-white">
+            Sec. do Respeito às Políticas para as Mulheres
+          </h1>
         </div>
 
         {/* Menu Items */}
@@ -169,7 +176,8 @@ export function Sidebar({ userRole }: SidebarProps) {
             {filteredMenuItems.map((item) => {
               const Icon = item.icon;
               const hasSubmenu = item.items && item.items.length > 0;
-              const isActiveParent = pathname.startsWith(item.href) && item.href !== '/dashboard';
+              const isActiveParent =
+                pathname.startsWith(item.href) && item.href !== "/dashboard";
               const isOpen = openMenus.includes(item.label);
 
               return (
@@ -179,10 +187,10 @@ export function Sidebar({ userRole }: SidebarProps) {
                       <button
                         onClick={() => toggleMenu(item.label)}
                         className={cn(
-                          'flex w-full items-center justify-between rounded-lg px-4 py-3 text-sm font-medium transition-colors',
+                          "flex w-full items-center justify-between rounded-lg px-4 py-3 text-sm font-medium transition-colors",
                           isActiveParent
-                            ? 'bg-slate-800 text-white border-l-4 border-blue-500'
-                            : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                            ? "bg-slate-800 text-white border-l-4 border-blue-500"
+                            : "text-slate-300 hover:bg-slate-800 hover:text-white",
                         )}
                       >
                         <div className="flex items-center gap-3">
@@ -195,7 +203,7 @@ export function Sidebar({ userRole }: SidebarProps) {
                           <ChevronRight className="h-4 w-4 opacity-50" />
                         )}
                       </button>
-                      
+
                       {/* Submenu List */}
                       {isOpen && (
                         <ul className="mt-2 space-y-1 px-4 border-l border-slate-700 ml-4">
@@ -206,10 +214,10 @@ export function Sidebar({ userRole }: SidebarProps) {
                                 <Link
                                   href={subItem.href}
                                   className={cn(
-                                    'flex items-center rounded-lg px-3 py-2 text-sm transition-colors',
+                                    "flex items-center rounded-lg px-3 py-2 text-sm transition-colors",
                                     isSubActive
-                                      ? 'text-white bg-slate-800 font-medium'
-                                      : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+                                      ? "text-white bg-slate-800 font-medium"
+                                      : "text-slate-300 hover:text-white hover:bg-slate-700/50",
                                   )}
                                 >
                                   {subItem.label}
@@ -224,10 +232,11 @@ export function Sidebar({ userRole }: SidebarProps) {
                     <Link
                       href={item.href}
                       className={cn(
-                        'flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors',
-                        pathname === item.href || pathname.startsWith(item.href + '/')
-                          ? 'bg-slate-800 text-white border-l-4 border-blue-500'
-                          : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                        "flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors",
+                        pathname === item.href ||
+                          pathname.startsWith(item.href + "/")
+                          ? "bg-slate-800 text-white border-l-4 border-blue-500"
+                          : "text-slate-300 hover:bg-slate-800 hover:text-white",
                       )}
                     >
                       <Icon className="h-5 w-5" />
