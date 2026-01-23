@@ -17,7 +17,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Gestão Ser Mulher",
-  description: "Sistema de Gerenciamento da Secretaria da Mulher",
+  description:
+    "Sistema de Gerenciamento da Secretaria Municipal do Respeito às Políticas para as Mulheres",
 };
 
 export default function RootLayout({
