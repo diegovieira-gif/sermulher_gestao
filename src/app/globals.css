@@ -170,6 +170,13 @@
 }
 
 @media print {
+  /* Configurações de página A4 */
+  @page {
+    size: A4;
+    margin: 2cm 1.5cm;
+  }
+
+  /* Ocultar elementos não necessários na impressão */
   aside,
   header,
   .print\:hidden,
@@ -177,11 +184,70 @@
     display: none !important;
   }
 
+  /* Configurar layout principal */
   main {
     width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
     overflow: visible !important;
   }
-}
 
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 11pt;
+    line-height: 1.4;
+  }
+
+  /* Estilos para a área de impressão do RMA */
+  .print-page {
+    width: 100%;
+    max-width: none;
+    padding: 0;
+    margin: 0;
+    background: white;
+    color: black;
+  }
+
+  .print-page table {
+    page-break-inside: auto;
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 10pt;
+  }
+
+  .print-page tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  .print-page thead {
+    display: table-header-group;
+  }
+
+  .print-page tfoot {
+    display: table-footer-group;
+  }
+
+  /* Quebra de página */
+  .page-break-before {
+    page-break-before: always;
+  }
+
+  .page-break-after {
+    page-break-after: always;
+  }
+
+  /* Evitar quebra de página dentro de elementos */
+  .print-page h2,
+  .print-page .mb-8 {
+    page-break-inside: avoid;
+  }
+
+  /* Forçar cores em modo de impressão */
+  .print-page * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+}

@@ -1,8 +1,19 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
+import {
+  Plus,
+  Search,
+  MoreHorizontal,
+  FileEdit,
+  Trash2,
+  FileText,
+  Printer,
+  ShieldAlert,
+  Gavel,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -11,6 +22,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,292 +46,339 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import { InfratorForm } from "./infrator-form";
 import { deleteInfrator } from "./actions";
-import { Plus, Pencil, Trash2, AlertTriangle, ShieldAlert, Eye } from "lucide-react";
-import Link from "next/link";
-import { toast } from "sonner";
-import { InfoTooltip } from "@/components/ui/info-tooltip";
 import type { Infrator } from "./schemas";
-import type {
-  NivelOption,
-  StatusLegalOption,
-  TipoAgressaoOption,
-} from "./actions";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface InfratoresClientProps {
-  infratores: any[];
-  options: {
-    niveis: NivelOption[];
-    statusLegal: StatusLegalOption[];
-    tiposAgressao: TipoAgressaoOption[];
-  };
+  initialData: Infrator[];
+  niveis: any[];
+  statusLegais: any[];
 }
 
 export function InfratoresClient({
-  infratores,
-  options,
+  initialData,
+  niveis,
+  statusLegais,
 }: InfratoresClientProps) {
-  const [formOpen, setFormOpen] = useState(false);
-  const [selectedInfrator, setSelectedInfrator] = useState<Infrator | null>(
-    null
+  const router = useRouter();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingInfrator, setEditingInfrator] = useState<Infrator | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  // Filtragem local
+  const filteredData = initialData.filter(
+    (item) =>
+      item.nome_completo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.cpf?.includes(searchTerm) ||
+      item.numero_processo?.includes(searchTerm),
   );
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [infratorToDelete, setInfratorToDelete] = useState<number | null>(
-    null
-  );
-  const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleNew = () => {
-    setSelectedInfrator(null);
-    setFormOpen(true);
+  const handleEdit = (infrator: Infrator) => {
+    setEditingInfrator(infrator);
+    setIsFormOpen(true);
   };
 
-  const handleEdit = (infrator: any) => {
-    setSelectedInfrator(infrator);
-    setFormOpen(true);
-  };
+  const handleDelete = async () => {
+    if (!deletingId) return;
 
-  const handleDeleteClick = (id: number) => {
-    setInfratorToDelete(id);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!infratorToDelete) return;
-
-    setIsDeleting(true);
     try {
-      const result = await deleteInfrator(infratorToDelete);
-
+      const result = await deleteInfrator(deletingId);
       if (result.success) {
-        toast.success(result.message);
-        setDeleteDialogOpen(false);
-        setInfratorToDelete(null);
+        toast.success("Infrator removido com sucesso");
+        router.refresh();
       } else {
-        toast.error(result.error);
+        toast.error("Erro ao remover: " + result.error);
       }
     } catch (error) {
-      toast.error("Erro ao excluir infrator");
-      console.error(error);
+      toast.error("Erro interno ao remover infrator");
     } finally {
-      setIsDeleting(false);
+      setDeletingId(null);
     }
   };
 
-  // Função auxiliar para formatar tipos de agressão (array de IDs)
-  const formatTiposAgressao = (ids: any) => {
-    // Validação: deve ser array e ter itens
-    if (!ids || !Array.isArray(ids) || ids.length === 0) {
-      return <span className="text-muted-foreground">-</span>;
-    }
-
-    return (
-      <div className="flex flex-wrap gap-1">
-        {ids.map((id: number) => {
-          // LOOKUP: Encontra o nome na lista de opções que já temos em memória
-          const opcao = options.tiposAgressao.find((opt) => opt.id === id);
-          const nome = opcao?.nome || `ID: ${id}`; // Fallback se não achar
-
-          return (
-            <Badge key={id} variant="outline" className="text-xs">
-              {nome}
-            </Badge>
-          );
-        })}
-      </div>
+  const handleFormSuccess = () => {
+    setIsFormOpen(false);
+    setEditingInfrator(null);
+    router.refresh();
+    toast.success(
+      editingInfrator ? "Infrator atualizado!" : "Infrator cadastrado!",
     );
   };
 
-  // Função para obter a cor do badge baseado no nível
-  const getNivelCor = (nivelId: any): string => {
-    if (nivelId?.cor) {
-      return nivelId.cor;
-    }
-    return "#6b7280"; // Cor padrão cinza
-  };
-
-  // Função auxiliar para formatar data para PT-BR
-  const formatDate = (dateString: string | null | undefined): string => {
-    if (!dateString) return "-";
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('pt-BR');
-    } catch {
-      return dateString;
-    }
-  };
-
-  // Função auxiliar para calcular idade
-  const calcularIdade = (dataNascimento: string | null | undefined): string => {
-    if (!dataNascimento) return "-";
-    try {
-      const hoje = new Date();
-      const nascimento = new Date(dataNascimento);
-      let idade = hoje.getFullYear() - nascimento.getFullYear();
-      const mes = hoje.getMonth() - nascimento.getMonth();
-      if (mes < 0 || (mes === 0 && hoje.getDate() < nascimento.getDate())) {
-        idade--;
-      }
-      return `${idade} anos`;
-    } catch {
-      return "-";
+  const getNivelColor = (nivel: string) => {
+    switch (nivel?.toLowerCase()) {
+      case "alto":
+        return "bg-red-100 text-red-800 border-red-200";
+      case "médio":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "baixo":
+        return "bg-green-100 text-green-800 border-green-200";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   return (
-    <>
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <ShieldAlert className="h-8 w-8 text-destructive" />
-            Gestão de Infratores
-          </h1>
-          <p className="text-muted-foreground">
-            Gerencie os infratores cadastrados no sistema (Sala Azul)
-          </p>
+    <div className="space-y-6">
+      {/* --- ÁREA DE TELA (DASHBOARD) --- */}
+      <div className="print:hidden space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+              <ShieldAlert className="h-6 w-6 text-blue-600" />
+              Gestão de Infratores
+            </h2>
+            <p className="text-sm text-gray-500">
+              Gerencie os participantes dos grupos reflexivos
+            </p>
+          </div>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button
+              variant="outline"
+              onClick={() => window.print()}
+              className="gap-2"
+            >
+              <Printer className="h-4 w-4" />
+              Exportar Relatório
+            </Button>
+            <Button
+              onClick={() => {
+                setEditingInfrator(null);
+                setIsFormOpen(true);
+              }}
+              className="bg-blue-600 hover:bg-blue-700 gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Novo Infrator
+            </Button>
+          </div>
         </div>
-        <Button onClick={handleNew}>
-          <Plus className="mr-2 h-4 w-4" />
-          Novo Infrator
-        </Button>
-      </div>
 
-      <div className="border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>
-                Nome
-                <InfoTooltip text="Nome completo do infrator." />
-              </TableHead>
-              <TableHead>
-                CPF
-                <InfoTooltip text="Cadastro de Pessoa Física do infrator." />
-              </TableHead>
-              <TableHead>
-                Info Pessoal
-                <InfoTooltip text="Data de nascimento e telefone de contato." />
-              </TableHead>
-              <TableHead>
-                Status Legal
-                <InfoTooltip text="Situação jurídica atual do processo." />
-              </TableHead>
-              <TableHead>
-                Nível de Periculosidade
-                <InfoTooltip text="Grau de risco identificado na triagem psicossocial." />
-              </TableHead>
-              <TableHead>
-                Tipos de Agressão
-                <InfoTooltip text="Formas de violência reportadas no caso." />
-              </TableHead>
-              <TableHead>
-                Número do Processo
-                <InfoTooltip text="Número do processo judicial relacionado." />
-              </TableHead>
-              <TableHead className="text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {infratores.length === 0 ? (
+        {/* Filtros */}
+        <div className="flex items-center gap-2 bg-white p-2 rounded-lg border shadow-sm">
+          <Search className="h-4 w-4 text-gray-400 ml-2" />
+          <Input
+            placeholder="Buscar por nome, CPF ou processo..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="border-0 focus-visible:ring-0"
+          />
+        </div>
+
+        {/* Tabela Interativa */}
+        <div className="rounded-md border bg-white shadow-sm overflow-hidden">
+          <Table>
+            <TableHeader className="bg-gray-50">
               <TableRow>
-                <TableCell
-                  colSpan={8}
-                  className="text-center text-muted-foreground"
-                >
-                  Nenhum infrator cadastrado
-                </TableCell>
+                <TableHead>Nome Completo</TableHead>
+                <TableHead>Status Legal</TableHead>
+                <TableHead>Nível de Risco</TableHead>
+                <TableHead>Processo</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
-            ) : (
-              infratores.map((infrator) => (
-                <TableRow key={infrator.id}>
-                  <TableCell className="font-medium">
-                    {infrator.nome_completo}
-                  </TableCell>
-                  <TableCell>{infrator.cpf}</TableCell>
-                  <TableCell>
-                    <div className="space-y-1 text-sm">
-                      <div>Nasc: {formatDate(infrator.data_nascimento)}</div>
-                      <div>Tel: {infrator?.contato?.telefone || "-"}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span>{infrator.status_legal_id?.nome || "-"}</span>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      style={{
-                        backgroundColor: getNivelCor(infrator.nivel_id),
-                        color: "white",
-                      }}
-                    >
-                      {infrator.nivel_id?.nome || "-"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {formatTiposAgressao(infrator.tipos_agressao_lista)}
-                  </TableCell>
-                  <TableCell>
-                    {infrator.numero_processo || "-"}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Link href={`/sala-azul/infratores/${infrator.id}`}>
-                        <Button variant="ghost" size="icon" title="Ver detalhes">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(infrator)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteClick(infrator.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
+            </TableHeader>
+            <TableBody>
+              {filteredData.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={5}
+                    className="h-24 text-center text-muted-foreground"
+                  >
+                    Nenhum infrator encontrado.
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                filteredData.map((item) => (
+                  <TableRow
+                    key={item.id}
+                    className="hover:bg-blue-50/30 transition-colors"
+                  >
+                    <TableCell className="font-medium">
+                      <div className="flex flex-col">
+                        <span className="text-gray-900">
+                          {item.nome_completo}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {item.cpf}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="bg-slate-50">
+                        <Gavel className="h-3 w-3 mr-1 text-slate-500" />
+                        {item.status_legal_id?.nome || "Não informado"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${getNivelColor(item.nivel_id?.nome)}`}
+                      >
+                        {item.nivel_id?.nome || "---"}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-sm text-gray-600 font-mono">
+                      {item.numero_processo || "---"}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Abrir menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              router.push(`/sala-azul/infratores/${item.id}`)
+                            }
+                          >
+                            <FileText className="mr-2 h-4 w-4" />
+                            Ver Detalhes
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEdit(item)}>
+                            <FileEdit className="mr-2 h-4 w-4" />
+                            Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => setDeletingId(item.id as number)}
+                            className="text-red-600 focus:text-red-600"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Excluir
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
-      <InfratorForm
-        open={formOpen}
-        onOpenChange={setFormOpen}
-        infrator={selectedInfrator}
-        options={options}
-      />
+      {/* --- ÁREA DE IMPRESSÃO (RELATÓRIO) --- */}
+      <div className="hidden print:fixed print:inset-0 print:z-50 print:bg-white print:block print:w-screen print:h-screen print:overflow-visible p-8 md:p-12">
+        {/* Cabeçalho do Relatório */}
+        <div className="mb-8 border-b pb-4">
+          <div className="flex justify-between items-end">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">
+                Relatório de Infratores
+              </h1>
+              <p className="text-sm text-gray-600">
+                Sala Azul - Grupos Reflexivos para Homens
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-gray-500">Data de Emissão</p>
+              <p className="font-mono font-medium">
+                {format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+              </p>
+            </div>
+          </div>
+        </div>
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        {/* Tabela de Relatório */}
+        <table className="w-full text-sm text-left">
+          <thead>
+            <tr className="border-b-2 border-gray-800">
+              <th className="py-2 font-bold text-gray-900">
+                Nome Completo / CPF
+              </th>
+              <th className="py-2 font-bold text-gray-900">Processo</th>
+              <th className="py-2 font-bold text-gray-900">Status Legal</th>
+              <th className="py-2 font-bold text-gray-900">Nível Risco</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredData.map((item, index) => (
+              <tr
+                key={item.id}
+                className={`border-b border-gray-200 ${index % 2 === 0 ? "bg-gray-50" : "bg-white"}`}
+              >
+                <td className="py-3 pr-4">
+                  <div className="font-semibold text-gray-900">
+                    {item.nome_completo}
+                  </div>
+                  <div className="text-gray-500 text-xs">
+                    {item.cpf || "CPF não informado"}
+                  </div>
+                </td>
+                <td className="py-3 font-mono text-gray-700">
+                  {item.numero_processo || "---"}
+                </td>
+                <td className="py-3 text-gray-700">
+                  {item.status_legal_id?.nome || "---"}
+                </td>
+                <td className="py-3">
+                  <span
+                    className={`text-xs font-bold uppercase ${
+                      item.nivel_id?.nome === "Alto"
+                        ? "text-red-700"
+                        : "text-gray-700"
+                    }`}
+                  >
+                    {item.nivel_id?.nome || "---"}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {/* Rodapé do Relatório */}
+        <div className="mt-12 pt-8 border-t border-gray-300 flex justify-between items-center text-xs text-gray-500">
+          <p>Sistema de Gestão Integrada - SerMulher</p>
+          <p>Página 1 de 1</p>
+        </div>
+      </div>
+
+      {/* --- MODAIS (Mantidos Intactos) --- */}
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {editingInfrator ? "Editar Infrator" : "Novo Infrator"}
+            </DialogTitle>
+          </DialogHeader>
+          <InfratorForm
+            onSuccess={handleFormSuccess}
+            initialData={editingInfrator || undefined}
+            niveis={niveis}
+            statusLegais={statusLegais}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={!!deletingId} onOpenChange={() => setDeletingId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta ação não pode ser desfeita. O infrator será excluído
-              permanentemente.
+              Esta ação não pode ser desfeita. Isso excluirá permanentemente o
+              registro do infrator.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              disabled={isDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleDelete}
+              className="bg-red-600 hover:bg-red-700"
             >
-              {isDeleting ? "Excluindo..." : "Excluir"}
+              Confirmar Exclusão
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </div>
   );
 }
