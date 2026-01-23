@@ -1,13 +1,9 @@
-"use server"; // <--- Diretiva no topo: Torna tudo aqui Server-Side
+"use server";
 
 import { directus } from "@/lib/directus";
 import { createItem, deleteItem, readItems, updateItem } from "@directus/sdk";
 import { revalidatePath } from "next/cache";
 
-/**
- * Tipos de collections de configuração disponíveis
- * (Tipos podem ser exportados normalmente para o cliente)
- */
 export type ConfigCollection =
   | "config_origens"
   | "config_prioridades"
@@ -21,13 +17,7 @@ export type ConfigCollection =
   | "config_campanhas"
   | "locais";
 
-/**
- * Whitelist de tipos permitidos para operações CRUD
- * Aceita ambos os formatos: nomes curtos (ex: "origens") e nomes longos (ex: "config_origens")
- * Esta é a única fonte de verdade para validação de segurança
- */
 const ALLOWED_TYPES = [
-  // Nomes curtos (usados nas tabs e URLs)
   "origens",
   "prioridades",
   "tipos-evento",
@@ -44,7 +34,6 @@ const ALLOWED_TYPES = [
   "encaminhamentos",
   "campanhas",
   "locais",
-  // Nomes longos (como vêm da API)
   "config_origens",
   "config_prioridades",
   "config_tipos_evento",
@@ -57,24 +46,15 @@ const ALLOWED_TYPES = [
   "config_campanhas",
 ] as const;
 
-/**
- * Retorna o nome da collection baseado no tipo
- * Função interna apenas para as Actions usarem.
- * Valida contra whitelist para segurança.
- * Suporta ambos os formatos: nomes curtos ("origens") e longos ("config_origens")
- */
 function getCollectionName(type: string): ConfigCollection {
-  // Validação de segurança: apenas tipos permitidos
   if (!ALLOWED_TYPES.includes(type as any)) {
     throw new Error(`Tipo "${type}" não é permitido para operações CRUD`);
   }
 
-  // Se já for o nome da collection (começa com "config_" ou é "locais"), retorna ele mesmo
   if (type.startsWith("config_") || type === "locais") {
     return type as ConfigCollection;
   }
 
-  // Caso contrário, faz o mapeamento do nome curto para o nome da collection
   switch (type) {
     case "origens":
       return "config_origens";
@@ -85,10 +65,8 @@ function getCollectionName(type: string): ConfigCollection {
       return "config_tipos_evento";
     case "tipos-agressao":
     case "tipos_agressao":
-      return "config_tipos_agressao";
     case "tipos-violencia":
     case "tipos_violencia":
-      // Mapeamos "tipos-violencia" (usado na URL/Tabs) para a collection real "config_tipos_agressao"
       return "config_tipos_agressao";
     case "periculosidade":
       return "config_niveis_periculosidade";
@@ -108,27 +86,16 @@ function getCollectionName(type: string): ConfigCollection {
   }
 }
 
-/**
- * Busca itens de uma collection específica usando o tipo (ex: "origens")
- * Mapeia internamente para o nome da collection no banco (ex: "config_origens")
- * Valida contra whitelist para segurança
- */
 export async function getAuxItems(type: string) {
   try {
     const collectionName = getCollectionName(type);
-
     // @ts-ignore
     const items = await directus.request(
-      readItems(collectionName, {
-        limit: -1,
-        sort: ["nome"],
-      }),
+      readItems(collectionName, { limit: -1, sort: ["nome"] }),
     );
-
     return { success: true, data: items };
   } catch (error) {
     console.error(`Erro ao buscar ${type}:`, error);
-    // Retorna array vazio em caso de erro para não quebrar a página
     return {
       success: false,
       data: [],
@@ -137,10 +104,6 @@ export async function getAuxItems(type: string) {
   }
 }
 
-/**
- * Salva um item de configuração (cria ou atualiza)
- * Valida o tipo contra whitelist antes de executar
- */
 export async function saveAuxItem(
   type: string,
   data: { id?: number; nome: string; [key: string]: any },
@@ -155,11 +118,13 @@ export async function saveAuxItem(
       await directus.request(createItem(collection, payload));
     }
 
+    // Revalidação de Cache Global (Importante!)
     revalidatePath("/configuracoes");
-    revalidatePath("/sala-azul/ciclos");
-    revalidatePath("/sala-azul/infratores");
     revalidatePath("/eventos");
     revalidatePath("/dashboard");
+    revalidatePath("/sala-azul/ciclos");
+    revalidatePath("/sala-azul/infratores");
+    revalidatePath("/mulheres");
 
     return { success: true };
   } catch (error) {
@@ -171,20 +136,18 @@ export async function saveAuxItem(
   }
 }
 
-/**
- * Deleta um item de configuração
- * Valida o tipo contra whitelist antes de executar
- */
 export async function deleteAuxItem(type: string, id: number) {
   try {
     const collection = getCollectionName(type);
     await directus.request(deleteItem(collection, id));
 
+    // Revalidação de Cache Global
     revalidatePath("/configuracoes");
-    revalidatePath("/sala-azul/ciclos");
-    revalidatePath("/sala-azul/infratores");
     revalidatePath("/eventos");
     revalidatePath("/dashboard");
+    revalidatePath("/sala-azul/ciclos");
+    revalidatePath("/sala-azul/infratores");
+    revalidatePath("/mulheres");
 
     return { success: true };
   } catch (error) {
