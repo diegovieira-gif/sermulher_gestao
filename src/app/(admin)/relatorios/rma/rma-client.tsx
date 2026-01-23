@@ -203,8 +203,286 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
     window.print();
   };
 
+  const mesNome = MESES.find((m) => m.value === mes)?.label || "";
+
   return (
     <div className="space-y-6">
+      {/* ÁREA DE IMPRESSÃO - Visível somente na impressão */}
+      <div className="hidden print:block">
+        <div className="print-page">
+          {/* Cabeçalho Formal */}
+          <div className="text-center mb-8 border-b-2 border-gray-800 pb-4">
+            <h1 className="text-2xl font-bold uppercase mb-2">
+              Relatório Mensal de Atendimentos
+            </h1>
+            <p className="text-lg font-semibold">
+              {mesNome} / {ano}
+            </p>
+          </div>
+
+          {/* Bloco A: Volume de Atendimentos */}
+          <div className="mb-8">
+            <h2 className="text-xl font-bold mb-4 bg-gray-100 p-2 border-l-4 border-purple-600">
+              BLOCO A: Volume de Atendimentos
+            </h2>
+            <table className="w-full border-collapse border border-gray-300 mb-4">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="border border-gray-300 px-4 py-2 text-left">
+                    Indicador
+                  </th>
+                  <th className="border border-gray-300 px-4 py-2 text-center">
+                    Quantidade
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="border border-gray-300 px-4 py-2">
+                    Total de Atendimentos
+                  </td>
+                  <td className="border border-gray-300 px-4 py-2 text-center font-bold">
+                    {dados.volume.total_atendimentos}
+                  </td>
+                </tr>
+                <tr>
+                  <td className="border border-gray-300 px-4 py-2">
+                    Novos Casos (Primeiro atendimento do ano)
+                  </td>
+                  <td className="border border-gray-300 px-4 py-2 text-center font-bold">
+                    {dados.volume.novos_casos}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Bloco B: Perfil Social */}
+          <div className="mb-8">
+            <h2 className="text-xl font-bold mb-4 bg-gray-100 p-2 border-l-4 border-purple-600">
+              BLOCO B: Perfil Social
+            </h2>
+            <table className="w-full border-collapse border border-gray-300 mb-4">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="border border-gray-300 px-4 py-2 text-left">
+                    Indicador
+                  </th>
+                  <th className="border border-gray-300 px-4 py-2 text-center">
+                    Quantidade
+                  </th>
+                  <th className="border border-gray-300 px-4 py-2 text-center">
+                    Percentual
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="border border-gray-300 px-4 py-2">
+                    Bolsa Família
+                  </td>
+                  <td className="border border-gray-300 px-4 py-2 text-center font-bold">
+                    {dados.perfil.bolsa_familia}
+                  </td>
+                  <td className="border border-gray-300 px-4 py-2 text-center">
+                    {dados.volume.total_atendimentos > 0
+                      ? `${Math.round((dados.perfil.bolsa_familia / dados.volume.total_atendimentos) * 100)}%`
+                      : "0%"}
+                  </td>
+                </tr>
+                <tr>
+                  <td className="border border-gray-300 px-4 py-2">BPC</td>
+                  <td className="border border-gray-300 px-4 py-2 text-center font-bold">
+                    {dados.perfil.bpc}
+                  </td>
+                  <td className="border border-gray-300 px-4 py-2 text-center">
+                    {dados.volume.total_atendimentos > 0
+                      ? `${Math.round((dados.perfil.bpc / dados.volume.total_atendimentos) * 100)}%`
+                      : "0%"}
+                  </td>
+                </tr>
+                <tr>
+                  <td className="border border-gray-300 px-4 py-2">
+                    Medida Protetiva
+                  </td>
+                  <td className="border border-gray-300 px-4 py-2 text-center font-bold">
+                    {dados.perfil.medida_protetiva}
+                  </td>
+                  <td className="border border-gray-300 px-4 py-2 text-center">
+                    {dados.volume.total_atendimentos > 0
+                      ? `${Math.round((dados.perfil.medida_protetiva / dados.volume.total_atendimentos) * 100)}%`
+                      : "0%"}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Bloco C: Encaminhamentos */}
+          <div className="mb-8">
+            <h2 className="text-xl font-bold mb-4 bg-gray-100 p-2 border-l-4 border-purple-600">
+              BLOCO C: Encaminhamentos
+            </h2>
+            <table className="w-full border-collapse border border-gray-300 mb-4">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="border border-gray-300 px-4 py-2 text-left">
+                    Tipo de Encaminhamento
+                  </th>
+                  <th className="border border-gray-300 px-4 py-2 text-center">
+                    Quantidade
+                  </th>
+                  <th className="border border-gray-300 px-4 py-2 text-center">
+                    Percentual
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {dadosEncaminhamentos.map((item, index) => (
+                  <tr key={index}>
+                    <td className="border border-gray-300 px-4 py-2">
+                      {item.nome}
+                    </td>
+                    <td className="border border-gray-300 px-4 py-2 text-center font-bold">
+                      {item.valor}
+                    </td>
+                    <td className="border border-gray-300 px-4 py-2 text-center">
+                      {totalEncaminhamentos > 0
+                        ? `${Math.round((item.valor / totalEncaminhamentos) * 100)}%`
+                        : "0%"}
+                    </td>
+                  </tr>
+                ))}
+                <tr className="bg-gray-50 font-bold">
+                  <td className="border border-gray-300 px-4 py-2">TOTAL</td>
+                  <td className="border border-gray-300 px-4 py-2 text-center">
+                    {totalEncaminhamentos}
+                  </td>
+                  <td className="border border-gray-300 px-4 py-2 text-center">
+                    100%
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Bloco D: Tipos de Violência */}
+          <div className="mb-8">
+            <h2 className="text-xl font-bold mb-4 bg-gray-100 p-2 border-l-4 border-purple-600">
+              BLOCO D: Tipos de Violência
+            </h2>
+            <table className="w-full border-collapse border border-gray-300 mb-4">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="border border-gray-300 px-4 py-2 text-left">
+                    Tipo de Violência
+                  </th>
+                  <th className="border border-gray-300 px-4 py-2 text-center">
+                    Quantidade
+                  </th>
+                  <th className="border border-gray-300 px-4 py-2 text-center">
+                    Percentual*
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {dadosTiposViolencia.map((item, index) => (
+                  <tr key={index}>
+                    <td className="border border-gray-300 px-4 py-2">
+                      {item.nome}
+                    </td>
+                    <td className="border border-gray-300 px-4 py-2 text-center font-bold">
+                      {item.valor}
+                    </td>
+                    <td className="border border-gray-300 px-4 py-2 text-center">
+                      {dados.volume.total_atendimentos > 0
+                        ? `${Math.round((item.valor / dados.volume.total_atendimentos) * 100)}%`
+                        : "0%"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="text-xs italic text-gray-600">
+              * Percentual em relação ao total de atendimentos. Note que o
+              somatório pode ultrapassar 100% pois uma pessoa pode sofrer mais
+              de um tipo de violência.
+            </p>
+          </div>
+
+          {/* Bloco L: Localidade */}
+          {dados.localidades && dados.localidades.length > 0 && (
+            <div className="mb-8 page-break-before">
+              <h2 className="text-xl font-bold mb-4 bg-gray-100 p-2 border-l-4 border-purple-600">
+                BLOCO L: Localidade - Atendimentos por Bairro
+              </h2>
+              <table className="w-full border-collapse border border-gray-300 mb-4">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="border border-gray-300 px-4 py-2 text-center">
+                      #
+                    </th>
+                    <th className="border border-gray-300 px-4 py-2 text-left">
+                      Bairro
+                    </th>
+                    <th className="border border-gray-300 px-4 py-2 text-center">
+                      Atendimentos
+                    </th>
+                    <th className="border border-gray-300 px-4 py-2 text-center">
+                      Percentual
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dados.localidades.map((localidade, index) => {
+                    const porcentagem =
+                      (localidade.total / dados.volume.total_atendimentos) *
+                      100;
+                    return (
+                      <tr key={index}>
+                        <td className="border border-gray-300 px-4 py-2 text-center">
+                          {index + 1}
+                        </td>
+                        <td className="border border-gray-300 px-4 py-2">
+                          {localidade.bairro}
+                        </td>
+                        <td className="border border-gray-300 px-4 py-2 text-center font-bold">
+                          {localidade.total}
+                        </td>
+                        <td className="border border-gray-300 px-4 py-2 text-center">
+                          {Math.round(porcentagem * 100) / 100}%
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Rodapé com Assinaturas */}
+          <div className="mt-16 pt-8 border-t-2 border-gray-300">
+            <div className="grid grid-cols-2 gap-8">
+              <div className="text-center">
+                <div className="border-t-2 border-gray-800 pt-2 mt-16">
+                  <p className="font-semibold">Coordenador(a)</p>
+                  <p className="text-sm text-gray-600">
+                    Centro de Referência da Mulher
+                  </p>
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="border-t-2 border-gray-800 pt-2 mt-16">
+                  <p className="font-semibold">Responsável Técnico(a)</p>
+                  <p className="text-sm text-gray-600">Data: ___/___/____</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* DASHBOARD INTERATIVO - Oculto na impressão */}
       {/* Filtros e Botão de Impressão */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between print:hidden">
         <Card className="flex-1">
@@ -281,7 +559,7 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
       </div>
 
       {/* Bloco A: Volume de Atendimentos */}
-      <div className="space-y-4 rma-print-section">
+      <div className="space-y-4 rma-print-section print:hidden">
         <h2 className="text-2xl font-bold text-foreground">
           Bloco A: Volume de Atendimentos
         </h2>
@@ -336,7 +614,7 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
       </div>
 
       {/* Bloco B: Perfil Social */}
-      <div className="space-y-4 rma-print-section">
+      <div className="space-y-4 rma-print-section print:hidden">
         <h2 className="text-2xl font-bold text-foreground">
           Bloco B: Perfil Social
         </h2>
@@ -423,7 +701,7 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
       </div>
 
       {/* Bloco C: Encaminhamentos */}
-      <div className="space-y-4 rma-print-section">
+      <div className="space-y-4 rma-print-section print:hidden">
         <h2 className="text-2xl font-bold text-foreground">
           Bloco C: Encaminhamentos
         </h2>
@@ -530,7 +808,7 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
       </div>
 
       {/* Bloco D: Tipos de Violência */}
-      <div className="space-y-4 rma-print-section">
+      <div className="space-y-4 rma-print-section print:hidden">
         <h2 className="text-2xl font-bold text-foreground">
           Bloco D: Tipos de Violência
         </h2>
@@ -593,7 +871,7 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
       </div>
 
       {/* Bloco L: Localidade */}
-      <div className="space-y-4 rma-print-section">
+      <div className="space-y-4 rma-print-section print:hidden">
         <h2 className="text-2xl font-bold text-foreground">
           Bloco L: Localidade
         </h2>
