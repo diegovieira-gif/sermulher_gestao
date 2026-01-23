@@ -12,10 +12,10 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import type { DashboardStats } from "./actions";
+import { SmartAssistant } from "./smart-assistant"; // <--- Componente Correto Restaurado
 import {
   BarChart,
   Bar,
@@ -41,7 +41,6 @@ export function OverviewClient({
   stats,
   userName = "Gestão",
 }: OverviewClientProps) {
-  // 1. Proteção contra dados vazios
   if (!stats) {
     return (
       <div className="flex items-center justify-center h-96 text-muted-foreground bg-gray-50 rounded-lg border border-dashed">
@@ -50,7 +49,6 @@ export function OverviewClient({
     );
   }
 
-  // 2. Extração segura dos dados com fallbacks
   const {
     kpis = {
       totalAtendimentosMes: 0,
@@ -71,7 +69,7 @@ export function OverviewClient({
 
   const formatarDataCurta = (dataStr: string) => {
     if (!dataStr) return "--/--";
-    const data = new Date(dataStr + "T00:00:00"); // Fix timezone issue
+    const data = new Date(dataStr + "T00:00:00");
     return data.toLocaleDateString("pt-BR", {
       day: "2-digit",
       month: "short",
@@ -93,7 +91,7 @@ export function OverviewClient({
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Cabeçalho */}
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1 mb-4">
         <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
           Olá, {userName}!
         </h1>
@@ -101,6 +99,9 @@ export function OverviewClient({
           {dataAtual}
         </p>
       </div>
+
+      {/* --- ASSISTENTE INTELIGENTE (ORIGINAL) --- */}
+      <SmartAssistant />
 
       {/* Cards de KPIs */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
