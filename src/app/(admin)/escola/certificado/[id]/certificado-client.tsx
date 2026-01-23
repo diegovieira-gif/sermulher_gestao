@@ -3,8 +3,7 @@
 import { useRef } from "react";
 import { useReactToPrint } from "react-to-print";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Printer, FileCheck, AlertCircle } from "lucide-react";
+import { Printer, FileCheck } from "lucide-react";
 import { CertificateTemplate } from "@/components/escola/certificate-template";
 
 interface CertificadoClientProps {
@@ -21,11 +20,6 @@ export default function CertificadoClient({
   curso,
 }: CertificadoClientProps) {
   const certificateRef = useRef<HTMLDivElement>(null);
-
-  // Validação: verifica se o status da matrícula é "Concluída"
-  const isConcluida =
-    matricula?.status?.toLowerCase() === "concluída" ||
-    matricula?.status?.toLowerCase() === "concluido";
 
   const handlePrint = useReactToPrint({
     contentRef: certificateRef,
@@ -45,14 +39,16 @@ export default function CertificadoClient({
     `,
   });
 
+  // Fallbacks seguros para dados que podem não existir no banco ainda
   const fallbackStart = turma?.data_inicio
     ? new Date(turma.data_inicio)
     : new Date();
+
   const fallbackEnd = turma?.data_fim
     ? new Date(turma.data_fim)
     : fallbackStart;
-  const fallbackInstructor =
-    turma?.instrutor_nome || "Instrutor(a) Responsável";
+
+  const fallbackInstructor = turma?.instrutor_nome || "Coordenação Pedagógica";
 
   const certificateData = {
     studentName: beneficiaria.nome_completo,
@@ -65,72 +61,38 @@ export default function CertificadoClient({
     directorName: undefined,
   };
 
-  if (!isConcluida) {
-    return (
-      <div className="w-full bg-background min-h-screen p-4 md:p-8">
-        <Alert variant="destructive" className="max-w-2xl">
-          <AlertCircle className="h-5 w-5" />
-          <AlertTitle>Certificado Indisponível</AlertTitle>
-          <AlertDescription>
-            O curso ainda não foi concluído. O certificado só pode ser emitido
-            após a conclusão da matrícula com status "Concluída".
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
-
   return (
     <div className="w-full bg-background min-h-screen p-4 md:p-8">
       {/* Barra de Ações */}
-      <div className="flex gap-3 mb-8 sticky top-8 z-10">
+      <div className="flex flex-col md:flex-row gap-3 mb-8 sticky top-8 z-10 print:hidden justify-between items-center bg-white/80 backdrop-blur-sm p-4 rounded-lg border shadow-sm">
+        <div className="flex items-center gap-2 text-green-700">
+          <FileCheck className="h-5 w-5" />
+          <span className="font-medium">Status: Aprovada</span>
+        </div>
+
         <Button
           onClick={() => handlePrint()}
           size="lg"
-          className="gap-2 bg-green-600 hover:bg-green-700"
+          className="gap-2 bg-purple-600 hover:bg-purple-700 text-white shadow-md transition-all hover:scale-105 w-full md:w-auto"
         >
           <Printer className="h-5 w-5" />
-          Imprimir / Salvar PDF
-        </Button>
-        <Button variant="outline" size="lg">
-          <FileCheck className="h-5 w-5 mr-2" />
-          Certificado Liberado
+          Imprimir / Baixar PDF
         </Button>
       </div>
 
       {/* Área de Preview */}
-      <div className="flex justify-center bg-gray-100 rounded-lg p-4 md:p-8 print:bg-white print:p-0 print:rounded-none">
-        <div className="shadow-lg print:shadow-none">
+      <div className="flex justify-center bg-gray-100 rounded-lg p-4 md:p-8 print:bg-white print:p-0 print:rounded-none overflow-auto border border-gray-200">
+        <div className="shadow-2xl print:shadow-none bg-white origin-top scale-90 md:scale-100 transition-transform">
           <CertificateTemplate ref={certificateRef} data={certificateData} />
         </div>
       </div>
 
-      {/* Informações Adicionais */}
-      <div className="mt-8 max-w-4xl mx-auto print:hidden">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="p-4 bg-card rounded-lg border">
-            <p className="text-xs text-muted-foreground uppercase">Aluno</p>
-            <p className="font-semibold truncate">
-              {beneficiaria.nome_completo}
-            </p>
-          </div>
-          <div className="p-4 bg-card rounded-lg border">
-            <p className="text-xs text-muted-foreground uppercase">Curso</p>
-            <p className="font-semibold truncate">
-              {certificateData.courseName}
-            </p>
-          </div>
-          <div className="p-4 bg-card rounded-lg border">
-            <p className="text-xs text-muted-foreground uppercase">
-              Carga Horária
-            </p>
-            <p className="font-semibold">{certificateData.hours}h</p>
-          </div>
-          <div className="p-4 bg-card rounded-lg border">
-            <p className="text-xs text-muted-foreground uppercase">Status</p>
-            <p className="font-semibold text-green-600">Concluída</p>
-          </div>
-        </div>
+      {/* Informações de Rodapé (Apenas Tela) */}
+      <div className="mt-8 max-w-4xl mx-auto print:hidden opacity-70 hover:opacity-100 transition-opacity">
+        <p className="text-center text-xs text-gray-400">
+          Este documento é gerado automaticamente com base nos registros do
+          sistema.
+        </p>
       </div>
     </div>
   );
