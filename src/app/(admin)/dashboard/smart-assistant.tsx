@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, Send, Loader2, AlertCircle, ArrowRight } from "lucide-react";
+import { Sparkles, Send, Loader2, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 
 const DEFAULT_SUGGESTIONS = [
   "Total de beneficiárias cadastradas",
-  "Quais são os bairros com mais atendimentos?",
+  "Qual o tipo de violência mais comum?",
   "Lista de infratores de alto risco",
   "Quantas turmas estão abertas?",
 ];
@@ -20,8 +20,6 @@ export function SmartAssistant() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
-
-  // Estado para as sugestões dinâmicas
   const [currentSuggestions, setCurrentSuggestions] =
     useState<string[]>(DEFAULT_SUGGESTIONS);
 
@@ -29,7 +27,6 @@ export function SmartAssistant() {
     const question = questionToAsk.trim();
     if (!question) return;
 
-    // Atualiza o input se foi clicado numa sugestão
     setInput(question);
     setLoading(true);
     setError(null);
@@ -49,8 +46,6 @@ export function SmartAssistant() {
       }
 
       setResult(data);
-
-      // ATUALIZAÇÃO: Se a IA devolveu sugestões de follow-up, atualiza os botões
       if (
         data.suggestions &&
         Array.isArray(data.suggestions) &&
@@ -98,7 +93,6 @@ export function SmartAssistant() {
           </Button>
         </div>
 
-        {/* Sugestões Rápidas (Dinâmicas) */}
         {!loading && (
           <div className="flex flex-wrap gap-2 animate-in fade-in duration-300">
             {currentSuggestions.map((suggestion, idx) => (
@@ -114,7 +108,6 @@ export function SmartAssistant() {
           </div>
         )}
 
-        {/* Erro */}
         {error && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
@@ -123,17 +116,14 @@ export function SmartAssistant() {
           </Alert>
         )}
 
-        {/* Resultados */}
         {result && (
           <div className="mt-4 space-y-4 animate-in fade-in slide-in-from-bottom-2">
-            {/* Resposta em Texto / Count */}
             {(result.type === "text" || result.type === "count") && (
               <div className="p-5 bg-white rounded-lg border border-purple-100 shadow-sm relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-1 h-full bg-purple-500" />
                 <p className="text-lg text-gray-800 font-medium leading-relaxed">
                   {result.answer}
                 </p>
-                {/* CORREÇÃO: Verifica se é número antes de formatar */}
                 {result.type === "count" && typeof result.data === "number" && (
                   <p className="text-4xl font-bold text-purple-600 mt-3 tracking-tight">
                     {result.data.toLocaleString("pt-BR")}
@@ -141,37 +131,48 @@ export function SmartAssistant() {
                 )}
                 {result.debug_model && (
                   <p className="text-[10px] text-gray-300 mt-4 text-right">
-                    Respondido por: {result.debug_model}
+                    IA: {result.debug_model}
                   </p>
                 )}
               </div>
             )}
 
-            {/* Resposta em Lista */}
             {result.type === "list" && Array.isArray(result.data) && (
               <div className="space-y-2">
                 <p className="font-medium text-gray-700 mb-2">
-                  {result.answer}:
+                  {result.answer}
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {result.data.map((item: any, idx: number) => (
                     <div
                       key={idx}
-                      className="p-3 bg-white hover:bg-purple-50/50 rounded-lg border border-gray-200 shadow-sm transition-colors flex flex-col gap-1"
+                      className="p-3 bg-white hover:bg-purple-50/50 rounded-lg border border-gray-200 shadow-sm transition-colors flex flex-col justify-between gap-2"
                     >
-                      <span className="font-semibold text-purple-900 truncate">
-                        {item.nome ||
-                          item.nome_completo ||
-                          item.nome_ciclo ||
-                          "Item " + (idx + 1)}
-                      </span>
+                      <div className="flex justify-between items-start gap-2">
+                        <span
+                          className="font-semibold text-purple-900 truncate"
+                          title={item.nome}
+                        >
+                          {item.nome ||
+                            item.nome_completo ||
+                            "Item " + (idx + 1)}
+                        </span>
+                        {/* Exibe contagem se existir */}
+                        {item.count !== undefined && (
+                          <Badge
+                            variant="secondary"
+                            className="bg-purple-100 text-purple-700 shrink-0"
+                          >
+                            {item.count}
+                          </Badge>
+                        )}
+                      </div>
 
-                      {/* Renderiza campos extras úteis se existirem */}
                       <div className="text-xs text-gray-500 space-y-0.5">
                         {item.status && (
                           <p>
                             Status:{" "}
-                            <span className="font-medium uppercase text-gray-700">
+                            <span className="font-medium uppercase">
                               {item.status}
                             </span>
                           </p>
