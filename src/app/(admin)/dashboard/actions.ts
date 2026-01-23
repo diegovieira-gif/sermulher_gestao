@@ -39,7 +39,14 @@ export async function getDashboardStats(): Promise<{
   data?: DashboardStats;
   error?: string;
 }> {
+  // Configuração de datas
   const now = new Date();
+
+  // Data de hoje zerada (00:00:00) para garantir que eventos de hoje apareçam
+  const todayStart = new Date(now);
+  todayStart.setHours(0, 0, 0, 0);
+  const todayStr = todayStart.toISOString();
+
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
     .toISOString()
     .split("T")[0];
@@ -94,23 +101,29 @@ export async function getDashboardStats(): Promise<{
             limit: -1,
           }),
         )
-        .catch(() => []),
+        .catch((err) => {
+          console.error("Erro ao buscar matrículas:", err);
+          return [];
+        }),
 
-      // D. Lista: Próximos Eventos (Tabela correta: eventos_campanhas)
+      // D. Lista: Próximos Eventos
       // @ts-ignore
       directus
         .request(
           readItems("eventos_campanhas", {
             filter: {
-              data_inicio: { _gte: now.toISOString().split("T")[0] },
-              status: { _neq: "cancelado" },
+              data_inicio: { _gte: todayStr },
             },
-            fields: ["id", "nome", "data_inicio", "local", "tipo_id.nome"],
+            // REMOVIDO "local" para evitar erro 403
+            fields: ["id", "nome", "data_inicio", "tipo_id.nome"],
             sort: ["data_inicio"],
             limit: 5,
           }),
         )
-        .catch(() => []),
+        .catch((err) => {
+          console.error("❌ Erro ao buscar eventos para o dashboard:", err);
+          return [];
+        }),
 
       // E. KPI: Infratores
       directus.request(
@@ -122,7 +135,6 @@ export async function getDashboardStats(): Promise<{
 
     // --- Processamento ---
 
-    // 1. Contagens
     const totalAtendimentos =
       Array.isArray(atendimentosCount) && atendimentosCount[0]?.count
         ? Number(atendimentosCount[0].count)
@@ -135,28 +147,27 @@ export async function getDashboardStats(): Promise<{
 
     const totalAlunas = Array.isArray(rawMatriculas) ? rawMatriculas.length : 0;
 
-    // 2. Processar Gráfico (Agrupar por Dia)
+    // Processar Gráfico
     const chartMap = new Map<string, number>();
     if (Array.isArray(atendimentosGrafico)) {
       atendimentosGrafico.forEach((item: any) => {
         if (item.data_abertura) {
-          const dateKey = item.data_abertura.split("T")[0]; // YYYY-MM-DD
+          const dateKey = item.data_abertura.split("T")[0];
           chartMap.set(dateKey, (chartMap.get(dateKey) || 0) + 1);
         }
       });
     }
 
-    // Ordenar array do gráfico
     const atendimentosPorDia = Array.from(chartMap, ([data, quantidade]) => ({
       data,
       quantidade,
     })).sort((a, b) => a.data.localeCompare(b.data));
 
-    // 3. Mapear Eventos (usando 'nome' em vez de 'titulo')
+    // Mapear Eventos
     const eventosFormatados = Array.isArray(proximosEventos)
       ? proximosEventos.map((evt: any) => ({
           id: evt.id,
-          titulo: evt.nome, // Mapeia 'nome' do banco para 'titulo' da interface
+          titulo: evt.nome,
           data_inicio: evt.data_inicio,
           tipo_id: evt.tipo_id ? { nome: evt.tipo_id.nome } : undefined,
         }))
@@ -172,11 +183,9 @@ export async function getDashboardStats(): Promise<{
       atendimentosPorDia,
       proximosEventos: eventosFormatados,
       alertasMedidasProtetivas: [],
-
-      // Props para compatibilidade com DashboardClient
-      totalAtendimentos: totalAtendimentos,
-      totalAlunas: totalAlunas,
-      totalInfratores: totalInfratores,
+      totalAtendimentos,
+      totalAlunas,
+      totalInfratores,
       growthAtendimentos: "+0%",
       growthAlunas: "+0%",
       growthInfratores: "+0%",
@@ -187,7 +196,7 @@ export async function getDashboardStats(): Promise<{
       data: stats,
     };
   } catch (error) {
-    console.error("❌ Erro ao gerar dashboard stats:", error);
+    console.error("❌ Erro crítico ao gerar dashboard stats:", error);
     return {
       success: false,
       error: "Erro ao carregar dados do dashboard.",

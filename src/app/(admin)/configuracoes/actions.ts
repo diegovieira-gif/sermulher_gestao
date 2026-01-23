@@ -158,6 +158,8 @@ export async function saveAuxItem(
     revalidatePath("/configuracoes");
     revalidatePath("/sala-azul/ciclos");
     revalidatePath("/sala-azul/infratores");
+    revalidatePath("/eventos");
+    revalidatePath("/dashboard");
 
     return { success: true };
   } catch (error) {
@@ -181,6 +183,8 @@ export async function deleteAuxItem(type: string, id: number) {
     revalidatePath("/configuracoes");
     revalidatePath("/sala-azul/ciclos");
     revalidatePath("/sala-azul/infratores");
+    revalidatePath("/eventos");
+    revalidatePath("/dashboard");
 
     return { success: true };
   } catch (error) {
