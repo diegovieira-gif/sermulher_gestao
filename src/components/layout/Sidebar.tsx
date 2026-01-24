@@ -165,9 +165,7 @@ export function Sidebar({ userRole }: SidebarProps) {
       <div className="flex h-full flex-col">
         {/* Logo/Header */}
         <div className="flex h-16 items-center border-b border-slate-800 px-6">
-          <h1 className="text-xl font-bold text-white">
-            Sec. do Respeito às Políticas para as Mulheres
-          </h1>
+          <h1 className="text-xl font-bold text-white">SerMulher</h1>
         </div>
 
         {/* Menu Items */}
