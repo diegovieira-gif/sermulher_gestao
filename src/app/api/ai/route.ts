@@ -13,12 +13,12 @@ const API_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 const DIRECTUS_URL = process.env.DIRECTUS_URL || "http://192.168.0.115:8055";
 const DIRECTUS_TOKEN = process.env.DIRECTUS_TOKEN || "";
 
-// Contexto do Banco de Dados (Referência para a IA)
+// Contexto do Banco de Dados
 const DB_SCHEMA_CONTEXT = `
 CONTEXTO DO BANCO DE DADOS:
 1. Tabela 'atendimentos': id, data_abertura, tipo_violencia (lista), bairro, relator_tecnico, status.
 2. Tabela 'escola_turmas': id, nome, status, data_inicio.
-3. Tabela 'infratores': id, nome_completo, nivel_id, status_legal_id.
+3. Tabela 'infratores': id, nome_completo, nivel_risco, status_legal.
 4. Tabela 'eventos_campanhas': id, nome, data_inicio, tipo_id.
 5. Tabela 'beneficiarias': id, nome_completo, cpf.
 `;
@@ -41,12 +41,20 @@ async function getBestAvailableModel(apiKey: string): Promise<string> {
     );
     const cleanName = (name: string) => name.replace("models/", "");
 
-    const flashModel = availableModels.find((m: any) =>
+    // CORREÇÃO: Prioridade total para o 1.5-flash (Estável e com alta cota)
+    // O 2.5-flash e 2.0-flash tem cotas muito baixas no Free Tier (20 req/dia)
+    const stableFlash = availableModels.find((m: any) =>
+      m.name.includes("gemini-1.5-flash"),
+    );
+    if (stableFlash) return cleanName(stableFlash.name);
+
+    // Se não achar o 1.5, tenta qualquer flash
+    const anyFlash = availableModels.find((m: any) =>
       m.name.toLowerCase().includes("flash"),
     );
-    if (flashModel) return cleanName(flashModel.name);
+    if (anyFlash) return cleanName(anyFlash.name);
 
-    return "gemini-1.5-flash";
+    return "gemini-1.5-flash"; // Fallback final
   } catch (error) {
     return "gemini-1.5-flash";
   }
@@ -248,6 +256,20 @@ export async function POST(req: Request) {
       debug_model: modelName,
     });
   } catch (error: any) {
+    // TRATAMENTO DE ERRO 429 (COTA)
+    if (
+      error.message?.includes("429") ||
+      error.message?.includes("quota") ||
+      error.status === 429
+    ) {
+      console.warn("⚠️ Cota da IA excedida.");
+      return NextResponse.json({
+        type: "text",
+        answer:
+          "⚠️ O limite gratuito de uso da IA foi atingido por hoje. Por favor, tente novamente amanhã ou configure uma chave de API com cota maior.",
+      });
+    }
+
     console.error("Erro Fatal Route:", error);
     return NextResponse.json({ error: "Erro interno." }, { status: 500 });
   }
