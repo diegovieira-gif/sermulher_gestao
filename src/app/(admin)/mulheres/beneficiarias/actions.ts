@@ -20,7 +20,8 @@ const BENEFICIARIA_FIELDS = [
   "nome_completo",
   "cpf",
   "data_nascimento",
-  "contato",
+  "telefone",
+  "email",
   "endereco",
   "perfil_socioeconomico",
   "recebe_bolsa_familia",
@@ -204,7 +205,8 @@ export async function saveBeneficiaria(data: unknown) {
     const payload: Record<string, unknown> = {
       nome_completo: validatedData.nome_completo,
       data_nascimento: normalizeDate(validatedData.data_nascimento),
-      contato: validatedData.contato,
+      telefone: validatedData.telefone || null,
+      email: validatedData.email || null,
       endereco: validatedData.endereco,
       perfil_socioeconomico: validatedData.perfil_socioeconomico || null,
     };

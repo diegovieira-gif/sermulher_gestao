@@ -29,7 +29,15 @@ import {
 import Link from "next/link";
 import { BeneficiariaForm } from "./beneficiaria-form";
 import { deleteBeneficiaria } from "./actions";
-import { Plus, Pencil, Trash2, ShieldAlert, HandCoins, Banknote, Eye } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  ShieldAlert,
+  HandCoins,
+  Banknote,
+  Eye,
+} from "lucide-react";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { toast } from "sonner";
 import type { Beneficiaria } from "./schemas";
@@ -38,15 +46,16 @@ interface BeneficiariasClientProps {
   beneficiarias: any[];
 }
 
-export function BeneficiariasClient({ beneficiarias }: BeneficiariasClientProps) {
+export function BeneficiariasClient({
+  beneficiarias,
+}: BeneficiariasClientProps) {
   const [formOpen, setFormOpen] = useState(false);
-  const [selectedBeneficiaria, setSelectedBeneficiaria] = useState<Beneficiaria | null>(
-    null
-  );
+  const [selectedBeneficiaria, setSelectedBeneficiaria] =
+    useState<Beneficiaria | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [beneficiariaToDelete, setBeneficiariaToDelete] = useState<number | null>(
-    null
-  );
+  const [beneficiariaToDelete, setBeneficiariaToDelete] = useState<
+    number | null
+  >(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleNew = () => {
@@ -95,18 +104,10 @@ export function BeneficiariasClient({ beneficiarias }: BeneficiariasClientProps)
     return cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
   };
 
-  // Função auxiliar para extrair telefone do JSON
-  const getTelefone = (contato: any): string => {
-    if (!contato) return "-";
-    if (typeof contato === "string") {
-      try {
-        const parsed = JSON.parse(contato);
-        return parsed?.telefone || "-";
-      } catch {
-        return contato;
-      }
-    }
-    return contato?.telefone || "-";
+  // Função auxiliar para formatar telefone
+  const formatTelefone = (telefone: string | null | undefined): string => {
+    if (!telefone) return "-";
+    return telefone;
   };
 
   // Função auxiliar para calcular idade
@@ -129,7 +130,7 @@ export function BeneficiariasClient({ beneficiarias }: BeneficiariasClientProps)
   // Componente para renderizar status/benefícios com ícones e tooltips
   const renderBeneficiosStatus = (beneficiaria: any) => {
     const beneficios = [];
-    
+
     if (beneficiaria.possui_medida_protetiva) {
       beneficios.push({
         icon: ShieldAlert,
@@ -137,7 +138,7 @@ export function BeneficiariasClient({ beneficiarias }: BeneficiariasClientProps)
         color: "text-orange-500",
       });
     }
-    
+
     if (beneficiaria.recebe_bolsa_familia) {
       beneficios.push({
         icon: HandCoins,
@@ -145,7 +146,7 @@ export function BeneficiariasClient({ beneficiarias }: BeneficiariasClientProps)
         color: "text-green-600",
       });
     }
-    
+
     if (beneficiaria.recebe_bpc) {
       beneficios.push({
         icon: Banknote,
@@ -236,13 +237,11 @@ export function BeneficiariasClient({ beneficiarias }: BeneficiariasClientProps)
                     {beneficiaria.nome_completo}
                   </TableCell>
                   <TableCell>{formatCPF(beneficiaria.cpf)}</TableCell>
-                  <TableCell>{getTelefone(beneficiaria.contato)}</TableCell>
+                  <TableCell>{formatTelefone(beneficiaria.telefone)}</TableCell>
                   <TableCell>
                     {calcularIdade(beneficiaria.data_nascimento)}
                   </TableCell>
-                  <TableCell>
-                    {renderBeneficiosStatus(beneficiaria)}
-                  </TableCell>
+                  <TableCell>{renderBeneficiosStatus(beneficiaria)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Button
@@ -251,7 +250,9 @@ export function BeneficiariasClient({ beneficiarias }: BeneficiariasClientProps)
                         asChild
                         title="Ver detalhes"
                       >
-                        <Link href={`/mulheres/beneficiarias/${beneficiaria.id}`}>
+                        <Link
+                          href={`/mulheres/beneficiarias/${beneficiaria.id}`}
+                        >
                           <Eye className="h-4 w-4" />
                         </Link>
                       </Button>
@@ -301,7 +302,9 @@ export function BeneficiariasClient({ beneficiarias }: BeneficiariasClientProps)
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>
+              Cancelar
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
               disabled={isDeleting}

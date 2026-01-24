@@ -1,22 +1,5 @@
 import { z } from "zod";
 
-// Schema para o objeto de contato
-export const contatoSchema = z.object({
-  telefone: z.string().min(1, "Telefone é obrigatório"),
-  email: z
-    .string()
-    .refine(
-      (val) => {
-        // Se vazio ou não preenchido, é válido (opcional)
-        if (!val || val.trim() === "") return true;
-        // Se preenchido, valida formato de email
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
-      },
-      { message: "Email inválido" }
-    )
-    .optional(),
-});
-
 // Schema para o objeto de endereço
 export const enderecoSchema = z.object({
   logradouro: z.string().min(1, "Logradouro é obrigatório"),
@@ -28,7 +11,9 @@ export const enderecoSchema = z.object({
 // Schema principal da beneficiária
 export const beneficiariaSchema = z.object({
   id: z.number().optional(),
-  nome_completo: z.string().min(3, "Nome completo deve ter no mínimo 3 caracteres"),
+  nome_completo: z
+    .string()
+    .min(3, "Nome completo deve ter no mínimo 3 caracteres"),
   cpf: z
     .string()
     .optional()
@@ -40,10 +25,11 @@ export const beneficiariaSchema = z.object({
         const cpfLimpo = val.replace(/\D/g, "");
         return cpfLimpo.length === 11;
       },
-      { message: "CPF deve conter 11 dígitos numéricos" }
+      { message: "CPF deve conter 11 dígitos numéricos" },
     ),
   data_nascimento: z.string().min(1, "Data de nascimento é obrigatória"),
-  contato: contatoSchema,
+  telefone: z.string().nullable().optional(),
+  email: z.string().nullable().optional(),
   endereco: enderecoSchema,
   perfil_socioeconomico: z.string().optional(),
   // Novos campos de Dados Sociais e Proteção
@@ -55,7 +41,6 @@ export const beneficiariaSchema = z.object({
 // Tipos TypeScript derivados dos schemas
 export type Beneficiaria = z.infer<typeof beneficiariaSchema>;
 export type BeneficiariaFormValues = z.input<typeof beneficiariaSchema>;
-export type Contato = z.infer<typeof contatoSchema>;
 export type Endereco = z.infer<typeof enderecoSchema>;
 
 // Schema para registrar entregas de benefícios vinculadas à beneficiária

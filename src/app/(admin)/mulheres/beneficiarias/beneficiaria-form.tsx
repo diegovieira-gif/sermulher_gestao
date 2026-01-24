@@ -54,10 +54,8 @@ export function BeneficiariaForm({
       nome_completo: "",
       cpf: "",
       data_nascimento: "",
-      contato: {
-        telefone: "",
-        email: "",
-      },
+      telefone: "",
+      email: "",
       endereco: {
         logradouro: "",
         numero: "",
@@ -77,8 +75,9 @@ export function BeneficiariaForm({
       // Normaliza os dados do Directus para o formulário
       const normalizedData: BeneficiariaFormValues = {
         ...beneficiaria,
-        // Garante que contato e endereco sejam objetos
-        contato: beneficiaria.contato || { telefone: "", email: "" },
+        // Garante que telefone e email sejam strings
+        telefone: beneficiaria.telefone || "",
+        email: beneficiaria.email || "",
         endereco: beneficiaria.endereco || {
           logradouro: "",
           numero: "",
@@ -98,10 +97,8 @@ export function BeneficiariaForm({
         nome_completo: "",
         cpf: "",
         data_nascimento: "",
-        contato: {
-          telefone: "",
-          email: "",
-        },
+        telefone: "",
+        email: "",
         endereco: {
           logradouro: "",
           numero: "",
@@ -265,11 +262,11 @@ export function BeneficiariaForm({
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
-                      name="contato.telefone"
+                      name="telefone"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>
-                            Telefone *
+                            Telefone
                             <InfoTooltip text="Número de telefone para contato e comunicação." />
                           </FormLabel>
                           <FormControl>
@@ -286,7 +283,7 @@ export function BeneficiariaForm({
 
                     <FormField
                       control={form.control}
-                      name="contato.email"
+                      name="email"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>
