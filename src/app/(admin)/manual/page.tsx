@@ -22,6 +22,8 @@ import {
   Calendar,
   FileText,
   Sparkles,
+  Megaphone,
+  Settings,
 } from "lucide-react";
 
 export default function ManualPage() {
@@ -102,14 +104,38 @@ export default function ManualPage() {
                 <AccordionTrigger>
                   Cadastrando uma nova beneficiária
                 </AccordionTrigger>
-                <AccordionContent className="text-gray-600">
-                  Acesse <strong>Gestão de Mulheres {">"} Beneficiárias</strong>{" "}
-                  e clique em "Novo Cadastro". Preencha os dados pessoais,
-                  endereço e composição familiar. O CPF é obrigatório para
-                  evitar duplicidade.
+                <AccordionContent className="text-gray-600 space-y-2">
+                  <p>
+                    Acesse{" "}
+                    <strong>Gestão de Mulheres {">"} Beneficiárias</strong> e
+                    clique em "Nova Beneficiária".
+                  </p>
+                  <p>
+                    <Badge variant="outline" className="mr-1">
+                      Novidade
+                    </Badge>
+                    Agora o cadastro é simplificado!{" "}
+                    <strong>Apenas o Nome Completo é obrigatório</strong>{" "}
+                    inicialmente. Dados como CPF, Endereço e Telefone podem ser
+                    preenchidos posteriormente à medida que o atendimento
+                    avança.
+                  </p>
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="mulher-2">
+                <AccordionTrigger>Busca e Exportação de Dados</AccordionTrigger>
+                <AccordionContent className="text-gray-600">
+                  Na tela de listagem de beneficiárias, utilize a{" "}
+                  <strong>Barra de Busca</strong> para encontrar rapidamente uma
+                  mulher por Nome ou CPF.
+                  <br />
+                  <br />
+                  Para gerar relatórios, clique no botão{" "}
+                  <strong>"Exportar CSV"</strong>. O sistema baixará um arquivo
+                  compatível com Excel contendo a lista filtrada atual.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="mulher-3">
                 <AccordionTrigger>Registrando um Atendimento</AccordionTrigger>
                 <AccordionContent className="text-gray-600">
                   No perfil da mulher, clique em "Novo Atendimento". Selecione o
@@ -118,7 +144,7 @@ export default function ManualPage() {
                   Prontuário Eletrônico.
                 </AccordionContent>
               </AccordionItem>
-              <AccordionItem value="mulher-3">
+              <AccordionItem value="mulher-4">
                 <AccordionTrigger>
                   Tramitações (Encaminhamentos)
                 </AccordionTrigger>
@@ -137,38 +163,37 @@ export default function ManualPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <GitPullRequest className="h-5 w-5 text-orange-600" />
-              3. Gestão de Demandas (Kanban)
+              3. Fluxo e Organização
             </CardTitle>
             <CardDescription>
-              Controle de fluxo de trabalho entre setores.
+              Kanban de demandas e Agenda Institucional.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="kanban-1">
-                <AccordionTrigger>
-                  O que é o Quadro de Demandas?
-                </AccordionTrigger>
+                <AccordionTrigger>Gestão de Demandas (Kanban)</AccordionTrigger>
                 <AccordionContent className="text-gray-600">
-                  É uma visão visual de todas as pendências. Cada cartão
-                  representa uma mulher/caso. As colunas representam o status:{" "}
-                  <strong>Aguardando</strong>, <strong>Em Análise</strong> e{" "}
-                  <strong>Concluído</strong>.
+                  Visualize todas as pendências em um quadro visual. Mova os
+                  cartões entre <strong>Aguardando</strong>,{" "}
+                  <strong>Em Análise</strong> e <strong>Concluído</strong>. Use
+                  os filtros para ver apenas as demandas do seu setor.
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="kanban-2">
-                <AccordionTrigger>Como mover um card?</AccordionTrigger>
+                <AccordionTrigger>Agenda Institucional</AccordionTrigger>
                 <AccordionContent className="text-gray-600">
-                  Use as setas no cartão para movê-lo de etapa. Ao finalizar uma
-                  demanda, mova para "Concluído". Use os filtros no topo da
-                  página para ver apenas demandas do seu setor (ex: "Jurídico").
+                  A Agenda unifica eventos manuais, aulas da Escola e sessões da
+                  Sala Azul. Use a aba <strong>"Calendário Visual"</strong> para
+                  ver o mês e a aba <strong>"Lista de Gestão"</strong> para
+                  cadastrar, editar ou excluir eventos.
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
           </CardContent>
         </Card>
 
-        {/* Seção 4: Escola e Sala Azul */}
+        {/* Seção 4 e 5: Escola e Sala Azul */}
         <div className="grid md:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
@@ -180,12 +205,22 @@ export default function ManualPage() {
             <CardContent>
               <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value="escola-1">
-                  <AccordionTrigger>Gestão de Turmas</AccordionTrigger>
+                  <AccordionTrigger>Painel da Escola</AccordionTrigger>
+                  <AccordionContent className="text-sm text-gray-600">
+                    O novo Painel da Escola exibe estatísticas rápidas: turmas
+                    ativas, total de alunas e cursos disponíveis. Use os atalhos
+                    para navegar rapidamente.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="escola-2">
+                  <AccordionTrigger>
+                    Gestão de Turmas e Matrículas
+                  </AccordionTrigger>
                   <AccordionContent className="text-sm text-gray-600">
                     Crie turmas para cursos profissionalizantes. Você pode
-                    matricular beneficiárias diretamente pelo perfil delas ou
-                    pela tela de turmas. O sistema controla a lista de presença
-                    e emissão de certificados.
+                    matricular beneficiárias e acompanhar a frequência. O
+                    sistema emite certificados automaticamente para alunas com
+                    mais de 75% de presença.
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
@@ -215,32 +250,70 @@ export default function ManualPage() {
           </Card>
         </div>
 
-        {/* Seção 6: Agenda e Relatórios */}
+        {/* Seção 6 e 7: Marketing e Configurações */}
+        <div className="grid md:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Megaphone className="h-4 w-4 text-pink-500" />
+                6. Marketing
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="mkt-1">
+                  <AccordionTrigger>Campanhas e Métricas</AccordionTrigger>
+                  <AccordionContent className="text-sm text-gray-600">
+                    Gerencie campanhas de conscientização (ex: Outubro Rosa).
+                    Acompanhe métricas de alcance e engajamento das redes
+                    sociais para gerar relatórios de impacto.
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Settings className="h-4 w-4 text-gray-500" />
+                7. Configurações
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="config-1">
+                  <AccordionTrigger>Padronização do Sistema</AccordionTrigger>
+                  <AccordionContent className="text-sm text-gray-600">
+                    Acesse este menu para cadastrar novos{" "}
+                    <strong>Bairros</strong>,{" "}
+                    <strong>Tipos de Violência</strong> ou{" "}
+                    <strong>Cursos</strong>. Tudo que for cadastrado aqui
+                    aparecerá automaticamente nas opções dos formulários.
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Seção 8: Relatórios Oficiais */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-purple-600" />
-              6. Agenda e Relatórios
+              <FileText className="h-5 w-5 text-green-600" />
+              8. Relatórios Oficiais
             </CardTitle>
           </CardHeader>
           <CardContent>
             <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="agenda-1">
-                <AccordionTrigger>Agenda Institucional</AccordionTrigger>
-                <AccordionContent className="text-gray-600">
-                  A Agenda unifica eventos manuais, aulas da Escola e sessões da
-                  Sala Azul. Use a aba <strong>"Calendário Visual"</strong> para
-                  ver o mês e a aba <strong>"Lista de Gestão"</strong> para
-                  cadastrar, editar ou excluir eventos.
-                </AccordionContent>
-              </AccordionItem>
               <AccordionItem value="relat-1">
-                <AccordionTrigger>Relatório RMA (SUAS)</AccordionTrigger>
+                <AccordionTrigger>RMA (SUAS)</AccordionTrigger>
                 <AccordionContent className="text-gray-600">
                   O sistema gera automaticamente o Registro Mensal de
-                  Atendimentos. Vá em Relatórios {">"} RMA, selecione o mês/ano
-                  e clique em "Imprimir". O layout já sai formatado para assinar
-                  e enviar.
+                  Atendimentos. Vá em Relatórios {" > "} RMA, selecione o
+                  mês/ano e clique em "Imprimir". O layout já sai formatado para
+                  assinatura.
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
@@ -248,9 +321,9 @@ export default function ManualPage() {
         </Card>
       </div>
 
-      <div className="text-center text-sm text-gray-400 pt-8">
+      <div className="text-center text-sm text-gray-400 pt-8 pb-4">
         <p>SerMulher Gestão Integrada © {new Date().getFullYear()}</p>
-        <p>Dúvidas técnicas? Contate o suporte de TI.</p>
+        <p>Desenvolvido para facilitar e humanizar o atendimento.</p>
       </div>
     </div>
   );
