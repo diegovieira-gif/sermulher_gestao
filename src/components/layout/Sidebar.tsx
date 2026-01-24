@@ -16,7 +16,7 @@ import {
   GraduationCap,
   ShieldAlert,
   Book,
-  LifeBuoy,
+  Megaphone, // Adicionado ícone
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { logout } from "@/app/login/actions";
@@ -37,15 +37,21 @@ const MENU_ITEMS: MenuItemConfig[] = [
     roles: [],
   },
   {
-    label: "Gestão de Demandas", // NOME CORRIGIDO
+    label: "Gestão de Demandas",
     href: "/tramitacoes",
     icon: GitPullRequest,
     roles: [],
   },
   {
     label: "Agenda Institucional",
-    href: "/agenda",
+    href: "/eventos", // CORRIGIDO: de /agenda para /eventos
     icon: Calendar,
+    roles: [],
+  },
+  {
+    label: "Marketing e Comunicação", // NOVO MÓDULO
+    href: "/marketing",
+    icon: Megaphone,
     roles: [],
   },
   {
@@ -88,7 +94,6 @@ const MENU_ITEMS: MenuItemConfig[] = [
     roles: ["admin", "gestor"],
     items: [{ label: "RMA (SUAS)", href: "/relatorios/rma" }],
   },
-  // Item de Documentação
   {
     label: "Manual do Usuário",
     href: "/manual",
@@ -208,8 +213,22 @@ export function Sidebar() {
         </ul>
       </nav>
 
-      {/* Logout Button */}
-      <div className="border-t border-slate-800 p-3 shrink-0">
+      {/* Rodapé: Configurações e Logout */}
+      <div className="border-t border-slate-800 p-3 shrink-0 space-y-1">
+        {/* Botão Configurações Agora Funcional */}
+        <Link
+          href="/configuracoes"
+          className={cn(
+            "flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors",
+            pathname.startsWith("/configuracoes")
+              ? "bg-slate-800 text-white border-l-4 border-blue-500"
+              : "text-slate-300 hover:bg-slate-800 hover:text-white",
+          )}
+        >
+          <Settings className="h-5 w-5" />
+          <span>Configurações</span>
+        </Link>
+
         <form action={handleLogout}>
           <button
             type="submit"
