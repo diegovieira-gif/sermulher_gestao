@@ -18,6 +18,7 @@ import {
   ChevronDown,
   ChevronRight,
   Megaphone,
+  GitPullRequest,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { logout } from "@/app/login/actions";
@@ -57,6 +58,12 @@ const MENU_ITEMS: MenuItemConfig[] = [
         href: "/mulheres/atendimentos",
       },
     ],
+  },
+  {
+    label: "Gestão de Demandas",
+    href: "/tramitacoes",
+    icon: GitPullRequest,
+    roles: [], // Todos logados
   },
   {
     label: "Escola da Mulher",
