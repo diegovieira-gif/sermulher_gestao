@@ -8,12 +8,9 @@ import {
   updateItem,
   deleteItem,
   readItem,
+  aggregate,
 } from "@directus/sdk";
-import {
-  beneficiariaSchema,
-  entregaBeneficioSchema,
-  type Beneficiaria,
-} from "./schemas";
+import { beneficiariaSchema, entregaBeneficioSchema } from "./schemas";
 
 const BENEFICIARIA_FIELDS = [
   "id",
@@ -27,7 +24,7 @@ const BENEFICIARIA_FIELDS = [
   "recebe_bolsa_familia",
   "recebe_bpc",
   "possui_medida_protetiva",
-];
+] as const;
 
 const normalizeDate = (value?: string | null) => {
   if (value === null || value === undefined) return null;
@@ -36,18 +33,56 @@ const normalizeDate = (value?: string | null) => {
 };
 
 /**
- * Busca todas as beneficiárias do Directus
+ * Busca beneficiárias com paginação e filtro
  */
-export async function getBeneficiarias() {
+export async function getBeneficiarias(page = 1, search = "") {
+  const limit = 10; // Itens por página
+  const offset = (page - 1) * limit;
+
+  // Filtro de busca (Nome ou CPF)
+  const filter = search
+    ? {
+        _or: [
+          { nome_completo: { _icontains: search } },
+          { cpf: { _contains: search } },
+        ],
+      }
+    : {};
+
   try {
-    const beneficiarias = await directus.request(
+    // 1. Busca os dados paginados
+    const items = await directus.request(
       readItems("beneficiarias", {
+        // @ts-ignore
         fields: BENEFICIARIA_FIELDS,
         sort: ["nome_completo"],
+        limit,
+        offset,
+        filter,
       }),
     );
 
-    return { success: true, data: beneficiarias };
+    // 2. Busca o total de registros (para calcular páginas)
+    const countResult = await directus.request(
+      aggregate("beneficiarias", {
+        aggregate: { count: "*" },
+        query: { filter },
+      }),
+    );
+
+    // @ts-ignore
+    const total = Number(countResult[0]?.count) || 0;
+
+    return {
+      success: true,
+      data: items,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   } catch (error) {
     console.error("Erro ao buscar beneficiárias:", error);
     return {
@@ -58,232 +93,125 @@ export async function getBeneficiarias() {
 }
 
 /**
- * Histórico de entregas de benefícios por beneficiária
+ * Busca TODOS os dados para Exportação (CSV)
+ */
+export async function getBeneficiariasExport(search = "") {
+  const filter = search
+    ? {
+        _or: [
+          { nome_completo: { _icontains: search } },
+          { cpf: { _contains: search } },
+        ],
+      }
+    : {};
+
+  try {
+    const items = await directus.request(
+      readItems("beneficiarias", {
+        // @ts-ignore
+        fields: [
+          "nome_completo",
+          "cpf",
+          "telefone",
+          "data_nascimento",
+          "endereco",
+        ],
+        sort: ["nome_completo"],
+        limit: -1, // Busca tudo
+        filter,
+      }),
+    );
+    return { success: true, data: items };
+  } catch (error) {
+    return { success: false, error: "Erro ao exportar dados." };
+  }
+}
+
+/**
+ * Histórico de entregas de benefícios
  */
 export async function getHistoricoBeneficios(beneficiariaId: string) {
   try {
     const historico = await directus.request(
       readItems("entregas_beneficios", {
-        filter: {
-          beneficiaria: {
-            _eq: beneficiariaId,
-          },
-        },
+        filter: { beneficiaria: { _eq: beneficiariaId } },
         sort: ["-data_entrega"],
-        // IMPORTANTE: Buscar os campos aninhados para exibir os nomes
         fields: [
           "*",
+          // @ts-ignore
           "beneficio.id",
           "beneficio.nome",
-          // Expansão explícita do usuário criador
           "user_created.first_name",
           "user_created.last_name",
-          "user_created.email", // Fallback caso não tenha nome
         ],
       }),
     );
-
     return { success: true, data: historico };
   } catch (error) {
-    console.error("Erro ao buscar histórico de benefícios:", error);
-    return {
-      success: false,
-      error: "Erro ao carregar histórico de benefícios.",
-    };
+    return { success: false, error: "Erro ao carregar histórico." };
   }
 }
 
-/**
- * Registra uma nova entrega de benefício
- */
+// --- Funções CRUD Padrão (Mantidas Simples) ---
+
 export async function registrarEntrega(data: unknown) {
   try {
     const payload = entregaBeneficioSchema.parse(data);
-
-    const created = await directus.request(
-      createItem("entregas_beneficios", {
-        beneficiaria: payload.beneficiaria,
-        beneficio: payload.beneficio,
-        data_entrega: payload.data_entrega,
-        quantidade: payload.quantidade ?? 1,
-        observacao: payload.observacao || null,
-      }),
-    );
-
-    // Busca o registro recém-criado com campos expandidos para atualizar a UI
-    const entregaCompleta = await directus.request(
-      readItem("entregas_beneficios", created.id as number, {
-        fields: [
-          "id",
-          "data_entrega",
-          "quantidade",
-          "observacao",
-          "beneficio.id",
-          "beneficio.nome",
-          "user_created.first_name",
-          "user_created.last_name",
-        ],
-      }),
-    );
-
+    await directus.request(createItem("entregas_beneficios", payload));
     revalidatePath(`/mulheres/beneficiarias/${payload.beneficiaria}`);
-
-    return {
-      success: true,
-      data: entregaCompleta,
-      message: "Entrega registrada com sucesso!",
-    };
+    return { success: true, message: "Entrega registrada!" };
   } catch (error) {
-    console.error("Erro ao registrar entrega:", error);
-
-    if (error instanceof Error && error.name === "ZodError") {
-      return {
-        success: false,
-        error: "Dados inválidos. Verifique os campos e tente novamente.",
-      };
-    }
-
-    return {
-      success: false,
-      error: "Erro ao registrar entrega de benefício.",
-    };
+    return { success: false, error: "Erro ao registrar entrega." };
   }
 }
 
-/**
- * Remove uma entrega de benefício
- */
-export async function deletarEntrega(
-  entregaId: number,
-  beneficiariaId: number,
-) {
+export async function deletarEntrega(id: number, beneficiariaId: number) {
   try {
-    await directus.request(deleteItem("entregas_beneficios", entregaId));
-
+    await directus.request(deleteItem("entregas_beneficios", id));
     revalidatePath(`/mulheres/beneficiarias/${beneficiariaId}`);
-
     return { success: true };
   } catch (error) {
-    console.error("Erro ao excluir entrega:", error);
-    return {
-      success: false,
-      error: "Erro ao excluir entrega de benefício.",
-    };
+    return { success: false, error: "Erro ao excluir." };
   }
 }
 
-/**
- * Busca uma beneficiária específica por ID
- */
 export async function getBeneficiaria(id: number) {
   try {
-    const beneficiaria = await directus.request(
-      readItem("beneficiarias", id, {
-        fields: BENEFICIARIA_FIELDS,
-      }),
+    const item = await directus.request(
+      readItem("beneficiarias", id, { fields: BENEFICIARIA_FIELDS }),
     );
-
-    return { success: true, data: beneficiaria };
+    return { success: true, data: item };
   } catch (error) {
-    console.error("Erro ao buscar beneficiária:", error);
-    return {
-      success: false,
-      error: "Erro ao buscar beneficiária. Tente novamente.",
-    };
+    return { success: false, error: "Erro ao buscar." };
   }
 }
 
-/**
- * Salva uma beneficiária (cria ou atualiza)
- */
 export async function saveBeneficiaria(data: unknown) {
   try {
-    // Valida os dados com Zod
-    const validatedData = beneficiariaSchema.parse(data);
+    const val = beneficiariaSchema.parse(data);
+    const payload: any = { ...val };
+    if (val.cpf) payload.cpf = val.cpf.replace(/\D/g, "");
 
-    // Prepara o payload para o Directus
-    const payload: Record<string, unknown> = {
-      nome_completo: validatedData.nome_completo,
-      data_nascimento: normalizeDate(validatedData.data_nascimento),
-      telefone: validatedData.telefone || null,
-      email: validatedData.email || null,
-      endereco: validatedData.endereco,
-      perfil_socioeconomico: validatedData.perfil_socioeconomico || null,
-    };
-
-    // CPF opcional - só inclui se preenchido
-    if (validatedData.cpf && validatedData.cpf.trim() !== "") {
-      // Remove formatação do CPF antes de salvar
-      payload.cpf = validatedData.cpf.replace(/\D/g, "");
-    }
-
-    // Campos opcionais de Dados Sociais e Proteção
-    if (validatedData.recebe_bolsa_familia !== undefined) {
-      payload.recebe_bolsa_familia = validatedData.recebe_bolsa_familia;
-    }
-    if (validatedData.recebe_bpc !== undefined) {
-      payload.recebe_bpc = validatedData.recebe_bpc;
-    }
-    if (validatedData.possui_medida_protetiva !== undefined) {
-      payload.possui_medida_protetiva = validatedData.possui_medida_protetiva;
-    }
-
-    if (validatedData.id) {
-      // Atualiza beneficiária existente
-      await directus.request(
-        updateItem("beneficiarias", validatedData.id, payload),
-      );
-
+    if (val.id) {
+      await directus.request(updateItem("beneficiarias", val.id, payload));
       revalidatePath("/mulheres/beneficiarias");
-      return {
-        success: true,
-        message: "Beneficiária atualizada com sucesso!",
-      };
+      return { success: true, message: "Atualizado!" };
     } else {
-      // Cria nova beneficiária
       await directus.request(createItem("beneficiarias", payload));
-
       revalidatePath("/mulheres/beneficiarias");
-      return {
-        success: true,
-        message: "Beneficiária cadastrada com sucesso!",
-      };
+      return { success: true, message: "Criado!" };
     }
   } catch (error) {
-    console.error("Erro ao salvar beneficiária:", error);
-
-    // Erro de validação do Zod
-    if (error instanceof Error && error.name === "ZodError") {
-      return {
-        success: false,
-        error: "Dados inválidos. Verifique os campos e tente novamente.",
-      };
-    }
-
-    return {
-      success: false,
-      error: "Erro ao salvar beneficiária. Tente novamente.",
-    };
+    return { success: false, error: "Erro ao salvar." };
   }
 }
 
-/**
- * Deleta uma beneficiária
- */
 export async function deleteBeneficiaria(id: number) {
   try {
     await directus.request(deleteItem("beneficiarias", id));
-
     revalidatePath("/mulheres/beneficiarias");
-    return {
-      success: true,
-      message: "Beneficiária excluída com sucesso!",
-    };
+    return { success: true, message: "Excluído!" };
   } catch (error) {
-    console.error("Erro ao excluir beneficiária:", error);
-    return {
-      success: false,
-      error: "Erro ao excluir beneficiária. Tente novamente.",
-    };
+    return { success: false, error: "Erro ao excluir." };
   }
 }

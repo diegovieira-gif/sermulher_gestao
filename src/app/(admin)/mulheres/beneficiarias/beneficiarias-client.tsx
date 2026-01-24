@@ -1,7 +1,9 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -20,23 +22,20 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { BeneficiariaForm } from "./beneficiaria-form";
-import { deleteBeneficiaria } from "./actions";
+import { deleteBeneficiaria, getBeneficiariasExport } from "./actions";
 import {
   Plus,
   Pencil,
   Trash2,
-  ShieldAlert,
-  HandCoins,
-  Banknote,
   Eye,
+  Search,
+  Download,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
 } from "lucide-react";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { toast } from "sonner";
@@ -44,179 +43,193 @@ import type { Beneficiaria } from "./schemas";
 
 interface BeneficiariasClientProps {
   beneficiarias: any[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+  searchParams: {
+    page: number;
+    q: string;
+  };
 }
 
 export function BeneficiariasClient({
   beneficiarias,
+  meta,
+  searchParams,
 }: BeneficiariasClientProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // Estados locais
   const [formOpen, setFormOpen] = useState(false);
   const [selectedBeneficiaria, setSelectedBeneficiaria] =
     useState<Beneficiaria | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [beneficiariaToDelete, setBeneficiariaToDelete] = useState<
-    number | null
-  >(null);
+  const [idToDelete, setIdToDelete] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleNew = () => {
-    setSelectedBeneficiaria(null);
-    setFormOpen(true);
+  // Busca e Exportação
+  const [searchTerm, setSearchTerm] = useState(searchParams.q);
+  const [isExporting, setIsExporting] = useState(false);
+
+  // Debounce da busca
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchTerm !== searchParams.q) {
+        const params = new URLSearchParams();
+        if (searchTerm) params.set("q", searchTerm);
+        params.set("page", "1"); // Reseta para pág 1 ao buscar
+        router.push(`${pathname}?${params.toString()}`);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm, router, pathname, searchParams.q]);
+
+  const handlePageChange = (newPage: number) => {
+    const params = new URLSearchParams(window.location.search);
+    params.set("page", newPage.toString());
+    router.push(`${pathname}?${params.toString()}`);
   };
 
-  const handleEdit = (beneficiaria: any) => {
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const result = await getBeneficiariasExport(searchTerm);
+      if (result.success && result.data) {
+        // Gerar CSV
+        const headers = [
+          "Nome Completo",
+          "CPF",
+          "Telefone",
+          "Data Nascimento",
+          "Bairro",
+          "Cidade",
+        ];
+        const rows = result.data.map((b: any) => [
+          b.nome_completo,
+          b.cpf || "",
+          b.telefone || "",
+          b.data_nascimento || "",
+          b.endereco?.bairro || "",
+          b.endereco?.cidade || "",
+        ]);
+
+        const csvContent = [
+          headers.join(","),
+          ...rows.map((r: any[]) =>
+            r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","),
+          ),
+        ].join("\n");
+
+        const blob = new Blob([csvContent], {
+          type: "text/csv;charset=utf-8;",
+        });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute(
+          "download",
+          `beneficiarias_${new Date().toISOString().slice(0, 10)}.csv`,
+        );
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success("Download iniciado!");
+      } else {
+        toast.error("Erro ao exportar dados.");
+      }
+    } catch (e) {
+      toast.error("Erro ao exportar.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleEdit = (beneficiaria: Beneficiaria) => {
     setSelectedBeneficiaria(beneficiaria);
     setFormOpen(true);
   };
 
   const handleDeleteClick = (id: number) => {
-    setBeneficiariaToDelete(id);
+    setIdToDelete(id);
     setDeleteDialogOpen(true);
   };
 
   const handleDeleteConfirm = async () => {
-    if (!beneficiariaToDelete) return;
-
+    if (!idToDelete) return;
     setIsDeleting(true);
-    try {
-      const result = await deleteBeneficiaria(beneficiariaToDelete);
+    const result = await deleteBeneficiaria(idToDelete);
+    setIsDeleting(false);
+    setDeleteDialogOpen(false);
+    setIdToDelete(null);
 
-      if (result.success) {
-        toast.success(result.message);
-        setDeleteDialogOpen(false);
-        setBeneficiariaToDelete(null);
-      } else {
-        toast.error(result.error);
-      }
-    } catch (error) {
-      toast.error("Erro ao excluir beneficiária");
-      console.error(error);
-    } finally {
-      setIsDeleting(false);
+    if (result.success) {
+      toast.success(result.message);
+    } else {
+      toast.error(result.error);
     }
-  };
-
-  // Função auxiliar para formatar CPF
-  const formatCPF = (cpf: string | null | undefined): string => {
-    if (!cpf) return "-";
-    // Remove formatação existente e formata novamente
-    const cpfLimpo = cpf.replace(/\D/g, "");
-    if (cpfLimpo.length !== 11) return cpf;
-    return cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
-  };
-
-  // Função auxiliar para formatar telefone
-  const formatTelefone = (telefone: string | null | undefined): string => {
-    if (!telefone) return "-";
-    return telefone;
-  };
-
-  // Função auxiliar para calcular idade
-  const calcularIdade = (dataNascimento: string | null | undefined): string => {
-    if (!dataNascimento) return "-";
-    try {
-      const hoje = new Date();
-      const nascimento = new Date(dataNascimento);
-      let idade = hoje.getFullYear() - nascimento.getFullYear();
-      const mes = hoje.getMonth() - nascimento.getMonth();
-      if (mes < 0 || (mes === 0 && hoje.getDate() < nascimento.getDate())) {
-        idade--;
-      }
-      return `${idade} anos`;
-    } catch {
-      return "-";
-    }
-  };
-
-  // Componente para renderizar status/benefícios com ícones e tooltips
-  const renderBeneficiosStatus = (beneficiaria: any) => {
-    const beneficios = [];
-
-    if (beneficiaria.possui_medida_protetiva) {
-      beneficios.push({
-        icon: ShieldAlert,
-        label: "Medida Protetiva",
-        color: "text-orange-500",
-      });
-    }
-
-    if (beneficiaria.recebe_bolsa_familia) {
-      beneficios.push({
-        icon: HandCoins,
-        label: "Bolsa Família",
-        color: "text-green-600",
-      });
-    }
-
-    if (beneficiaria.recebe_bpc) {
-      beneficios.push({
-        icon: Banknote,
-        label: "BPC",
-        color: "text-blue-600",
-      });
-    }
-
-    if (beneficios.length === 0) {
-      return <span className="text-muted-foreground">-</span>;
-    }
-
-    return (
-      <TooltipProvider>
-        <div className="flex gap-2">
-          {beneficios.map((beneficio, idx) => {
-            const Icon = beneficio.icon;
-            return (
-              <Tooltip key={idx}>
-                <TooltipTrigger asChild>
-                  <Icon className={`h-5 w-5 ${beneficio.color} cursor-help`} />
-                </TooltipTrigger>
-                <TooltipContent>{beneficio.label}</TooltipContent>
-              </Tooltip>
-            );
-          })}
-        </div>
-      </TooltipProvider>
-    );
   };
 
   return (
-    <>
-      <div className="flex justify-between items-center mb-6">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Gestão de Beneficiárias</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Beneficiárias</h1>
           <p className="text-muted-foreground">
-            Gerencie o cadastro das mulheres atendidas pelo sistema
+            Gerencie o cadastro das mulheres atendidas ({meta.total} registros).
           </p>
         </div>
-        <Button onClick={handleNew}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nova Beneficiária
+        <Button
+          onClick={() => {
+            setSelectedBeneficiaria(null);
+            setFormOpen(true);
+          }}
+          className="bg-purple-600 hover:bg-purple-700"
+        >
+          <Plus className="mr-2 h-4 w-4" /> Nova Beneficiária
         </Button>
       </div>
 
-      <div className="border rounded-lg">
+      {/* Barra de Ferramentas */}
+      <div className="flex gap-2 items-center bg-white p-2 rounded-lg border shadow-sm">
+        <div className="relative flex-1">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+          <Input
+            placeholder="Buscar por nome ou CPF..."
+            className="pl-9 bg-transparent border-none focus-visible:ring-0"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className="h-6 w-px bg-gray-200" />
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-gray-600"
+          onClick={handleExport}
+          disabled={isExporting}
+        >
+          {isExporting ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Download className="h-4 w-4 mr-2" />
+          )}
+          Exportar CSV
+        </Button>
+      </div>
+
+      {/* Tabela */}
+      <div className="rounded-md border bg-white shadow-sm overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>
-                Nome
-                <InfoTooltip text="Nome completo da beneficiária." />
-              </TableHead>
-              <TableHead>
-                CPF
-                <InfoTooltip text="Cadastro de Pessoa Física da beneficiária." />
-              </TableHead>
-              <TableHead>
-                Telefone
-                <InfoTooltip text="Número de telefone para contato." />
-              </TableHead>
-              <TableHead>
-                Idade
-                <InfoTooltip text="Idade calculada a partir da data de nascimento." />
-              </TableHead>
-              <TableHead>
-                Status/Benefícios
-                <InfoTooltip text="Situação atual e benefícios recebidos pela beneficiária." />
-              </TableHead>
+            <TableRow className="bg-gray-50/50">
+              <TableHead>Nome Completo</TableHead>
+              <TableHead>CPF</TableHead>
+              <TableHead>Telefone</TableHead>
+              <TableHead>Localização</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -224,53 +237,69 @@ export function BeneficiariasClient({
             {beneficiarias.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={6}
-                  className="text-center text-muted-foreground py-8"
+                  colSpan={5}
+                  className="h-32 text-center text-muted-foreground"
                 >
-                  Nenhuma beneficiária cadastrada
+                  Nenhum registro encontrado.
                 </TableCell>
               </TableRow>
             ) : (
-              beneficiarias.map((beneficiaria) => (
-                <TableRow key={beneficiaria.id}>
+              beneficiarias.map((b: any) => (
+                <TableRow key={b.id} className="hover:bg-gray-50/50">
                   <TableCell className="font-medium">
-                    {beneficiaria.nome_completo}
+                    <div className="flex flex-col">
+                      <span>{b.nome_completo}</span>
+                      {b.origem_dado === "importacao_odoo" && (
+                        <span className="text-[10px] text-amber-600 bg-amber-50 w-fit px-1 rounded mt-0.5">
+                          Importado
+                        </span>
+                      )}
+                    </div>
                   </TableCell>
-                  <TableCell>{formatCPF(beneficiaria.cpf)}</TableCell>
-                  <TableCell>{formatTelefone(beneficiaria.telefone)}</TableCell>
                   <TableCell>
-                    {calcularIdade(beneficiaria.data_nascimento)}
+                    {b.cpf || <span className="text-gray-400">-</span>}
                   </TableCell>
-                  <TableCell>{renderBeneficiosStatus(beneficiaria)}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        asChild
-                        title="Ver detalhes"
+                  <TableCell>
+                    {b.telefone || <span className="text-gray-400">-</span>}
+                  </TableCell>
+                  <TableCell>
+                    {b.endereco?.bairro ? (
+                      <Badge
+                        variant="outline"
+                        className="font-normal text-gray-600"
                       >
-                        <Link
-                          href={`/mulheres/beneficiarias/${beneficiaria.id}`}
+                        {b.endereco.bairro}
+                      </Badge>
+                    ) : (
+                      <span className="text-gray-400 text-sm">-</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-1">
+                      <Link href={`/mulheres/beneficiarias/${b.id}`}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                         >
                           <Eye className="h-4 w-4" />
-                        </Link>
-                      </Button>
+                        </Button>
+                      </Link>
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleEdit(beneficiaria)}
-                        title="Editar"
+                        className="h-8 w-8 text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                        onClick={() => handleEdit(b)}
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleDeleteClick(beneficiaria.id)}
-                        title="Excluir"
+                        className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => handleDeleteClick(b.id)}
                       >
-                        <Trash2 className="h-4 w-4 text-destructive" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </TableCell>
@@ -281,13 +310,41 @@ export function BeneficiariasClient({
         </Table>
       </div>
 
+      {/* Paginação */}
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-gray-500">
+          Mostrando <strong>{(meta.page - 1) * meta.limit + 1}</strong> a{" "}
+          <strong>{Math.min(meta.page * meta.limit, meta.total)}</strong> de{" "}
+          <strong>{meta.total}</strong> resultados
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(meta.page - 1)}
+            disabled={meta.page <= 1}
+          >
+            <ChevronLeft className="h-4 w-4 mr-1" /> Anterior
+          </Button>
+          <div className="flex items-center justify-center px-4 font-medium text-sm">
+            Página {meta.page} de {meta.totalPages}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(meta.page + 1)}
+            disabled={meta.page >= meta.totalPages}
+          >
+            Próximo <ChevronRight className="h-4 w-4 ml-1" />
+          </Button>
+        </div>
+      </div>
+
       <BeneficiariaForm
         open={formOpen}
         onOpenChange={(open) => {
           setFormOpen(open);
-          if (!open) {
-            setSelectedBeneficiaria(null);
-          }
+          if (!open) setSelectedBeneficiaria(null);
         }}
         beneficiaria={selectedBeneficiaria}
       />
@@ -315,6 +372,6 @@ export function BeneficiariasClient({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </div>
   );
 }
