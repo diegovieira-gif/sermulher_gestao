@@ -653,3 +653,67 @@ export async function getTurmaPerformance(turmaId: number) {
     return { success: false, error: "Erro ao buscar performance." };
   }
 }
+/**
+ * Busca todas as matrículas (Global)
+ */
+export async function getAllMatriculas() {
+  try {
+    const matriculas = await directus.request(
+      readItems("escola_matriculas", {
+        // @ts-ignore
+        fields: [
+          "id",
+          "data_matricula",
+          "status",
+          "turma.id",
+          "turma.nome",
+          "beneficiaria.id",
+          "beneficiaria.nome_completo",
+          "beneficiaria.cpf",
+        ],
+        sort: ["-data_matricula"],
+        limit: 100,
+      }),
+    );
+
+    return { success: true, data: matriculas };
+  } catch (error) {
+    console.error("Erro ao buscar todas as matrículas:", error);
+    return { success: false, error: "Erro ao buscar matrículas." };
+  }
+}
+
+/**
+ * Busca estatísticas rápidas para o Dashboard da Escola
+ */
+export async function getEscolaStats() {
+  try {
+    const [turmas, cursos, matriculas] = await Promise.all([
+      directus.request(
+        readItems("escola_turmas", { limit: -1, fields: ["id", "status"] }),
+      ),
+      directus.request(
+        readItems("escola_cursos", { limit: -1, fields: ["id"] }),
+      ),
+      directus.request(
+        readItems("escola_matriculas", { limit: -1, fields: ["id", "status"] }),
+      ),
+    ]);
+
+    return {
+      success: true,
+      data: {
+        total_turmas: turmas.length,
+        turmas_ativas: turmas.filter(
+          (t: any) => t.status === "em_andamento" || t.status === "aberta",
+        ).length,
+        total_cursos: cursos.length,
+        total_matriculas: matriculas.length,
+        matriculas_ativas: matriculas.filter((m: any) => m.status === "ativa")
+          .length,
+      },
+    };
+  } catch (error) {
+    return { success: false, error: "Erro ao buscar estatísticas" };
+  }
+}
