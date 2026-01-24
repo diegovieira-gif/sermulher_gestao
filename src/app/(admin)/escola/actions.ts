@@ -181,9 +181,9 @@ export async function getTurmas() {
       readItems("escola_turmas", {
         limit: -1,
         sort: ["nome"],
-        // Importante: trazer o nome do curso relacionado
+        // Importante: trazer o ID e o nome do curso relacionado
         // @ts-ignore
-        fields: ["*", "curso.nome"],
+        fields: ["*", "curso.id", "curso.nome"],
       }),
     );
 
