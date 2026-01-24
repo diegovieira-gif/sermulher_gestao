@@ -1,24 +1,16 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
-import { Toaster } from "sonner";
-import NextTopLoader from "nextjs-toploader";
+import { Toaster } from "sonner"; // Ajuste para o Toaster padrão do Sonner
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Gestão Ser Mulher",
-  description:
-    "Sistema de Gerenciamento da Secretaria Municipal do Respeito às Políticas para as Mulheres",
+  title: "SerMulher - Gestão",
+  description: "Sistema de Gestão Integrada de Políticas para as Mulheres",
+  icons: {
+    icon: "/favicon.ico", // Opcional: ícone se tiver
+  },
 };
 
 export default function RootLayout({
@@ -27,21 +19,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {/* Navegação Global: Barra de progresso no topo */}
-        <NextTopLoader color="#3B82F6" showSpinner={false} />
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-          <Toaster />
-        </ThemeProvider>
+    <html lang="pt-BR">
+      <body className={`${inter.className} min-h-screen bg-gray-50`}>
+        {children}
+        <Toaster position="top-right" richColors />
       </body>
     </html>
   );
