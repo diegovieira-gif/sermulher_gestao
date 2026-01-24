@@ -42,7 +42,7 @@ Gestão da autonomia financeira através de qualificação profissional.
 ### Criar Turma
 
 1. Acesse o menu **"Escola"** > **"Turmas"**.
-2. Clique em **"+ Criar Turma"**.
+2. Clique no botão **"+ Criar Turma"**.
 3. Defina o Curso, Professor, Turno e Datas (Início/Fim).
 4. O status da turma muda automaticamente (Aberta, Em Andamento, Concluída) conforme as datas.
 
@@ -80,18 +80,29 @@ Calendário unificado da Secretaria.
   - Início e Fim de Turmas (Verde).
   - Sessões da Sala Azul (Azul).
   - Eventos e Campanhas (Roxo).
-- **Novo Evento:** Clique no botão **"+ Novo Evento"** no topo do calendário para agendar palestras, reuniões ou campanhas (ex: Agosto Lilás).
+- **Novo Evento:** Clique no botão **"+ Novo Evento"** para agendar palestras, reuniões ou ações comunitárias.
+- **Listagem:** Use a aba "Lista de Eventos" para ver e gerenciar todos os agendamentos em formato de tabela.
 
 ---
 
-## 6. Configurações
+## 6. Marketing e Comunicação
 
-Área restrita à gestão para padronizar o sistema.
+Gestão de campanhas de conscientização e métricas sociais.
 
-- Acesse para cadastrar novos **Tipos de Evento**, **Bairros**, **Origens de Encaminhamento**, etc.
-- Qualquer alteração aqui reflete imediatamente nos formulários de cadastro.
+1. Acesse o menu **"Marketing e Comunicação"**.
+2. Visualize o desempenho de campanhas ativas (Alcance, Engajamento).
+3. Cadastre novos materiais ou planeje ações de divulgação vinculadas aos Eventos da Agenda.
+
+---
+
+## 7. Configurações
+
+Área restrita à gestão para padronizar o sistema. Acessível pelo botão **"Configurações"** no rodapé do menu lateral.
+
+- **Tabelas Auxiliares:** Cadastre novos **Tipos de Evento**, **Bairros**, **Origens de Encaminhamento**, **Tipos de Violência**, etc.
+- **Importância:** Qualquer alteração aqui reflete imediatamente nas opções disponíveis nos formulários de cadastro de todo o sistema.
 
 ---
 
 **Suporte Técnico**
-Em caso de dúvidas ou erros no sistema, contate a equipe de TI da Secretaria.
+Em caso de dúvidas ou erros no sistema, contate a equipe de TI da Secretaria ou consulte o administrador do sistema.
