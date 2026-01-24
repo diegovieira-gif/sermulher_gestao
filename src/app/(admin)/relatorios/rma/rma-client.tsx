@@ -16,6 +16,7 @@ import {
   Scale,
   AlertTriangle,
   Printer,
+  Filter,
 } from "lucide-react";
 import {
   BarChart,
@@ -67,946 +68,414 @@ const MESES = [
   { value: "12", label: "Dezembro" },
 ];
 
-// Gera anos dos últimos 5 anos até o próximo ano
-const ANOS = Array.from({ length: 6 }, (_, i) => {
-  const ano = new Date().getFullYear() - 4 + i;
-  return { value: ano.toString(), label: ano.toString() };
-});
-
-const CORES_ENCAMINHAMENTOS = [
-  "#9333ea", // cras - roxo
-  "#a855f7", // creas - roxo claro
-  "#10b981", // saude - verde
-  "#3b82f6", // educacao - azul
-  "#f59e0b", // terceiro_setor - amarelo
-  "#ef4444", // casa_abrigo - vermelho
-  "#6366f1", // delegacia - índigo
-  "#9ca3af", // nenhum - cinza
-];
-
-const CORES_VIOLENCIA = [
-  "#ec4899", // fisica - rosa
-  "#8b5cf6", // psicologica - roxo
-  "#ef4444", // sexual - vermelho
-  "#f59e0b", // patrimonial - amarelo
-  "#6366f1", // moral - índigo
-];
-
 export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
   const [mes, setMes] = useState(mesInicial.toString());
   const [ano, setAno] = useState(anoInicial.toString());
-  const [isPending, startTransition] = useTransition();
 
-  const handleFilterChange = () => {
+  const handleFiltrar = () => {
     startTransition(() => {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set("mes", mes);
-      params.set("ano", ano);
-      router.push(`/relatorios/rma?${params.toString()}`);
+      router.push(`?mes=${mes}&ano=${ano}`);
     });
   };
 
-  // Prepara dados para gráfico de encaminhamentos
-  const dadosEncaminhamentos = [
-    {
-      nome: "CRAS",
-      valor: dados.encaminhamentos.cras,
-      cor: CORES_ENCAMINHAMENTOS[0],
-    },
-    {
-      nome: "CREAS",
-      valor: dados.encaminhamentos.creas,
-      cor: CORES_ENCAMINHAMENTOS[1],
-    },
-    {
-      nome: "Saúde",
-      valor: dados.encaminhamentos.saude,
-      cor: CORES_ENCAMINHAMENTOS[2],
-    },
-    {
-      nome: "Educação",
-      valor: dados.encaminhamentos.educacao,
-      cor: CORES_ENCAMINHAMENTOS[3],
-    },
-    {
-      nome: "Terceiro Setor",
-      valor: dados.encaminhamentos.terceiro_setor,
-      cor: CORES_ENCAMINHAMENTOS[4],
-    },
-    {
-      nome: "Casa Abrigo",
-      valor: dados.encaminhamentos.casa_abrigo,
-      cor: CORES_ENCAMINHAMENTOS[5],
-    },
-    {
-      nome: "Delegacia",
-      valor: dados.encaminhamentos.delegacia,
-      cor: CORES_ENCAMINHAMENTOS[6],
-    },
-    {
-      nome: "Nenhum",
-      valor: dados.encaminhamentos.nenhum,
-      cor: CORES_ENCAMINHAMENTOS[7],
-    },
-  ].filter((item) => item.valor > 0); // Remove zeros
-
-  // Prepara dados para gráfico de tipos de violência
-  const dadosTiposViolencia = [
-    {
-      nome: "Física",
-      valor: dados.tipos_violencia.fisica,
-      cor: CORES_VIOLENCIA[0],
-    },
-    {
-      nome: "Psicológica",
-      valor: dados.tipos_violencia.psicologica,
-      cor: CORES_VIOLENCIA[1],
-    },
-    {
-      nome: "Sexual",
-      valor: dados.tipos_violencia.sexual,
-      cor: CORES_VIOLENCIA[2],
-    },
-    {
-      nome: "Patrimonial",
-      valor: dados.tipos_violencia.patrimonial,
-      cor: CORES_VIOLENCIA[3],
-    },
-    {
-      nome: "Moral",
-      valor: dados.tipos_violencia.moral,
-      cor: CORES_VIOLENCIA[4],
-    },
-  ].filter((item) => item.valor > 0); // Remove zeros
-
-  // Calcula total para porcentagens
-  const totalEncaminhamentos =
-    dados.encaminhamentos.cras +
-    dados.encaminhamentos.creas +
-    dados.encaminhamentos.saude +
-    dados.encaminhamentos.educacao +
-    dados.encaminhamentos.terceiro_setor +
-    dados.encaminhamentos.casa_abrigo +
-    dados.encaminhamentos.delegacia +
-    dados.encaminhamentos.nenhum;
-
-  const totalTiposViolencia =
-    dados.tipos_violencia.fisica +
-    dados.tipos_violencia.psicologica +
-    dados.tipos_violencia.sexual +
-    dados.tipos_violencia.patrimonial +
-    dados.tipos_violencia.moral;
-
-  const handlePrint = () => {
+  const handleImprimir = () => {
     window.print();
   };
 
-  const mesNome = MESES.find((m) => m.value === mes)?.label || "";
+  const anosDisponiveis = Array.from(
+    { length: 5 },
+    (_, i) => new Date().getFullYear() - i,
+  );
 
   return (
     <div className="space-y-6">
-      {/* ÁREA DE IMPRESSÃO - Visível somente na impressão */}
-      <div className="hidden print:block">
-        <div className="print-page">
-          {/* Cabeçalho Formal */}
-          <div className="text-center mb-8 border-b-2 border-gray-800 pb-4">
-            <h1 className="text-2xl font-bold uppercase mb-2">
-              Relatório Mensal de Atendimentos
-            </h1>
-            <p className="text-lg font-semibold">
-              {mesNome} / {ano}
-            </p>
-          </div>
+      {/* Estilos de Impressão - Correção da Margem Esquerda */}
+      <style jsx global>{`
+        @media print {
+          @page {
+            margin: 10mm;
+            size: A4;
+          }
+          /* Oculta tudo por padrão */
+          body * {
+            visibility: hidden;
+          }
+          /* Exibe apenas a área do relatório e seus filhos */
+          #rma-print-area,
+          #rma-print-area * {
+            visibility: visible;
+          }
+          /* Posicionamento absoluto para ignorar sidebar/margens do layout */
+          #rma-print-area {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            margin: 0;
+            padding: 20px;
+            background: white;
+            z-index: 9999;
+          }
+          /* Remove sombras e fundos escuros para economizar tinta */
+          .no-print-shadow {
+            box-shadow: none !important;
+            border: 1px solid #ddd !important;
+          }
+          /* Esconde botões dentro da área de print se houver */
+          .hide-on-print {
+            display: none !important;
+          }
+        }
+      `}</style>
 
-          {/* Bloco A: Volume de Atendimentos */}
-          <div className="mb-8">
-            <h2 className="text-xl font-bold mb-4 bg-gray-100 p-2 border-l-4 border-purple-600">
-              BLOCO A: Volume de Atendimentos
-            </h2>
-            <table className="w-full border-collapse border border-gray-300 mb-4">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="border border-gray-300 px-4 py-2 text-left">
-                    Indicador
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2 text-center">
-                    Quantidade
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td className="border border-gray-300 px-4 py-2">
-                    Total de Atendimentos
-                  </td>
-                  <td className="border border-gray-300 px-4 py-2 text-center font-bold">
-                    {dados.volume.total_atendimentos}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="border border-gray-300 px-4 py-2">
-                    Novos Casos (Primeiro atendimento do ano)
-                  </td>
-                  <td className="border border-gray-300 px-4 py-2 text-center font-bold">
-                    {dados.volume.novos_casos}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          {/* Bloco B: Perfil Social */}
-          <div className="mb-8">
-            <h2 className="text-xl font-bold mb-4 bg-gray-100 p-2 border-l-4 border-purple-600">
-              BLOCO B: Perfil Social
-            </h2>
-            <table className="w-full border-collapse border border-gray-300 mb-4">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="border border-gray-300 px-4 py-2 text-left">
-                    Indicador
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2 text-center">
-                    Quantidade
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2 text-center">
-                    Percentual
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td className="border border-gray-300 px-4 py-2">
-                    Bolsa Família
-                  </td>
-                  <td className="border border-gray-300 px-4 py-2 text-center font-bold">
-                    {dados.perfil.bolsa_familia}
-                  </td>
-                  <td className="border border-gray-300 px-4 py-2 text-center">
-                    {dados.volume.total_atendimentos > 0
-                      ? `${Math.round((dados.perfil.bolsa_familia / dados.volume.total_atendimentos) * 100)}%`
-                      : "0%"}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="border border-gray-300 px-4 py-2">BPC</td>
-                  <td className="border border-gray-300 px-4 py-2 text-center font-bold">
-                    {dados.perfil.bpc}
-                  </td>
-                  <td className="border border-gray-300 px-4 py-2 text-center">
-                    {dados.volume.total_atendimentos > 0
-                      ? `${Math.round((dados.perfil.bpc / dados.volume.total_atendimentos) * 100)}%`
-                      : "0%"}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="border border-gray-300 px-4 py-2">
-                    Medida Protetiva
-                  </td>
-                  <td className="border border-gray-300 px-4 py-2 text-center font-bold">
-                    {dados.perfil.medida_protetiva}
-                  </td>
-                  <td className="border border-gray-300 px-4 py-2 text-center">
-                    {dados.volume.total_atendimentos > 0
-                      ? `${Math.round((dados.perfil.medida_protetiva / dados.volume.total_atendimentos) * 100)}%`
-                      : "0%"}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          {/* Bloco C: Encaminhamentos */}
-          <div className="mb-8">
-            <h2 className="text-xl font-bold mb-4 bg-gray-100 p-2 border-l-4 border-purple-600">
-              BLOCO C: Encaminhamentos
-            </h2>
-            <table className="w-full border-collapse border border-gray-300 mb-4">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="border border-gray-300 px-4 py-2 text-left">
-                    Tipo de Encaminhamento
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2 text-center">
-                    Quantidade
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2 text-center">
-                    Percentual
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {dadosEncaminhamentos.map((item, index) => (
-                  <tr key={index}>
-                    <td className="border border-gray-300 px-4 py-2">
-                      {item.nome}
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2 text-center font-bold">
-                      {item.valor}
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2 text-center">
-                      {totalEncaminhamentos > 0
-                        ? `${Math.round((item.valor / totalEncaminhamentos) * 100)}%`
-                        : "0%"}
-                    </td>
-                  </tr>
-                ))}
-                <tr className="bg-gray-50 font-bold">
-                  <td className="border border-gray-300 px-4 py-2">TOTAL</td>
-                  <td className="border border-gray-300 px-4 py-2 text-center">
-                    {totalEncaminhamentos}
-                  </td>
-                  <td className="border border-gray-300 px-4 py-2 text-center">
-                    100%
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          {/* Bloco D: Tipos de Violência */}
-          <div className="mb-8">
-            <h2 className="text-xl font-bold mb-4 bg-gray-100 p-2 border-l-4 border-purple-600">
-              BLOCO D: Tipos de Violência
-            </h2>
-            <table className="w-full border-collapse border border-gray-300 mb-4">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="border border-gray-300 px-4 py-2 text-left">
-                    Tipo de Violência
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2 text-center">
-                    Quantidade
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2 text-center">
-                    Percentual*
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {dadosTiposViolencia.map((item, index) => (
-                  <tr key={index}>
-                    <td className="border border-gray-300 px-4 py-2">
-                      {item.nome}
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2 text-center font-bold">
-                      {item.valor}
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2 text-center">
-                      {dados.volume.total_atendimentos > 0
-                        ? `${Math.round((item.valor / dados.volume.total_atendimentos) * 100)}%`
-                        : "0%"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <p className="text-xs italic text-gray-600">
-              * Percentual em relação ao total de atendimentos. Note que o
-              somatório pode ultrapassar 100% pois uma pessoa pode sofrer mais
-              de um tipo de violência.
-            </p>
-          </div>
-
-          {/* Bloco L: Localidade */}
-          {dados.localidades && dados.localidades.length > 0 && (
-            <div className="mb-8 page-break-before">
-              <h2 className="text-xl font-bold mb-4 bg-gray-100 p-2 border-l-4 border-purple-600">
-                BLOCO L: Localidade - Atendimentos por Bairro
-              </h2>
-              <table className="w-full border-collapse border border-gray-300 mb-4">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="border border-gray-300 px-4 py-2 text-center">
-                      #
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 text-left">
-                      Bairro
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 text-center">
-                      Atendimentos
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 text-center">
-                      Percentual
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {dados.localidades.map((localidade, index) => {
-                    const porcentagem =
-                      (localidade.total / dados.volume.total_atendimentos) *
-                      100;
-                    return (
-                      <tr key={index}>
-                        <td className="border border-gray-300 px-4 py-2 text-center">
-                          {index + 1}
-                        </td>
-                        <td className="border border-gray-300 px-4 py-2">
-                          {localidade.bairro}
-                        </td>
-                        <td className="border border-gray-300 px-4 py-2 text-center font-bold">
-                          {localidade.total}
-                        </td>
-                        <td className="border border-gray-300 px-4 py-2 text-center">
-                          {Math.round(porcentagem * 100) / 100}%
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* Rodapé com Assinaturas */}
-          <div className="mt-16 pt-8 border-t-2 border-gray-300">
-            <div className="grid grid-cols-2 gap-8">
-              <div className="text-center">
-                <div className="border-t-2 border-gray-800 pt-2 mt-16">
-                  <p className="font-semibold">Coordenador(a)</p>
-                  <p className="text-sm text-gray-600">
-                    Centro de Referência da Mulher
-                  </p>
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="border-t-2 border-gray-800 pt-2 mt-16">
-                  <p className="font-semibold">Responsável Técnico(a)</p>
-                  <p className="text-sm text-gray-600">Data: ___/___/____</p>
-                </div>
-              </div>
-            </div>
-          </div>
+      {/* Cabeçalho e Filtros (Não aparecem na impressão devido ao CSS acima) */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 hide-on-print">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Relatório RMA</h2>
+          <p className="text-muted-foreground">
+            Registro Mensal de Atendimentos (SUAS)
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={handleImprimir} className="gap-2">
+            <Printer className="h-4 w-4" />
+            Imprimir / Salvar PDF
+          </Button>
         </div>
       </div>
 
-      {/* DASHBOARD INTERATIVO - Oculto na impressão */}
-      {/* Filtros e Botão de Impressão */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between print:hidden">
-        <Card className="flex-1">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Filtro de Período
-            </CardTitle>
-            <CardDescription>
-              Selecione o mês e ano para visualizar os dados do Relatório Mensal
-              de Atendimento
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1 space-y-2">
-                <Label htmlFor="mes">Mês</Label>
-                <Select
-                  value={mes}
-                  onValueChange={(value) => setMes(value)}
-                  disabled={isPending}
-                >
-                  <SelectTrigger className="w-full bg-white">
-                    <SelectValue placeholder="Selecione o Mês" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MESES.map((m) => (
-                      <SelectItem key={m.value} value={m.value}>
-                        {m.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex-1 space-y-2">
-                <Label htmlFor="ano">Ano</Label>
-                <Select
-                  value={ano}
-                  onValueChange={(value) => setAno(value)}
-                  disabled={isPending}
-                >
-                  <SelectTrigger className="w-full bg-white">
-                    <SelectValue placeholder="Selecione o Ano" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ANOS.map((a) => (
-                      <SelectItem key={a.value} value={a.value}>
-                        {a.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-end">
-                <Button
-                  onClick={handleFilterChange}
-                  disabled={isPending}
-                  className="w-full sm:w-auto"
-                >
-                  {isPending ? "Carregando..." : "Aplicar Filtro"}
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Button
-          onClick={handlePrint}
-          variant="outline"
-          className="print:hidden"
-        >
-          <Printer className="mr-2 h-4 w-4" />
-          Imprimir Relatório
-        </Button>
-      </div>
+      <Card className="hide-on-print">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Filter className="h-4 w-4" />
+            Filtros do Período
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col sm:flex-row gap-4 items-end">
+          <div className="space-y-2 w-full sm:w-[180px]">
+            <Label>Mês de Referência</Label>
+            <Select value={mes} onValueChange={setMes}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {MESES.map((m) => (
+                  <SelectItem key={m.value} value={m.value}>
+                    {m.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2 w-full sm:w-[120px]">
+            <Label>Ano</Label>
+            <Select value={ano} onValueChange={setAno}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {anosDisponiveis.map((a) => (
+                  <SelectItem key={a} value={a.toString()}>
+                    {a}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button
+            onClick={handleFiltrar}
+            disabled={isPending}
+            className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700"
+          >
+            {isPending ? "Atualizando..." : "Aplicar Filtros"}
+          </Button>
+        </CardContent>
+      </Card>
 
-      {/* Bloco A: Volume de Atendimentos */}
-      <div className="space-y-4 rma-print-section print:hidden">
-        <h2 className="text-2xl font-bold text-foreground">
-          Bloco A: Volume de Atendimentos
-        </h2>
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Card grande com Total de Atendimentos */}
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <FileText className="h-5 w-5" />
-                Total de Atendimentos
+      {/* ÁREA DE IMPRESSÃO (ID rma-print-area é crucial) */}
+      <div id="rma-print-area" className="space-y-6">
+        {/* Cabeçalho apenas para impressão */}
+        <div className="hidden print:block text-center mb-8 border-b pb-4">
+          <h1 className="text-2xl font-bold text-gray-900">
+            Relatório Mensal de Atendimentos (RMA)
+          </h1>
+          <p className="text-gray-600 mt-1">
+            Secretaria Municipal do Respeito às Políticas para as Mulheres
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            Período de Referência: {MESES.find((m) => m.value === mes)?.label}/
+            {ano}
+          </p>
+        </div>
+
+        {/* 1. Volume de Atendimentos */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card className="no-print-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Total Atendimentos
               </CardTitle>
-              <CardDescription>No período selecionado</CardDescription>
+              <FileText className="h-4 w-4 text-purple-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-5xl font-bold text-primary">
+              <div className="text-2xl font-bold">
                 {dados.volume.total_atendimentos}
               </div>
-              <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4" />
-                  <span>
-                    Novos casos:{" "}
-                    <strong className="text-foreground">
-                      {dados.volume.novos_casos}
-                    </strong>
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Cards menores para informações adicionais */}
-          <div className="flex flex-col gap-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Novos Casos
-                </CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {dados.volume.novos_casos}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Primeiro atendimento do ano
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
-
-      {/* Bloco B: Perfil Social */}
-      <div className="space-y-4 rma-print-section print:hidden">
-        <h2 className="text-2xl font-bold text-foreground">
-          Bloco B: Perfil Social
-        </h2>
-        <div className="grid gap-6 md:grid-cols-3">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Heart className="h-5 w-5 text-pink-600" />
-                Bolsa Família
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">
-                {dados.perfil.bolsa_familia}
-              </div>
-              <div className="mt-2 h-2 w-full rounded-full bg-muted">
-                <div
-                  className="h-2 rounded-full bg-pink-600"
-                  style={{
-                    width: `${dados.volume.total_atendimentos > 0 ? (dados.perfil.bolsa_familia / dados.volume.total_atendimentos) * 100 : 0}%`,
-                  }}
-                />
-              </div>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {dados.volume.total_atendimentos > 0
-                  ? `${Math.round((dados.perfil.bolsa_familia / dados.volume.total_atendimentos) * 100)}% dos atendimentos`
-                  : "0% dos atendimentos"}
+              <p className="text-xs text-muted-foreground">
+                No período selecionado
               </p>
             </CardContent>
           </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5 text-blue-600" />
-                BPC
-              </CardTitle>
+          <Card className="no-print-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Novos Casos</CardTitle>
+              <Users className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{dados.perfil.bpc}</div>
-              <div className="mt-2 h-2 w-full rounded-full bg-muted">
-                <div
-                  className="h-2 rounded-full bg-blue-600"
-                  style={{
-                    width: `${dados.volume.total_atendimentos > 0 ? (dados.perfil.bpc / dados.volume.total_atendimentos) * 100 : 0}%`,
-                  }}
-                />
+              <div className="text-2xl font-bold">
+                {dados.volume.novos_casos}
               </div>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {dados.volume.total_atendimentos > 0
-                  ? `${Math.round((dados.perfil.bpc / dados.volume.total_atendimentos) * 100)}% dos atendimentos`
-                  : "0% dos atendimentos"}
+              <p className="text-xs text-muted-foreground">
+                Primeiro acolhimento
               </p>
             </CardContent>
           </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-red-600" />
-                Medida Protetiva
+          <Card className="no-print-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Medidas Protetivas
               </CardTitle>
+              <Shield className="h-4 w-4 text-red-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">
+              <div className="text-2xl font-bold">
                 {dados.perfil.medida_protetiva}
               </div>
-              <div className="mt-2 h-2 w-full rounded-full bg-muted">
-                <div
-                  className="h-2 rounded-full bg-red-600"
-                  style={{
-                    width: `${dados.volume.total_atendimentos > 0 ? (dados.perfil.medida_protetiva / dados.volume.total_atendimentos) * 100 : 0}%`,
-                  }}
-                />
+              <p className="text-xs text-muted-foreground">
+                Mulheres com MPU ativa
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="no-print-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Benefício Social
+              </CardTitle>
+              <Heart className="h-4 w-4 text-pink-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {dados.perfil.bolsa_familia + dados.perfil.bpc}
               </div>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {dados.volume.total_atendimentos > 0
-                  ? `${Math.round((dados.perfil.medida_protetiva / dados.volume.total_atendimentos) * 100)}% dos atendimentos`
-                  : "0% dos atendimentos"}
+              <p className="text-xs text-muted-foreground">
+                Bolsa Família ou BPC
               </p>
             </CardContent>
           </Card>
         </div>
-      </div>
 
-      {/* Bloco C: Encaminhamentos */}
-      <div className="space-y-4 rma-print-section print:hidden">
-        <h2 className="text-2xl font-bold text-foreground">
-          Bloco C: Encaminhamentos
-        </h2>
+        {/* 2. Tipos de Violência (Gráfico) */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+          <Card className="col-span-4 no-print-shadow">
+            <CardHeader>
+              <CardTitle>Tipos de Violência Identificados</CardTitle>
+              <CardDescription>
+                Distribuição das ocorrências por tipologia
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pl-2">
+              <div className="h-[300px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={[
+                      {
+                        name: "Física",
+                        total: dados.tipos_violencia.fisica,
+                        fill: "#ef4444",
+                      },
+                      {
+                        name: "Psicológica",
+                        total: dados.tipos_violencia.psicologica,
+                        fill: "#a855f7",
+                      },
+                      {
+                        name: "Moral",
+                        total: dados.tipos_violencia.moral,
+                        fill: "#eab308",
+                      },
+                      {
+                        name: "Sexual",
+                        total: dados.tipos_violencia.sexual,
+                        fill: "#f97316",
+                      },
+                      {
+                        name: "Patrimonial",
+                        total: dados.tipos_violencia.patrimonial,
+                        fill: "#3b82f6",
+                      },
+                    ]}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis
+                      dataKey="name"
+                      stroke="#888888"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis
+                      stroke="#888888"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(value) => `${value}`}
+                    />
+                    <Tooltip />
+                    <Bar dataKey="total" radius={[4, 4, 0, 0]}>
+                      {/* Cells para cores individuais */}
+                      <Cell fill="#ef4444" />
+                      <Cell fill="#a855f7" />
+                      <Cell fill="#eab308" />
+                      <Cell fill="#f97316" />
+                      <Cell fill="#3b82f6" />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card>
+          {/* 3. Encaminhamentos (Lista) */}
+          <Card className="col-span-3 no-print-shadow">
+            <CardHeader>
+              <CardTitle>Rede de Atendimento</CardTitle>
+              <CardDescription>
+                Encaminhamentos realizados no mês
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center">
+                  <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <div className="ml-2 space-y-1 flex-1">
+                    <p className="text-sm font-medium leading-none">
+                      CRAS/CREAS
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Assistência Social
+                    </p>
+                  </div>
+                  <div className="font-bold">
+                    {dados.encaminhamentos.cras + dados.encaminhamentos.creas}
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <Stethoscope className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <div className="ml-2 space-y-1 flex-1">
+                    <p className="text-sm font-medium leading-none">Saúde</p>
+                    <p className="text-xs text-muted-foreground">
+                      UBS, Hospitais
+                    </p>
+                  </div>
+                  <div className="font-bold">{dados.encaminhamentos.saude}</div>
+                </div>
+                <div className="flex items-center">
+                  <Scale className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <div className="ml-2 space-y-1 flex-1">
+                    <p className="text-sm font-medium leading-none">
+                      Segurança/Justiça
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Delegacia, Defensoria
+                    </p>
+                  </div>
+                  <div className="font-bold">
+                    {dados.encaminhamentos.delegacia}
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <Home className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <div className="ml-2 space-y-1 flex-1">
+                    <p className="text-sm font-medium leading-none">Abrigo</p>
+                    <p className="text-xs text-muted-foreground">
+                      Acolhimento Institucional
+                    </p>
+                  </div>
+                  <div className="font-bold">
+                    {dados.encaminhamentos.casa_abrigo}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* 4. Localidades */}
+        <Card className="no-print-shadow">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building2 className="h-5 w-5" />
-              Encaminhamentos
-            </CardTitle>
-            <CardDescription>
-              Distribuição dos encaminhamentos realizados
-            </CardDescription>
+            <CardTitle>Territorialização</CardTitle>
+            <CardDescription>Distribuição dos casos por bairro</CardDescription>
           </CardHeader>
           <CardContent>
-            {dadosEncaminhamentos.length > 0 ? (
-              <>
-                <div
-                  style={{ width: "100%", height: 300 }}
-                  className="print:!h-auto print:min-h-[200px]"
-                >
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={dadosEncaminhamentos}>
-                      <CartesianGrid
-                        strokeDasharray="3 3"
-                        className="stroke-border"
-                      />
-                      <XAxis
-                        dataKey="nome"
-                        className="text-muted-foreground"
-                        tick={{
-                          fill: "hsl(var(--muted-foreground))",
-                          fontSize: 12,
-                        }}
-                        angle={-45}
-                        textAnchor="end"
-                        height={80}
-                      />
-                      <YAxis
-                        className="text-muted-foreground"
-                        tick={{
-                          fill: "hsl(var(--muted-foreground))",
-                          fontSize: 12,
-                        }}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "hsl(var(--card))",
-                          border: "1px solid hsl(var(--border))",
-                          borderRadius: "8px",
-                          color: "hsl(var(--foreground))",
-                        }}
-                        formatter={(value: number | undefined) => [
-                          `${value || 0} (${totalEncaminhamentos > 0 ? Math.round(((value || 0) / totalEncaminhamentos) * 100) : 0}%)`,
-                          "Quantidade",
-                        ]}
-                      />
-                      <Bar dataKey="valor" radius={[8, 8, 0, 0]}>
-                        {dadosEncaminhamentos.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.cor} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="mt-4 space-y-2">
-                  {dadosEncaminhamentos.map((item, index) => (
+            {dados.localidades.length > 0 ? (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {dados.localidades.slice(0, 6).map((loc, i) => (
                     <div
-                      key={index}
-                      className="flex items-center justify-between"
+                      key={loc.bairro}
+                      className="flex items-center justify-between p-2 border rounded bg-gray-50/50 break-inside-avoid"
                     >
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="h-4 w-4 rounded"
-                          style={{ backgroundColor: item.cor }}
-                        />
-                        <span className="text-sm">{item.nome}</span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-sm font-semibold">
-                          {item.valor}
-                        </span>
-                        <span className="ml-2 text-xs text-muted-foreground">
-                          (
-                          {totalEncaminhamentos > 0
-                            ? Math.round(
-                                (item.valor / totalEncaminhamentos) * 100,
-                              )
-                            : 0}
-                          %)
-                        </span>
-                      </div>
+                      <span
+                        className="text-sm font-medium truncate pr-2"
+                        title={loc.bairro}
+                      >
+                        {loc.bairro}
+                      </span>
+                      <span className="text-sm font-bold bg-white px-2 py-0.5 rounded border">
+                        {loc.total}
+                      </span>
                     </div>
                   ))}
                 </div>
-              </>
+
+                {/* Destaque Bairro */}
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+                  <div className="bg-purple-50 p-4 rounded-lg text-center break-inside-avoid">
+                    <p className="text-xs uppercase text-purple-600 font-bold mb-1">
+                      Maior Incidência
+                    </p>
+                    <p className="text-lg font-bold text-gray-900">
+                      {dados.localidades[0]?.bairro || "N/A"}
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-lg text-center break-inside-avoid">
+                    <p className="text-xs uppercase text-gray-500 font-bold mb-1">
+                      Total de Bairros
+                    </p>
+                    <p className="text-lg font-bold text-gray-900">
+                      {dados.localidades.length}
+                    </p>
+                  </div>
+                </div>
+              </div>
             ) : (
-              <div className="py-12 text-center text-muted-foreground">
-                Nenhum encaminhamento registrado no período
+              <div className="py-8 text-center text-muted-foreground">
+                Nenhum registro de localidade encontrado.
               </div>
             )}
           </CardContent>
         </Card>
-      </div>
 
-      {/* Bloco D: Tipos de Violência */}
-      <div className="space-y-4 rma-print-section print:hidden">
-        <h2 className="text-2xl font-bold text-foreground">
-          Bloco D: Tipos de Violência
-        </h2>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5" />
-              Tipos de Violência
-            </CardTitle>
-            <CardDescription>
-              Distribuição dos tipos de violência identificados (em relação ao
-              total de atendimentos)
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {dadosTiposViolencia.length > 0 &&
-            dados.volume.total_atendimentos > 0 ? (
-              <div className="space-y-6">
-                {dadosTiposViolencia.map((item, index) => {
-                  const porcentagem =
-                    (item.valor / dados.volume.total_atendimentos) * 100;
-                  return (
-                    <div key={index} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="h-4 w-4 rounded"
-                            style={{ backgroundColor: item.cor }}
-                          />
-                          <span className="text-sm font-medium">
-                            {item.nome}
-                          </span>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-sm font-semibold">
-                            {item.valor}
-                          </span>
-                          <span className="ml-2 text-xs text-muted-foreground">
-                            ({Math.round(porcentagem)}%)
-                          </span>
-                        </div>
-                      </div>
-                      <Progress
-                        value={porcentagem}
-                        max={100}
-                        indicatorColor={item.cor}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="py-12 text-center text-muted-foreground">
-                Nenhum tipo de violência registrado no período
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Bloco L: Localidade */}
-      <div className="space-y-4 rma-print-section print:hidden">
-        <h2 className="text-2xl font-bold text-foreground">
-          Bloco L: Localidade
-        </h2>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Home className="h-5 w-5" />
-              Atendimentos por Bairro
-            </CardTitle>
-            <CardDescription>
-              Distribuição geográfica dos atendimentos por bairro em Aracaju
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {dados.localidades && dados.localidades.length > 0 ? (
-              <div className="space-y-4">
-                {/* Gráfico de barras horizontal */}
-                <div style={{ width: "100%", height: 384 }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={dados.localidades.slice(0, 15)} // Top 15 bairros
-                      layout="vertical"
-                      margin={{ top: 5, right: 30, left: 200, bottom: 5 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis type="number" />
-                      <YAxis dataKey="bairro" type="category" width={190} />
-                      <Tooltip />
-                      <Bar dataKey="total" fill="#8b5cf6" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-
-                {/* Tabela detalhada */}
-                <div className="border rounded-lg overflow-hidden mt-6">
-                  <table className="w-full text-sm">
-                    <thead className="bg-muted">
-                      <tr>
-                        <th className="px-4 py-2 text-left font-semibold">
-                          Posição
-                        </th>
-                        <th className="px-4 py-2 text-left font-semibold">
-                          Bairro
-                        </th>
-                        <th className="px-4 py-2 text-right font-semibold">
-                          Atendimentos
-                        </th>
-                        <th className="px-4 py-2 text-right font-semibold">
-                          Percentual
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {dados.localidades.map((localidade, index) => {
-                        const porcentagem =
-                          (localidade.total / dados.volume.total_atendimentos) *
-                          100;
-                        return (
-                          <tr
-                            key={index}
-                            className={index % 2 === 0 ? "bg-muted/50" : ""}
-                          >
-                            <td className="px-4 py-2 text-center text-muted-foreground">
-                              {index + 1}
-                            </td>
-                            <td className="px-4 py-2 font-medium">
-                              {localidade.bairro}
-                            </td>
-                            <td className="px-4 py-2 text-right font-semibold">
-                              {localidade.total}
-                            </td>
-                            <td className="px-4 py-2 text-right text-muted-foreground">
-                              {Math.round(porcentagem * 100) / 100}%
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Resumo estatístico */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
-                  <Card className="bg-accent/50">
-                    <CardContent className="pt-6">
-                      <div className="text-center">
-                        <p className="text-sm text-muted-foreground mb-1">
-                          Total de Bairros
-                        </p>
-                        <p className="text-3xl font-bold">
-                          {dados.localidades.length}
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-accent/50">
-                    <CardContent className="pt-6">
-                      <div className="text-center">
-                        <p className="text-sm text-muted-foreground mb-1">
-                          Bairro com Mais Atendimentos
-                        </p>
-                        <p className="text-2xl font-bold">
-                          {dados.localidades[0]?.bairro}
-                        </p>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {dados.localidades[0]?.total} atendimentos
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-accent/50">
-                    <CardContent className="pt-6">
-                      <div className="text-center">
-                        <p className="text-sm text-muted-foreground mb-1">
-                          Média de Atendimentos
-                        </p>
-                        <p className="text-3xl font-bold">
-                          {Math.round(
-                            dados.volume.total_atendimentos /
-                              dados.localidades.length,
-                          )}
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-            ) : (
-              <div className="py-12 text-center text-muted-foreground">
-                Nenhum registro de localidade encontrado no período
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        {/* Rodapé da Impressão */}
+        <div className="hidden print:block text-center text-xs text-gray-400 mt-8 pt-8 border-t">
+          <p>
+            Sistema SerMulher - Gerado em{" "}
+            {new Date().toLocaleDateString("pt-BR")} às{" "}
+            {new Date().toLocaleTimeString("pt-BR")}
+          </p>
+        </div>
       </div>
     </div>
   );
