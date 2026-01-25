@@ -15,22 +15,24 @@ export default async function ConfiguracoesPage() {
     locais: any[] = [],
     bairros: any[] = [],
     beneficios: any[] = [],
-    campanhas: any[] = [];
+    campanhas: any[] = [],
+    setores: any[] = [];
 
   try {
     // Busca Paralela (Promise.all) para maior performance em produção
     const results = await Promise.allSettled([
-      getAuxItems("config_origens"),
-      getAuxItems("config_prioridades"),
-      getAuxItems("config_tipos_evento"),
-      getAuxItems("config_tipos_agressao"),
-      getAuxItems("config_encaminhamentos"),
-      getAuxItems("config_niveis_periculosidade"),
-      getAuxItems("config_status_legal"),
-      getAuxItems("locais"),
-      getAuxItems("config_bairros"),
-      getAuxItems("config_beneficios"),
-      getAuxItems("config_campanhas"),
+      getAuxItems("config_origens"), // 0
+      getAuxItems("config_prioridades"), // 1
+      getAuxItems("config_tipos_evento"), // 2
+      getAuxItems("config_tipos_agressao"), // 3
+      getAuxItems("config_encaminhamentos"), // 4
+      getAuxItems("config_niveis_periculosidade"), // 5
+      getAuxItems("config_status_legal"), // 6
+      getAuxItems("locais"), // 7
+      getAuxItems("config_bairros"), // 8
+      getAuxItems("config_beneficios"), // 9
+      getAuxItems("config_campanhas"), // 10
+      getAuxItems("setores"), // 11 (NOVO)
     ]);
 
     // Helper para extrair dados seguros
@@ -50,6 +52,7 @@ export default async function ConfiguracoesPage() {
     bairros = getData(8);
     beneficios = getData(9);
     campanhas = getData(10);
+    setores = getData(11);
   } catch (error) {
     console.error("Erro crítico ao carregar configurações:", error);
   }
@@ -77,6 +80,7 @@ export default async function ConfiguracoesPage() {
         bairros={bairros}
         beneficios={beneficios}
         campanhas={campanhas}
+        setores={setores}
       />
     </div>
   );

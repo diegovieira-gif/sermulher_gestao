@@ -15,7 +15,8 @@ export type ConfigCollection =
   | "config_beneficios"
   | "config_encaminhamentos"
   | "config_campanhas"
-  | "locais";
+  | "locais"
+  | "setores"; // Adicionado
 
 const ALLOWED_TYPES = [
   "origens",
@@ -34,6 +35,7 @@ const ALLOWED_TYPES = [
   "encaminhamentos",
   "campanhas",
   "locais",
+  "setores", // Adicionado
   "config_origens",
   "config_prioridades",
   "config_tipos_evento",
@@ -51,7 +53,8 @@ function getCollectionName(type: string): ConfigCollection {
     throw new Error(`Tipo "${type}" não é permitido para operações CRUD`);
   }
 
-  if (type.startsWith("config_") || type === "locais") {
+  // Verifica se é um tipo direto (config_*, locais ou setores)
+  if (type.startsWith("config_") || type === "locais" || type === "setores") {
     return type as ConfigCollection;
   }
 
@@ -118,13 +121,14 @@ export async function saveAuxItem(
       await directus.request(createItem(collection, payload));
     }
 
-    // Revalidação de Cache Global (Importante!)
+    // Revalidação de Cache Global
     revalidatePath("/configuracoes");
     revalidatePath("/eventos");
     revalidatePath("/dashboard");
     revalidatePath("/sala-azul/ciclos");
     revalidatePath("/sala-azul/infratores");
     revalidatePath("/mulheres");
+    revalidatePath("/tramitacoes");
 
     return { success: true };
   } catch (error) {
@@ -148,6 +152,7 @@ export async function deleteAuxItem(type: string, id: number) {
     revalidatePath("/sala-azul/ciclos");
     revalidatePath("/sala-azul/infratores");
     revalidatePath("/mulheres");
+    revalidatePath("/tramitacoes");
 
     return { success: true };
   } catch (error) {
