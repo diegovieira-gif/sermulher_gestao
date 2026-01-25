@@ -5,27 +5,36 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        # Mantendo o IP do Directus se ele ainda for interno, ou ajuste se ele tiver domínio próprio
+        # URL Pública (Navegador -> Directus). Se tiver HTTPS, idealmente o Directus também deveria ter.
         - NEXT_PUBLIC_DIRECTUS_URL=http://192.168.0.115:8055
     restart: always
     ports:
       - "3002:3000"
     environment:
       - NODE_ENV=production
-      - DIRECTUS_API_URL=http://192.168.0.115:8055
+      # Comunicação Interna (Server Action -> Directus)
+      - DIRECTUS_API_URL=http://direcuts_sermulher-directus-1:8055
       - DIRECTUS_TOKEN=j8EbY77uaPAhN0ZnGrDvoQI9VUGTvl_7
       - AUTH_SECRET=j8EbY77uaPAhN0ZnGrDvoQI9VUGTvl_7
-      # URL pública da aplicação atualizada
       - NEXT_PUBLIC_APP_URL=https://fluxo.sermulher.aracaju.se.gov.br
 
-    # Configuração de Proxy Reverso (Domínio)
+    # Conecta nas redes
     networks:
-      - sermulher_gestao_default
+      - traefik_public
+      - directus_network
+
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.sermulher.rule=Host(`fluxo.sermulher.aracaju.se.gov.br`)"
       - "traefik.http.services.sermulher.loadbalancer.server.port=3000"
+      # Configuração para HTTPS (se o Traefik tiver certresolver configurado)
+      - "traefik.http.routers.sermulher.entrypoints=websecure"
+      - "traefik.http.routers.sermulher.tls=true"
 
 networks:
-  sermulher_gestao_default:
+  traefik_public:
     external: true
+  # Mapeia 'directus_network' para o nome real descoberto no servidor
+  directus_network:
+    external: true
+    name: direcuts_sermulher_directus_net

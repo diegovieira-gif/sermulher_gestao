@@ -1,105 +1,84 @@
-'use server';
+"use server";
 
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
-import { createDirectus, rest, authentication, readMe } from '@directus/sdk';
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { authentication, createDirectus, rest } from "@directus/sdk";
 
-const directusUrl = process.env.NEXT_PUBLIC_DIRECTUS_URL || '';
+export async function login(formData: FormData) {
+  const email = formData.get("email") as string;
+  const password = formData.get("password") as string;
 
-// Cliente Directus com autenticação
-function getAuthClient() {
-  return createDirectus(directusUrl)
-    .with(authentication('json'))
-    .with(rest());
-}
+  // Log para Debug (Remover senhas em produção real se não for ambiente seguro)
+  console.log(`[Login] Tentativa de login para: ${email}`);
+  console.log(`[Login] URL Directus: ${process.env.DIRECTUS_API_URL}`);
 
-export async function login(prevState: { error?: string } | undefined, formData: FormData) {
-  const email = formData.get('email') as string;
-  const password = formData.get('password') as string;
-
-  if (!email || !password) {
-    return {
-      error: 'Email e senha são obrigatórios.',
-    };
+  if (!process.env.DIRECTUS_API_URL) {
+    console.error("[Login] ERRO CRÍTICO: DIRECTUS_API_URL não definida!");
+    return redirect(
+      "/login?error=Erro%20de%20configura%C3%A7%C3%A3o%20no%20servidor",
+    );
   }
 
   try {
-    const client = getAuthClient();
+    const client = createDirectus(process.env.DIRECTUS_API_URL)
+      .with(authentication("json"))
+      .with(rest());
 
-    // Autentica o usuário
-    await client.login(email, password);
+    console.log("[Login] Enviando requisição ao Directus...");
 
-    // Obtém o token de acesso
-    const token = await client.getToken();
+    const response = await client.login(email, password);
 
-    if (!token) {
-      return {
-        error: 'Erro ao obter token de autenticação.',
-      };
+    console.log("[Login] Sucesso! Token recebido.");
+
+    if (!response.access_token || !response.refresh_token) {
+      throw new Error("Tokens não recebidos do Directus");
     }
 
-    // Busca os dados do usuário atual
-    const user = await client.request(
-      readMe({
-        fields: ['id', 'email', 'first_name', 'last_name', 'role.name'],
-      })
-    );
-
-    // Define os cookies
+    // Configura cookies
     const cookieStore = await cookies();
-    
-    // Cookie do token de sessão (HTTPOnly, Secure)
-    cookieStore.set('session_token', token, {
+
+    // Access Token (curta duração)
+    cookieStore.set("directus_token", response.access_token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7 dias
-      path: '/',
+      secure: process.env.NODE_ENV === "production",
+      maxAge: response.expires || 900, // 15 min default
+      path: "/",
+      sameSite: "lax",
     });
 
-    // Cookie com a role do usuário (para controle visual)
-    if (user.role && typeof user.role === 'object' && 'name' in user.role) {
-      cookieStore.set('user_role', user.role.name as string, {
-        httpOnly: false, // Permite acesso no client para UI
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 7,
-        path: '/',
-      });
+    // Refresh Token (longa duração)
+    cookieStore.set("directus_refresh_token", response.refresh_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 7 * 24 * 60 * 60, // 7 dias
+      path: "/",
+      sameSite: "lax",
+    });
+
+    console.log("[Login] Cookies definidos. Redirecionando para /dashboard");
+  } catch (error: any) {
+    console.error("[Login] Erro na autenticação:", error);
+
+    let errorMessage = "Credenciais inválidas";
+
+    // Tenta extrair mensagem de erro do Directus
+    if (error?.errors?.[0]?.message) {
+      errorMessage = error.errors[0].message;
+      console.error("[Login] Mensagem Directus:", errorMessage);
+    } else if (error.message) {
+      errorMessage = error.message;
     }
 
-    // Cookie com informações do usuário (para exibição)
-    cookieStore.set('user_name', `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email, {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
-      path: '/',
-    });
-
-  } catch (error) {
-    console.error('Erro ao fazer login:', error);
-    return {
-      error: 'Email ou senha inválidos. Verifique suas credenciais e tente novamente.',
-    };
+    return redirect(`/login?error=${encodeURIComponent(errorMessage)}`);
   }
 
-  // Redireciona para o dashboard
-  redirect('/dashboard');
+  // Redirecionamento fora do try/catch (padrão Next.js)
+  redirect("/dashboard");
 }
 
 export async function logout() {
-  try {
-    const cookieStore = await cookies();
-    
-    // Remove todos os cookies de autenticação
-    cookieStore.delete('session_token');
-    cookieStore.delete('user_role');
-    cookieStore.delete('user_name');
-  } catch (error) {
-    console.error('Erro ao fazer logout:', error);
-  }
-
-  // Redireciona para a página de login
-  redirect('/login');
+  const cookieStore = await cookies();
+  cookieStore.delete("directus_token");
+  cookieStore.delete("directus_refresh_token");
+  redirect("/login");
 }
