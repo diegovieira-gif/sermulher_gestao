@@ -5,63 +5,25 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-<<<<<<< HEAD
-        # URL Pública do Directus (importante para o navegador carregar imagens)
-        - NEXT_PUBLIC_DIRECTUS_URL=https://fluxo.sermulher.aracaju.se.gov.br/api-directus
-=======
-        # Mantendo o IP do Directus se ele ainda for interno, ou ajuste se ele tiver domínio próprio
+        # Endereço público do Directus (acessível pelo navegador do usuário)
         - NEXT_PUBLIC_DIRECTUS_URL=http://192.168.0.115:8055
->>>>>>> parent of 97116f6 (Update login flow and Docker Compose Directus config)
     restart: always
     ports:
-      - "3002:3000"
+      - "3002:3000" # Acessar via http://192.168.0.115:3002
     environment:
       - NODE_ENV=production
-<<<<<<< HEAD
-      # Comunicação Interna (Container -> Container na mesma rede)
-      - DIRECTUS_API_URL=http://direcuts_sermulher-directus-1:8055
-=======
+      # Endereço interno (acessível de dentro do container)
       - DIRECTUS_API_URL=http://192.168.0.115:8055
->>>>>>> parent of 97116f6 (Update login flow and Docker Compose Directus config)
       - DIRECTUS_TOKEN=j8EbY77uaPAhN0ZnGrDvoQI9VUGTvl_7
+      # Gere uma string aleatória para segurança da sessão
       - AUTH_SECRET=j8EbY77uaPAhN0ZnGrDvoQI9VUGTvl_7
-      # URL pública da aplicação atualizada
-      - NEXT_PUBLIC_APP_URL=https://fluxo.sermulher.aracaju.se.gov.br
+    # Opcional: Se quiser usar o Traefik no futuro, descomente abaixo:
+    # networks:
+    #   - traefik_public
+    # labels:
+    #   - "traefik.enable=true"
+    #   - "traefik.http.routers.sermulher.rule=Host(`gestao.seu-dominio.com`)"
 
-<<<<<<< HEAD
-    # Conecta APENAS na rede compartilhada
-    networks:
-      - shared_network
-
-=======
-    # Configuração de Proxy Reverso (Domínio)
-    networks:
-      - sermulher_gestao_default
->>>>>>> parent of 97116f6 (Update login flow and Docker Compose Directus config)
-    labels:
-      - "traefik.enable=true"
-      # Usa a rede correta para roteamento
-      - "traefik.docker.network=direcuts_sermulher_directus_net"
-
-      # Regras de Roteamento
-      - "traefik.http.routers.sermulher.rule=Host(`fluxo.sermulher.aracaju.se.gov.br`)"
-<<<<<<< HEAD
-      - "traefik.http.routers.sermulher.entrypoints=websecure"
-      - "traefik.http.routers.sermulher.tls=true"
-      - "traefik.http.routers.sermulher.tls.certresolver=leresolver"
-
-      # Aponta para a porta interna 3000
-      - "traefik.http.services.sermulher.loadbalancer.server.port=3000"
-
-networks:
-  shared_network:
-    external: true
-    # Nome exato da rede onde o Traefik e o Directus já estão
-    name: direcuts_sermulher_directus_net
-=======
-      - "traefik.http.services.sermulher.loadbalancer.server.port=3000"
-
-networks:
-  sermulher_gestao_default:
-    external: true
->>>>>>> parent of 97116f6 (Update login flow and Docker Compose Directus config)
+# networks:
+#   traefik_public:
+#     external: true
