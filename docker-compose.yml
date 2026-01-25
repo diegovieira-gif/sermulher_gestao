@@ -5,25 +5,27 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        # Endereço público do Directus (acessível pelo navegador do usuário)
+        # Mantendo o IP do Directus se ele ainda for interno, ou ajuste se ele tiver domínio próprio
         - NEXT_PUBLIC_DIRECTUS_URL=http://192.168.0.115:8055
     restart: always
     ports:
-      - "3002:3000" # Acessar via http://192.168.0.115:3002
+      - "3002:3000"
     environment:
       - NODE_ENV=production
-      # Endereço interno (acessível de dentro do container)
       - DIRECTUS_API_URL=http://192.168.0.115:8055
       - DIRECTUS_TOKEN=j8EbY77uaPAhN0ZnGrDvoQI9VUGTvl_7
-      # Gere uma string aleatória para segurança da sessão
       - AUTH_SECRET=j8EbY77uaPAhN0ZnGrDvoQI9VUGTvl_7
-    # Opcional: Se quiser usar o Traefik no futuro, descomente abaixo:
-    # networks:
-    #   - traefik_public
-    # labels:
-    #   - "traefik.enable=true"
-    #   - "traefik.http.routers.sermulher.rule=Host(`gestao.seu-dominio.com`)"
+      # URL pública da aplicação atualizada
+      - NEXT_PUBLIC_APP_URL=https://fluxo.sermulher.aracaju.se.gov.br
 
-# networks:
-#   traefik_public:
-#     external: true
+    # Configuração de Proxy Reverso (Domínio)
+    networks:
+      - traefik_public
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sermulher.rule=Host(`fluxo.sermulher.aracaju.se.gov.br`)"
+      - "traefik.http.services.sermulher.loadbalancer.server.port=3000"
+
+networks:
+  traefik_public:
+    external: true
