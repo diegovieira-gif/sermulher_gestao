@@ -65,7 +65,7 @@ export default function LoginPage() {
             SerMulher
           </h1>
           <p className="text-sm text-gray-500">
-            Sistema de Gestão Integrada de Políticas para as Mulheres
+            Sistema de Gestão Integrada da SerMulher
           </p>
         </div>
 
@@ -84,7 +84,7 @@ export default function LoginPage() {
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="seu.email@exemplo.com"
+                  placeholder="seu.email@aracaju.se.gov.br"
                   required
                   className="bg-gray-50"
                 />
