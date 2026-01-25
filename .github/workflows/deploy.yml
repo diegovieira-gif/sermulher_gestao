@@ -1,10 +1,10 @@
 name: Deploy Produção (On-Premise)
 
 on:
-  # Dispara automaticamente ao commitar na main
+  # Dispara automaticamente ao commitar na master
   push:
-    branches: ["main"]
-  # Permite disparar manualmente pela aba Actions do GitHub se necessário
+    branches: ["master"]
+  # Permite disparar manualmente pela aba Actions do GitHub
   workflow_dispatch:
 
 jobs:
@@ -25,7 +25,6 @@ jobs:
           echo "AUTH_SECRET=${{ secrets.AUTH_SECRET }}" >> .env
           echo "NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL }}" >> .env
           echo "NEXT_PUBLIC_DIRECTUS_URL=${{ secrets.NEXT_PUBLIC_DIRECTUS_URL }}" >> .env
-          # Configuração do Traefik (se necessário no futuro)
           echo "DOMAIN=fluxo.sermulher.aracaju.se.gov.br" >> .env
 
       - name: 🐳 Docker Compose Deploy
