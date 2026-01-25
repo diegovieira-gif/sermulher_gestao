@@ -16,8 +16,6 @@ import {
 } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 
-export const dynamic = "force-dynamic";
-
 // Estado inicial do formulário
 const initialState = {
   message: "",
