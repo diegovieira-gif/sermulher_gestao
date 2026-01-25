@@ -5,65 +5,42 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        - NEXT_PUBLIC_DIRECTUS_URL=http://192.168.0.115:8055
+        # URL Pública do Directus (usada pelo navegador do cliente)
+        - NEXT_PUBLIC_DIRECTUS_URL=https://fluxo.sermulher.aracaju.se.gov.br/api-directus
+        # Nota: Se o directus não tiver domínio público, mantenha o IP: http://192.168.0.115:8055
+        # Mas idealmente ele deveria ser acessível publicamente para imagens carregarem.
+
     restart: always
     ports:
       - "3002:3000"
     environment:
       - NODE_ENV=production
-      # Comunicação Interna (Container -> Container)
+      # Comunicação Interna (Container -> Container) via nome da rede
       - DIRECTUS_API_URL=http://direcuts_sermulher-directus-1:8055
       - DIRECTUS_TOKEN=j8EbY77uaPAhN0ZnGrDvoQI9VUGTvl_7
       - AUTH_SECRET=j8EbY77uaPAhN0ZnGrDvoQI9VUGTvl_7
       - NEXT_PUBLIC_APP_URL=https://fluxo.sermulher.aracaju.se.gov.br
 
-    # Conecta apenas na rede do Directus que existe
+    # Conecta APENAS na rede do Directus (onde o Traefik também está)
     networks:
-      services:
-        sermulher-frontend:
-          container_name: sermulher_frontend
-          build:
-            context: .
-            dockerfile: Dockerfile
-            args:
-              - NEXT_PUBLIC_DIRECTUS_URL=http://192.168.0.115:8055
-          restart: always
-          # Porta externa 3002 mantida para debug/acesso direto se necessário
-          ports:
-            - "3002:3000"
-          environment:
-            - NODE_ENV=production
-            - DIRECTUS_API_URL=http://direcuts_sermulher-directus-1:8055
-            - DIRECTUS_TOKEN=j8EbY77uaPAhN0ZnGrDvoQI9VUGTvl_7
-            - AUTH_SECRET=j8EbY77uaPAhN0ZnGrDvoQI9VUGTvl_7
-            - NEXT_PUBLIC_APP_URL=https://fluxo.sermulher.aracaju.se.gov.br
+      - default_net
 
-          networks:
-            - directus_network
-            - traefik_network
+    labels:
+      - "traefik.enable=true"
+      # Força o Traefik a usar essa rede específica para achar o container
+      - "traefik.docker.network=direcuts_sermulher_directus_net"
 
-          labels:
-            - "traefik.enable=true"
-            # Roteador HTTP -> HTTPS (Opcional, se o Traefik já não fizer globalmente)
-            # - "traefik.http.routers.sermulher-http.rule=Host(`fluxo.sermulher.aracaju.se.gov.br`)"
-            # - "traefik.http.routers.sermulher-http.entrypoints=web"
-            # - "traefik.http.routers.sermulher-http.middlewares=redirect-to-https"
+      # Regra de Roteamento
+      - "traefik.http.routers.sermulher.rule=Host(`fluxo.sermulher.aracaju.se.gov.br`)"
+      - "traefik.http.routers.sermulher.entrypoints=websecure"
+      - "traefik.http.routers.sermulher.tls=true"
+      # Nome exato do resolver encontrado no seu arquivo do Traefik
+      - "traefik.http.routers.sermulher.tls.certresolver=leresolver"
 
-            # Roteador HTTPS Principal
-            - "traefik.http.routers.sermulher.rule=Host(`fluxo.sermulher.aracaju.se.gov.br`)"
-            - "traefik.http.routers.sermulher.entrypoints=websecure"
-            - "traefik.http.routers.sermulher.tls=true"
-            # Ajuste o certresolver se o seu Traefik usar Let's Encrypt (comum ser 'myresolver' ou 'le')
-            # - "traefik.http.routers.sermulher.tls.certresolver=myresolver"
+      # Porta interna da aplicação
+      - "traefik.http.services.sermulher.loadbalancer.server.port=3000"
 
-            # Aponta para a porta interna 3000 do Next.js
-            - "traefik.http.services.sermulher.loadbalancer.server.port=3000"
-
-      networks:
-        directus_network:
-          external: true
-          name: direcuts_sermulher_directus_net
-
-        traefik_network:
-          external: true
-          name: portainer_default
+networks:
+  default_net:
+    external: true
+    name: direcuts_sermulher_directus_net
