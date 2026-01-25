@@ -127,7 +127,9 @@ export function Sidebar() {
         </div>
         <div>
           <h1 className="text-lg font-bold text-white">SerMulher</h1>
-          <p className="text-[10px] text-slate-400">Gestão Integrada</p>
+          <p className="text-[10px] text-slate-400">
+            Secretaria Municipal do Respeito às Políticas para as Mulheres
+          </p>
         </div>
       </div>
 
