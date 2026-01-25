@@ -5,44 +5,39 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        - NEXT_PUBLIC_DIRECTUS_URL=https://fluxo.sermulher.aracaju.se.gov.br/api
+        # URL Pública do Directus (importante para o navegador carregar imagens)
+        - NEXT_PUBLIC_DIRECTUS_URL=https://fluxo.sermulher.aracaju.se.gov.br/api-directus
     restart: always
     ports:
       - "3002:3000"
     environment:
       - NODE_ENV=production
-      # Comunicação interna via rede do Directus
+      # Comunicação Interna (Container -> Container na mesma rede)
       - DIRECTUS_API_URL=http://direcuts_sermulher-directus-1:8055
       - DIRECTUS_TOKEN=j8EbY77uaPAhN0ZnGrDvoQI9VUGTvl_7
       - AUTH_SECRET=j8EbY77uaPAhN0ZnGrDvoQI9VUGTvl_7
       - NEXT_PUBLIC_APP_URL=https://fluxo.sermulher.aracaju.se.gov.br
 
+    # Conecta APENAS na rede compartilhada
     networks:
-      - directus_net
-      - traefik_net
+      - shared_network
 
     labels:
       - "traefik.enable=true"
-      # Usa a rede do traefik para roteamento
-      - "traefik.docker.network=portainer_default"
+      # Usa a rede correta para roteamento
+      - "traefik.docker.network=direcuts_sermulher_directus_net"
 
-      # Roteador Principal
+      # Regras de Roteamento
       - "traefik.http.routers.sermulher.rule=Host(`fluxo.sermulher.aracaju.se.gov.br`)"
       - "traefik.http.routers.sermulher.entrypoints=websecure"
       - "traefik.http.routers.sermulher.tls=true"
       - "traefik.http.routers.sermulher.tls.certresolver=leresolver"
 
-      # Serviço (Aponta para a porta 3000)
+      # Aponta para a porta interna 3000
       - "traefik.http.services.sermulher.loadbalancer.server.port=3000"
 
 networks:
-  directus_net:
+  shared_network:
     external: true
+    # Nome exato da rede onde o Traefik e o Directus já estão
     name: direcuts_sermulher_directus_net
-
-  traefik_net:
-    external: true
-    # IMPORTANTE: Verifique no Portainer qual rede o container 'traefik' compartilha.
-    # Geralmente é 'portainer_default' se foi instalado via Portainer ou 'traefik_default'.
-    # No seu log apareceu 'portainer_default', estou usando essa como aposta principal.
-    name: portainer_default
