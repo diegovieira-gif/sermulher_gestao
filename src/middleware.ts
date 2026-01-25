@@ -3,27 +3,31 @@ import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const sessionToken = request.cookies.get("session_token");
 
-  // Rotas públicas que não precisam de autenticação
+  // CORREÇÃO: Verificar o cookie 'directus_token' que é gravado no login
+  const sessionToken = request.cookies.get("directus_token");
+
+  // Rotas públicas (que não precisam de login)
   const isPublicRoute = pathname === "/login";
 
-  // Rotas protegidas (todas que começam com /admin)
-  const isProtectedRoute = pathname.startsWith("/admin");
+  // Rotas protegidas: Tudo que NÃO for público e NÃO for estático
+  // Isso garante que /dashboard, /tramitacoes, etc sejam protegidas
+  const isProtectedRoute = !isPublicRoute;
 
-  // Se tentar acessar rota protegida sem token -> redirecionar para login
+  // 1. Proteção: Se tenta acessar rota protegida SEM token -> Manda pro Login
   if (isProtectedRoute && !sessionToken) {
     const loginUrl = new URL("/login", request.url);
+    // Salva a url de origem para redirecionar depois (opcional)
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // Se tentar acessar login com token válido -> redirecionar para dashboard
+  // 2. Redirecionamento: Se tenta acessar Login COM token -> Manda pro Dashboard
   if (isPublicRoute && sessionToken) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  // Redirecionar raiz para login se não autenticado, ou dashboard se autenticado
+  // 3. Raiz (/): Redireciona baseado se está logado ou não
   if (pathname === "/") {
     if (sessionToken) {
       return NextResponse.redirect(new URL("/dashboard", request.url));
@@ -38,11 +42,12 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public files (public folder)
+     * Aplica o middleware em todas as rotas, EXCETO:
+     * - _next/static (arquivos estáticos do next)
+     * - _next/image (otimização de imagens)
+     * - favicon.ico
+     * - arquivos com extensão (ex: .svg, .png, .css)
+     * - /api (rotas de API costumam tratar auth internamente ou serem públicas)
      */
     "/((?!_next/static|_next/image|favicon.ico|.*\\..*|api).*)",
   ],

@@ -3,51 +3,70 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { authentication, createDirectus, rest } from "@directus/sdk";
-import { revalidatePath } from "next/cache"; // Importação Importante
+import { revalidatePath } from "next/cache";
 
-// Define um tipo união para aceitar tanto FormData quanto Objeto simples
-export async function login(input: FormData | { [key: string]: any }) {
-  // Extração inteligente dos dados baseada no tipo de entrada
-  let email, password;
+// Assinatura compatível com useActionState: (estadoAnterior, formData)
+export async function login(prevState: any, formData?: FormData) {
+  // DECISÃO INTELIGENTE:
+  // Se o 2º argumento existe, é uma chamada via formulário do React (useActionState).
+  // Se não, é uma chamada direta via código (login({ email: ... })).
+  const input = formData || prevState;
 
-  if (input instanceof FormData) {
-    email = input.get("email") as string;
-    password = input.get("password") as string;
-  } else {
-    // Fallback para quando a função é chamada com JSON { email, password }
-    email = input.email;
-    password = input.password;
+  let email = "";
+  let password = "";
+
+  // --- Bloco de Extração ---
+  try {
+    // Verifica se é FormData (tem método .get)
+    const isFormData = input && typeof input.get === "function";
+
+    if (isFormData) {
+      email = String(input.get("email") || "");
+      password = String(input.get("password") || "");
+
+      // Debug
+      console.log("[Login] Dados recebidos via FormData.");
+    } else if (input && typeof input === "object") {
+      // Objeto JSON direto
+      email = String(input.email || "");
+      password = String(input.password || "");
+      console.log("[Login] Dados recebidos via Objeto JSON.");
+    } else {
+      console.error("[Login] Formato de entrada desconhecido:", typeof input);
+    }
+  } catch (err) {
+    console.error("[Login] Erro na extração:", err);
+  }
+  // ------------------------
+
+  console.log(`[Login] Processando login para: ${email}`);
+
+  // Validação
+  if (!email || !password) {
+    // Retorna erro para o estado do formulário em vez de redirecionar (melhor UX)
+    return { message: "Por favor, preencha email e senha." };
   }
 
-  console.log(`[Login] Tentativa de login para: ${email}`);
-
-  // Validação básica da URL da API
   const apiUrl = process.env.DIRECTUS_API_URL;
   if (!apiUrl) {
-    console.error("[Login] ERRO CRÍTICO: DIRECTUS_API_URL não definida!");
-    return redirect("/login?error=Erro%20de%20configuração%20no%20servidor");
+    console.error("[Login] ERRO CRÍTICO: DIRECTUS_API_URL ausente");
+    return { message: "Erro de configuração no servidor." };
   }
 
   try {
-    // Cria cliente Directus
     const client = createDirectus(apiUrl)
       .with(authentication("json"))
       .with(rest());
 
-    console.log("[Login] Conectando ao Directus:", apiUrl);
-
-    // Autenticação
+    console.log("[Login] Conectando Directus...");
     const response = await client.login(email, password);
-    console.log("[Login] Resposta do Directus recebida.");
 
     if (!response.access_token || !response.refresh_token) {
-      throw new Error("Tokens não recebidos do Directus");
+      throw new Error("Tokens não recebidos");
     }
 
-    // Manipulação de Cookies (Next.js 15 Async)
     const cookieStore = await cookies();
 
-    // Access Token
     cookieStore.set("directus_token", response.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -56,32 +75,25 @@ export async function login(input: FormData | { [key: string]: any }) {
       sameSite: "lax",
     });
 
-    // Refresh Token
     cookieStore.set("directus_refresh_token", response.refresh_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      maxAge: 7 * 24 * 60 * 60, // 7 dias
+      maxAge: 7 * 24 * 60 * 60,
       path: "/",
       sameSite: "lax",
     });
-
-    console.log("[Login] Cookies definidos com sucesso.");
   } catch (error: any) {
-    console.error("[Login] Erro detalhado:", error);
+    console.error("[Login] Falha:", error);
 
-    let errorMessage = "Credenciais inválidas";
+    let msg = "Credenciais inválidas.";
+    if (error?.errors?.[0]?.message) msg = error.errors[0].message;
+    else if (error.message) msg = error.message;
 
-    if (error?.errors?.[0]?.message) {
-      errorMessage = error.errors[0].message;
-    } else if (error.message) {
-      errorMessage = error.message;
-    }
-
-    // Redireciona de volta com erro
-    return redirect(`/login?error=${encodeURIComponent(errorMessage)}`);
+    // Retorna o erro para ser exibido na tela (state.message)
+    return { message: msg };
   }
 
-  // Sucesso: Redireciona para o dashboard
+  // Sucesso: Redirecionamento final
   redirect("/dashboard");
 }
 
@@ -89,9 +101,6 @@ export async function logout() {
   const cookieStore = await cookies();
   cookieStore.delete("directus_token");
   cookieStore.delete("directus_refresh_token");
-
-  // 🔥 FORÇA O NEXT.JS A ESQUECER O LAYOUT ANTERIOR (DASHBOARD)
   revalidatePath("/", "layout");
-
   redirect("/login");
 }
