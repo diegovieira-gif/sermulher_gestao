@@ -5,25 +5,21 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        # Endereço público do Directus (acessível pelo navegador do usuário)
+        # URL Pública do Directus (acessível pelo navegador do usuário)
         - NEXT_PUBLIC_DIRECTUS_URL=http://192.168.0.115:8055
     restart: always
     ports:
-      - "3002:3000" # Acessar via http://192.168.0.115:3002
+      - "3002:3000" # Host:3002 -> Container:3000
     environment:
       - NODE_ENV=production
-      # Endereço interno (acessível de dentro do container)
+      # Comunicação interna (Server Side)
+      # Usamos o IP do host para garantir acesso ao Directus na porta 8055
       - DIRECTUS_API_URL=http://192.168.0.115:8055
       - DIRECTUS_TOKEN=j8EbY77uaPAhN0ZnGrDvoQI9VUGTvl_7
-      # Gere uma string aleatória para segurança da sessão
       - AUTH_SECRET=j8EbY77uaPAhN0ZnGrDvoQI9VUGTvl_7
-    # Opcional: Se quiser usar o Traefik no futuro, descomente abaixo:
-    # networks:
-    #   - traefik_public
-    # labels:
-    #   - "traefik.enable=true"
-    #   - "traefik.http.routers.sermulher.rule=Host(`gestao.seu-dominio.com`)"
-
-# networks:
-#   traefik_public:
-#     external: true
+      # URL da aplicação (importante para redirecionamentos)
+      - NEXT_PUBLIC_APP_URL=http://192.168.0.115:3002
+    
+    # Permite que o container acesse o IP do host (Linux)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
