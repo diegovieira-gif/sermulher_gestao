@@ -67,20 +67,22 @@ export async function login(prevState: any, formData?: FormData) {
 
     const cookieStore = await cookies();
 
-    cookieStore.set("directus_token", response.access_token, {
+    // CONFIGURAÇÃO DE COOKIE PARA HTTP (evita bloqueio de envio em HTTP)
+    const cookieOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: response.expires ? Math.floor(response.expires / 1000) : 900,
+      secure: false, // Em ambientes sem HTTPS (acesso via IP/HTTP)
       path: "/",
-      sameSite: "lax",
+      sameSite: "lax" as const,
+    };
+
+    cookieStore.set("directus_token", response.access_token, {
+      ...cookieOptions,
+      maxAge: response.expires ? Math.floor(response.expires / 1000) : 900,
     });
 
     cookieStore.set("directus_refresh_token", response.refresh_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      ...cookieOptions,
       maxAge: 7 * 24 * 60 * 60,
-      path: "/",
-      sameSite: "lax",
     });
   } catch (error: any) {
     console.error("[Login] Falha:", error);

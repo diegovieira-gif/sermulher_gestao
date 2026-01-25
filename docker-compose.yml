@@ -19,7 +19,7 @@ services:
       - AUTH_SECRET=j8EbY77uaPAhN0ZnGrDvoQI9VUGTvl_7
       # URL da aplicação (importante para redirecionamentos)
       - NEXT_PUBLIC_APP_URL=http://192.168.0.115:3002
-    
+
     # Permite que o container acesse o IP do host (Linux)
     extra_hosts:
       - "host.docker.internal:host-gateway"
