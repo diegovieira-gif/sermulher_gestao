@@ -8,45 +8,44 @@ export async function login(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
 
-  // Log para Debug (Remover senhas em produção real se não for ambiente seguro)
   console.log(`[Login] Tentativa de login para: ${email}`);
-  console.log(`[Login] URL Directus: ${process.env.DIRECTUS_API_URL}`);
 
-  if (!process.env.DIRECTUS_API_URL) {
+  // Validação básica da URL da API
+  const apiUrl = process.env.DIRECTUS_API_URL;
+  if (!apiUrl) {
     console.error("[Login] ERRO CRÍTICO: DIRECTUS_API_URL não definida!");
-    return redirect(
-      "/login?error=Erro%20de%20configura%C3%A7%C3%A3o%20no%20servidor",
-    );
+    return redirect("/login?error=Erro%20de%20configuração%20no%20servidor");
   }
 
   try {
-    const client = createDirectus(process.env.DIRECTUS_API_URL)
+    // Cria cliente Directus
+    const client = createDirectus(apiUrl)
       .with(authentication("json"))
       .with(rest());
 
-    console.log("[Login] Enviando requisição ao Directus...");
+    console.log("[Login] Conectando ao Directus:", apiUrl);
 
+    // Autenticação
     const response = await client.login(email, password);
-
-    console.log("[Login] Sucesso! Token recebido.");
+    console.log("[Login] Resposta do Directus recebida.");
 
     if (!response.access_token || !response.refresh_token) {
       throw new Error("Tokens não recebidos do Directus");
     }
 
-    // Configura cookies
+    // Manipulação de Cookies (Next.js 15 Async)
     const cookieStore = await cookies();
 
-    // Access Token (curta duração)
+    // Access Token
     cookieStore.set("directus_token", response.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      maxAge: response.expires || 900, // 15 min default
+      maxAge: response.expires ? Math.floor(response.expires / 1000) : 900,
       path: "/",
       sameSite: "lax",
     });
 
-    // Refresh Token (longa duração)
+    // Refresh Token
     cookieStore.set("directus_refresh_token", response.refresh_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -55,24 +54,23 @@ export async function login(formData: FormData) {
       sameSite: "lax",
     });
 
-    console.log("[Login] Cookies definidos. Redirecionando para /dashboard");
+    console.log("[Login] Cookies definidos com sucesso.");
   } catch (error: any) {
-    console.error("[Login] Erro na autenticação:", error);
+    console.error("[Login] Erro detalhado:", error);
 
     let errorMessage = "Credenciais inválidas";
 
-    // Tenta extrair mensagem de erro do Directus
     if (error?.errors?.[0]?.message) {
       errorMessage = error.errors[0].message;
-      console.error("[Login] Mensagem Directus:", errorMessage);
     } else if (error.message) {
       errorMessage = error.message;
     }
 
+    // Redireciona de volta com erro
     return redirect(`/login?error=${encodeURIComponent(errorMessage)}`);
   }
 
-  // Redirecionamento fora do try/catch (padrão Next.js)
+  // Sucesso: Redireciona para o dashboard
   redirect("/dashboard");
 }
 
