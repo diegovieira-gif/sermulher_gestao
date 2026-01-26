@@ -1,8 +1,7 @@
 import { z } from "zod";
 
-// Schema para o objeto de contato
 export const contatoSchema = z.object({
-  telefone: z.string().optional(),
+  telefone: z.string().optional().nullable(),
   email: z
     .string()
     .refine(
@@ -12,29 +11,29 @@ export const contatoSchema = z.object({
       },
       { message: "Email inválido" },
     )
-    .optional(),
+    .optional()
+    .nullable(),
 });
 
-// Schema para o objeto de endereço (Tudo Opcional)
 export const enderecoSchema = z.object({
-  logradouro: z.string().optional(),
-  numero: z.string().optional(),
-  bairro: z.string().optional(),
-  cidade: z.string().optional(),
+  logradouro: z.string().optional().nullable(),
+  numero: z.string().optional().nullable(),
+  bairro: z.string().optional().nullable(),
+  cidade: z.string().optional().nullable(),
 });
 
-// Schema principal da beneficiária
 export const beneficiariaSchema = z.object({
-  id: z.number().optional(),
-  // ÚNICO CAMPO OBRIGATÓRIO
+  // CORREÇÃO: coerce.number transforma "123" em 123
+  id: z.coerce.number().optional(),
+
   nome_completo: z
     .string()
     .min(3, "Nome completo deve ter no mínimo 3 caracteres"),
 
-  // Opcionais
   cpf: z
     .string()
     .optional()
+    .nullable()
     .refine(
       (val) => {
         if (!val || val.trim() === "") return true;
@@ -44,39 +43,31 @@ export const beneficiariaSchema = z.object({
       { message: "CPF deve conter 11 dígitos numéricos" },
     ),
 
-  data_nascimento: z.string().optional(),
+  data_nascimento: z.string().optional().nullable(),
 
-  telefone: z.string().nullable().optional(),
-  email: z.string().nullable().optional(),
+  telefone: z.string().optional().nullable(),
+  email: z.string().optional().nullable(),
 
   endereco: enderecoSchema,
 
-  perfil_socioeconomico: z.string().optional(),
+  perfil_socioeconomico: z.string().optional().nullable(),
 
-  // Campos de Dados Sociais e Proteção
-  recebe_bolsa_familia: z.boolean().optional(),
-  recebe_bpc: z.boolean().optional(),
-  possui_medida_protetiva: z.boolean().optional(),
+  // CORREÇÃO: coerce.boolean trata strings de checkbox
+  recebe_bolsa_familia: z.coerce.boolean().optional(),
+  recebe_bpc: z.coerce.boolean().optional(),
+  possui_medida_protetiva: z.coerce.boolean().optional(),
 });
 
-// Tipos TypeScript derivados dos schemas
+// Tipos derivados
 export type Beneficiaria = z.infer<typeof beneficiariaSchema>;
 export type BeneficiariaFormValues = z.input<typeof beneficiariaSchema>;
 export type Contato = z.infer<typeof contatoSchema>;
 export type Endereco = z.infer<typeof enderecoSchema>;
 
-// Schema para registrar entregas de benefícios vinculadas à beneficiária
 export const entregaBeneficioSchema = z.object({
-  beneficiaria: z.coerce.number().int().positive("Beneficiária é obrigatória"),
-  beneficio: z.coerce.number().int().positive("Benefício é obrigatório"),
-  data_entrega: z
-    .string()
-    .min(1, "Data de entrega é obrigatória")
-    .refine((val) => !isNaN(Date.parse(val)), { message: "Data inválida" }),
-  quantidade: z.coerce
-    .number()
-    .int()
-    .positive("Quantidade deve ser maior que 0")
-    .default(1),
+  beneficiaria: z.coerce.number().int().positive(),
+  beneficio: z.coerce.number().int().positive(),
+  data_entrega: z.string().min(1),
+  quantidade: z.coerce.number().int().positive().default(1),
   observacao: z.string().optional(),
 });

@@ -1,18 +1,22 @@
-"use server";
+﻿"use server";
 
 import { revalidatePath } from "next/cache";
-import { directus } from "@/lib/directus";
 import {
+  createDirectus,
+  rest,
+  staticToken,
   readItems,
   createItem,
   updateItem,
   deleteItem,
   readItem,
   aggregate,
-  withToken,
 } from "@directus/sdk";
 import { cookies } from "next/headers";
 import { beneficiariaSchema, entregaBeneficioSchema } from "./schemas";
+
+// URL da API (Fallback seguro para localhost caso ENV falhe)
+const API_URL = process.env.DIRECTUS_API_URL || "http://192.168.0.115:8055";
 
 const BENEFICIARIA_FIELDS = [
   "id",
@@ -28,93 +32,61 @@ const BENEFICIARIA_FIELDS = [
   "possui_medida_protetiva",
 ] as const;
 
-// Função para limpar dados (remove strings vazias)
-function cleanData(data: any) {
-  const cleaned: any = {};
-  Object.keys(data).forEach((key) => {
-    if (data[key] !== "" && data[key] !== null && data[key] !== undefined) {
-      cleaned[key] = data[key];
+// --- Helpers Internos ---
+
+function parseFormData(formData: FormData) {
+  const data: any = {};
+  formData.forEach((value, key) => {
+    if (key.includes(".")) {
+      const [parent, child] = key.split(".");
+      if (!data[parent]) data[parent] = {};
+      data[parent][child] = value;
     } else {
+      data[key] = value;
+    }
+  });
+  return data;
+}
+
+function cleanData(data: any) {
+  const cleaned = JSON.parse(JSON.stringify(data));
+  Object.keys(cleaned).forEach((key) => {
+    if (
+      cleaned[key] === "" ||
+      cleaned[key] === undefined ||
+      cleaned[key] === null
+    ) {
       cleaned[key] = null;
+    }
+    if (typeof cleaned[key] === "object" && cleaned[key] !== null) {
+      Object.keys(cleaned[key]).forEach((subKey) => {
+        if (cleaned[key][subKey] === "") cleaned[key][subKey] = null;
+      });
     }
   });
   return cleaned;
 }
 
-export async function saveBeneficiaria(data: unknown) {
-  console.log("📝 [Server Action] Iniciando saveBeneficiaria...");
+// Função para obter cliente autenticado
+async function getAuthenticatedClient() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("directus_token")?.value;
 
-  try {
-    // 1. Validação Zod
-    const val = beneficiariaSchema.parse(data);
-    const payload: any = { ...val };
+  // Cria uma nova instância limpa para evitar conflitos com o cliente global
+  const client = createDirectus(API_URL)
+    .with(rest())
+    .with(staticToken(token || "")); // Se não tiver token, usa string vazia (vai dar erro 403 se rota for privada)
 
-    // Limpeza
-    if (payload.cpf) payload.cpf = payload.cpf.replace(/\D/g, "");
-
-    // Remove campos vazios/nulos
-    Object.keys(payload).forEach((key) => {
-      if (payload[key] === "" || payload[key] === undefined)
-        payload[key] = null;
-    });
-
-    const id = payload.id;
-    delete payload.id; // Não envia ID no corpo do payload
-
-    // 2. Cliente com Token
-    const cookieStore = await cookies();
-    const token = cookieStore.get("directus_token")?.value;
-    const client = token ? directus.with(withToken(token)) : directus;
-
-    console.log("🚀 Payload:", JSON.stringify(payload));
-
-    if (id) {
-      await client.request(updateItem("beneficiarias", id, payload));
-    } else {
-      await client.request(createItem("beneficiarias", payload));
-    }
-
-    revalidatePath("/mulheres/beneficiarias");
-    return { success: true, message: "Salvo com sucesso!" };
-  } catch (error: any) {
-    console.error("❌ ERRO FATAL NO SAVE:", error);
-    if (error.errors)
-      console.error(
-        "🔍 Erros Directus:",
-        JSON.stringify(error.errors, null, 2),
-      );
-
-    // Tenta extrair mensagem legível
-    let msg = "Erro ao salvar.";
-    if (error?.errors?.[0]?.message) msg = error.errors[0].message;
-
-    return { success: false, error: msg };
-  }
+  return { client, token };
 }
 
-export async function deleteBeneficiaria(id: number) {
-  try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get("directus_token")?.value;
-    const client = token ? directus.with(withToken(token)) : directus;
+// --- Ações de Leitura (Queries) ---
 
-    await client.request(deleteItem("beneficiarias", id));
-    revalidatePath("/mulheres/beneficiarias");
-    return { success: true, message: "Excluído com sucesso!" };
-  } catch (error: any) {
-    console.error("❌ Erro ao excluir:", error);
-    return { success: false, error: "Erro ao excluir registro." };
-  }
-}
-
-/**
- * Busca beneficiárias com paginação e filtro
- */
 export async function getBeneficiarias(page = 1, search = "") {
-  const limit = 10; // Itens por página
+  const { client } = await getAuthenticatedClient();
+  const limit = 10;
   const offset = (page - 1) * limit;
 
-  // Filtro de busca (Nome ou CPF)
   const filter = search
     ? {
         _or: [
@@ -125,8 +97,7 @@ export async function getBeneficiarias(page = 1, search = "") {
     : {};
 
   try {
-    // 1. Busca os dados paginados
-    const items = await directus.request(
+    const items = await client.request(
       readItems("beneficiarias", {
         // @ts-ignore
         fields: BENEFICIARIA_FIELDS,
@@ -137,8 +108,7 @@ export async function getBeneficiarias(page = 1, search = "") {
       }),
     );
 
-    // 2. Busca o total de registros (para calcular páginas)
-    const countResult = await directus.request(
+    const countResult = await client.request(
       aggregate("beneficiarias", {
         aggregate: { count: "*" },
         query: { filter },
@@ -160,17 +130,24 @@ export async function getBeneficiarias(page = 1, search = "") {
     };
   } catch (error) {
     console.error("Erro ao buscar beneficiárias:", error);
-    return {
-      success: false,
-      error: "Erro ao buscar beneficiárias. Tente novamente.",
-    };
+    return { success: false, error: "Erro ao buscar dados." };
   }
 }
 
-/**
- * Busca TODOS os dados para Exportação (CSV)
- */
+export async function getBeneficiaria(id: number) {
+  const { client } = await getAuthenticatedClient();
+  try {
+    const item = await client.request(
+      readItem("beneficiarias", id, { fields: BENEFICIARIA_FIELDS }),
+    );
+    return { success: true, data: item };
+  } catch (error) {
+    return { success: false, error: "Erro ao buscar beneficiária." };
+  }
+}
+
 export async function getBeneficiariasExport(search = "") {
+  const { client } = await getAuthenticatedClient();
   const filter = search
     ? {
         _or: [
@@ -181,7 +158,7 @@ export async function getBeneficiariasExport(search = "") {
     : {};
 
   try {
-    const items = await directus.request(
+    const items = await client.request(
       readItems("beneficiarias", {
         // @ts-ignore
         fields: [
@@ -192,22 +169,20 @@ export async function getBeneficiariasExport(search = "") {
           "endereco",
         ],
         sort: ["nome_completo"],
-        limit: -1, // Busca tudo
+        limit: -1,
         filter,
       }),
     );
     return { success: true, data: items };
   } catch (error) {
-    return { success: false, error: "Erro ao exportar dados." };
+    return { success: false, error: "Erro ao exportar." };
   }
 }
 
-/**
- * Histórico de entregas de benefícios
- */
 export async function getHistoricoBeneficios(beneficiariaId: string) {
+  const { client } = await getAuthenticatedClient();
   try {
-    const historico = await directus.request(
+    const historico = await client.request(
       readItems("entregas_beneficios", {
         filter: { beneficiaria: { _eq: beneficiariaId } },
         sort: ["-data_entrega"],
@@ -227,10 +202,95 @@ export async function getHistoricoBeneficios(beneficiariaId: string) {
   }
 }
 
+// --- Ações de Escrita (Mutations) ---
+
+export async function saveBeneficiaria(input: any) {
+  console.log("📝 [Server Action] Iniciando saveBeneficiaria...");
+
+  try {
+    let rawData: any;
+
+    // Detecção: FormData vs JSON
+    if (input && typeof input.forEach === "function") {
+      rawData = parseFormData(input);
+    } else {
+      rawData = input;
+    }
+
+    const cleanRawData = cleanData(rawData);
+
+    // Validação Zod com Coerção
+    const payload = beneficiariaSchema.parse(cleanRawData);
+
+    if (payload.cpf) payload.cpf = payload.cpf.replace(/\D/g, "");
+
+    const id = payload.id;
+    const payloadToSend = { ...payload };
+    delete payloadToSend.id;
+
+    // CLIENTE NOVO E AUTENTICADO
+    const { client, token } = await getAuthenticatedClient();
+
+    if (!token) {
+      throw new Error("Usuário não autenticado.");
+    }
+
+    console.log(
+      "🚀 Enviando Payload para Directus:",
+      JSON.stringify(payloadToSend),
+    );
+
+    if (id) {
+      await client.request(updateItem("beneficiarias", id, payloadToSend));
+      console.log("✅ Atualização concluída.");
+    } else {
+      await client.request(createItem("beneficiarias", payloadToSend));
+      console.log("✅ Criação concluída.");
+    }
+
+    revalidatePath("/mulheres/beneficiarias");
+    return {
+      success: true,
+      message: id ? "Cadastro atualizado!" : "Cadastro realizado!",
+    };
+  } catch (error: any) {
+    console.error("❌ ERRO NO SAVE:", error);
+
+    if (error.issues) {
+      const issues = error.issues
+        .map((i: any) => `${i.path.join(".")}: ${i.message}`)
+        .join(", ");
+      return { success: false, error: `Erro nos campos: ${issues}` };
+    }
+
+    if (error.errors) {
+      return {
+        success: false,
+        error: error.errors[0]?.message || "Erro no banco.",
+      };
+    }
+
+    return { success: false, error: "Erro desconhecido ao salvar." };
+  }
+}
+
+export async function deleteBeneficiaria(id: number) {
+  const { client } = await getAuthenticatedClient();
+  try {
+    await client.request(deleteItem("beneficiarias", id));
+    revalidatePath("/mulheres/beneficiarias");
+    return { success: true, message: "Excluído com sucesso!" };
+  } catch (error) {
+    console.error("Erro ao excluir:", error);
+    return { success: false, error: "Erro ao excluir registro." };
+  }
+}
+
 export async function registrarEntrega(data: unknown) {
+  const { client } = await getAuthenticatedClient();
   try {
     const payload = entregaBeneficioSchema.parse(data);
-    await directus.request(createItem("entregas_beneficios", payload));
+    await client.request(createItem("entregas_beneficios", payload));
     revalidatePath(`/mulheres/beneficiarias/${payload.beneficiaria}`);
     return { success: true, message: "Entrega registrada!" };
   } catch (error) {
@@ -239,22 +299,12 @@ export async function registrarEntrega(data: unknown) {
 }
 
 export async function deletarEntrega(id: number, beneficiariaId: number) {
+  const { client } = await getAuthenticatedClient();
   try {
-    await directus.request(deleteItem("entregas_beneficios", id));
+    await client.request(deleteItem("entregas_beneficios", id));
     revalidatePath(`/mulheres/beneficiarias/${beneficiariaId}`);
     return { success: true };
   } catch (error) {
     return { success: false, error: "Erro ao excluir." };
-  }
-}
-
-export async function getBeneficiaria(id: number) {
-  try {
-    const item = await directus.request(
-      readItem("beneficiarias", id, { fields: BENEFICIARIA_FIELDS }),
-    );
-    return { success: true, data: item };
-  } catch (error) {
-    return { success: false, error: "Erro ao buscar." };
   }
 }
