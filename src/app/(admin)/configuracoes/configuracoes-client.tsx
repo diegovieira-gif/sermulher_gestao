@@ -3,7 +3,23 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GenericCrudTable } from "@/components/shared/generic-crud-table";
 import { saveAuxItem, deleteAuxItem } from "./actions";
+import {
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { z } from "zod";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import {
   Building2,
   AlertCircle,
@@ -16,7 +32,7 @@ import {
   Map,
   HeartHandshake,
   Megaphone,
-  Briefcase,
+  Briefcase, // Ícone para Setores
 } from "lucide-react";
 
 interface ConfiguracoesClientProps {
@@ -31,19 +47,8 @@ interface ConfiguracoesClientProps {
   bairros: any[];
   beneficios: any[];
   campanhas: any[];
-  setores: any[];
+  setores: any[]; // Novo
 }
-
-// Schema base reutilizável
-const baseSchema = z.object({
-  nome: z.string().min(2, "Nome é obrigatório"),
-  status: z.string().default("published"),
-});
-
-// Schema com cor
-const colorSchema = baseSchema.extend({
-  cor: z.string().optional(),
-});
 
 export function ConfiguracoesClient({
   origens,
@@ -59,332 +64,688 @@ export function ConfiguracoesClient({
   campanhas,
   setores,
 }: ConfiguracoesClientProps) {
-  // Função auxiliar para renderizar a bolinha de cor
-  const renderColor = (item: any) => (
-    <div className="flex items-center gap-2">
-      <div
-        className="w-4 h-4 rounded-full border shadow-sm"
-        style={{ backgroundColor: item.cor || "#000" }}
-      />
-      <span className="text-xs text-muted-foreground font-mono uppercase">
-        {item.cor}
-      </span>
-    </div>
-  );
+  // Schema padrão
+  const basicSchema = z.object({
+    nome: z.string().min(2, "Nome é obrigatório"),
+  });
+
+  const monthOptions = [
+    "Janeiro",
+    "Fevereiro",
+    "Março",
+    "Abril",
+    "Maio",
+    "Junho",
+    "Julho",
+    "Agosto",
+    "Setembro",
+    "Outubro",
+    "Novembro",
+    "Dezembro",
+  ];
 
   return (
     <div className="w-full">
-      <Tabs defaultValue="origens" className="w-full space-y-6">
-        <div className="overflow-x-auto pb-2">
-          <TabsList className="h-auto w-max justify-start gap-2 bg-transparent p-0">
+      <Tabs defaultValue="setores" className="flex flex-col md:flex-row gap-6">
+        {/* MENU LATERAL */}
+        <aside className="w-full md:w-64 shrink-0">
+          <TabsList className="flex md:flex-col h-auto bg-transparent p-0 gap-1 overflow-x-auto md:overflow-visible w-full flex-nowrap md:flex-wrap text-left">
+            <div className="hidden md:block px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Estrutural
+            </div>
+
+            <TabsTrigger
+              value="setores"
+              className="flex items-center gap-2 justify-start w-full px-4 py-3 data-[state=active]:bg-muted data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
+            >
+              <Briefcase className="w-4 h-4" />
+              <span>Setores</span>
+            </TabsTrigger>
+
+            <TabsTrigger
+              value="locais"
+              className="flex items-center gap-2 justify-start w-full px-4 py-3 data-[state=active]:bg-muted data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
+            >
+              <Building2 className="w-4 h-4" />
+              <span>Locais</span>
+            </TabsTrigger>
+
+            <TabsTrigger
+              value="bairros"
+              className="flex items-center gap-2 justify-start w-full px-4 py-3 data-[state=active]:bg-muted data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
+            >
+              <MapPin className="w-4 h-4" />
+              <span>Bairros</span>
+            </TabsTrigger>
+
+            <div className="hidden md:block px-4 py-2 mt-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Atendimento
+            </div>
+
             <TabsTrigger
               value="origens"
-              className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-900 border border-transparent data-[state=active]:border-purple-200"
+              className="flex items-center gap-2 justify-start w-full px-4 py-3 data-[state=active]:bg-muted data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
             >
-              <Building2 className="mr-2 h-4 w-4" />
-              Origens
+              <ArrowUpRight className="w-4 h-4" />
+              <span>Origens</span>
             </TabsTrigger>
+
             <TabsTrigger
               value="prioridades"
-              className="data-[state=active]:bg-red-100 data-[state=active]:text-red-900 border border-transparent data-[state=active]:border-red-200"
+              className="flex items-center gap-2 justify-start w-full px-4 py-3 data-[state=active]:bg-muted data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
             >
-              <AlertCircle className="mr-2 h-4 w-4" />
-              Prioridades
+              <AlertCircle className="w-4 h-4" />
+              <span>Prioridades</span>
             </TabsTrigger>
+
             <TabsTrigger
-              value="tipos-evento"
-              className="data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900 border border-transparent data-[state=active]:border-blue-200"
+              value="tipos-violencia"
+              className="flex items-center gap-2 justify-start w-full px-4 py-3 data-[state=active]:bg-muted data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
             >
-              <CalendarDays className="mr-2 h-4 w-4" />
-              Tipos Evento
+              <ShieldAlert className="w-4 h-4" />
+              <span>Tipos de Violência</span>
             </TabsTrigger>
-            <TabsTrigger
-              value="tipos-agressao"
-              className="data-[state=active]:bg-orange-100 data-[state=active]:text-orange-900 border border-transparent data-[state=active]:border-orange-200"
-            >
-              <ShieldAlert className="mr-2 h-4 w-4" />
-              Tipos Agressão
-            </TabsTrigger>
+
             <TabsTrigger
               value="encaminhamentos"
-              className="data-[state=active]:bg-green-100 data-[state=active]:text-green-900 border border-transparent data-[state=active]:border-green-200"
+              className="flex items-center gap-2 justify-start w-full px-4 py-3 data-[state=active]:bg-muted data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
             >
-              <ArrowUpRight className="mr-2 h-4 w-4" />
-              Encaminhamentos
+              <Map className="w-4 h-4" />
+              <span>Encaminhamentos</span>
             </TabsTrigger>
+
+            <TabsTrigger
+              value="beneficios"
+              className="flex items-center gap-2 justify-start w-full px-4 py-3 data-[state=active]:bg-muted data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
+            >
+              <HeartHandshake className="w-4 h-4" />
+              <span>Benefícios</span>
+            </TabsTrigger>
+
+            <div className="hidden md:block px-4 py-2 mt-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Outros
+            </div>
+
+            <TabsTrigger
+              value="tipos-evento"
+              className="flex items-center gap-2 justify-start w-full px-4 py-3 data-[state=active]:bg-muted data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
+            >
+              <CalendarDays className="w-4 h-4" />
+              <span>Tipos de Evento</span>
+            </TabsTrigger>
+
+            <TabsTrigger
+              value="campanhas"
+              className="flex items-center gap-2 justify-start w-full px-4 py-3 data-[state=active]:bg-muted data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
+            >
+              <Megaphone className="w-4 h-4" />
+              <span>Campanhas</span>
+            </TabsTrigger>
+
             <TabsTrigger
               value="periculosidade"
-              className="data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900 border border-transparent data-[state=active]:border-slate-200"
+              className="flex items-center gap-2 justify-start w-full px-4 py-3 data-[state=active]:bg-muted data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
             >
-              <Siren className="mr-2 h-4 w-4" />
-              Níveis Risco
+              <Siren className="w-4 h-4" />
+              <span>Periculosidade</span>
             </TabsTrigger>
             <TabsTrigger
               value="status-legal"
-              className="data-[state=active]:bg-yellow-100 data-[state=active]:text-yellow-900 border border-transparent data-[state=active]:border-yellow-200"
+              className="flex items-center gap-2 justify-start w-full px-4 py-3 data-[state=active]:bg-muted data-[state=active]:border-l-4 data-[state=active]:border-primary data-[state=active]:font-semibold"
             >
-              <Scale className="mr-2 h-4 w-4" />
-              Status Legal
-            </TabsTrigger>
-            <TabsTrigger
-              value="locais"
-              className="data-[state=active]:bg-indigo-100 data-[state=active]:text-indigo-900 border border-transparent data-[state=active]:border-indigo-200"
-            >
-              <MapPin className="mr-2 h-4 w-4" />
-              Locais (Sala Azul)
-            </TabsTrigger>
-            <TabsTrigger
-              value="bairros"
-              className="data-[state=active]:bg-cyan-100 data-[state=active]:text-cyan-900 border border-transparent data-[state=active]:border-cyan-200"
-            >
-              <Map className="mr-2 h-4 w-4" />
-              Bairros
-            </TabsTrigger>
-            <TabsTrigger
-              value="beneficios"
-              className="data-[state=active]:bg-emerald-100 data-[state=active]:text-emerald-900 border border-transparent data-[state=active]:border-emerald-200"
-            >
-              <HeartHandshake className="mr-2 h-4 w-4" />
-              Benefícios
-            </TabsTrigger>
-            <TabsTrigger
-              value="campanhas"
-              className="data-[state=active]:bg-pink-100 data-[state=active]:text-pink-900 border border-transparent data-[state=active]:border-pink-200"
-            >
-              <Megaphone className="mr-2 h-4 w-4" />
-              Campanhas
-            </TabsTrigger>
-            <TabsTrigger
-              value="setores"
-              className="data-[state=active]:bg-gray-100 data-[state=active]:text-gray-900 border border-transparent data-[state=active]:border-gray-200"
-            >
-              <Briefcase className="mr-2 h-4 w-4" />
-              Setores
+              <Scale className="w-4 h-4" />
+              <span>Status Legal</span>
             </TabsTrigger>
           </TabsList>
-        </div>
+        </aside>
 
-        <div className="bg-white rounded-lg border shadow-sm p-4">
-          {/* 1. Origens */}
-          <TabsContent value="origens" className="space-y-4 focus:outline-none">
+        {/* CONTEÚDO */}
+        <div className="flex-1 bg-card rounded-lg border shadow-sm p-6 min-h-[500px]">
+          {/* SETORES (NOVO) */}
+          <TabsContent value="setores" className="mt-0 space-y-4">
             <GenericCrudTable
-              title="Origens da Demanda"
-              description="Fontes de onde chegam as mulheres (ex: CRAS, CREAS, Espontânea)."
-              data={origens}
-              hasColorField={true}
-              showStatus={true}
-              columns={[
-                { key: "nome", label: "Nome" },
-                { key: "cor", label: "Cor", render: renderColor },
-              ]}
-              schema={colorSchema}
-              onSave={(data) => saveAuxItem("config_origens", data)}
-              onDelete={(id) => deleteAuxItem("config_origens", id)}
-            />
-          </TabsContent>
-
-          {/* 2. Prioridades */}
-          <TabsContent
-            value="prioridades"
-            className="space-y-4 focus:outline-none"
-          >
-            <GenericCrudTable
-              title="Níveis de Prioridade"
-              description="Classificação de urgência para atendimentos (ex: Alta, Média, Baixa)."
-              data={prioridades}
-              hasColorField={true}
-              showStatus={true}
-              columns={[
-                { key: "nome", label: "Nome" },
-                { key: "cor", label: "Cor", render: renderColor },
-              ]}
-              schema={colorSchema}
-              onSave={(data) => saveAuxItem("config_prioridades", data)}
-              onDelete={(id) => deleteAuxItem("config_prioridades", id)}
-            />
-          </TabsContent>
-
-          {/* 3. Tipos de Evento */}
-          <TabsContent
-            value="tipos-evento"
-            className="space-y-4 focus:outline-none"
-          >
-            <GenericCrudTable
-              title="Tipos de Evento"
-              description="Categorias para a agenda institucional (ex: Reunião, Palestra, Ação Externa)."
-              data={tiposEvento}
-              showStatus={true}
+              title="Setores"
+              description="Gerencie os setores (departamentos) da instituição. Ex: Recepção, Jurídico."
+              items={setores}
+              type="setores"
               columns={[{ key: "nome", label: "Nome" }]}
-              schema={baseSchema}
-              onSave={(data) => saveAuxItem("config_tipos_evento", data)}
-              onDelete={(id) => deleteAuxItem("config_tipos_evento", id)}
+              onSave={(data) => saveAuxItem("setores", data)}
+              onDelete={(id) => deleteAuxItem("setores", id)}
+              formSchema={basicSchema}
+              renderFormFields={(form) => (
+                <FormField
+                  control={form.control}
+                  name="nome"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome do Setor</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ex: Recepção" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             />
           </TabsContent>
 
-          {/* 4. Tipos de Agressão */}
-          <TabsContent
-            value="tipos-agressao"
-            className="space-y-4 focus:outline-none"
-          >
+          {/* LOCAIS */}
+          <TabsContent value="locais" className="mt-0 space-y-4">
             <GenericCrudTable
-              title="Tipos de Violência/Agressão"
-              description="Tipificações de violência para relatórios (ex: Física, Psicológica, Patrimonial)."
-              data={tiposAgressao}
-              showStatus={true}
+              title="Locais de Atendimento"
+              items={locais}
+              type="locais"
               columns={[{ key: "nome", label: "Nome" }]}
-              schema={baseSchema}
-              onSave={(data) => saveAuxItem("config_tipos_agressao", data)}
-              onDelete={(id) => deleteAuxItem("config_tipos_agressao", id)}
+              onSave={(data) => saveAuxItem("locais", data)}
+              onDelete={(id) => deleteAuxItem("locais", id)}
+              formSchema={basicSchema}
+              renderFormFields={(form) => (
+                <FormField
+                  control={form.control}
+                  name="nome"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome do Local</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ex: Sala de Reunião 1" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             />
           </TabsContent>
 
-          {/* 5. Encaminhamentos */}
-          <TabsContent
-            value="encaminhamentos"
-            className="space-y-4 focus:outline-none"
-          >
+          {/* BAIRROS */}
+          <TabsContent value="bairros" className="mt-0 space-y-4">
+            <GenericCrudTable
+              title="Bairros"
+              items={bairros}
+              type="bairros"
+              columns={[{ key: "nome", label: "Nome" }]}
+              onSave={(data) => saveAuxItem("bairros", data)}
+              onDelete={(id) => deleteAuxItem("bairros", id)}
+              formSchema={basicSchema}
+              renderFormFields={(form) => (
+                <FormField
+                  control={form.control}
+                  name="nome"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome do Bairro</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ex: Centro" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+            />
+          </TabsContent>
+
+          {/* ORIGENS */}
+          <TabsContent value="origens" className="mt-0 space-y-4">
+            <GenericCrudTable
+              title="Origens"
+              items={origens}
+              type="origens"
+              columns={[{ key: "nome", label: "Nome" }]}
+              onSave={(v) => saveAuxItem("origens", v)}
+              onDelete={(id) => deleteAuxItem("origens", id)}
+              formSchema={basicSchema}
+              renderFormFields={(form) => (
+                <FormField
+                  control={form.control}
+                  name="nome"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+            />
+          </TabsContent>
+
+          {/* PRIORIDADES */}
+          <TabsContent value="prioridades" className="mt-0 space-y-4">
+            <GenericCrudTable
+              title="Prioridades"
+              items={prioridades}
+              type="prioridades"
+              columns={[{ key: "nome", label: "Nome" }]}
+              onSave={(v) => saveAuxItem("prioridades", v)}
+              onDelete={(id) => deleteAuxItem("prioridades", id)}
+              formSchema={basicSchema}
+              renderFormFields={(form) => (
+                <FormField
+                  control={form.control}
+                  name="nome"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+            />
+          </TabsContent>
+
+          {/* TIPOS VIOLÊNCIA */}
+          <TabsContent value="tipos-violencia" className="mt-0 space-y-4">
+            <GenericCrudTable
+              title="Tipos de Violência"
+              items={tiposAgressao}
+              type="tipos-violencia"
+              columns={[{ key: "nome", label: "Nome" }]}
+              onSave={(v) => saveAuxItem("tipos-violencia", v)}
+              onDelete={(id) => deleteAuxItem("tipos-violencia", id)}
+              formSchema={basicSchema}
+              renderFormFields={(form) => (
+                <FormField
+                  control={form.control}
+                  name="nome"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+            />
+          </TabsContent>
+
+          {/* ENCAMINHAMENTOS */}
+          <TabsContent value="encaminhamentos" className="mt-0 space-y-4">
             <GenericCrudTable
               title="Encaminhamentos"
-              description="Destinos para onde as usuárias são encaminhadas."
-              data={encaminhamentos}
-              showStatus={true}
-              hasGrupoRma={true}
+              items={encaminhamentos}
+              type="encaminhamentos"
+              columns={[{ key: "nome", label: "Nome" }]}
+              onSave={(v) => saveAuxItem("encaminhamentos", v)}
+              onDelete={(id) => deleteAuxItem("encaminhamentos", id)}
+              formSchema={basicSchema}
+              renderFormFields={(form) => (
+                <FormField
+                  control={form.control}
+                  name="nome"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+            />
+          </TabsContent>
+
+          {/* BENEFICIOS */}
+          <TabsContent value="beneficios" className="mt-0 space-y-4">
+            <GenericCrudTable
+              title="Benefícios"
+              items={beneficios}
+              type="beneficios"
+              columns={[{ key: "nome", label: "Nome" }]}
+              onSave={(v) => saveAuxItem("beneficios", v)}
+              onDelete={(id) => deleteAuxItem("beneficios", id)}
+              formSchema={basicSchema}
+              renderFormFields={(form) => (
+                <FormField
+                  control={form.control}
+                  name="nome"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+            />
+          </TabsContent>
+
+          {/* TIPOS EVENTO */}
+          <TabsContent value="tipos-evento" className="mt-0 space-y-4">
+            <GenericCrudTable
+              title="Tipos de Evento"
+              items={tiposEvento}
+              type="tipos-evento"
+              columns={[{ key: "nome", label: "Nome" }]}
+              onSave={(v) => saveAuxItem("tipos-evento", v)}
+              onDelete={(id) => deleteAuxItem("tipos-evento", id)}
+              formSchema={basicSchema}
+              renderFormFields={(form) => (
+                <FormField
+                  control={form.control}
+                  name="nome"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+            />
+          </TabsContent>
+
+          {/* PERICULOSIDADE */}
+          <TabsContent value="periculosidade" className="mt-0 space-y-4">
+            <GenericCrudTable
+              title="Níveis de Periculosidade"
+              items={periculosidade}
+              type="periculosidade"
               columns={[
                 { key: "nome", label: "Nome" },
                 {
-                  key: "grupo_rma",
-                  label: "Grupo RMA",
+                  key: "cor",
+                  label: "Cor",
                   render: (item) => (
-                    <span className="capitalize px-2 py-1 bg-slate-100 rounded text-xs">
-                      {item.grupo_rma?.replace("_", " ") || "-"}
+                    <div className="flex items-center gap-2">
+                      {item.cor && (
+                        <div
+                          className="w-6 h-6 rounded border"
+                          style={{ backgroundColor: item.cor }}
+                        />
+                      )}
+                      <span>{item.cor || "-"}</span>
+                    </div>
+                  ),
+                },
+                { key: "peso", label: "Peso" },
+              ]}
+              hasColorField={true}
+              onSave={(v) => saveAuxItem("periculosidade", v)}
+              onDelete={(id) => deleteAuxItem("periculosidade", id)}
+              formSchema={z.object({
+                nome: z.string().min(2, "Nome obrigatório"),
+                cor: z.string().optional(),
+                peso: z.coerce.number().optional(),
+              })}
+              renderFormFields={(form) => (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="nome"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nome</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="cor"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Cor</FormLabel>
+                        <div className="flex gap-2">
+                          <Input type="color" className="w-12" {...field} />
+                          <Input {...field} />
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="peso"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Peso (Gravidade)</FormLabel>
+                        <FormControl>
+                          <Input type="number" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
+            />
+          </TabsContent>
+
+          {/* STATUS LEGAL */}
+          <TabsContent value="status-legal" className="mt-0 space-y-4">
+            <GenericCrudTable
+              title="Status Legal"
+              items={statusLegal}
+              type="status-legal"
+              columns={[
+                { key: "nome", label: "Nome" },
+                {
+                  key: "cor",
+                  label: "Cor",
+                  render: (item) => (
+                    <div className="flex items-center gap-2">
+                      {item.cor && (
+                        <div
+                          className="w-6 h-6 rounded border"
+                          style={{ backgroundColor: item.cor }}
+                        />
+                      )}
+                      <span>{item.cor || "-"}</span>
+                    </div>
+                  ),
+                },
+              ]}
+              hasColorField={true}
+              onSave={(v) => saveAuxItem("status-legal", v)}
+              onDelete={(id) => deleteAuxItem("status-legal", id)}
+              formSchema={z.object({
+                nome: z.string().min(2, "Nome obrigatório"),
+                cor: z.string().optional(),
+              })}
+              renderFormFields={(form) => (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="nome"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nome</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="cor"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Cor</FormLabel>
+                        <div className="flex gap-2">
+                          <Input type="color" className="w-12" {...field} />
+                          <Input {...field} />
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
+            />
+          </TabsContent>
+
+          {/* CAMPANHAS */}
+          <TabsContent value="campanhas" className="mt-0 space-y-4">
+            <GenericCrudTable
+              title="Campanhas de Marketing"
+              items={campanhas}
+              type="campanhas"
+              columns={[
+                { key: "nome", label: "Nome" },
+                { key: "mes", label: "Mês" },
+                {
+                  key: "cor",
+                  label: "Cor",
+                  render: (item) => (
+                    <div className="flex items-center gap-2">
+                      {item.cor && (
+                        <div
+                          className="w-4 h-4 rounded-full border"
+                          style={{ backgroundColor: item.cor }}
+                        />
+                      )}
+                      <span>{item.cor || "-"}</span>
+                    </div>
+                  ),
+                },
+                {
+                  key: "status",
+                  label: "Status",
+                  render: (item) => (
+                    <span
+                      className={`px-2 py-1 rounded text-xs ${item.status === "published" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}
+                    >
+                      {item.status === "published" ? "Ativo" : "Inativo"}
                     </span>
                   ),
                 },
               ]}
-              schema={baseSchema.extend({
-                grupo_rma: z.string().min(1, "Grupo é obrigatório"),
+              hasColorField={true}
+              onSave={(data) => saveAuxItem("campanhas", data)}
+              onDelete={(id) => deleteAuxItem("campanhas", id)}
+              formSchema={z.object({
+                id: z.number().optional(),
+                nome: z.string().min(2, "Nome obrigatório"),
+                mes: z.string().min(1, "Selecione o mês"),
+                cor: z.string().min(1, "Selecione a cor"),
+                status: z.string().min(1, "Selecione o status"),
               })}
-              onSave={(data) => saveAuxItem("config_encaminhamentos", data)}
-              onDelete={(id) => deleteAuxItem("config_encaminhamentos", id)}
-            />
-          </TabsContent>
+              renderFormFields={(form: any) => (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="nome"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nome da Campanha</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ex: Agosto Lilás" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-          {/* 6. Periculosidade */}
-          <TabsContent
-            value="periculosidade"
-            className="space-y-4 focus:outline-none"
-          >
-            <GenericCrudTable
-              title="Níveis de Periculosidade"
-              description="Classificação de risco do agressor na Sala Azul."
-              data={periculosidade}
-              showStatus={true}
-              columns={[
-                { key: "nome", label: "Nome" },
-                { key: "peso", label: "Peso" },
-              ]}
-              schema={baseSchema.extend({
-                peso: z.coerce.number().optional(),
-              })}
-              onSave={(data) =>
-                saveAuxItem("config_niveis_periculosidade", data)
-              }
-              onDelete={(id) =>
-                deleteAuxItem("config_niveis_periculosidade", id)
-              }
-            />
-          </TabsContent>
+                  <FormField
+                    control={form.control}
+                    name="mes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Mês de Referência</FormLabel>
+                        <FormControl>
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione o mês" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {monthOptions.map((mes) => (
+                                <SelectItem key={mes} value={mes}>
+                                  {mes}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-          {/* 7. Status Legal */}
-          <TabsContent
-            value="status-legal"
-            className="space-y-4 focus:outline-none"
-          >
-            <GenericCrudTable
-              title="Status Legal"
-              description="Situação jurídica do processo (ex: Medida Deferida, Aguardando Audiência)."
-              data={statusLegal}
-              showStatus={true}
-              columns={[{ key: "nome", label: "Nome" }]}
-              schema={baseSchema}
-              onSave={(data) => saveAuxItem("config_status_legal", data)}
-              onDelete={(id) => deleteAuxItem("config_status_legal", id)}
-            />
-          </TabsContent>
+                  <FormField
+                    control={form.control}
+                    name="cor"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Cor da Campanha</FormLabel>
+                        <div className="flex gap-2">
+                          <FormControl>
+                            <Input
+                              type="color"
+                              className="w-12 h-10 p-1"
+                              {...field}
+                            />
+                          </FormControl>
+                          <Input
+                            placeholder="#000000"
+                            {...field}
+                            className="flex-1"
+                          />
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-          {/* 8. Locais */}
-          <TabsContent value="locais" className="space-y-4 focus:outline-none">
-            <GenericCrudTable
-              title="Locais de Realização"
-              description="Locais onde ocorrem os grupos reflexivos da Sala Azul."
-              data={locais}
-              showStatus={true}
-              columns={[{ key: "nome", label: "Nome" }]}
-              schema={baseSchema}
-              onSave={(data) => saveAuxItem("locais", data)}
-              onDelete={(id) => deleteAuxItem("locais", id)}
-            />
-          </TabsContent>
-
-          {/* 9. Bairros */}
-          <TabsContent value="bairros" className="space-y-4 focus:outline-none">
-            <GenericCrudTable
-              title="Bairros de Aracaju"
-              description="Lista de bairros para padronização de endereços."
-              data={bairros}
-              showStatus={true}
-              columns={[{ key: "nome", label: "Nome" }]}
-              schema={baseSchema}
-              onSave={(data) => saveAuxItem("config_bairros", data)}
-              onDelete={(id) => deleteAuxItem("config_bairros", id)}
-            />
-          </TabsContent>
-
-          {/* 10. Benefícios */}
-          <TabsContent
-            value="beneficios"
-            className="space-y-4 focus:outline-none"
-          >
-            <GenericCrudTable
-              title="Benefícios Eventuais"
-              description="Tipos de auxílios entregues (ex: Cesta Básica, Kit Higiene)."
-              data={beneficios}
-              showStatus={true}
-              columns={[{ key: "nome", label: "Nome" }]}
-              schema={baseSchema}
-              onSave={(data) => saveAuxItem("config_beneficios", data)}
-              onDelete={(id) => deleteAuxItem("config_beneficios", id)}
-            />
-          </TabsContent>
-
-          {/* 11. Campanhas */}
-          <TabsContent
-            value="campanhas"
-            className="space-y-4 focus:outline-none"
-          >
-            <GenericCrudTable
-              title="Campanhas"
-              description="Temas e campanhas (ex: Agosto Lilás, Outubro Rosa)."
-              data={campanhas}
-              showStatus={true}
-              columns={[{ key: "nome", label: "Nome" }]}
-              schema={baseSchema}
-              onSave={(data) => saveAuxItem("config_campanhas", data)}
-              onDelete={(id) => deleteAuxItem("config_campanhas", id)}
-            />
-          </TabsContent>
-
-          {/* 12. Setores */}
-          <TabsContent value="setores" className="space-y-4 focus:outline-none">
-            <GenericCrudTable
-              title="Setores"
-              description="Setores internos para tramitação de demandas."
-              data={setores}
-              showStatus={true}
-              columns={[{ key: "nome", label: "Nome" }]}
-              schema={baseSchema}
-              onSave={(data) => saveAuxItem("setores", data)}
-              onDelete={(id) => deleteAuxItem("setores", id)}
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Status
+                          <InfoTooltip text="Define se a campanha está ativa, inativa ou arquivada." />
+                        </FormLabel>
+                        <FormControl>
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione o status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="published">Ativo</SelectItem>
+                              <SelectItem value="draft">Inativo</SelectItem>
+                              <SelectItem value="archived">
+                                Arquivado
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
             />
           </TabsContent>
         </div>
