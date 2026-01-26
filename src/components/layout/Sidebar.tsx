@@ -237,6 +237,10 @@ export function Sidebar() {
             <span>Sair</span>
           </button>
         </form>
+
+        <div className="mt-2 text-center pb-1">
+          <span className="text-[10px] text-slate-600 font-mono">v1.0</span>
+        </div>
       </div>
     </aside>
   );
