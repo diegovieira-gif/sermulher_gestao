@@ -2,20 +2,16 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { authentication, createDirectus, rest } from "@directus/sdk";
+import { authentication, createDirectus, rest, readMe } from "@directus/sdk";
 import { revalidatePath } from "next/cache";
 
-// Server Action compatível com useActionState e chamadas diretas
 export async function login(prevState: any, formData?: FormData) {
   const input = formData || prevState;
-
   let email = "";
   let password = "";
 
-  // Extração robusta dos dados (FormData ou JSON)
   try {
     const isFormData = input && typeof input.get === "function";
-
     if (isFormData) {
       email = String(input.get("email") || "");
       password = String(input.get("password") || "");
@@ -33,7 +29,6 @@ export async function login(prevState: any, formData?: FormData) {
 
   const apiUrl = process.env.DIRECTUS_API_URL;
   if (!apiUrl) {
-    console.error("[Login] ERRO CRÍTICO: DIRECTUS_API_URL ausente");
     return { message: "Erro de configuração no servidor." };
   }
 
@@ -42,46 +37,72 @@ export async function login(prevState: any, formData?: FormData) {
       .with(authentication("json"))
       .with(rest());
 
+    // 1. Autenticação
     const response = await client.login(email, password);
 
     if (!response.access_token || !response.refresh_token) {
-      throw new Error("Tokens não recebidos");
+      throw new Error("Tokens não recebidos.");
     }
 
+    // 2. Buscar dados do usuário (Nome e Role)
+    // O cliente já está autenticado internamente após o login
+    const user = await client.request(
+      readMe({ fields: ["first_name", "last_name", "role.name"] }),
+    );
+
+    const userName = user.first_name
+      ? `${user.first_name} ${user.last_name || ""}`
+      : email;
+    // O Directus retorna a role como objeto ou ID, ajustamos conforme retorno
+    const userRole =
+      typeof user.role === "object" && user.role
+        ? (user.role as any).name
+        : "Usuário";
+
+    // 3. Salvar Cookies
     const cookieStore = await cookies();
 
-    // --- CORREÇÃO DEFINITIVA PARA HTTP/IP ---
     const cookieOptions = {
       httpOnly: true,
-      // secure: false é OBRIGATÓRIO para funcionar em [http://192.168...](http://192.168...)
-      // Se fosse true, o navegador ignoraria o cookie fora de HTTPS/Localhost
-      secure: false,
+      secure: false, // IP Local
       path: "/",
       sameSite: "lax" as const,
     };
 
-    // Salva Access Token
+    // Tokens (Segurança - httpOnly)
     cookieStore.set("directus_token", response.access_token, {
       ...cookieOptions,
-      maxAge: response.expires ? Math.floor(response.expires / 1000) : 900,
+      maxAge: 900, // 15 min
     });
 
-    // Salva Refresh Token
     cookieStore.set("directus_refresh_token", response.refresh_token, {
       ...cookieOptions,
-      maxAge: 7 * 24 * 60 * 60, // 7 dias
+      maxAge: 7 * 24 * 60 * 60,
+    });
+
+    // Dados do Usuário (Acessíveis via JS no cliente? Não por padrão com httpOnly)
+    // Para o Header ler, precisamos que NÃO seja httpOnly ou criar uma API de profile.
+    // Vamos usar httpOnly: false APENAS para nome e role para facilitar a leitura no Header.tsx
+
+    cookieStore.set("user_name", userName, {
+      ...cookieOptions,
+      httpOnly: false, // Permitir leitura no cliente
+      maxAge: 7 * 24 * 60 * 60,
+    });
+
+    cookieStore.set("user_role", userRole || "Admin", {
+      ...cookieOptions,
+      httpOnly: false, // Permitir leitura no cliente
+      maxAge: 7 * 24 * 60 * 60,
     });
   } catch (error: any) {
     console.error("[Login] Falha:", error);
-
     let msg = "Credenciais inválidas.";
     if (error?.errors?.[0]?.message) msg = error.errors[0].message;
     else if (error.message) msg = error.message;
-
     return { message: msg };
   }
 
-  // Login com sucesso
   redirect("/dashboard");
 }
 
@@ -89,15 +110,11 @@ export async function logout() {
   const cookieStore = await cookies();
   cookieStore.delete("directus_token");
   cookieStore.delete("directus_refresh_token");
-  // Limpa o cache do cliente para evitar ver telas antigas
-  revalidatePath("/", "layout");
-  redirect("/login");
-}
+  cookieStore.delete("user_name");
+  cookieStore.delete("user_role");
 
-export async function logout() {
-  const cookieStore = await cookies();
-  cookieStore.delete("directus_token");
-  cookieStore.delete("directus_refresh_token");
   revalidatePath("/", "layout");
+  revalidatePath("/", "layout");
+
   redirect("/login");
 }
