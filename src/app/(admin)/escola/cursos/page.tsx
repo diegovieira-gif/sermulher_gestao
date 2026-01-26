@@ -2,6 +2,8 @@ import { getCursos } from "../actions";
 import { CursosClient } from "./cursos-client";
 import type { EscolaCursoDB } from "@/types/database";
 
+export const dynamic = "force-dynamic";
+
 export default async function CursosPage() {
   const cursosResult = await getCursos();
 

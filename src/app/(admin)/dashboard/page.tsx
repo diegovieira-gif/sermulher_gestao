@@ -2,29 +2,22 @@ import { getDashboardStats } from "./actions";
 import { OverviewClient } from "./overview-client";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
-import { directus } from "@/lib/directus";
-import { readMe } from "@directus/sdk";
+import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  // Busca dados do dashboard e dados do usuário em paralelo para performance
-  const [statsResult, userResult] = await Promise.all([
-    getDashboardStats(),
-    // Tenta buscar o usuário atual. Se falhar (ex: token inválido), retorna null
-    directus.request(readMe({ fields: ["first_name"] })).catch(() => null),
-  ]);
+  // 1. Busca estatísticas do dashboard
+  const statsResult = await getDashboardStats();
 
-  // Tenta pegar o usuário real via readMe (mais seguro se tiver auth por cookie)
-  let userName = "Gestão";
-  try {
-    const me = await directus.request(readMe({ fields: ["first_name"] }));
-    if (me && me.first_name) {
-      userName = me.first_name;
-    }
-  } catch (e) {
-    // Se falhar (ex: token de admin geral), mantemos "Gestão"
-  }
+  // 2. Busca nome do usuário direto dos cookies (Fonte de verdade da sessão atual)
+  const cookieStore = await cookies();
+  const userNameCookie = cookieStore.get("user_name");
+
+  // Decodifica o nome (caso tenha acentos ou espaços encodados) ou usa fallback
+  const userName = userNameCookie
+    ? decodeURIComponent(userNameCookie.value)
+    : "Gestão";
 
   if (!statsResult.success || !statsResult.data) {
     return (

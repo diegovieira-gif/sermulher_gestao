@@ -1,6 +1,8 @@
 import { getAtendimentos, getFormOptions } from "./actions";
 import { AtendimentosClient } from "./atendimentos-client";
 
+export const dynamic = "force-dynamic";
+
 export default async function AtendimentosPage() {
   const [atendimentosResult, optionsResult] = await Promise.all([
     getAtendimentos(),

@@ -1,6 +1,8 @@
 import { getSalas, getOptions } from "./actions";
 import { SalasClient } from "./salas-client";
 
+export const dynamic = "force-dynamic";
+
 export default async function CiclosPage() {
   // Busca salas e opções simultaneamente usando Promise.all
   const [salasResult, optionsResult] = await Promise.all([

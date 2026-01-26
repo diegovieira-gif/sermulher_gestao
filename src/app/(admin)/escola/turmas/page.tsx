@@ -1,6 +1,8 @@
 import { getTurmas, getCursosOptions } from "../actions";
 import { TurmasClient } from "./turmas-client";
 
+export const dynamic = "force-dynamic";
+
 export default async function TurmasPage() {
   const [turmasResult, cursosOptionsResult] = await Promise.all([
     getTurmas(),

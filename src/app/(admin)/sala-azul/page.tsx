@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Users, RefreshCw, AlertTriangle } from "lucide-react";
 import { SalaAzulStatsChart } from "./sala-azul-stats-chart";
 
+export const dynamic = "force-dynamic";
+
 interface Stats {
   ciclosAtivos: number;
   totalParticipantes: number;
@@ -22,19 +24,19 @@ async function getStats(): Promise<Stats> {
           // Busca apenas o ID e o Nome do Nível para contagem
           fields: ["id", "nivel_id.nome"] as any,
           limit: -1,
-        })
+        }),
       ),
       directus.request(
         readItems("salas_azul", {
           fields: ["id", "status"],
           limit: -1,
-        })
+        }),
       ),
     ]);
 
     // 1. Ciclos Ativos
     const ciclosAtivos = salas.filter(
-      (s: any) => s.status === "Em Andamento"
+      (s: any) => s.status === "Em Andamento",
     ).length;
 
     // 2. Total Participantes
@@ -61,7 +63,7 @@ async function getStats(): Promise<Stats> {
       ([nivel, qtd]) => ({
         nivel,
         quantidade: qtd,
-      })
+      }),
     );
 
     return {
