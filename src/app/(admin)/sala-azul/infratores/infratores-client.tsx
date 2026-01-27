@@ -58,12 +58,14 @@ interface InfratoresClientProps {
   initialData: any[];
   niveis: any[];
   statusLegais: any[];
+  tiposAgressao: any[];
 }
 
 export function InfratoresClient({
   initialData,
   niveis,
   statusLegais,
+  tiposAgressao,
 }: InfratoresClientProps) {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
@@ -347,6 +349,7 @@ export function InfratoresClient({
             initialData={editingInfrator || undefined}
             niveis={niveis}
             statusLegais={statusLegais}
+            tiposAgressao={tiposAgressao}
           />
         </DialogContent>
       </Dialog>

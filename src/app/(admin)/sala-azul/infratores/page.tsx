@@ -42,6 +42,7 @@ export default async function InfratoresPage() {
           initialData={infratoresResult.data || []}
           niveis={options.niveis || []}
           statusLegais={options.statusLegal || []}
+          tiposAgressao={options.tiposAgressao || []}
         />
       </div>
     </div>
