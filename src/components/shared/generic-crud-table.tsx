@@ -54,6 +54,8 @@ import { InfoTooltip } from "@/components/ui/info-tooltip";
 
 export interface GenericCrudTableProps {
   title: string;
+  description?: string;
+  type?: string;
   items: any[];
   columns: Array<{
     key: string;
