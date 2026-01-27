@@ -114,6 +114,7 @@ export async function getFormOptions() {
         readItems("beneficiarias", {
           fields: ["id", "nome_completo", "cpf"],
           sort: ["nome_completo"],
+          limit: -1, // CORREÇÃO: Buscar todos os registros para permitir filtro no cliente
         }),
       ) as Promise<BeneficiariaOption[]>,
       directus.request(
