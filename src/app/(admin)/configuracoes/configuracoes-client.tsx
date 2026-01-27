@@ -32,7 +32,7 @@ import {
   Map,
   HeartHandshake,
   Megaphone,
-  Briefcase, // Ícone para Setores
+  Briefcase,
 } from "lucide-react";
 
 interface ConfiguracoesClientProps {
@@ -47,7 +47,7 @@ interface ConfiguracoesClientProps {
   bairros: any[];
   beneficios: any[];
   campanhas: any[];
-  setores: any[]; // Novo
+  setores: any[];
 }
 
 export function ConfiguracoesClient({
@@ -201,7 +201,7 @@ export function ConfiguracoesClient({
 
         {/* CONTEÚDO */}
         <div className="flex-1 bg-card rounded-lg border shadow-sm p-6 min-h-[500px]">
-          {/* SETORES (NOVO) */}
+          {/* SETORES */}
           <TabsContent value="setores" className="mt-0 space-y-4">
             <GenericCrudTable
               title="Setores"
@@ -211,6 +211,7 @@ export function ConfiguracoesClient({
               columns={[{ key: "nome", label: "Nome" }]}
               onSave={(data) => saveAuxItem("setores", data)}
               onDelete={(id) => deleteAuxItem("setores", id)}
+              // Mantém manual pois setores não requer status/cor
               formSchema={basicSchema}
               renderFormFields={(form) => (
                 <FormField
@@ -370,31 +371,28 @@ export function ConfiguracoesClient({
             />
           </TabsContent>
 
-          {/* ENCAMINHAMENTOS */}
+          {/* ENCAMINHAMENTOS - CORRIGIDO */}
           <TabsContent value="encaminhamentos" className="mt-0 space-y-4">
             <GenericCrudTable
               title="Encaminhamentos"
               items={encaminhamentos}
               type="encaminhamentos"
-              columns={[{ key: "nome", label: "Nome" }]}
+              hasGrupoRma={true} // Ativa o campo obrigatório
+              columns={[
+                { key: "nome", label: "Nome" },
+                {
+                  key: "grupo_rma",
+                  label: "Grupo RMA",
+                  render: (item) => (
+                    <span className="capitalize px-2 py-1 bg-slate-100 rounded text-xs">
+                      {item.grupo_rma?.replace("_", " ") || "-"}
+                    </span>
+                  ),
+                },
+              ]}
               onSave={(v) => saveAuxItem("encaminhamentos", v)}
               onDelete={(id) => deleteAuxItem("encaminhamentos", id)}
-              formSchema={basicSchema}
-              renderFormFields={(form) => (
-                <FormField
-                  control={form.control}
-                  name="nome"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nome</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
+              // Removido schema manual para usar o padrão que inclui grupo_rma
             />
           </TabsContent>
 
