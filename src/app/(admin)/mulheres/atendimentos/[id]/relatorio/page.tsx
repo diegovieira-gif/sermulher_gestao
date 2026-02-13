@@ -93,11 +93,11 @@ export default async function RelatorioAtendimentoPage({ params }: PageProps) {
             </div>
             <div>
               <span className="block text-slate-500 text-xs">Origem</span>
-              <span className="text-slate-800">{atendimento.origem_id?.nome || "-"}</span>
+              <span className="text-slate-800">{atendimento.origem_id?.nome || atendimento.origem || "-"}</span>
             </div>
             <div>
               <span className="block text-slate-500 text-xs">Prioridade</span>
-              <span className="text-slate-800 font-medium">{atendimento.prioridade_id?.nome || "Normal"}</span>
+              <span className="text-slate-800 font-medium">{atendimento.prioridade_id?.nome || atendimento.prioridade || "Normal"}</span>
             </div>
           </div>
         </section>
