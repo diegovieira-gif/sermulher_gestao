@@ -1,10 +1,27 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { marketingPostSchema, MarketingPost } from "./schemas";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import {
   Select,
   SelectContent,
@@ -21,13 +38,19 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   Plus,
   Trash2,
   Edit,
   BarChart3,
   Eye,
-  TrendingUp,
-  Percent,
   Flag,
   Smartphone,
   Instagram,
@@ -36,14 +59,43 @@ import {
   Facebook,
   Monitor,
   ExternalLink,
+  Tv,
+  Radio,
+  Trophy,
 } from "lucide-react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+} from "recharts";
 import { saveMarketingItem, deleteMarketingItem } from "./actions";
+import { toast } from "sonner";
 
 interface MarketingClientProps {
   items: any[];
-  stats: any;
+  stats: {
+    totalPosts: number;
+    postsPorCanal: { name: string; value: number }[];
+    alcanceTotal: number;
+    campanhasAtivas: number;
+    topAlcance: { titulo: string; alcance: number; canal: string } | null;
+  };
   campanhasList: any[];
 }
+
+const COLORS = [
+  "#E1306C", // Instagram
+  "#1877F2", // Facebook
+  "#10B981", // Site
+  "#F59E0B", // Youtube/TV
+  "#6366F1", // Outros
+  "#8B5CF6",
+];
 
 export function MarketingClient({
   items,
@@ -51,86 +103,87 @@ export function MarketingClient({
   campanhasList,
 }: MarketingClientProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [editId, setEditId] = useState<number | null>(null);
 
-  const [formData, setFormData] = useState({
-    id: null,
-    titulo: "",
-    data_publicacao: new Date().toISOString().split("T")[0],
-    plataforma: "instagram",
-    link: "",
-    alcance: "",
-    interacoes: "",
-    campanha_id: "0",
+  const form = useForm({
+    resolver: zodResolver(marketingPostSchema),
+    defaultValues: {
+      titulo: "",
+      data_publicacao: new Date().toISOString().split("T")[0],
+      canal: "Instagram" as const,
+      formato: "Feed/Post" as const,
+      alcance: 0,
+      link: "",
+    },
   });
 
+  const { watch, setValue } = form;
+  const selectedCanal = watch("canal");
+
   const handleEdit = (item: any) => {
-    setFormData({
-      id: item.id,
+    setEditId(item.id);
+    form.reset({
       titulo: item.titulo,
       data_publicacao: item.data_publicacao,
-      plataforma: item.plataforma,
+      canal: item.canal,
+      formato: item.formato,
+      alcance: item.alcance || 0,
       link: item.link || "",
-      alcance: item.alcance || "0",
-      interacoes: item.interacoes || "0",
-      campanha_id: item.campanha_id
-        ? String(item.campanha_id.id || item.campanha_id)
-        : "0",
     });
     setIsOpen(true);
   };
 
   const handleNew = () => {
-    setFormData({
-      id: null,
+    setEditId(null);
+    form.reset({
       titulo: "",
       data_publicacao: new Date().toISOString().split("T")[0],
-      plataforma: "instagram",
+      canal: "Instagram",
+      formato: "Feed/Post",
+      alcance: 0,
       link: "",
-      alcance: "",
-      interacoes: "",
-      campanha_id: "0",
     });
     setIsOpen(true);
   };
 
-  const onSave = async () => {
-    if (!formData.titulo || !formData.data_publicacao) {
-      alert("Preencha Título e Data!");
-      return;
+  const onSubmit = async (data: any) => {
+    try {
+      const payload = { ...data, id: editId };
+      const res = await saveMarketingItem(payload);
+
+      if (res.success) {
+        toast.success("Registro salvo com sucesso!");
+        setIsOpen(false);
+      } else {
+        toast.error(res.error || "Erro ao salvar.");
+      }
+    } catch (error) {
+      toast.error("Erro inesperado ao salvar.");
     }
-    setLoading(true);
-
-    const payload = {
-      ...formData,
-      alcance: Number(formData.alcance),
-      interacoes: Number(formData.interacoes),
-      campanha_id:
-        formData.campanha_id === "0" ? null : Number(formData.campanha_id),
-    };
-
-    const res = await saveMarketingItem(payload);
-    setLoading(false);
-    if (res.success) setIsOpen(false);
-    else alert("Erro ao salvar: " + (res.error || "Desconhecido"));
   };
 
   const onDelete = async (id: number) => {
     if (confirm("Tem certeza que deseja excluir?")) {
       await deleteMarketingItem(id);
+      toast.success("Item removido!");
     }
   };
 
-  const getPlatformIcon = (plat: string) => {
-    switch (plat) {
-      case "instagram":
+  const getChannelIcon = (canal: string) => {
+    switch (canal) {
+      case "Instagram":
         return <Instagram className="w-4 h-4 text-pink-600" />;
-      case "facebook":
+      case "Facebook":
         return <Facebook className="w-4 h-4 text-blue-600" />;
-      case "site":
-        return <Globe className="w-4 h-4 text-gray-600" />;
-      case "jornal":
-        return <Newspaper className="w-4 h-4 text-gray-800" />;
+      case "Site PMA":
+      case "Site SERMULHER":
+        return <Globe className="w-4 h-4 text-green-600" />;
+      case "Jornal":
+        return <Newspaper className="w-4 h-4 text-gray-600" />;
+      case "TV":
+        return <Tv className="w-4 h-4 text-orange-600" />;
+      case "Rádio":
+        return <Radio className="w-4 h-4 text-yellow-600" />;
       default:
         return <Monitor className="w-4 h-4 text-gray-500" />;
     }
@@ -139,315 +192,319 @@ export function MarketingClient({
   return (
     <div className="space-y-6">
       {/* KPI GRID */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="relative overflow-hidden border-l-4 border-l-blue-500">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Publicações
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Total Publicações
             </CardTitle>
-            <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
-              <BarChart3 className="h-4 w-4 text-blue-600" />
-            </div>
+            <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.postsMes}</div>
-          </CardContent>
-        </Card>
-        <Card className="relative overflow-hidden border-l-4 border-l-green-500">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Alcance
-            </CardTitle>
-            <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
-              <Eye className="h-4 w-4 text-green-600" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {stats.alcanceMes.toLocaleString("pt-BR")}
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="relative overflow-hidden border-l-4 border-l-purple-500">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Interações
-            </CardTitle>
-            <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
-              <TrendingUp className="h-4 w-4 text-purple-600" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {stats.interacoesMes.toLocaleString("pt-BR")}
-            </div>
+            <div className="text-2xl font-bold">{stats.totalPosts}</div>
+            <p className="text-xs text-muted-foreground">Mês atual</p>
           </CardContent>
         </Card>
 
-        {/* KPI LINHA 2 */}
-        <Card className="relative overflow-hidden border-l-4 border-l-orange-500">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Engajamento
-            </CardTitle>
-            <div className="h-8 w-8 rounded-full bg-orange-100 flex items-center justify-center">
-              <Percent className="h-4 w-4 text-orange-600" />
-            </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Alcance Total</CardTitle>
+            <Eye className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.taxaEngajamento}%</div>
-            <p className="text-xs text-muted-foreground mt-1">Qualidade</p>
+            <div className="text-2xl font-bold">
+              {stats.alcanceTotal.toLocaleString("pt-BR")}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Estimativa acumulada
+            </p>
           </CardContent>
         </Card>
-        <Card className="relative overflow-hidden border-l-4 border-l-pink-500">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Campanhas
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Campanhas Ativas
             </CardTitle>
-            <div className="h-8 w-8 rounded-full bg-pink-100 flex items-center justify-center">
-              <Flag className="h-4 w-4 text-pink-600" />
-            </div>
+            <Flag className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.campanhasAtivas}</div>
-            <p className="text-xs text-muted-foreground mt-1">Ativas no mês</p>
+            <p className="text-xs text-muted-foreground">Em andamento</p>
           </CardContent>
         </Card>
-        <Card className="relative overflow-hidden border-l-4 border-l-indigo-500">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Top Canal
-            </CardTitle>
-            <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center">
-              <Smartphone className="h-4 w-4 text-indigo-600" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold capitalize">
-              {stats.topPlataforma}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Maior volume</p>
-          </CardContent>
-        </Card>
+
+        {stats.topAlcance && (
+          <Card className="bg-gradient-to-br from-yellow-50 to-orange-50 border-orange-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-orange-800">
+                Top Alcance
+              </CardTitle>
+              <Trophy className="h-4 w-4 text-orange-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-lg font-bold truncate text-orange-900">
+                {stats.topAlcance.alcance.toLocaleString("pt-BR")}
+              </div>
+              <p className="text-xs text-orange-700 truncate max-w-[180px]">
+                {stats.topAlcance.titulo}
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
-      {/* Tabela de Gestão */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Gestão de Comunicação</CardTitle>
-          <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={handleNew}>
-                <Plus className="w-4 h-4 mr-2" /> Novo
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogHeader>
-                <DialogTitle>
-                  {formData.id ? "Editar Publicação" : "Nova Publicação"}
-                </DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label>Título / Manchete</Label>
-                  <Input
-                    value={formData.titulo}
-                    onChange={(e) =>
-                      setFormData({ ...formData, titulo: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label>Data</Label>
-                    <Input
-                      type="date"
-                      value={formData.data_publicacao}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          data_publicacao: e.target.value,
-                        })
-                      }
+      <div className="grid gap-4 md:grid-cols-3">
+        {/* GRÁFICO */}
+        <Card className="md:col-span-1">
+          <CardHeader>
+            <CardTitle>Publicações por Canal</CardTitle>
+            <CardDescription>Distribuição do mês</CardDescription>
+          </CardHeader>
+          <CardContent className="h-[200px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={stats.postsPorCanal}>
+                <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
+                <Tooltip
+                  cursor={{ fill: 'transparent' }}
+                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                />
+                <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                  {stats.postsPorCanal.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
                     />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>Plataforma</Label>
-                    <Select
-                      value={formData.plataforma}
-                      onValueChange={(val) =>
-                        setFormData({ ...formData, plataforma: val })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="instagram">Instagram</SelectItem>
-                        <SelectItem value="facebook">Facebook</SelectItem>
-                        <SelectItem value="site">Site</SelectItem>
-                        <SelectItem value="jornal">Jornal</SelectItem>
-                        <SelectItem value="outros">Outros</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
 
-                {/* CAMPO LINK RESTAURADO AQUI */}
-                <div className="grid gap-2">
-                  <Label>Link (URL)</Label>
-                  <Input
-                    value={formData.link}
-                    onChange={(e) =>
-                      setFormData({ ...formData, link: e.target.value })
-                    }
-                    placeholder="https://..."
-                  />
-                </div>
-
-                {/* DROPDOWN DE CAMPANHA */}
-                <div className="grid gap-2">
-                  <Label>Campanha</Label>
-                  <Select
-                    value={formData.campanha_id}
-                    onValueChange={(val) =>
-                      setFormData({ ...formData, campanha_id: val })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">Nenhuma / Avulso</SelectItem>
-                      {campanhasList.map((c) => (
-                        <SelectItem key={c.id} value={String(c.id)}>
-                          <span className="flex items-center gap-2">
-                            {c.cor && (
-                              <span
-                                className="w-2 h-2 rounded-full"
-                                style={{ backgroundColor: c.cor }}
-                              />
-                            )}
-                            {c.nome}
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label>Alcance</Label>
-                    <Input
-                      type="number"
-                      value={formData.alcance}
-                      onChange={(e) =>
-                        setFormData({ ...formData, alcance: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>Interações</Label>
-                    <Input
-                      type="number"
-                      value={formData.interacoes}
-                      onChange={(e) =>
-                        setFormData({ ...formData, interacoes: e.target.value })
-                      }
-                    />
-                  </div>
-                </div>
-                <Button onClick={onSave} disabled={loading}>
-                  {loading ? "Salvando..." : "Salvar"}
+        {/* TABELA E BOTÃO */}
+        <Card className="md:col-span-2">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Histórico Recente</CardTitle>
+              <CardDescription>Ultimas postagens registradas</CardDescription>
+            </div>
+            <Dialog open={isOpen} onOpenChange={setIsOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={handleNew}>
+                  <Plus className="w-4 h-4 mr-2" /> Novo Registro
                 </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border">
-            <table className="w-full text-sm text-left">
-              <thead className="bg-muted/50 text-muted-foreground">
-                <tr>
-                  <th className="p-4 font-medium">Data</th>
-                  <th className="p-4 font-medium">Título</th>
-                  <th className="p-4 font-medium">Plataforma</th>
-                  <th className="p-4 font-medium">Campanha</th>
-                  <th className="p-4 font-medium">Alcance</th>
-                  <th className="p-4 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle>
+                    {editId ? "Editar Registro" : "Novo Registro de Mídia"}
+                  </DialogTitle>
+                </DialogHeader>
+                <Form {...form}>
+                  <form
+                    onSubmit={form.handleSubmit(onSubmit)}
+                    className="space-y-4"
+                  >
+                    <FormField
+                      control={form.control}
+                      name="titulo"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Título / Pauta</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Ex: Campanha X..." {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="data_publicacao"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Data</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="canal"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Canal</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecione" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {[
+                                  "Site PMA",
+                                  "Site SERMULHER",
+                                  "Instagram",
+                                  "Facebook",
+                                  "Jornal",
+                                  "TV",
+                                  "Rádio",
+                                ].map((c) => (
+                                  <SelectItem key={c} value={c}>
+                                    {c}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    {(selectedCanal === "Instagram" ||
+                      selectedCanal === "Facebook") && (
+                        <FormField
+                          control={form.control}
+                          name="formato"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Formato</FormLabel>
+                              <Select
+                                onValueChange={field.onChange}
+                                defaultValue={field.value || undefined}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Selecione" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {[
+                                    "Feed/Post",
+                                    "Reels",
+                                    "Stories",
+                                    "Matéria",
+                                    "Entrevista",
+                                  ].map((f) => (
+                                    <SelectItem key={f} value={f}>
+                                      {f}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="alcance"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Alcance (Estimado)</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                placeholder="0"
+                                {...field}
+                                value={(field.value as number | string) ?? ""}
+                                onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="link"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Link (Opcional)</FormLabel>
+                            <FormControl>
+                              <Input placeholder="https://..." {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="flex justify-end pt-4">
+                      <Button type="submit">Salvar Registro</Button>
+                    </div>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Título</TableHead>
+                  <TableHead>Canal</TableHead>
+                  <TableHead>Alcance</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {items.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="p-8 text-center text-muted-foreground"
-                    >
-                      Nenhum item encontrado.
-                    </td>
-                  </tr>
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-24 text-center">
+                      Nenhum registro encontrado.
+                    </TableCell>
+                  </TableRow>
                 ) : (
                   items.map((item) => (
-                    <tr
-                      key={item.id}
-                      className="border-t hover:bg-muted/50 transition-colors"
-                    >
-                      <td className="p-4">
+                    <TableRow key={item.id}>
+                      <TableCell>
                         {new Date(item.data_publicacao).toLocaleDateString(
                           "pt-BR",
                         )}
-                      </td>
-                      <td className="p-4 font-medium">
-                        <div className="flex flex-col">
-                          <span>{item.titulo}</span>
-                          {item.link && (
-                            <a
-                              href={item.link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-blue-500 hover:underline flex items-center gap-1"
-                            >
-                              Link <ExternalLink className="w-3 h-3" />
-                            </a>
-                          )}
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-2">
-                          {getPlatformIcon(item.plataforma)}
-                          <span className="capitalize">{item.plataforma}</span>
-                        </div>
-                      </td>
-
-                      {/* COLUNA CAMPANHA COM BADGE */}
-                      <td className="p-4">
-                        {item.campanha_id ? (
-                          <Badge
-                            variant="outline"
-                            style={
-                              item.campanha_id.cor
-                                ? {
-                                    backgroundColor:
-                                      item.campanha_id.cor + "20",
-                                    color: item.campanha_id.cor,
-                                    borderColor: item.campanha_id.cor,
-                                  }
-                                : {}
-                            }
-                          >
-                            {item.campanha_id.nome}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {item.titulo}
+                        {item.formato && (
+                          <Badge variant="secondary" className="ml-2 text-[10px]">
+                            {item.formato}
                           </Badge>
-                        ) : (
-                          <span className="text-muted-foreground text-xs">
-                            -
-                          </span>
                         )}
-                      </td>
-
-                      <td className="p-4 font-mono">{item.alcance}</td>
-                      <td className="p-4 text-right flex justify-end gap-2">
+                        {item.link && (
+                          <a
+                            href={item.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="ml-2 text-blue-500 hover:text-blue-700 inline-flex items-center"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {getChannelIcon(item.canal)}
+                          <span>{item.canal}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{item.alcance}</TableCell>
+                      <TableCell className="text-right">
                         <Button
                           variant="ghost"
                           size="icon"
@@ -462,15 +519,15 @@ export function MarketingClient({
                         >
                           <Trash2 className="w-4 h-4 text-red-500" />
                         </Button>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))
                 )}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

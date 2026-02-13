@@ -8,12 +8,11 @@ export default async function MarketingPage() {
   const [itemsResult, stats, campanhasRes] = await Promise.all([
     getMarketingItems().catch(() => ({ success: false, data: [] })),
     getMarketingStats().catch(() => ({
-      postsMes: 0,
-      alcanceMes: 0,
-      interacoesMes: 0,
-      taxaEngajamento: "0",
+      totalPosts: 0,
+      postsPorCanal: [],
+      alcanceTotal: 0,
       campanhasAtivas: 0,
-      topPlataforma: "-",
+      topAlcance: null,
     })),
     // Busca a lista de campanhas cadastradas nas configurações
     getAuxItems("config_campanhas").catch(() => ({ success: false, data: [] })),

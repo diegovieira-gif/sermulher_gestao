@@ -9,6 +9,7 @@ import {
   aggregate,
 } from "@directus/sdk";
 import { revalidatePath } from "next/cache";
+import { marketingPostSchema } from "./schemas";
 
 const COLLECTION = "marketing_items";
 
@@ -31,7 +32,6 @@ function parsePayload(data: any) {
 
   // Tratamento de tipos numéricos
   if (payload.alcance) payload.alcance = Number(payload.alcance);
-  if (payload.interacoes) payload.interacoes = Number(payload.interacoes);
   if (payload.campanha_id !== undefined && payload.campanha_id !== null)
     payload.campanha_id = Number(payload.campanha_id);
 
@@ -47,6 +47,7 @@ export async function getMarketingItems() {
         // @ts-ignore fields are dynamic
         fields: ["*", "campanha_id.*"],
         sort: ["-data_publicacao"],
+        limit: 50, // Limite para garantir performance
       }),
     );
     return { success: true, data: items };
@@ -60,13 +61,26 @@ export async function getMarketingItems() {
 export async function saveMarketingItem(data: any) {
   try {
     // 1. Normaliza os dados
-    const payload = parsePayload(data);
-    const id = payload.id;
+    const rawPayload = parsePayload(data);
+    const id = rawPayload.id;
 
     // Remove o ID do payload para não tentar salvar no banco
-    delete payload.id;
+    delete rawPayload.id;
 
-    console.log("📦 Payload Marketing:", payload);
+    // 2. Validação com Zod
+    const validationResult = marketingPostSchema.safeParse(rawPayload);
+
+    if (!validationResult.success) {
+      const errorMsg = validationResult.error.issues[0]?.message || "Erro de validação";
+      return {
+        success: false,
+        error: errorMsg,
+      };
+    }
+
+    const payload = validationResult.data;
+
+    console.log("📦 Payload Marketing Validado:", payload);
 
     if (id) {
       await directus.request(updateItem(COLLECTION, id, payload));
@@ -82,7 +96,7 @@ export async function saveMarketingItem(data: any) {
       JSON.stringify(error, null, 2),
     );
 
-    // Retorna erro amigável se for validação
+    // Retorna erro amigável se for validação do Directus
     if (error?.errors?.[0]?.message) {
       return { success: false, error: `Erro: ${error.errors[0].message}` };
     }
@@ -114,89 +128,122 @@ export async function getMarketingStats() {
       .split("T")[0];
 
     // Busca Paralela: Totais e Agrupamentos
-    const [totais, porPlataforma, porCampanha] = await Promise.all([
-      // A. Soma de Alcance e Interações
-      directus.request(
-        aggregate(COLLECTION, {
-          aggregate: { count: "*", sum: ["alcance", "interacoes"] },
-          query: {
-            filter: {
-              data_publicacao: { _between: [startOfMonth, endOfMonth] },
+    const [totais, porCanal, porCampanha, topPost] = await Promise.all([
+      // A. Soma de Alcance e Contagem Total
+      directus
+        .request(
+          aggregate(COLLECTION, {
+            aggregate: { count: "*", sum: ["alcance"] },
+            query: {
+              filter: {
+                data_publicacao: { _between: [startOfMonth, endOfMonth] },
+              },
             },
-          },
+          }),
+        )
+        .catch((err) => {
+          console.error("Erro ao buscar totais:", err);
+          return null;
         }),
-      ),
 
-      // B. Agrupar por Plataforma (Para descobrir a principal)
-      directus.request(
-        aggregate(COLLECTION, {
-          groupBy: ["plataforma"],
-          aggregate: { count: "*" },
-          query: {
-            filter: {
-              data_publicacao: { _between: [startOfMonth, endOfMonth] },
+      // B. Agrupar por Canal (Para gráfico)
+      directus
+        .request(
+          aggregate(COLLECTION, {
+            groupBy: ["canal"],
+            aggregate: { count: "*" },
+            query: {
+              filter: {
+                data_publicacao: { _between: [startOfMonth, endOfMonth] },
+              },
             },
-          },
+          }),
+        )
+        .catch((err) => {
+          console.error("Erro ao agrupar por canal (verificar permissões):", err);
+          return [];
         }),
-      ),
 
       // C. Agrupar por Campanha (Para contar quantas ativas)
-      directus.request(
-        aggregate(COLLECTION, {
-          groupBy: ["campanha_id"],
-          aggregate: { count: "*" },
-          query: {
+      directus
+        .request(
+          aggregate(COLLECTION, {
+            groupBy: ["campanha_id"],
+            aggregate: { count: "*" },
+            query: {
+              filter: {
+                data_publicacao: { _between: [startOfMonth, endOfMonth] },
+              },
+            },
+          }),
+        )
+        .catch((err) => {
+          console.error("Erro ao agrupar por campanha:", err);
+          return [];
+        }),
+
+      // D. Top Post por Alcance
+      directus
+        .request(
+          readItems(COLLECTION, {
+            sort: ["-alcance"],
+            limit: 1,
             filter: {
               data_publicacao: { _between: [startOfMonth, endOfMonth] },
+              alcance: { _nnull: true },
             },
-          },
+          }),
+        )
+        .catch((err) => {
+          console.error("Erro ao buscar top post:", err);
+          return [];
         }),
-      ),
     ]);
 
     const result = totais && totais[0] ? totais[0] : null;
-    const posts = Number(result?.count || 0);
-    const alcance = Number(result?.sum?.alcance || 0);
-    const interacoes = Number(result?.sum?.interacoes || 0);
+    const totalPosts = Number(result?.count || 0);
+    const alcanceTotal = Number(result?.sum?.alcance || 0);
 
-    // Cálculos Derivados
-    const engajamento =
-      alcance > 0 ? ((interacoes / alcance) * 100).toFixed(1) : "0";
-
-    // Encontrar plataforma top
-    // @ts-ignore
-    const topPlataformaItem = porPlataforma?.sort(
-      (a, b) => Number(b.count) - Number(a.count),
-    )[0];
-    const topPlataforma = topPlataformaItem
-      ? topPlataformaItem.plataforma
-      : "-";
+    // Formatando dados para Recharts
+    const postsPorCanal =
+      // @ts-ignore
+      porCanal?.map((item: any) => ({
+        name: item.canal || "Outros",
+        value: Number(item.count),
+      })) || [];
 
     // Contar campanhas únicas (IDs distintos com campanha_id não nulo)
     // @ts-ignore group items structure from Directus
     const campanhasAtivas = Array.isArray(porCampanha)
       ? new Set(
-          porCampanha.filter((c) => c.campanha_id).map((c) => c.campanha_id),
-        ).size
+        porCampanha.filter((c) => c.campanha_id).map((c) => c.campanha_id),
+      ).size
       : 0;
 
+    const topAlcance =
+      topPost && topPost.length > 0
+        ? {
+          titulo: topPost[0].titulo,
+          alcance: topPost[0].alcance,
+          canal: topPost[0].canal,
+        }
+        : null;
+
     return {
-      postsMes: posts,
-      alcanceMes: alcance,
-      interacoesMes: interacoes,
-      taxaEngajamento: engajamento,
-      campanhasAtivas: campanhasAtivas,
-      topPlataforma: topPlataforma,
+      totalPosts,
+      postsPorCanal,
+      alcanceTotal,
+      campanhasAtivas,
+      topAlcance,
     };
   } catch (error) {
     console.error("Erro stats:", error);
     return {
-      postsMes: 0,
-      alcanceMes: 0,
-      interacoesMes: 0,
-      taxaEngajamento: "0",
+      totalPosts: 0,
+      postsPorCanal: [],
+      alcanceTotal: 0,
       campanhasAtivas: 0,
-      topPlataforma: "-",
+      topAlcance: null,
     };
   }
 }
