@@ -80,9 +80,9 @@ export default async function BeneficiariaDetalhePage({ params }: PageProps) {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Contato</p>
-                  <p className="font-medium text-foreground">{contato.telefone || "Não informado"}</p>
-                  {contato.email && (
-                    <p className="text-sm text-muted-foreground">{contato.email}</p>
+                  <p className="font-medium text-foreground">{beneficiaria.telefone || "Não informado"}</p>
+                  {beneficiaria.email && (
+                    <p className="text-sm text-muted-foreground">{beneficiaria.email}</p>
                   )}
                 </div>
               </div>
