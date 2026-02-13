@@ -194,10 +194,42 @@ export async function saveAtendimento(data: unknown) {
     // Campos opcionais
     if (validatedData.origem_id) {
       payload.origem_id = validatedData.origem_id;
+      // Snapshot do nome da origem
+      try {
+        const origem = await directus.request(
+          readItems("config_origens", {
+            fields: ["nome"],
+            filter: { id: { _eq: validatedData.origem_id } },
+            limit: 1,
+          }),
+        );
+        if (origem?.[0]?.nome) {
+          payload.origem = origem[0].nome;
+        }
+      } catch (e) {
+        console.error("Erro ao buscar nome da origem", e);
+      }
     }
+
     if (validatedData.prioridade_id) {
       payload.prioridade_id = validatedData.prioridade_id;
+      // Snapshot do nome da prioridade
+      try {
+        const prioridade = await directus.request(
+          readItems("config_prioridades", {
+            fields: ["nome"],
+            filter: { id: { _eq: validatedData.prioridade_id } },
+            limit: 1,
+          }),
+        );
+        if (prioridade?.[0]?.nome) {
+          payload.prioridade = prioridade[0].nome;
+        }
+      } catch (e) {
+        console.error("Erro ao buscar nome da prioridade", e);
+      }
     }
+
     if (validatedData.encaminhamento_id) {
       payload.encaminhamento_id = validatedData.encaminhamento_id;
 
