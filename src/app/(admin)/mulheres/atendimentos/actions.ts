@@ -29,6 +29,12 @@ const ATENDIMENTO_FIELDS = [
   "encaminhamento_rma",
   "encaminhamento_id",
   "tipos_violencia",
+  "medida_protetiva",
+  "gestante_puerpera",
+  "boletim_ocorrencia",
+  "necessidades_sociais",
+  "necessidades_juridicas",
+  "avaliacao_risco",
   // Relacionamentos
   "beneficiaria.id",
   "beneficiaria.nome_completo",
@@ -177,6 +183,12 @@ export async function saveAtendimento(data: unknown) {
       data_abertura:
         normalizeDate(validatedData.data_abertura) ||
         new Date().toISOString().split("T")[0],
+      medida_protetiva: validatedData.medida_protetiva,
+      gestante_puerpera: validatedData.gestante_puerpera,
+      boletim_ocorrencia: validatedData.boletim_ocorrencia,
+      necessidades_sociais: validatedData.necessidades_sociais,
+      necessidades_juridicas: validatedData.necessidades_juridicas,
+      avaliacao_risco: validatedData.avaliacao_risco,
     };
 
     // Campos opcionais

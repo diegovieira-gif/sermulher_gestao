@@ -47,6 +47,12 @@ export const atendimentoSchema = z.object({
       z.string(),
     ])
     .optional(),
+  medida_protetiva: z.boolean().default(false),
+  gestante_puerpera: z.boolean().default(false),
+  boletim_ocorrencia: z.string().optional(),
+  necessidades_sociais: z.any().optional(),
+  necessidades_juridicas: z.any().optional(),
+  avaliacao_risco: z.record(z.string(), z.any()).optional(),
 });
 
 // Schema para uso no formulário (trabalha com array)
@@ -80,6 +86,12 @@ export const atendimentoFormSchema = z.object({
     .positive()
     .optional(),
   tipos_violencia: z.array(z.coerce.number()).optional(),
+  medida_protetiva: z.boolean().default(false),
+  gestante_puerpera: z.boolean().default(false),
+  boletim_ocorrencia: z.string().optional(),
+  necessidades_sociais: z.any().optional(),
+  necessidades_juridicas: z.any().optional(),
+  avaliacao_risco: z.record(z.string(), z.any()).optional(),
 });
 
 // Tipos TypeScript derivados dos schemas

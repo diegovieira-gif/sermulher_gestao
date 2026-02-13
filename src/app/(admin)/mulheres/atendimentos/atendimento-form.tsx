@@ -32,6 +32,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import {
   Select,
@@ -42,6 +43,9 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
@@ -56,6 +60,19 @@ interface AtendimentoFormProps {
   tiposViolenciaOptions: TipoViolenciaOption[];
   atendimento?: any | null;
 }
+
+const RISCO_OPTIONS = ["Sim", "Não", "Não se aplica"];
+
+const PERGUNTAS_RISCO = [
+  { key: "violencia_aumentando", label: "A violência está aumentando?" },
+  { key: "filhos_com_agressor", label: "Possui filhos com o agressor?" },
+  { key: "conflito_guarda", label: "Há conflito sobre guarda dos filhos?" },
+  { key: "tentou_separar", label: "Tentou se separar recentemente?" },
+  { key: "agressor_persegue", label: "O agressor persegue a vítima?" },
+  { key: "agressor_armas", label: "O agressor possui armas de fogo?" },
+  { key: "agressor_drogas", label: "O agressor faz uso de drogas/álcool?" },
+  { key: "agressor_ameaca_morte", label: "O agressor ameaçou de morte?" },
+];
 
 export function AtendimentoForm({
   open,
@@ -82,19 +99,19 @@ export function AtendimentoForm({
     if (atendimento) {
       const beneficiariaId =
         typeof atendimento.beneficiaria === "object" &&
-        atendimento.beneficiaria !== null
+          atendimento.beneficiaria !== null
           ? atendimento.beneficiaria?.id
           : atendimento.beneficiaria;
 
       const origemId =
         typeof atendimento.origem_id === "object" &&
-        atendimento.origem_id !== null
+          atendimento.origem_id !== null
           ? atendimento.origem_id?.id
           : atendimento.origem_id;
 
       const prioridadeId =
         typeof atendimento.prioridade_id === "object" &&
-        atendimento.prioridade_id !== null
+          atendimento.prioridade_id !== null
           ? atendimento.prioridade_id?.id
           : atendimento.prioridade_id;
 
@@ -146,12 +163,12 @@ export function AtendimentoForm({
                 : typeof item === "number"
                   ? item
                   : (() => {
-                      const slug = slugify(String(item));
-                      const match = tiposViolenciaOptions.find(
-                        (opt) => slugify(opt.nome) === slug,
-                      );
-                      return match?.id;
-                    })(),
+                    const slug = slugify(String(item));
+                    const match = tiposViolenciaOptions.find(
+                      (opt) => slugify(opt.nome) === slug,
+                    );
+                    return match?.id;
+                  })(),
             )
             .filter(Boolean) as number[];
         }
@@ -194,6 +211,12 @@ export function AtendimentoForm({
           dataAberturaFormatted || new Date().toISOString().split("T")[0],
         encaminhamento_id: encaminhamentoId || undefined,
         tipos_violencia: tiposViolenciaIds,
+        medida_protetiva: atendimento.medida_protetiva || false,
+        gestante_puerpera: atendimento.gestante_puerpera || false,
+        boletim_ocorrencia: atendimento.boletim_ocorrencia || undefined,
+        necessidades_sociais: atendimento.necessidades_sociais || undefined,
+        necessidades_juridicas: atendimento.necessidades_juridicas || undefined,
+        avaliacao_risco: atendimento.avaliacao_risco || {},
       };
     }
 
@@ -206,6 +229,12 @@ export function AtendimentoForm({
       data_abertura: new Date().toISOString().split("T")[0],
       encaminhamento_id: undefined,
       tipos_violencia: [],
+      medida_protetiva: false,
+      gestante_puerpera: false,
+      boletim_ocorrencia: undefined,
+      necessidades_sociais: undefined,
+      necessidades_juridicas: undefined,
+      avaliacao_risco: {},
     };
   }, [atendimento, encaminhamentosOptions, tiposViolenciaOptions]);
 
@@ -241,258 +270,407 @@ export function AtendimentoForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto w-full">
         <DialogHeader>
           <DialogTitle>
             {atendimento ? "Editar Atendimento" : "Novo Atendimento"}
           </DialogTitle>
           <DialogDescription>
-            Registre um novo atendimento para uma beneficiária.
+            Preencha os dados do atendimento abaixo.
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Card: Quem é a vítima? */}
-            <div className="border rounded-lg p-4 space-y-4">
-              <h3 className="text-sm font-semibold">Quem é a vítima?</h3>
+            <Tabs defaultValue="triagem" className="w-full">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="triagem">Triagem Inicial</TabsTrigger>
+                <TabsTrigger value="socioassistencial">
+                  Socioassistencial
+                </TabsTrigger>
+                <TabsTrigger value="juridico">Jurídico</TabsTrigger>
+                <TabsTrigger value="risco">Avaliação de Risco</TabsTrigger>
+              </TabsList>
 
-              <FormField
-                control={form.control}
-                name="beneficiaria"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Beneficiária *
-                      <InfoTooltip text="Selecione a mulher assistida que está recebendo o atendimento." />
-                    </FormLabel>
-                    <FormControl>
-                      <BeneficiariaComboBox
-                        options={beneficiariasOptions}
-                        value={field.value}
-                        onValueChange={(value) => field.onChange(value)}
-                        placeholder="Buscar beneficiária por nome ou CPF..."
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+              {/* ABA 1: TRIAGEM INICIAL */}
+              <TabsContent value="triagem" className="space-y-4 pt-4">
+                <div className="grid grid-cols-1 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="beneficiaria"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Beneficiária *
+                          <InfoTooltip text="Selecione a mulher assistida." />
+                        </FormLabel>
+                        <FormControl>
+                          <BeneficiariaComboBox
+                            options={beneficiariasOptions}
+                            value={field.value}
+                            onValueChange={(value) => field.onChange(value)}
+                            placeholder="Buscar beneficiária..."
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-            {/* Card: Dados da Triagem */}
-            <div className="border rounded-lg p-4 space-y-4">
-              <h3 className="text-sm font-semibold">Dados da Triagem</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="origem_id"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Origem</FormLabel>
+                          <FormControl>
+                            <Select
+                              value={field.value ? String(field.value) : ""}
+                              onValueChange={(val) =>
+                                field.onChange(val ? Number(val) : undefined)
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {origensOptions.map((opt) => (
+                                  <SelectItem key={opt.id} value={String(opt.id)}>
+                                    {opt.nome}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="origem_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Origem
-                        <InfoTooltip text="Canal ou local de onde veio o encaminhamento (CRAS, Delegacia, etc)." />
-                      </FormLabel>
-                      <FormControl>
-                        <Select
-                          value={field.value ? String(field.value) : ""}
-                          onValueChange={(val) =>
-                            field.onChange(val ? Number(val) : undefined)
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione a origem..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {origensOptions.map((opt) => (
-                              <SelectItem key={opt.id} value={String(opt.id)}>
-                                {opt.nome}
+                    <FormField
+                      control={form.control}
+                      name="prioridade_id"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Prioridade</FormLabel>
+                          <FormControl>
+                            <Select
+                              value={field.value ? String(field.value) : ""}
+                              onValueChange={(val) =>
+                                field.onChange(val ? Number(val) : undefined)
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {prioridadesOptions.map((opt) => (
+                                  <SelectItem key={opt.id} value={String(opt.id)}>
+                                    {opt.nome}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="data_abertura"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Data de Abertura</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} value={field.value ?? ""} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="status"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Status</FormLabel>
+                          <FormControl>
+                            <Select
+                              value={field.value || StatusAtendimento.ABERTO}
+                              onValueChange={field.onChange}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {Object.values(StatusAtendimento).map((status) => (
+                                  <SelectItem key={status} value={status}>
+                                    {status}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="encaminhamento_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Encaminhamento</FormLabel>
+                        <FormControl>
+                          <Select
+                            value={field.value ? String(field.value) : ""}
+                            onValueChange={(val) =>
+                              field.onChange(val ? Number(val) : undefined)
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {encaminhamentosOptions.map((opt) => (
+                                <SelectItem key={opt.id} value={String(opt.id)}>
+                                  {opt.nome}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </TabsContent>
+
+              {/* ABA 2: SOCIOASSISTENCIAL */}
+              <TabsContent value="socioassistencial" className="space-y-4 pt-4">
+                <div className="border rounded-lg p-4 space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="gestante_puerpera"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                        <div className="space-y-0.5">
+                          <FormLabel>Gestante ou Puérpera?</FormLabel>
+                          <FormDescription>
+                            Indique se a assistida está gestante ou em puerpério.
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="necessidades_sociais"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Necessidades Sociais</FormLabel>
+                        <FormDescription>
+                          Descreva necessidades como Cesta Básica, Encaminhamento CRAS, Bolsa Família, etc.
+                        </FormDescription>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Descreva as necessidades sociais identificadas..."
+                            className="min-h-[120px]"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </TabsContent>
+
+              {/* ABA 3: JURÍDICO */}
+              <TabsContent value="juridico" className="space-y-4 pt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="boletim_ocorrencia"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Boletim de Ocorrência</FormLabel>
+                        <FormControl>
+                          <Select
+                            value={field.value || "Não"}
+                            onValueChange={field.onChange}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Sim">Sim</SelectItem>
+                              <SelectItem value="Não">Não</SelectItem>
+                              <SelectItem value="Deseja realizar">
+                                Deseja realizar
                               </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="prioridade_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Prioridade
-                        <InfoTooltip text="Nível de urgência do atendimento (Alta, Média, Baixa)." />
-                      </FormLabel>
-                      <FormControl>
-                        <Select
-                          value={field.value ? String(field.value) : ""}
-                          onValueChange={(val) =>
-                            field.onChange(val ? Number(val) : undefined)
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione a prioridade..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {prioridadesOptions.map((opt) => (
-                              <SelectItem key={opt.id} value={String(opt.id)}>
-                                {opt.nome}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                  <FormField
+                    control={form.control}
+                    name="medida_protetiva"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 mt-8 md:mt-0 lg:mt-0">
+                        <div className="space-y-0.5">
+                          <FormLabel>Possui Medida Protetiva?</FormLabel>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="data_abertura"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Data de Abertura</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="date"
-                          {...field}
-                          value={field.value ?? ""}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Status
-                        <InfoTooltip text="Situação atual do atendimento (Aberto, Em Andamento, Concluído, Cancelado)." />
-                      </FormLabel>
-                      <FormControl>
-                        <Select
-                          value={field.value || StatusAtendimento.ABERTO}
-                          onValueChange={field.onChange}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Object.values(StatusAtendimento).map((status) => (
-                              <SelectItem key={status} value={status}>
-                                {status}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="encaminhamento_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Encaminhamento (config)
-                      <InfoTooltip text="Órgãos para onde a assistida foi direcionada." />
-                    </FormLabel>
-                    <FormControl>
-                      <Select
-                        value={field.value ? String(field.value) : ""}
-                        onValueChange={(val) =>
-                          field.onChange(val ? Number(val) : undefined)
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o encaminhamento..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {encaminhamentosOptions.map((opt) => (
-                            <SelectItem key={opt.id} value={String(opt.id)}>
-                              {opt.nome}
-                            </SelectItem>
+                <div className="border rounded-lg p-4 space-y-4">
+                  <h3 className="text-sm font-semibold mb-2">Tipos de Violência</h3>
+                  <FormField
+                    control={form.control}
+                    name="tipos_violencia"
+                    render={() => (
+                      <FormItem>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {tiposViolenciaOptions.map((tipo) => (
+                            <FormField
+                              key={tipo.id}
+                              control={form.control}
+                              name="tipos_violencia"
+                              render={({ field }) => {
+                                const isChecked =
+                                  Array.isArray(field.value) &&
+                                  field.value.includes(tipo.id);
+                                return (
+                                  <FormItem
+                                    key={tipo.id}
+                                    className="flex flex-row items-start space-x-3 space-y-0"
+                                  >
+                                    <FormControl>
+                                      <Checkbox
+                                        checked={isChecked}
+                                        onCheckedChange={(checked: boolean) => {
+                                          const currentValue = Array.isArray(
+                                            field.value,
+                                          )
+                                            ? field.value
+                                            : [];
+                                          const newValue = checked
+                                            ? [...currentValue, tipo.id]
+                                            : currentValue.filter(
+                                              (value) => value !== tipo.id,
+                                            );
+                                          field.onChange(newValue);
+                                        }}
+                                      />
+                                    </FormControl>
+                                    <FormLabel className="font-normal capitalize cursor-pointer">
+                                      {tipo.nome}
+                                    </FormLabel>
+                                  </FormItem>
+                                );
+                              }}
+                            />
                           ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-            {/* Card: Tipos de Violência */}
-            <div className="border rounded-lg p-4 space-y-4">
-              <h3 className="text-sm font-semibold">Tipos de Violência</h3>
-
-              <FormField
-                control={form.control}
-                name="tipos_violencia"
-                render={() => (
-                  <FormItem>
-                    <div className="space-y-3">
-                      {tiposViolenciaOptions.map((tipo) => (
-                        <FormField
-                          key={tipo.id}
-                          control={form.control}
-                          name="tipos_violencia"
-                          render={({ field }) => {
-                            const isChecked =
-                              Array.isArray(field.value) &&
-                              field.value.includes(tipo.id);
-                            return (
-                              <FormItem
-                                key={tipo.id}
-                                className="flex flex-row items-start space-x-3 space-y-0"
-                              >
-                                <FormControl>
-                                  <Checkbox
-                                    checked={isChecked}
-                                    onCheckedChange={(checked: boolean) => {
-                                      const currentValue = Array.isArray(
-                                        field.value,
-                                      )
-                                        ? field.value
-                                        : [];
-                                      const newValue = checked
-                                        ? [...currentValue, tipo.id]
-                                        : currentValue.filter(
-                                            (value) => value !== tipo.id,
-                                          );
-                                      field.onChange(newValue);
-                                    }}
-                                  />
-                                </FormControl>
-                                <FormLabel className="font-normal capitalize">
-                                  {tipo.nome}
-                                </FormLabel>
-                              </FormItem>
-                            );
-                          }}
+                <FormField
+                  control={form.control}
+                  name="necessidades_juridicas"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Necessidades Jurídicas</FormLabel>
+                      <FormDescription>
+                        Descreva necessidades como Divórcio, Guarda, Pensão, etc.
+                      </FormDescription>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Descreva as demandas jurídicas..."
+                          className="min-h-[100px]"
+                          {...field}
                         />
-                      ))}
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </TabsContent>
+
+              {/* ABA 4: AVALIAÇÃO DE RISCO */}
+              <TabsContent value="risco" className="space-y-4 pt-4">
+                <div className="border rounded-lg p-4 bg-red-50/50">
+                  <h3 className="text-md font-semibold text-red-800 mb-4 flex items-center gap-2">
+                    Mapeamento de Risco
+                  </h3>
+                  <div className="space-y-4">
+                    {PERGUNTAS_RISCO.map((pergunta) => (
+                      <FormField
+                        key={pergunta.key}
+                        control={form.control}
+                        name={`avaliacao_risco.${pergunta.key}`}
+                        render={({ field }) => (
+                          <FormItem className="grid grid-cols-1 md:grid-cols-[2fr_1fr] items-center gap-4 border-b border-red-100 pb-2 last:border-0">
+                            <FormLabel className="text-sm font-medium">
+                              {pergunta.label}
+                            </FormLabel>
+                            <FormControl>
+                              <Select
+                                value={field.value || "Não se aplica"}
+                                onValueChange={field.onChange}
+                              >
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Selecione..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {RISCO_OPTIONS.map((opt) => (
+                                    <SelectItem key={opt} value={opt}>
+                                      {opt}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
 
             {/* Botões */}
             <div className="flex justify-end gap-4 pt-4 border-t">
@@ -508,7 +686,7 @@ export function AtendimentoForm({
                 {isSubmitting && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                {atendimento ? "Atualizar" : "Criar"}
+                {atendimento ? "Atualizar Atendimento" : "Criar Atendimento"}
               </Button>
             </div>
           </form>
