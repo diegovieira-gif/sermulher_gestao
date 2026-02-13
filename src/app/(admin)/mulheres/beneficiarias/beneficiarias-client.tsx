@@ -246,7 +246,6 @@ export function BeneficiariasClient({
               <TableHead>Nome Completo</TableHead>
               <TableHead>CPF</TableHead>
               <TableHead>Telefone</TableHead>
-              <TableHead>Telefone</TableHead>
               <TableHead>Cidade / Bairro</TableHead>
               <TableHead>Idade</TableHead>
               <TableHead className="text-right">Ações</TableHead>
