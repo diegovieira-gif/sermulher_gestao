@@ -688,29 +688,32 @@ export async function getAllMatriculas() {
  */
 export async function getEscolaStats() {
   try {
-    const [turmas, cursos, matriculas] = await Promise.all([
+    const [turmas, matriculas] = await Promise.all([
       directus.request(
         readItems("escola_turmas", { limit: -1, fields: ["id", "status"] }),
-      ),
-      directus.request(
-        readItems("escola_cursos", { limit: -1, fields: ["id"] }),
       ),
       directus.request(
         readItems("escola_matriculas", { limit: -1, fields: ["id", "status"] }),
       ),
     ]);
 
+    const totalAlunos = matriculas.length;
+    const turmasAtivas = turmas.filter(
+      (t: any) => t.status === "em_andamento",
+    ).length;
+
+    // Considerando 'concluida' e 'concluída' para garantir compatibilidade
+    const alunosCertificados = matriculas.filter((m: any) => {
+      const status = m.status?.toLowerCase();
+      return status === "concluida" || status === "concluída";
+    }).length;
+
     return {
       success: true,
       data: {
-        total_turmas: turmas.length,
-        turmas_ativas: turmas.filter(
-          (t: any) => t.status === "em_andamento" || t.status === "aberta",
-        ).length,
-        total_cursos: cursos.length,
-        total_matriculas: matriculas.length,
-        matriculas_ativas: matriculas.filter((m: any) => m.status === "ativa")
-          .length,
+        totalAlunos,
+        turmasAtivas,
+        alunosCertificados,
       },
     };
   } catch (error) {
