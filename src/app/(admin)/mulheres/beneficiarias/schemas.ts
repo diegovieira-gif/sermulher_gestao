@@ -1,18 +1,7 @@
 import { z } from "zod";
 
 export const contatoSchema = z.object({
-  telefone: z.string().optional().nullable(),
-  email: z
-    .string()
-    .refine(
-      (val) => {
-        if (!val || val.trim() === "") return true;
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
-      },
-      { message: "Email inválido" },
-    )
-    .optional()
-    .nullable(),
+  melhor_turno_contato: z.enum(["Manhã", "Tarde"]).optional().nullable(),
 });
 
 export const enderecoSchema = z.object({
@@ -30,6 +19,8 @@ export const beneficiariaSchema = z.object({
     .string()
     .min(3, "Nome completo deve ter no mínimo 3 caracteres"),
 
+  nome_social: z.string().optional().nullable(),
+
   cpf: z
     .string()
     .optional()
@@ -45,10 +36,33 @@ export const beneficiariaSchema = z.object({
 
   data_nascimento: z.string().optional().nullable(),
 
+  // Campos demográficos (IDs das tabelas de configuração)
+  raca_cor_id: z.coerce.number().optional().nullable(),
+  estado_civil_id: z.coerce.number().optional().nullable(),
+  escolaridade_id: z.coerce.number().optional().nullable(),
+  situacao_trabalho_id: z.coerce.number().optional().nullable(),
+
+  quantidade_filhos: z.coerce.number().min(0).optional().nullable(),
+
   telefone: z.string().optional().nullable(),
-  email: z.string().optional().nullable(),
+  email: z
+    .string()
+    .refine(
+      (val) => {
+        if (!val || val.trim() === "") return true;
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+      },
+      { message: "Email inválido" },
+    )
+    .optional()
+    .nullable(),
+
+  // Json de contato onde o melhor_turno fica
+  contato: contatoSchema.optional().nullable(),
 
   endereco: enderecoSchema,
+
+  numero_cad_unico: z.string().optional().nullable(),
 
   perfil_socioeconomico: z.string().optional().nullable(),
 

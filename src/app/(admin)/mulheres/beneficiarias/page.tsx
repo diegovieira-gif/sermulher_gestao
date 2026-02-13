@@ -1,4 +1,4 @@
-import { getBeneficiarias } from "./actions";
+import { getBeneficiarias, getBeneficiariaFormOptions } from "./actions";
 import { BeneficiariasClient } from "./beneficiarias-client";
 
 export const dynamic = "force-dynamic";
@@ -16,28 +16,47 @@ export default async function BeneficiariasPage({ searchParams }: PageProps) {
   const page = Number(params?.page) || 1;
   const search = params?.q || "";
 
-  // Busca dados paginados
-  const result = await getBeneficiarias(page, search);
+  // Busca dados (sem paginação por enquanto, conforme novo actions.ts) e opções
+  const [result, formOptionsResult] = await Promise.all([
+    getBeneficiarias(),
+    getBeneficiariaFormOptions(),
+  ]);
 
   if (!result.success) {
     return (
-      <div className="p-6">
-        <div className="bg-destructive/10 text-destructive px-4 py-3 rounded">
-          {result.error || "Erro ao carregar dados."}
-        </div>
+      <div className="p-8 text-center text-red-500">
+        Erro ao carregar dados: {result.error}
       </div>
     );
   }
 
-  // Prepara o objeto meta padrão caso venha vazio
-  const meta = result.meta || { total: 0, page: 1, limit: 10, totalPages: 1 };
+  // Como a nova action não retorna meta, criamos um dummy ou calculamos
+  // Isso desabilita a paginação real por enquanto
+  const totalItems = Array.isArray(result.data) ? result.data.length : 0;
+  const meta = {
+    total: totalItems,
+    page: 1,
+    limit: totalItems > 0 ? totalItems : 10,
+    totalPages: 1,
+  };
+
+  const formOptions = formOptionsResult.success ? formOptionsResult.data : null;
 
   return (
-    <div className="p-6">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Beneficiárias</h1>
+          <p className="text-muted-foreground">
+            Gerencie o cadastro de beneficiárias e seus dependentes.
+          </p>
+        </div>
+      </div>
+
       <BeneficiariasClient
-        beneficiarias={result.data || []}
+        initialData={Array.isArray(result.data) ? result.data : []}
         meta={meta}
-        searchParams={{ page, q: search }}
+        formOptions={formOptions}
       />
     </div>
   );

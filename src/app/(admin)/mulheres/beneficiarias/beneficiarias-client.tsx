@@ -25,7 +25,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { BeneficiariaForm } from "./beneficiaria-form";
-import { deleteBeneficiaria, getBeneficiariasExport } from "./actions";
+import { deleteBeneficiaria } from "./actions";
 import {
   Plus,
   Pencil,
@@ -42,26 +42,31 @@ import { toast } from "sonner";
 import type { Beneficiaria } from "./schemas";
 
 interface BeneficiariasClientProps {
-  beneficiarias: any[];
+  initialData: any[]; // Changed from beneficiarias
   meta: {
     total: number;
     page: number;
     limit: number;
     totalPages: number;
   };
-  searchParams: {
-    page: number;
-    q: string;
-  };
+  // searchParams removed
+  formOptions: {
+    racas: any[];
+    estadosCivis: any[];
+    escolaridades: any[];
+    situacoesTrabalho: any[];
+    bairros: any[];
+  } | null;
 }
 
 export function BeneficiariasClient({
-  beneficiarias,
+  initialData,
   meta,
-  searchParams,
+  formOptions,
 }: BeneficiariasClientProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams(); // Use hook instead of prop
 
   // Estados locais
   const [formOpen, setFormOpen] = useState(false);
@@ -72,33 +77,28 @@ export function BeneficiariasClient({
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Busca e Exportação
-  const [searchTerm, setSearchTerm] = useState(searchParams.q);
+  const [searchTerm, setSearchTerm] = useState(""); // Init empty
   const [isExporting, setIsExporting] = useState(false);
 
-  // Debounce da busca
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (searchTerm !== searchParams.q) {
-        const params = new URLSearchParams();
-        if (searchTerm) params.set("q", searchTerm);
-        params.set("page", "1"); // Reseta para pág 1 ao buscar
-        router.push(`${pathname}?${params.toString()}`);
-      }
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [searchTerm, router, pathname, searchParams.q]);
+  // Filtered data based on search (Client-side filtering since we load all)
+  const filteredData = initialData.filter((b) => {
+    if (!searchTerm) return true;
+    const search = searchTerm.toLowerCase();
+    return (
+      b.nome_completo?.toLowerCase().includes(search) ||
+      b.cpf?.includes(search)
+    );
+  });
 
-  const handlePageChange = (newPage: number) => {
-    const params = new URLSearchParams(window.location.search);
-    params.set("page", newPage.toString());
-    router.push(`${pathname}?${params.toString()}`);
-  };
+  // Debounce da busca NO URL UPDATE for now, just local filter
+  // or keep URL sync if desired, but page.tsx ignores it.
+  // Let's keep it simple: client side filtering.
 
-  const handleExport = async () => {
+  const handleExport = () => {
     setIsExporting(true);
     try {
-      const result = await getBeneficiariasExport(searchTerm);
-      if (result.success && result.data) {
+      // Usar filteredData
+      if (filteredData.length > 0) {
         // Gerar CSV
         const headers = [
           "Nome Completo",
@@ -108,7 +108,7 @@ export function BeneficiariasClient({
           "Bairro",
           "Cidade",
         ];
-        const rows = result.data.map((b: any) => [
+        const rows = filteredData.map((b: any) => [
           b.nome_completo,
           b.cpf || "",
           b.telefone || "",
@@ -139,7 +139,7 @@ export function BeneficiariasClient({
         document.body.removeChild(link);
         toast.success("Download iniciado!");
       } else {
-        toast.error("Erro ao exportar dados.");
+        toast.error("Nenhum dado para exportar.");
       }
     } catch (e) {
       toast.error("Erro ao exportar.");
@@ -229,22 +229,24 @@ export function BeneficiariasClient({
               <TableHead>Nome Completo</TableHead>
               <TableHead>CPF</TableHead>
               <TableHead>Telefone</TableHead>
-              <TableHead>Localização</TableHead>
+              <TableHead>Telefone</TableHead>
+              <TableHead>Cidade / Bairro</TableHead>
+              <TableHead>Idade</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {beneficiarias.length === 0 ? (
+            {filteredData.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={6}
                   className="h-32 text-center text-muted-foreground"
                 >
                   Nenhum registro encontrado.
                 </TableCell>
               </TableRow>
             ) : (
-              beneficiarias.map((b: any) => (
+              filteredData.map((b: any) => (
                 <TableRow key={b.id} className="hover:bg-gray-50/50">
                   <TableCell className="font-medium">
                     <div className="flex flex-col">
@@ -263,17 +265,37 @@ export function BeneficiariasClient({
                     {b.telefone || <span className="text-gray-400">-</span>}
                   </TableCell>
                   <TableCell>
-                    {b.endereco?.bairro ? (
-                      <Badge
-                        variant="outline"
-                        className="font-normal text-gray-600"
-                      >
-                        {b.endereco.bairro}
-                      </Badge>
+                    {b.endereco?.cidade && b.endereco?.bairro ? (
+                      <div className="flex flex-col text-sm">
+                        <span>{b.endereco.cidade}</span>
+                        <span className="text-gray-500 text-xs">
+                          {b.endereco.bairro}
+                        </span>
+                      </div>
                     ) : (
                       <span className="text-gray-400 text-sm">-</span>
                     )}
                   </TableCell>
+                  <TableCell>
+                    {b.data_nascimento ? (
+                      (() => {
+                        const today = new Date();
+                        const birthDate = new Date(b.data_nascimento);
+                        let age = today.getFullYear() - birthDate.getFullYear();
+                        const m = today.getMonth() - birthDate.getMonth();
+                        if (
+                          m < 0 ||
+                          (m === 0 && today.getDate() < birthDate.getDate())
+                        ) {
+                          age--;
+                        }
+                        return age + " anos";
+                      })()
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
+                  </TableCell>
+
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
                       <Link href={`/mulheres/beneficiarias/${b.id}`}>
@@ -347,6 +369,7 @@ export function BeneficiariasClient({
           if (!open) setSelectedBeneficiaria(null);
         }}
         beneficiaria={selectedBeneficiaria}
+        formOptions={formOptions}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
