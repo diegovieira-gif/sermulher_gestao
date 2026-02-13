@@ -16,7 +16,11 @@ export default async function ConfiguracoesPage() {
     bairros: any[] = [],
     beneficios: any[] = [],
     campanhas: any[] = [],
-    setores: any[] = [];
+    setores: any[] = [],
+    racaCor: any[] = [],
+    estadoCivil: any[] = [],
+    escolaridade: any[] = [],
+    situacaoTrabalho: any[] = [];
 
   try {
     // Busca Paralela (Promise.all) para maior performance em produção
@@ -33,6 +37,10 @@ export default async function ConfiguracoesPage() {
       getAuxItems("config_beneficios"), // 9
       getAuxItems("config_campanhas"), // 10
       getAuxItems("setores"), // 11 (NOVO)
+      getAuxItems("config_raca_cor"), // 12
+      getAuxItems("config_estado_civil"), // 13
+      getAuxItems("config_escolaridade"), // 14
+      getAuxItems("config_situacao_trabalho"), // 15
     ]);
 
     // Helper para extrair dados seguros
@@ -53,6 +61,10 @@ export default async function ConfiguracoesPage() {
     beneficios = getData(9);
     campanhas = getData(10);
     setores = getData(11);
+    racaCor = getData(12);
+    estadoCivil = getData(13);
+    escolaridade = getData(14);
+    situacaoTrabalho = getData(15);
   } catch (error) {
     console.error("Erro crítico ao carregar configurações:", error);
   }
@@ -81,6 +93,10 @@ export default async function ConfiguracoesPage() {
         beneficios={beneficios}
         campanhas={campanhas}
         setores={setores}
+        racaCor={racaCor}
+        estadoCivil={estadoCivil}
+        escolaridade={escolaridade}
+        situacaoTrabalho={situacaoTrabalho}
       />
     </div>
   );

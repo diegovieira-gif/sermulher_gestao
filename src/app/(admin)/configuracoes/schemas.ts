@@ -21,3 +21,10 @@ export const periculosidadeSchema = colorSchema.extend({
 export const campanhaSchema = colorSchema.extend({
   mes: z.string().min(1, "Mês é obrigatório"),
 });
+
+export const racaCorSchema = baseSchema;
+export const estadoCivilSchema = baseSchema;
+export const escolaridadeSchema = baseSchema;
+export const situacaoTrabalhoSchema = baseSchema;
+export const bairroSchema = baseSchema;
+

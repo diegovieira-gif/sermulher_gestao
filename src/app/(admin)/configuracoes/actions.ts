@@ -16,7 +16,11 @@ export type ConfigCollection =
   | "config_encaminhamentos"
   | "config_campanhas"
   | "locais"
-  | "setores"; // Adicionado
+  | "setores"
+  | "config_raca_cor"
+  | "config_estado_civil"
+  | "config_escolaridade"
+  | "config_situacao_trabalho";
 
 const ALLOWED_TYPES = [
   "origens",
@@ -46,6 +50,14 @@ const ALLOWED_TYPES = [
   "config_beneficios",
   "config_encaminhamentos",
   "config_campanhas",
+  "config_raca_cor",
+  "config_estado_civil",
+  "config_escolaridade",
+  "config_situacao_trabalho",
+  "raca-cor",
+  "estado-civil",
+  "escolaridade",
+  "situacao-trabalho",
 ] as const;
 
 function getCollectionName(type: string): ConfigCollection {
@@ -84,6 +96,14 @@ function getCollectionName(type: string): ConfigCollection {
       return "config_encaminhamentos";
     case "campanhas":
       return "config_campanhas";
+    case "raca-cor":
+      return "config_raca_cor";
+    case "estado-civil":
+      return "config_estado_civil";
+    case "escolaridade":
+      return "config_escolaridade";
+    case "situacao-trabalho":
+      return "config_situacao_trabalho";
     default:
       throw new Error(`Tipo "${type}" não possui mapeamento para collection`);
   }
@@ -109,7 +129,7 @@ export async function getAuxItems(type: string) {
 
 export async function saveAuxItem(
   type: string,
-  data: { id?: number; nome: string; [key: string]: any },
+  data: { id?: number; nome: string;[key: string]: any },
 ) {
   try {
     const collection = getCollectionName(type);

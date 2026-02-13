@@ -16,6 +16,8 @@ import {
   HeartHandshake,
   Megaphone,
   Briefcase,
+  Users,
+  MapPinned,
 } from "lucide-react";
 
 // Imports dos Componentes Refatorados
@@ -53,6 +55,10 @@ interface ConfiguracoesClientProps {
   beneficios: any[];
   campanhas: any[];
   setores: any[];
+  racaCor: any[];
+  estadoCivil: any[];
+  escolaridade: any[];
+  situacaoTrabalho: any[];
 }
 
 export function ConfiguracoesClient({
@@ -68,12 +74,19 @@ export function ConfiguracoesClient({
   beneficios,
   campanhas,
   setores,
+  racaCor,
+  estadoCivil,
+  escolaridade,
+  situacaoTrabalho,
 }: ConfiguracoesClientProps) {
   const menuItems = [
     { label: "Estrutural", isHeader: true },
     { value: "setores", label: "Setores", icon: Briefcase },
     { value: "locais", label: "Locais", icon: Building2 },
-    { value: "bairros", label: "Bairros", icon: MapPin },
+    { value: "bairros", label: "Endereços", icon: MapPinned },
+
+    { label: "Demografia", isHeader: true },
+    { value: "demografia", label: "Dados Demográficos", icon: Users },
 
     { label: "Atendimento", isHeader: true },
     { value: "origens", label: "Origens", icon: ArrowUpRight },
@@ -144,11 +157,40 @@ export function ConfiguracoesClient({
 
           <TabsContent value="bairros" className="mt-0 space-y-4">
             <TabPadrao
-              title="Bairros"
+              title="Bairros do Município"
               data={bairros}
               collectionName="config_bairros"
               type="bairros"
             />
+          </TabsContent>
+
+          <TabsContent value="demografia" className="mt-0 space-y-8">
+            <div className="grid gap-8">
+              <TabPadrao
+                title="Raça / Cor"
+                data={racaCor}
+                collectionName="config_raca_cor"
+                type="raca-cor"
+              />
+              <TabPadrao
+                title="Estado Civil"
+                data={estadoCivil}
+                collectionName="config_estado_civil"
+                type="estado-civil"
+              />
+              <TabPadrao
+                title="Escolaridade"
+                data={escolaridade}
+                collectionName="config_escolaridade"
+                type="escolaridade"
+              />
+              <TabPadrao
+                title="Situação de Trabalho"
+                data={situacaoTrabalho}
+                collectionName="config_situacao_trabalho"
+                type="situacao-trabalho"
+              />
+            </div>
           </TabsContent>
 
           <TabsContent value="origens" className="mt-0 space-y-4">
