@@ -94,6 +94,16 @@ export function BeneficiariasClient({
   // or keep URL sync if desired, but page.tsx ignores it.
   // Let's keep it simple: client side filtering.
 
+  const handlePageChange = (newPage: number) => {
+    const params = new URLSearchParams(searchParams);
+    if (newPage > 1) {
+      params.set("page", newPage.toString());
+    } else {
+      params.delete("page");
+    }
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
   const handleExport = () => {
     setIsExporting(true);
     try {
@@ -369,7 +379,7 @@ export function BeneficiariasClient({
           if (!open) setSelectedBeneficiaria(null);
         }}
         beneficiaria={selectedBeneficiaria}
-        formOptions={formOptions}
+        formOptions={formOptions || undefined}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

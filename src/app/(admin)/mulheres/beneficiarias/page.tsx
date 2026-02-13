@@ -16,9 +16,9 @@ export default async function BeneficiariasPage({ searchParams }: PageProps) {
   const page = Number(params?.page) || 1;
   const search = params?.q || "";
 
-  // Busca dados (sem paginação por enquanto, conforme novo actions.ts) e opções
+  // Busca dados com paginação e busca
   const [result, formOptionsResult] = await Promise.all([
-    getBeneficiarias(),
+    getBeneficiarias(page, search),
     getBeneficiariaFormOptions(),
   ]);
 
@@ -30,32 +30,13 @@ export default async function BeneficiariasPage({ searchParams }: PageProps) {
     );
   }
 
-  // Como a nova action não retorna meta, criamos um dummy ou calculamos
-  // Isso desabilita a paginação real por enquanto
-  const totalItems = Array.isArray(result.data) ? result.data.length : 0;
-  const meta = {
-    total: totalItems,
-    page: 1,
-    limit: totalItems > 0 ? totalItems : 10,
-    totalPages: 1,
-  };
-
   const formOptions = formOptionsResult.success ? formOptionsResult.data : null;
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Beneficiárias</h1>
-          <p className="text-muted-foreground">
-            Gerencie o cadastro de beneficiárias e seus dependentes.
-          </p>
-        </div>
-      </div>
-
       <BeneficiariasClient
         initialData={Array.isArray(result.data) ? result.data : []}
-        meta={meta}
+        meta={result.meta || { total: 0, page: 1, limit: 10, totalPages: 1 }}
         formOptions={formOptions}
       />
     </div>

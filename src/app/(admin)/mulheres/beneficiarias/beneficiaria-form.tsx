@@ -52,10 +52,10 @@ interface BeneficiariaFormProps {
   onOpenChange: (open: boolean) => void;
   beneficiaria?: Beneficiaria | null;
   formOptions?: {
-    racaCor: FormOption[];
-    estadoCivil: FormOption[];
-    escolaridade: FormOption[];
-    situacaoTrabalho: FormOption[];
+    racas: FormOption[];
+    estadosCivis: FormOption[];
+    escolaridades: FormOption[];
+    situacoesTrabalho: FormOption[];
     bairros: FormOption[];
   };
 }
@@ -298,8 +298,8 @@ export function BeneficiariaForm({
                             type="number"
                             min="0"
                             {...field}
-                            value={field.value}
-                            onChange={(e) => field.onChange(Number(e.target.value))}
+                            value={field.value !== null && field.value !== undefined ? Number(field.value) : 0}
+                            onChange={(e) => field.onChange(e.target.valueAsNumber)}
                           />
                         </FormControl>
                         <FormMessage />
@@ -634,7 +634,7 @@ export function BeneficiariaForm({
                           <FormLabel className="text-base">Recebe Bolsa Família</FormLabel>
                         </div>
                         <FormControl>
-                          <Switch checked={field.value || false} onCheckedChange={field.onChange} />
+                          <Switch checked={!!field.value} onCheckedChange={field.onChange} />
                         </FormControl>
                       </FormItem>
                     )}
@@ -649,7 +649,7 @@ export function BeneficiariaForm({
                           <FormLabel className="text-base">Recebe BPC</FormLabel>
                         </div>
                         <FormControl>
-                          <Switch checked={field.value || false} onCheckedChange={field.onChange} />
+                          <Switch checked={!!field.value} onCheckedChange={field.onChange} />
                         </FormControl>
                       </FormItem>
                     )}
@@ -664,7 +664,7 @@ export function BeneficiariaForm({
                           <FormLabel className="text-base">Possui Medida Protetiva</FormLabel>
                         </div>
                         <FormControl>
-                          <Switch checked={field.value || false} onCheckedChange={field.onChange} />
+                          <Switch checked={!!field.value} onCheckedChange={field.onChange} />
                         </FormControl>
                       </FormItem>
                     )}
