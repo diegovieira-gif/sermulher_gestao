@@ -61,8 +61,15 @@ export type AtendimentoDetails = {
   demanda_psicologica: boolean;
   demanda_socioassistencial: boolean;
   sigiloso: boolean;
+  // Novos campos estruturados
   medida_protetiva: boolean;
-  boletim_ocorrencia: boolean;
+  gestante_puerpera: boolean;
+  boletim_ocorrencia: string | null;
+  necessidades_sociais: any;
+  necessidades_juridicas: any;
+  avaliacao_risco: any;
+  tipos_violencia: string | null; // Pode vir como string csv ou objeto via relacionamento
+  tipos_violencia_lista: any[]; // Relacionamento M2M
 };
 
 /**
@@ -93,6 +100,13 @@ export async function getAtendimentoDetails(id: number) {
           },
           {
             origem_id: ["nome"],
+          },
+          {
+            tipos_violencia_lista: [
+              {
+                config_tipos_agressao_id: ["nome"],
+              },
+            ],
           },
         ],
       }),

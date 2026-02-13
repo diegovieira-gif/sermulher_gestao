@@ -31,7 +31,7 @@ export default async function RelatorioAtendimentoPage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-gray-50 p-8 print:bg-white print:p-0">
-      
+
       {/* Botão de Impressão (Componente Isolado) */}
       <div className="mx-auto max-w-[210mm] mb-6 flex justify-end print:hidden">
         <PrintButton />
@@ -39,7 +39,7 @@ export default async function RelatorioAtendimentoPage({ params }: PageProps) {
 
       {/* Folha A4 */}
       <div className="mx-auto w-[210mm] min-h-[297mm] bg-white p-[20mm] shadow-lg print:shadow-none print:w-full">
-        
+
         {/* Cabeçalho */}
         <div className="border-b pb-6 mb-6 flex items-start justify-between">
           <div>
@@ -102,10 +102,123 @@ export default async function RelatorioAtendimentoPage({ params }: PageProps) {
           </div>
         </section>
 
+        {/* 3. Dados Complementares (Socioassistencial e Jurídico) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 break-inside-avoid">
+          {/* Socioassistencial */}
+          <section>
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 border-b pb-1">
+              Dados Socioassistenciais
+            </h2>
+            <div className="space-y-4 text-sm">
+              <div>
+                <span className="block text-slate-500 text-xs">Gestante ou Puérpera</span>
+                <span className="text-slate-900 font-medium">
+                  {atendimento.gestante_puerpera ? "Sim" : "Não"}
+                </span>
+              </div>
+              <div className="col-span-2">
+                <span className="block text-slate-500 text-xs">Necessidades Sociais</span>
+                <div className="mt-1 text-slate-800 whitespace-pre-wrap bg-slate-50 p-2 rounded text-xs min-h-[40px]">
+                  {atendimento.necessidades_sociais || "Nenhuma registrada."}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Jurídico */}
+          <section>
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 border-b pb-1">
+              Dados Jurídicos
+            </h2>
+            <div className="space-y-4 text-sm">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <span className="block text-slate-500 text-xs">Boletim de Ocorrência</span>
+                  <span className="text-slate-900 font-medium">
+                    {atendimento.boletim_ocorrencia || "Não informado"}
+                  </span>
+                </div>
+                <div>
+                  <span className="block text-slate-500 text-xs">Medida Protetiva</span>
+                  <span className="text-slate-900 font-medium">
+                    {atendimento.medida_protetiva ? "Sim" : "Não"}
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <span className="block text-slate-500 text-xs">Tipos de Violência</span>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {atendimento.tipos_violencia_lista && atendimento.tipos_violencia_lista.length > 0 ? (
+                    atendimento.tipos_violencia_lista.map((item: any, idx: number) => (
+                      <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                        {item.config_tipos_agressao_id?.nome || "Violência não especificada"}
+                      </span>
+                    ))
+                  ) : atendimento.tipos_violencia ? (
+                    // Fallback para campo de texto antigo
+                    atendimento.tipos_violencia.split(',').map((v: string) => (
+                      <span key={v} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                        {v.trim()}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-slate-500 italic">Nenhum tipo registrado</span>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <span className="block text-slate-500 text-xs">Necessidades Jurídicas</span>
+                <div className="mt-1 text-slate-800 whitespace-pre-wrap bg-slate-50 p-2 rounded text-xs min-h-[40px]">
+                  {atendimento.necessidades_juridicas || "Nenhuma registrada."}
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        {/* 4. Avaliação de Risco */}
+        {atendimento.avaliacao_risco && Object.keys(atendimento.avaliacao_risco).length > 0 && (
+          <section className="mb-8 break-inside-avoid">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 border-b pb-1">
+              Avaliação de Risco
+            </h2>
+            <div className="bg-red-50 border border-red-100 rounded p-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
+                {Object.entries(atendimento.avaliacao_risco).map(([key, value]) => {
+                  const labelMap: Record<string, string> = {
+                    violencia_aumentando: "A violência está aumentando?",
+                    filhos_com_agressor: "Possui filhos com o agressor?",
+                    conflito_guarda: "Há conflito sobre guarda dos filhos?",
+                    tentou_separar: "Tentou se separar recentemente?",
+                    agressor_persegue: "O agressor persegue a vítima?",
+                    agressor_armas: "O agressor possui armas de fogo?",
+                    agressor_drogas: "O agressor faz uso de drogas/álcool?",
+                    agressor_ameaca_morte: "O agressor ameaçou de morte?",
+                  };
+                  const label = labelMap[key] || key.replace(/_/g, ' ');
+
+                  if (value === "Não se aplica") return null;
+
+                  return (
+                    <div key={key} className="flex justify-between items-center border-b border-red-100/50 py-1 last:border-0">
+                      <span className="text-slate-700">{label}</span>
+                      <span className={`font-medium ${value === "Sim" ? "text-red-700" : "text-slate-600"}`}>
+                        {String(value)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* 3. Evolução (Timeline) */}
         <section>
           <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 border-b pb-1">Histórico de Evolução</h2>
-          
+
           <div className="space-y-6">
             {tramitacoes.length === 0 ? (
               <p className="text-sm text-slate-400 italic">Nenhum registro de evolução encontrado.</p>
@@ -114,15 +227,15 @@ export default async function RelatorioAtendimentoPage({ params }: PageProps) {
                 <div key={t.id} className="relative pl-4 border-l-2 border-slate-200 break-inside-avoid">
                   <div className="flex items-baseline justify-between mb-1">
                     <h3 className="text-sm font-bold text-slate-900">
-                      {t.tipo_demanda} 
-                      <span className="font-normal text-slate-500 mx-1">•</span> 
+                      {t.tipo_demanda}
+                      <span className="font-normal text-slate-500 mx-1">•</span>
                       <span className="font-medium text-slate-600">{t.setor_responsavel?.nome}</span>
                     </h3>
                     <span className="text-xs text-slate-400 font-mono">
                       {new Date(t.data_recebimento).toLocaleDateString('pt-BR')}
                     </span>
                   </div>
-                  <div 
+                  <div
                     className="text-sm text-slate-700 leading-relaxed text-justify"
                     dangerouslySetInnerHTML={{ __html: t.relato_tecnico }}
                   />
