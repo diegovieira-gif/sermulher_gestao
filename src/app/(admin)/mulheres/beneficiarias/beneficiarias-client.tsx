@@ -84,22 +84,32 @@ export function BeneficiariasClient({
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Busca e Exportação
-  const [searchTerm, setSearchTerm] = useState(""); // Init empty
+  const [searchTerm, setSearchTerm] = useState(
+    searchParams.get("q") || ""
+  );
   const [isExporting, setIsExporting] = useState(false);
 
-  // Filtered data based on search (Client-side filtering since we load all)
-  const filteredData = initialData.filter((b) => {
-    if (!searchTerm) return true;
-    const search = searchTerm.toLowerCase();
-    return (
-      b.nome_completo?.toLowerCase().includes(search) ||
-      b.cpf?.includes(search)
-    );
-  });
+  // Debounced search effect
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      const params = new URLSearchParams(searchParams);
+      if (searchTerm) {
+        params.set("q", searchTerm);
+      } else {
+        params.delete("q");
+      }
+      // Se o termo de busca mudou, reseta para a página 1 (mas evita loop se o searchTerm for igual ao da url)
+      if (searchTerm !== (searchParams.get("q") || "")) {
+        params.set("page", "1");
+        router.push(`${pathname}?${params.toString()}`);
+      }
+    }, 500); // 500ms delay
 
-  // Debounce da busca NO URL UPDATE for now, just local filter
-  // or keep URL sync if desired, but page.tsx ignores it.
-  // Let's keep it simple: client side filtering.
+    return () => clearTimeout(handler);
+  }, [searchTerm, router, pathname, searchParams]);
+
+  // Use initialData directly, filtering is done on server
+  const filteredData = initialData;
 
   const handlePageChange = (newPage: number) => {
     const params = new URLSearchParams(searchParams);
@@ -114,7 +124,7 @@ export function BeneficiariasClient({
   const handleExport = () => {
     setIsExporting(true);
     try {
-      // Usar filteredData
+      // Usar filteredData (que agora é o dado retornado do servidor)
       if (filteredData.length > 0) {
         // Gerar CSV
         const headers = [
