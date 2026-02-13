@@ -6,70 +6,20 @@ import { readItems } from "@directus/sdk";
 /**
  * Tipos de retorno para o RMA
  */
-export type PerfilSocial = {
-  recebe_bolsa_familia: number;
-  recebe_bpc: number;
-  possui_medida_protetiva: number;
-};
-
-export type Encaminhamentos = {
-  cras: number;
-  creas: number;
-  saude: number;
-  educacao: number;
-  terceiro_setor: number;
-  casa_abrigo: number;
-  delegacia: number;
-  nenhum: number;
-};
-
-export type TiposViolencia = {
-  fisica: number;
-  psicologica: number;
-  sexual: number;
-  patrimonial: number;
-  moral: number;
-};
-
-export type VolumeRMA = {
-  total_atendimentos: number;
-  novos_casos: number;
-};
-
-export type PerfilRMA = {
-  bolsa_familia: number;
-  bpc: number;
-  medida_protetiva: number;
-};
-
-export type LocalidadeRMA = {
-  bairro: string;
-  total: number;
-};
-
-export type DadosRMA = {
-  volume: VolumeRMA;
-  perfil: PerfilRMA;
-  encaminhamentos: Encaminhamentos;
-  tipos_violencia: TiposViolencia;
-  localidades: LocalidadeRMA[];
-};
-
-/**
- * Tipo para atendimento retornado do Directus
- */
-type AtendimentoRMA = {
-  id: number;
-  encaminhamento_rma: string | null;
-  tipos_violencia: string | null;
-  data_abertura: string | null;
-  beneficiaria: {
-    id: number;
-    recebe_bolsa_familia: boolean | null;
-    recebe_bpc: boolean | null;
-    possui_medida_protetiva: boolean | null;
-    endereco_bairro: string | null;
-  } | null;
+export type RMAStats = {
+  volume: {
+    novos_casos: number;
+    atendimentos_tecnicos: number; // Tramitações
+    total_movimento: number; // Soma dos dois
+  };
+  setores: {
+    nome: string;
+    quantidade: number;
+  }[];
+  violencia: {
+    tipo: string;
+    quantidade: number;
+  }[];
 };
 
 /**
@@ -99,221 +49,116 @@ function getRangeDatas(mes: number, ano: number): { inicio: string; fim: string 
 }
 
 /**
- * Agrega dados do Relatório Mensal de Atendimento (RMA)
- * 
- * @param params - Objeto com mês e ano { mes: number, ano: number }
- * @param params.mes - Número do mês (1-12)
- * @param params.ano - Número do ano (ex: 2024)
- * @returns Objeto estruturado com todas as agregações do RMA
+ * Busca estatísticas do RMA
  */
-export async function getDadosRMA({
+export async function getRMAStats({
   mes,
   ano,
 }: {
   mes: number;
   ano: number;
-}): Promise<{ success: true; data: DadosRMA } | { success: false; error: string }> {
+}): Promise<{ success: true; data: RMAStats } | { success: false; error: string }> {
   try {
-    // Validação de parâmetros
-    if (!mes || !ano) {
-      return {
-        success: false,
-        error: "Parâmetros 'mes' e 'ano' são obrigatórios.",
-      };
-    }
-
-    // Calcula range de datas do mês
     const { inicio, fim } = getRangeDatas(mes, ano);
 
-    // Busca atendimentos do mês com campos necessários
+    // 1. Busca NOVOS CASOS (Atendimentos criados no mês)
+    // Contamos apenas atendimentos abertos neste mês
     const atendimentos = await directus.request(
       readItems("atendimentos", {
-        fields: [
-          "id",
-          "encaminhamento_rma",
-          "tipos_violencia",
-          "data_abertura",
-          "beneficiaria.id",
-          "beneficiaria.recebe_bolsa_familia",
-          "beneficiaria.recebe_bpc",
-          "beneficiaria.possui_medida_protetiva",
-          "beneficiaria.endereco.bairro",
-        ],
+        fields: ["id", "tipos_violencia"],
         filter: {
           data_abertura: {
             _gte: inicio,
             _lte: fim,
           },
         },
-        limit: -1, // Busca todos os atendimentos do mês
+        limit: -1,
       })
-    ) as AtendimentoRMA[];
+    );
 
-    // Inicializa estruturas de agregação
-    const perfilSocial: PerfilSocial = {
-      recebe_bolsa_familia: 0,
-      recebe_bpc: 0,
-      possui_medida_protetiva: 0,
-    };
+    const novosCasos = atendimentos.length;
 
-    const encaminhamentos: Encaminhamentos = {
-      cras: 0,
-      creas: 0,
-      saude: 0,
-      educacao: 0,
-      terceiro_setor: 0,
-      casa_abrigo: 0,
-      delegacia: 0,
-      nenhum: 0,
-    };
+    // 2. Busca TRAMITAÇÕES (Volume de Atendimentos)
+    // Contamos todas as tramitações recebidas no mês (evolução, atendimento técnico, etc)
+    const tramitacoes = await directus.request(
+      readItems("tramitacoes", {
+        fields: [
+          "id",
+          {
+            setor_responsavel: ["nome"]
+          }
+        ],
+        filter: {
+          data_recebimento: {
+            _gte: inicio,
+            _lte: fim,
+          },
+        },
+        limit: -1,
+      })
+    );
 
-    const tiposViolencia: TiposViolencia = {
-      fisica: 0,
-      psicologica: 0,
-      sexual: 0,
-      patrimonial: 0,
-      moral: 0,
-    };
+    const atendimentosTecnicos = tramitacoes.length;
 
-    // Mapa para contar localidades (bairros)
-    const localidadesMap = new Map<string, number>();
+    // 3. Agrupamento por Setor (Baseado nas Tramitações)
+    const setoresMap = new Map<string, number>();
 
-    // Para identificar novos casos, precisamos verificar se é o primeiro atendimento da beneficiária no ano
-    // Por enquanto, vamos contar todos como novos (simplificado)
-    // TODO: Implementar lógica mais robusta verificando atendimentos anteriores da mesma beneficiária no ano
-    const beneficiariasDoMes = new Set<number>();
-    
-    // Agregação dos dados
-    atendimentos.forEach((atendimento) => {
-      // Conta beneficiárias únicas para identificar novos casos
-      if (atendimento.beneficiaria?.id) {
-        beneficiariasDoMes.add(atendimento.beneficiaria.id);
-      }
+    // Inicializa setores comuns com 0 para garantir que apareçam
+    // (Opcional, mas bom para relatório consistente)
+    // setoresMap.set("Psicologia", 0);
+    // setoresMap.set("Serviço Social", 0);
+    // setoresMap.set("Jurídico", 0);
 
-      // Agrega Perfil Social
-      if (atendimento.beneficiaria) {
-        if (atendimento.beneficiaria.recebe_bolsa_familia === true) {
-          perfilSocial.recebe_bolsa_familia++;
-        }
-        if (atendimento.beneficiaria.recebe_bpc === true) {
-          perfilSocial.recebe_bpc++;
-        }
-        if (atendimento.beneficiaria.possui_medida_protetiva === true) {
-          perfilSocial.possui_medida_protetiva++;
-        }
-      }
+    tramitacoes.forEach((t: any) => { // Using any for rough typing matching directus return
+      const nomeSetor = t.setor_responsavel?.nome || "Não Identificado";
+      setoresMap.set(nomeSetor, (setoresMap.get(nomeSetor) || 0) + 1);
+    });
 
-      // Agrega Encaminhamentos
-      if (atendimento.encaminhamento_rma) {
-        const enc = atendimento.encaminhamento_rma.toLowerCase();
-        if (enc in encaminhamentos) {
-          (encaminhamentos as any)[enc]++;
-        }
-      } else {
-        encaminhamentos.nenhum++;
-      }
+    const setoresStats = Array.from(setoresMap.entries())
+      .map(([nome, quantidade]) => ({ nome, quantidade }))
+      .sort((a, b) => b.quantidade - a.quantidade);
 
-      // Agrega Tipos de Violência (CSV split)
-      if (atendimento.tipos_violencia) {
-        const tipos = atendimento.tipos_violencia
-          .split(",")
-          .map((t) => t.trim().toLowerCase())
-          .filter((t) => t.length > 0);
+    // 4. Perfil da Violência (Baseado nos NOVOS CASOS)
+    const violenciaMap = new Map<string, number>();
 
-        tipos.forEach((tipo) => {
-          // Mapeia variações possíveis para os tipos padrão
-          const tipoNormalizado = tipo === "psicologica" ? "psicologica" : tipo;
-          
-          if (tipoNormalizado in tiposViolencia) {
-            (tiposViolencia as any)[tipoNormalizado]++;
+    atendimentos.forEach((a: any) => {
+      if (a.tipos_violencia) {
+        // Pode ser string CSV ou array dependendo da implementação, assumindo string CSV baseado no código anterior
+        const tipos = typeof a.tipos_violencia === 'string'
+          ? a.tipos_violencia.split(',')
+          : (Array.isArray(a.tipos_violencia) ? a.tipos_violencia : []);
+
+        tipos.forEach((tipo: string) => {
+          const tipoLimpo = tipo.trim();
+          if (tipoLimpo) {
+            violenciaMap.set(tipoLimpo, (violenciaMap.get(tipoLimpo) || 0) + 1);
           }
         });
       }
-
-      // Agrega Localidades (Bairros)
-      if (atendimento.beneficiaria?.endereco_bairro) {
-        const bairro = atendimento.beneficiaria.endereco_bairro;
-        localidadesMap.set(bairro, (localidadesMap.get(bairro) || 0) + 1);
-      }
     });
 
-    // Para novos casos, verifica se é o primeiro atendimento da beneficiária no ano
-    // Busca todos os atendimentos anteriores no mesmo ano para cada beneficiária do mês
-    let novosCasos = 0;
-    
-    try {
-      const inicioAno = new Date(ano, 0, 1);
-      inicioAno.setHours(0, 0, 0, 0);
-      const fimAno = new Date(ano, 11, 31, 23, 59, 59, 999);
-
-      // Para cada beneficiária do mês, verifica se teve atendimento anterior no ano
-      const promises = Array.from(beneficiariasDoMes).map(async (beneficiariaId) => {
-        const atendimentosAnteriores = await directus.request(
-          readItems("atendimentos", {
-            fields: ["id"],
-            filter: {
-              beneficiaria: {
-                _eq: beneficiariaId,
-              },
-              data_abertura: {
-                _gte: inicioAno.toISOString(),
-                _lt: inicio, // Antes do início do mês atual (inicio já é string ISO)
-              },
-            },
-            limit: 1, // Apenas verifica se existe
-          })
-        );
-
-        return atendimentosAnteriores.length === 0; // É novo caso se não teve atendimento anterior no ano
-      });
-
-      const resultados = await Promise.all(promises);
-      novosCasos = resultados.filter((isNew) => isNew).length;
-    } catch (error) {
-      // Em caso de erro na verificação de novos casos, usa o total como fallback
-      console.warn("Erro ao verificar novos casos, usando total como fallback:", error);
-      novosCasos = beneficiariasDoMes.size;
-    }
-
-    // Monta objeto de retorno
-    const dadosRMA: DadosRMA = {
-      volume: {
-        total_atendimentos: atendimentos.length,
-        novos_casos: novosCasos,
-      },
-      perfil: {
-        bolsa_familia: perfilSocial.recebe_bolsa_familia,
-        bpc: perfilSocial.recebe_bpc,
-        medida_protetiva: perfilSocial.possui_medida_protetiva,
-      },
-      encaminhamentos: encaminhamentos,
-      tipos_violencia: tiposViolencia,
-      localidades: Array.from(localidadesMap.entries())
-        .map(([bairro, total]) => ({ bairro, total }))
-        .sort((a, b) => b.total - a.total), // Ordena por total decrescente
-    };
+    const violenciaStats = Array.from(violenciaMap.entries())
+      .map(([tipo, quantidade]) => ({ tipo, quantidade }))
+      .sort((a, b) => b.quantidade - a.quantidade);
 
     return {
       success: true,
-      data: dadosRMA,
+      data: {
+        volume: {
+          novos_casos: novosCasos,
+          atendimentos_tecnicos: atendimentosTecnicos,
+          total_movimento: novosCasos + atendimentosTecnicos
+        },
+        setores: setoresStats,
+        violencia: violenciaStats
+      },
     };
+
   } catch (error) {
     console.error("Erro ao buscar dados do RMA:", error);
-
-    // Tratamento de erros específicos
-    if (error instanceof Error) {
-      // Erro de validação de data
-      if (error.message.includes("inválido")) {
-        return {
-          success: false,
-          error: error.message,
-        };
-      }
-    }
-
     return {
       success: false,
-      error: "Erro ao buscar dados do RMA. Tente novamente.",
+      error: "Erro ao buscar dados do RMA.",
     };
   }
 }

@@ -1,4 +1,4 @@
-import { getDadosRMA } from './actions';
+import { getRMAStats } from './actions';
 import { RMAClient } from './rma-client';
 
 interface PageProps {
@@ -10,7 +10,7 @@ interface PageProps {
 
 export default async function RMAPage({ searchParams }: PageProps) {
   const params = await searchParams;
-  
+
   // Valores padrão: mês e ano atuais
   const hoje = new Date();
   const mes = params.mes ? parseInt(params.mes, 10) : hoje.getMonth() + 1;
@@ -21,7 +21,7 @@ export default async function RMAPage({ searchParams }: PageProps) {
   const anoValido = ano >= 2000 && ano <= 2100 ? ano : hoje.getFullYear();
 
   // Busca dados do RMA
-  const result = await getDadosRMA({ mes: mesValido, ano: anoValido });
+  const result = await getRMAStats({ mes: mesValido, ano: anoValido });
 
   if (!result.success) {
     return (
@@ -43,7 +43,7 @@ export default async function RMAPage({ searchParams }: PageProps) {
 
   return (
     <div className="p-6">
-      <div className="mb-6">
+      <div className="mb-6 print:hidden">
         <h1 className="text-3xl font-bold text-foreground">Relatório Mensal de Atendimento (RMA)</h1>
         <p className="text-muted-foreground mt-2">
           Visualize as estatísticas e agregações dos atendimentos mensais

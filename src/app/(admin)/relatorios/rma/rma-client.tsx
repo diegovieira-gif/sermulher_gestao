@@ -1,37 +1,14 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
-  FileText,
-  Users,
-  Shield,
-  Calendar,
-  TrendingUp,
-  Heart,
-  GraduationCap,
-  Building2,
-  Stethoscope,
-  Home,
-  Scale,
-  AlertTriangle,
   Printer,
   Filter,
 } from "lucide-react";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-} from "recharts";
-import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -44,11 +21,11 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import type { DadosRMA } from "./actions";
+import type { RMAStats } from "./actions";
+import Image from "next/image";
 
 interface RMAClientProps {
-  dados: DadosRMA;
+  dados: RMAStats;
   mesInicial: number;
   anoInicial: number;
 }
@@ -91,46 +68,37 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
 
   return (
     <div className="space-y-6">
-      {/* Estilos de Impressão - Correção da Margem Esquerda */}
+      {/* Estilos de Impressão */}
       <style jsx global>{`
         @media print {
           @page {
             margin: 10mm;
             size: A4;
           }
-          /* Oculta tudo por padrão */
           body * {
             visibility: hidden;
           }
-          /* Exibe apenas a área do relatório e seus filhos */
           #rma-print-area,
           #rma-print-area * {
             visibility: visible;
           }
-          /* Posicionamento absoluto para ignorar sidebar/margens do layout */
           #rma-print-area {
             position: fixed;
             left: 0;
             top: 0;
             width: 100%;
             margin: 0;
-            padding: 20px;
+            padding: 0;
             background: white;
             z-index: 9999;
           }
-          /* Remove sombras e fundos escuros para economizar tinta */
-          .no-print-shadow {
-            box-shadow: none !important;
-            border: 1px solid #ddd !important;
-          }
-          /* Esconde botões dentro da área de print se houver */
           .hide-on-print {
             display: none !important;
           }
         }
       `}</style>
 
-      {/* Cabeçalho e Filtros (Não aparecem na impressão devido ao CSS acima) */}
+      {/* Header e Filtros (Não aparecem na impressão) */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 hide-on-print">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Relatório RMA</h2>
@@ -141,7 +109,7 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={handleImprimir} className="gap-2">
             <Printer className="h-4 w-4" />
-            Imprimir / Salvar PDF
+            Imprimir Relatório
           </Button>
         </div>
       </div>
@@ -194,288 +162,153 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
         </CardContent>
       </Card>
 
-      {/* ÁREA DE IMPRESSÃO (ID rma-print-area é crucial) */}
-      <div id="rma-print-area" className="space-y-6">
-        {/* Cabeçalho apenas para impressão */}
-        <div className="hidden print:block text-center mb-8 border-b pb-4">
-          <h1 className="text-2xl font-bold text-gray-900">
-            Relatório Mensal de Atendimentos (RMA)
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Secretaria Municipal do Respeito às Políticas para as Mulheres
+      {/* ÁREA DE IMPRESSÃO (Documento Oficial) */}
+      <div id="rma-print-area" className="w-full max-w-[210mm] mx-auto bg-white p-8 min-h-[297mm] shadow-sm print:shadow-none border border-gray-200 print:border-none">
+
+        {/* Bloco 1: Cabeçalho Institucional */}
+        <div className="text-center border-b-2 border-black pb-4 mb-6">
+          <h1 className="text-xl font-bold uppercase tracking-wider">Prefeitura Municipal de Seropédica</h1>
+          <h2 className="text-lg font-semibold uppercase mt-1">Secretaria Municipal de Assistência Social e Direitos Humanos</h2>
+          <h3 className="text-md font-medium uppercase mt-1">Superintendência de Políticas para as Mulheres</h3>
+          <p className="mt-4 font-bold text-lg border p-2 inline-block px-8 border-black">
+            RELATÓRIO MENSAL DE ATENDIMENTOS - RMA
           </p>
-          <p className="text-sm text-gray-500 mt-2">
-            Período de Referência: {MESES.find((m) => m.value === mes)?.label}/
-            {ano}
-          </p>
+          <div className="mt-2 text-sm font-semibold">
+            REFERÊNCIA: {MESES.find((m) => m.value === mes)?.label?.toUpperCase()} / {ano}
+          </div>
         </div>
 
-        {/* 1. Volume de Atendimentos */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="no-print-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Total Atendimentos
-              </CardTitle>
-              <FileText className="h-4 w-4 text-purple-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {dados.volume.total_atendimentos}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                No período selecionado
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="no-print-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Novos Casos</CardTitle>
-              <Users className="h-4 w-4 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {dados.volume.novos_casos}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Primeiro acolhimento
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="no-print-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Medidas Protetivas
-              </CardTitle>
-              <Shield className="h-4 w-4 text-red-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {dados.perfil.medida_protetiva}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Mulheres com MPU ativa
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="no-print-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Benefício Social
-              </CardTitle>
-              <Heart className="h-4 w-4 text-pink-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {dados.perfil.bolsa_familia + dados.perfil.bpc}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Bolsa Família ou BPC
-              </p>
-            </CardContent>
-          </Card>
+        {/* Bloco 2: Volume de Atendimentos */}
+        <div className="mb-8">
+          <h4 className="text-sm font-bold uppercase mb-2 border-l-4 border-black pl-2 bg-gray-100 py-1">
+            1. MOVIMENTO MENSAL
+          </h4>
+          <table className="w-full border-collapse border border-black text-sm">
+            <thead>
+              <tr className="bg-gray-200">
+                <th className="border border-black p-2 text-left w-2/3">DESCRIÇÃO</th>
+                <th className="border border-black p-2 text-center w-1/3">QUANTIDADE</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="border border-black p-2 font-medium">
+                  NOVOS CASOS (Primeiro Acolhimento no Mês)
+                </td>
+                <td className="border border-black p-2 text-center font-bold">
+                  {dados.volume.novos_casos}
+                </td>
+              </tr>
+              <tr>
+                <td className="border border-black p-2 font-medium">
+                  ATENDIMENTOS TÉCNICOS REALIZADOS (Evoluções / Tramitações)
+                </td>
+                <td className="border border-black p-2 text-center font-bold">
+                  {dados.volume.atendimentos_tecnicos}
+                </td>
+              </tr>
+              <tr className="bg-gray-100">
+                <td className="border border-black p-2 text-right font-bold">
+                  TOTAL DE ATIVIDADES
+                </td>
+                <td className="border border-black p-2 text-center font-bold text-lg">
+                  {dados.volume.total_movimento}
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
-        {/* 2. Tipos de Violência (Gráfico) */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-          <Card className="col-span-4 no-print-shadow">
-            <CardHeader>
-              <CardTitle>Tipos de Violência Identificados</CardTitle>
-              <CardDescription>
-                Distribuição das ocorrências por tipologia
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pl-2">
-              <div className="h-[300px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={[
-                      {
-                        name: "Física",
-                        total: dados.tipos_violencia.fisica,
-                        fill: "#ef4444",
-                      },
-                      {
-                        name: "Psicológica",
-                        total: dados.tipos_violencia.psicologica,
-                        fill: "#a855f7",
-                      },
-                      {
-                        name: "Moral",
-                        total: dados.tipos_violencia.moral,
-                        fill: "#eab308",
-                      },
-                      {
-                        name: "Sexual",
-                        total: dados.tipos_violencia.sexual,
-                        fill: "#f97316",
-                      },
-                      {
-                        name: "Patrimonial",
-                        total: dados.tipos_violencia.patrimonial,
-                        fill: "#3b82f6",
-                      },
-                    ]}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis
-                      dataKey="name"
-                      stroke="#888888"
-                      fontSize={12}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <YAxis
-                      stroke="#888888"
-                      fontSize={12}
-                      tickLine={false}
-                      axisLine={false}
-                      tickFormatter={(value) => `${value}`}
-                    />
-                    <Tooltip />
-                    <Bar dataKey="total" radius={[4, 4, 0, 0]}>
-                      {/* Cells para cores individuais */}
-                      <Cell fill="#ef4444" />
-                      <Cell fill="#a855f7" />
-                      <Cell fill="#eab308" />
-                      <Cell fill="#f97316" />
-                      <Cell fill="#3b82f6" />
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* 3. Encaminhamentos (Lista) */}
-          <Card className="col-span-3 no-print-shadow">
-            <CardHeader>
-              <CardTitle>Rede de Atendimento</CardTitle>
-              <CardDescription>
-                Encaminhamentos realizados no mês
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center">
-                  <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
-                  <div className="ml-2 space-y-1 flex-1">
-                    <p className="text-sm font-medium leading-none">
-                      CRAS/CREAS
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Assistência Social
-                    </p>
-                  </div>
-                  <div className="font-bold">
-                    {dados.encaminhamentos.cras + dados.encaminhamentos.creas}
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <Stethoscope className="mr-2 h-4 w-4 text-muted-foreground" />
-                  <div className="ml-2 space-y-1 flex-1">
-                    <p className="text-sm font-medium leading-none">Saúde</p>
-                    <p className="text-xs text-muted-foreground">
-                      UBS, Hospitais
-                    </p>
-                  </div>
-                  <div className="font-bold">{dados.encaminhamentos.saude}</div>
-                </div>
-                <div className="flex items-center">
-                  <Scale className="mr-2 h-4 w-4 text-muted-foreground" />
-                  <div className="ml-2 space-y-1 flex-1">
-                    <p className="text-sm font-medium leading-none">
-                      Segurança/Justiça
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Delegacia, Defensoria
-                    </p>
-                  </div>
-                  <div className="font-bold">
-                    {dados.encaminhamentos.delegacia}
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <Home className="mr-2 h-4 w-4 text-muted-foreground" />
-                  <div className="ml-2 space-y-1 flex-1">
-                    <p className="text-sm font-medium leading-none">Abrigo</p>
-                    <p className="text-xs text-muted-foreground">
-                      Acolhimento Institucional
-                    </p>
-                  </div>
-                  <div className="font-bold">
-                    {dados.encaminhamentos.casa_abrigo}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Bloco 3: Detalhamento por Setor */}
+        <div className="mb-8">
+          <h4 className="text-sm font-bold uppercase mb-2 border-l-4 border-black pl-2 bg-gray-100 py-1">
+            2. DETALHAMENTO DOS ATENDIMENTOS TÉCNICOS
+          </h4>
+          <table className="w-full border-collapse border border-black text-sm">
+            <thead>
+              <tr className="bg-gray-200">
+                <th className="border border-black p-2 text-left w-2/3">SETOR / EQUIPE TÉCNICA</th>
+                <th className="border border-black p-2 text-center w-1/3">ATENDIMENTOS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {dados.setores.length > 0 ? (
+                dados.setores.map((setor, index) => (
+                  <tr key={setor.nome}>
+                    <td className="border border-black p-2 uppercase">
+                      {setor.nome}
+                    </td>
+                    <td className="border border-black p-2 text-center">
+                      {setor.quantidade}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td className="border border-black p-2 text-center italic text-gray-500" colSpan={2}>
+                    Nenhum atendimento técnico registrado.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
 
-        {/* 4. Localidades */}
-        <Card className="no-print-shadow">
-          <CardHeader>
-            <CardTitle>Territorialização</CardTitle>
-            <CardDescription>Distribuição dos casos por bairro</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {dados.localidades.length > 0 ? (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {dados.localidades.slice(0, 6).map((loc, i) => (
-                    <div
-                      key={loc.bairro}
-                      className="flex items-center justify-between p-2 border rounded bg-gray-50/50 break-inside-avoid"
-                    >
-                      <span
-                        className="text-sm font-medium truncate pr-2"
-                        title={loc.bairro}
-                      >
-                        {loc.bairro}
-                      </span>
-                      <span className="text-sm font-bold bg-white px-2 py-0.5 rounded border">
-                        {loc.total}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Destaque Bairro */}
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-                  <div className="bg-purple-50 p-4 rounded-lg text-center break-inside-avoid">
-                    <p className="text-xs uppercase text-purple-600 font-bold mb-1">
-                      Maior Incidência
-                    </p>
-                    <p className="text-lg font-bold text-gray-900">
-                      {dados.localidades[0]?.bairro || "N/A"}
-                    </p>
-                  </div>
-                  <div className="bg-gray-50 p-4 rounded-lg text-center break-inside-avoid">
-                    <p className="text-xs uppercase text-gray-500 font-bold mb-1">
-                      Total de Bairros
-                    </p>
-                    <p className="text-lg font-bold text-gray-900">
-                      {dados.localidades.length}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="py-8 text-center text-muted-foreground">
-                Nenhum registro de localidade encontrado.
-              </div>
+        {/* Bloco 4: Perfil da Violência (Novos Casos) */}
+        <div className="mb-8">
+          <h4 className="text-sm font-bold uppercase mb-2 border-l-4 border-black pl-2 bg-gray-100 py-1">
+            3. TIPOS DE VIOLÊNCIA IDENTIFICADOS (NOVOS CASOS)
+          </h4>
+          <table className="w-full border-collapse border border-black text-sm">
+            <thead>
+              <tr className="bg-gray-200">
+                <th className="border border-black p-2 text-left w-2/3">TIPOLOGIA</th>
+                <th className="border border-black p-2 text-center w-1/3">OCORRÊNCIAS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {dados.violencia.length > 0 ? (
+                dados.violencia.map((v, index) => (
+                  <tr key={v.tipo}>
+                    <td className="border border-black p-2 uppercase">
+                      {v.tipo}
+                    </td>
+                    <td className="border border-black p-2 text-center">
+                      {v.quantidade}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td className="border border-black p-2 text-center italic text-gray-500" colSpan={2}>
+                    Nenhuma tipologia identificada nos novos casos.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+            {dados.violencia.length > 0 && (
+              <tfoot>
+                <tr className="bg-gray-100">
+                  <td className="border border-black p-2 text-xs italic text-gray-600">
+                    * Um caso pode envolver múltiplos tipos de violência.
+                  </td>
+                  <td className="border border-black p-2"></td>
+                </tr>
+              </tfoot>
             )}
-          </CardContent>
-        </Card>
-
-        {/* Rodapé da Impressão */}
-        <div className="hidden print:block text-center text-xs text-gray-400 mt-8 pt-8 border-t">
-          <p>
-            Sistema SerMulher - Gerado em{" "}
-            {new Date().toLocaleDateString("pt-BR")} às{" "}
-            {new Date().toLocaleTimeString("pt-BR")}
-          </p>
+          </table>
         </div>
+
+        {/* Rodapé - Assinaturas */}
+        <div className="mt-16 grid grid-cols-2 gap-16 text-center text-sm">
+          <div className="border-t border-black pt-2">
+            <p>Responsável Técnico</p>
+          </div>
+          <div className="border-t border-black pt-2">
+            <p>Coordenação</p>
+          </div>
+        </div>
+
       </div>
     </div>
   );
