@@ -83,9 +83,8 @@ async function getAuthenticatedClient() {
 
 // --- Ações de Leitura (Queries) ---
 
-export async function getBeneficiarias(page = 1, search = "") {
+export async function getBeneficiarias(page = 1, search = "", limit = 10) {
   const { client } = await getAuthenticatedClient();
-  const limit = 10;
   const offset = (page - 1) * limit;
 
   const filter = search

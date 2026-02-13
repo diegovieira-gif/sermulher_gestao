@@ -27,6 +27,13 @@ import Link from "next/link";
 import { BeneficiariaForm } from "./beneficiaria-form";
 import { deleteBeneficiaria } from "./actions";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Plus,
   Pencil,
   Trash2,
@@ -343,7 +350,31 @@ export function BeneficiariasClient({
       </div>
 
       {/* Paginação */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-500">Itens por página:</span>
+          <Select
+            value={String(meta.limit)}
+            onValueChange={(value) => {
+              const params = new URLSearchParams(searchParams);
+              params.set("limit", value);
+              params.set("page", "1"); // Resetar para a primeira página
+              router.push(`${pathname}?${params.toString()}`);
+            }}
+          >
+            <SelectTrigger className="w-[70px] h-8">
+              <SelectValue placeholder={String(meta.limit)} />
+            </SelectTrigger>
+            <SelectContent>
+              {[10, 25, 50, 100].map((limit) => (
+                <SelectItem key={limit} value={String(limit)}>
+                  {limit}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         <div className="text-sm text-gray-500">
           Mostrando <strong>{(meta.page - 1) * meta.limit + 1}</strong> a{" "}
           <strong>{Math.min(meta.page * meta.limit, meta.total)}</strong> de{" "}

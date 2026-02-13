@@ -7,6 +7,7 @@ interface PageProps {
   searchParams: Promise<{
     page?: string;
     q?: string;
+    limit?: string;
   }>;
 }
 
@@ -15,10 +16,11 @@ export default async function BeneficiariasPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const page = Number(params?.page) || 1;
   const search = params?.q || "";
+  const limit = Number(params?.limit) || 10;
 
   // Busca dados com paginação e busca
   const [result, formOptionsResult] = await Promise.all([
-    getBeneficiarias(page, search),
+    getBeneficiarias(page, search, limit),
     getBeneficiariaFormOptions(),
   ]);
 
