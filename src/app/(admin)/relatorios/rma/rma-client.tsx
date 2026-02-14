@@ -167,9 +167,9 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
 
         {/* Bloco 1: Cabeçalho Institucional */}
         <div className="text-center border-b-2 border-black pb-4 mb-6">
-          <h1 className="text-xl font-bold uppercase tracking-wider">Prefeitura Municipal de Seropédica</h1>
-          <h2 className="text-lg font-semibold uppercase mt-1">Secretaria Municipal de Assistência Social e Direitos Humanos</h2>
-          <h3 className="text-md font-medium uppercase mt-1">Superintendência de Políticas para as Mulheres</h3>
+          <h1 className="text-xl font-bold uppercase tracking-wider">Prefeitura Municipal de Aracaju</h1>
+          <h2 className="text-lg font-semibold uppercase mt-1">SERMULHER</h2>
+          <h3 className="text-md font-medium uppercase mt-1">Secretaria Municipal do Respeito às Políticas para as Mulheres</h3>
           <p className="mt-4 font-bold text-lg border p-2 inline-block px-8 border-black">
             RELATÓRIO MENSAL DE ATENDIMENTOS - RMA
           </p>

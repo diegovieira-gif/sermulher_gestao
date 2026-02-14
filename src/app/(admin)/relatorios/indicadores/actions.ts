@@ -14,7 +14,10 @@ export type IndicadoresData = {
             total: number;
             individual: number;
             coletivo: number;
+            encaminhamentos: number;
+            devolutivas: number;
         };
+        porSetor: { name: string; value: number }[];
         educacao: {
             turmasAtivas: number;
             totalAlunas: number;
@@ -83,7 +86,7 @@ export async function getIndicadoresCRAM(
             // B. TRAMITAÇÕES (Atendimentos Técnicos)
             directus.request(
                 readItems("tramitacoes", {
-                    fields: ["id", "tipo_demanda"],
+                    fields: ["id", "tipo_demanda", "setor_responsavel.nome"], // Added sector name
                     filter: {
                         data_recebimento: { _between: [startDateStr, endDateStr] },
                     },
@@ -220,21 +223,42 @@ export async function getIndicadoresCRAM(
             .map(([name, value]) => ({ name, value }));
 
         // --- 3. PROCESSAMENTO (Ações) ---
-        // Tramitações (Individual vs Coletivo)
+        // Tramitações (Individual vs Coletivo / Setor / Encaminhamento / Devolutiva)
         let tecTotal = 0;
         let tecIndividual = 0;
         let tecColetivo = 0;
+        let tecEncaminhamentos = 0;
+        let tecDevolutivas = 0;
+        const setorCount: Record<string, number> = {};
 
         tramitacoes.forEach((t: any) => {
             tecTotal++;
+
             const tipo = t.tipo_demanda?.toLowerCase() || "";
+            const setor = t.setor_responsavel?.nome || "Geral";
+
+            // Contagem por setor
+            setorCount[setor] = (setorCount[setor] || 0) + 1;
+
+            // Classificação Individual vs Coletivo
             if (tipo.includes("coletiv")) {
                 tecColetivo++;
             } else {
-                // Assume individual se não for explicitamente coletivo (ou se for "individual")
                 tecIndividual++;
             }
+
+            // Classificação Encaminhamento vs Devolutiva
+            if (tipo.includes("encaminhamento")) {
+                tecEncaminhamentos++;
+            }
+            if (tipo.includes("devolutiva") || tipo.includes("retorno")) {
+                tecDevolutivas++;
+            }
         });
+
+        const porSetor = Object.entries(setorCount)
+            .map(([name, value]) => ({ name, value }))
+            .sort((a, b) => b.value - a.value);
 
         // Eventos
         let reunioesRede = 0;
@@ -248,7 +272,7 @@ export async function getIndicadoresCRAM(
 
         // --- 4. PROCESSAMENTO (Marketing) ---
         let mktAlcance = 0;
-        let topPostItem = null;
+        let topPostItem: { titulo: string; alcance: number; canal: string } | null = null;
         const mktCanais: Record<string, number> = {};
 
         marketing.forEach((m: any) => {
@@ -330,7 +354,10 @@ export async function getIndicadoresCRAM(
                         total: tecTotal,
                         individual: tecIndividual,
                         coletivo: tecColetivo,
+                        encaminhamentos: tecEncaminhamentos,
+                        devolutivas: tecDevolutivas,
                     },
+                    porSetor,
                     educacao: {
                         turmasAtivas: turmas.length,
                         totalAlunas: 0, // Não calculado nesta versão simples
