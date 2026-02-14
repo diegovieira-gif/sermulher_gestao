@@ -93,7 +93,10 @@ const MENU_ITEMS: MenuItemConfig[] = [
     href: "/relatorios",
     icon: FileText,
     roles: ["admin", "gestor"],
-    items: [{ label: "RMA (SUAS)", href: "/relatorios/rma" }],
+    items: [
+      { label: "Indicadores Gerais", href: "/relatorios/indicadores" },
+      { label: "RMA (SUAS)", href: "/relatorios/rma" }
+    ],
   },
   {
     label: "Manual do Usuário",
