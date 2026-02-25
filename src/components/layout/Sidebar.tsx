@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
 import {
   LayoutDashboard,
   FileText,
@@ -10,7 +9,6 @@ import {
   Settings,
   LogOut,
   HeartHandshake,
-  ChevronDown,
   ChevronRight,
   GitPullRequest,
   GraduationCap,
@@ -20,6 +18,28 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { logout } from "@/app/login/actions";
+import {
+  Sidebar as ShadcnSidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
+  SidebarRail,
+  useSidebar,
+} from "@/components/ui/sidebar";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 interface MenuItemConfig {
   label: string;
@@ -72,7 +92,7 @@ const MENU_ITEMS: MenuItemConfig[] = [
     roles: [],
     items: [
       { label: "Painel da Escola", href: "/escola" },
-      { label: "Cursos", href: "/escola/cursos" }, // NOVO ITEM ADICIONADO
+      { label: "Cursos", href: "/escola/cursos" },
       { label: "Turmas", href: "/escola/turmas" },
       { label: "Matrículas", href: "/escola/matriculas" },
     ],
@@ -106,145 +126,155 @@ const MENU_ITEMS: MenuItemConfig[] = [
   },
 ];
 
-export function Sidebar() {
-  const pathname = usePathname();
-  const [openSubmenus, setOpenSubmenus] = useState<string[]>([]);
+interface SidebarProps {
+  userRole: string;
+}
 
-  const toggleSubmenu = (label: string) => {
-    setOpenSubmenus((prev) =>
-      prev.includes(label)
-        ? prev.filter((item) => item !== label)
-        : [...prev, label],
-    );
-  };
+export function Sidebar({ userRole }: SidebarProps) {
+  const pathname = usePathname();
+  const { state } = useSidebar();
 
   const handleLogout = async () => {
     await logout();
   };
 
+  // RBAC logic: Filter menu items
+  // Roles: 'Busca Ativa' or 'Recepção' only see 'Gestão de Mulheres'
+  const isLimited = userRole === "Busca Ativa" || userRole === "Recepção";
+
+  const filteredMenuItems = isLimited
+    ? MENU_ITEMS.filter(item => item.label === "Gestão de Mulheres")
+    : MENU_ITEMS;
+
   return (
-    <aside className="fixed left-0 top-0 z-40 h-screen w-64 -translate-x-full border-r border-slate-800 bg-slate-900 transition-transform sm:translate-x-0 flex flex-col">
-      <div className="flex h-16 items-center gap-2 border-b border-slate-800 px-6 shrink-0">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white">
-          <ShieldAlert className="h-5 w-5" />
-        </div>
-        <div>
-          <h1 className="text-lg font-bold text-white">SerMulher</h1>
-          <p className="text-[10px] text-slate-400">
-            Secretaria Municipal do Respeito às Políticas para as Mulheres
-          </p>
-        </div>
-      </div>
+    <ShadcnSidebar variant="inset" collapsible="icon">
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="lg" asChild>
+              <Link href="/dashboard">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-blue-600 text-white shadow-lg">
+                  <ShieldAlert className="size-5" />
+                </div>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-bold text-slate-900 dark:text-white">SerMulher</span>
+                  <span className="truncate text-[10px] text-slate-500 dark:text-slate-400">PMM / SerMulher</span>
+                </div>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
 
-      <nav className="flex-1 overflow-y-auto px-3 py-4 custom-scrollbar">
-        <ul className="space-y-1">
-          {MENU_ITEMS.map((item) => {
-            const Icon = item.icon;
-            const hasSubmenu = item.items && item.items.length > 0;
-            const isSubmenuOpen = openSubmenus.includes(item.label);
-            const isChildActive =
-              hasSubmenu &&
-              item.items?.some((sub) => pathname.startsWith(sub.href));
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
+          <SidebarMenu>
+            {filteredMenuItems.map((item) => {
+              const Icon = item.icon;
+              const hasSubmenu = item.items && item.items.length > 0;
+              const isActive = pathname === item.href || (pathname.startsWith(item.href + "/") && item.href !== "/");
 
-            return (
-              <li key={item.href}>
-                {hasSubmenu ? (
-                  <div>
-                    <button
-                      onClick={() => toggleSubmenu(item.label)}
-                      className={cn(
-                        "flex w-full items-center justify-between rounded-lg px-4 py-3 text-sm font-medium transition-colors",
-                        isChildActive
-                          ? "text-white bg-slate-800/50"
-                          : "text-slate-300 hover:bg-slate-800 hover:text-white",
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        <Icon className="h-5 w-5" />
-                        <span>{item.label}</span>
-                      </div>
-                      {isSubmenuOpen ? (
-                        <ChevronDown className="h-4 w-4" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4" />
-                      )}
-                    </button>
-
-                    {(isSubmenuOpen || isChildActive) && (
-                      <ul className="mt-1 space-y-1 px-2">
-                        {item.items!.map((subItem) => {
-                          const isSubActive =
-                            pathname === subItem.href ||
-                            pathname.startsWith(subItem.href + "/");
-                          return (
-                            <li key={subItem.href}>
-                              <Link
-                                href={subItem.href}
+              if (hasSubmenu) {
+                const isChildActive = item.items?.some(sub => pathname.startsWith(sub.href));
+                return (
+                  <Collapsible
+                    key={item.label}
+                    asChild
+                    defaultOpen={isChildActive}
+                    className="group/collapsible"
+                  >
+                    <SidebarMenuItem>
+                      <CollapsibleTrigger asChild>
+                        <SidebarMenuButton
+                          tooltip={item.label}
+                          isActive={isActive || isChildActive}
+                          className={cn(
+                            (isActive || isChildActive) && "bg-slate-200 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold"
+                          )}
+                        >
+                          <Icon className="size-5" />
+                          <span>{item.label}</span>
+                          <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                        </SidebarMenuButton>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <SidebarMenuSub>
+                          {item.items?.map((subItem) => (
+                            <SidebarMenuSubItem key={subItem.href}>
+                              <SidebarMenuSubButton
+                                asChild
+                                isActive={pathname === subItem.href}
                                 className={cn(
-                                  "block rounded-lg px-4 py-2 text-sm transition-colors ml-8 border-l border-slate-700",
-                                  isSubActive
-                                    ? "text-blue-400 border-blue-500 bg-slate-800/30"
-                                    : "text-slate-400 hover:text-white hover:border-slate-500",
+                                  pathname === subItem.href && "text-blue-600 dark:text-blue-400 font-medium"
                                 )}
                               >
-                                {subItem.label}
-                              </Link>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    )}
-                  </div>
-                ) : (
-                  <Link
-                    href={item.href}
+                                <Link href={subItem.href}>
+                                  <span>{subItem.label}</span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          ))}
+                        </SidebarMenuSub>
+                      </CollapsibleContent>
+                    </SidebarMenuItem>
+                  </Collapsible>
+                );
+              }
+
+              return (
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton
+                    asChild
+                    tooltip={item.label}
+                    isActive={isActive}
                     className={cn(
-                      "flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors",
-                      pathname === item.href ||
-                        (pathname.startsWith(item.href + "/") &&
-                          item.href !== "/")
-                        ? "bg-slate-800 text-white border-l-4 border-blue-500"
-                        : "text-slate-300 hover:bg-slate-800 hover:text-white",
+                      isActive && "bg-slate-200 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold"
                     )}
                   >
-                    <Icon className="h-5 w-5" />
-                    <span>{item.label}</span>
-                  </Link>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+                    <Link href={item.href}>
+                      <Icon className="size-5" />
+                      <span>{item.label}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            })}
+          </SidebarMenu>
+        </SidebarGroup>
+      </SidebarContent>
 
-      <div className="border-t border-slate-800 p-3 shrink-0 space-y-1">
-        <Link
-          href="/configuracoes"
-          className={cn(
-            "flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors",
-            pathname.startsWith("/configuracoes")
-              ? "bg-slate-800 text-white border-l-4 border-blue-500"
-              : "text-slate-300 hover:bg-slate-800 hover:text-white",
-          )}
-        >
-          <Settings className="h-5 w-5" />
-          <span>Configurações</span>
-        </Link>
-
-        <form action={handleLogout}>
-          <button
-            type="submit"
-            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
-          >
-            <LogOut className="h-5 w-5" />
-            <span>Sair</span>
-          </button>
-        </form>
-
-        <div className="mt-2 text-center pb-1">
-          <span className="text-[10px] text-slate-600 font-mono">v1.0</span>
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              tooltip="Configurações"
+              isActive={pathname.startsWith("/configuracoes")}
+              className={cn(
+                pathname.startsWith("/configuracoes") && "bg-slate-200 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold"
+              )}
+            >
+              <Link href="/configuracoes">
+                <Settings className="size-5" />
+                <span>Configurações</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <form action={handleLogout} className="w-full">
+              <SidebarMenuButton type="submit" tooltip="Sair">
+                <LogOut className="size-5" />
+                <span>Sair</span>
+              </SidebarMenuButton>
+            </form>
+          </SidebarMenuItem>
+        </SidebarMenu>
+        <div className="mt-2 text-center pb-2 opacity-30">
+          <span className="text-[10px] font-mono">v1.1</span>
         </div>
-      </div>
-    </aside>
+      </SidebarFooter>
+      <SidebarRail />
+    </ShadcnSidebar>
   );
 }

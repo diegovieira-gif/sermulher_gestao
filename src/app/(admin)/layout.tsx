@@ -2,6 +2,7 @@ import { cookies } from 'next/headers';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { LayoutClient } from './layout-client';
+import { SidebarProvider } from '@/components/ui/sidebar';
 
 const pageTitles: Record<string, string> = {
   '/dashboard': 'Dashboard',
@@ -23,11 +24,13 @@ export default async function AdminLayout({
   const userRole = cookieStore.get('user_role')?.value || 'visitante';
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-900">
-      <Sidebar userRole={userRole} />
-      <div className="ml-64 flex flex-col">
-        <LayoutClient pageTitles={pageTitles}>{children}</LayoutClient>
+    <SidebarProvider>
+      <div className="flex min-h-screen bg-slate-100 dark:bg-slate-900 w-full">
+        <Sidebar userRole={userRole} />
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <LayoutClient pageTitles={pageTitles}>{children}</LayoutClient>
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }
