@@ -153,7 +153,7 @@ export function Sidebar({ userRole }: SidebarProps) {
     : MENU_ITEMS;
 
   return (
-    <ShadcnSidebar variant="inset" collapsible="icon">
+    <ShadcnSidebar variant="sidebar" collapsible="icon">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
