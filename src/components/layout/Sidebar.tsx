@@ -119,6 +119,12 @@ const MENU_ITEMS: MenuItemConfig[] = [
     ],
   },
   {
+    label: "Observatório",
+    href: "/admin/observatorio",
+    icon: LayoutDashboard,
+    roles: ["admin", "gestor"],
+  },
+  {
     label: "Manual do Usuário",
     href: "/manual",
     icon: Book,
