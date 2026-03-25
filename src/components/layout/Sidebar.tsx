@@ -118,6 +118,12 @@ const MENU_ITEMS: MenuItemConfig[] = [
       { label: "RMA (SUAS)", href: "/relatorios/rma" }
     ],
   },
+  {
+    label: "Observatório",
+    href: "/admin/observatorio",
+    icon: LayoutDashboard,
+    roles: ["admin", "gestor"],
+  },
 ];
 
 interface SidebarProps {
@@ -236,68 +242,54 @@ export function Sidebar({ userRole }: SidebarProps) {
             })}
           </SidebarMenu>
         </SidebarGroup>
+        <SidebarGroup className="mt-auto pt-4">
+          <SidebarGroupLabel>Sistema</SidebarGroupLabel>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                tooltip="Manual do Usuário"
+                isActive={pathname.startsWith("/manual")}
+                className={cn(
+                  pathname.startsWith("/manual") && "bg-slate-200 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold"
+                )}
+              >
+                <Link href="/manual">
+                  <Book className="size-5" />
+                  <span>Manual do Usuário</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                tooltip="Configurações"
+                isActive={pathname.startsWith("/configuracoes")}
+                className={cn(
+                  pathname.startsWith("/configuracoes") && "bg-slate-200 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold"
+                )}
+              >
+                <Link href="/configuracoes">
+                  <Settings className="size-5" />
+                  <span>Configurações</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+
+            <SidebarMenuItem>
+              <form action={handleLogout} className="w-full">
+                <SidebarMenuButton type="submit" tooltip="Sair">
+                  <LogOut className="size-5" />
+                  <span>Sair</span>
+                </SidebarMenuButton>
+              </form>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter>
-        <SidebarMenu>
-          {!isLimited && (
-            <>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  tooltip="Observatório"
-                  isActive={pathname.startsWith("/admin/observatorio")}
-                  className={cn(
-                    pathname.startsWith("/admin/observatorio") && "bg-slate-200 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold"
-                  )}
-                >
-                  <Link href="/admin/observatorio">
-                    <LayoutDashboard className="size-5" />
-                    <span>Observatório</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  tooltip="Manual do Usuário"
-                  isActive={pathname.startsWith("/manual")}
-                  className={cn(
-                    pathname.startsWith("/manual") && "bg-slate-200 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold"
-                  )}
-                >
-                  <Link href="/manual">
-                    <Book className="size-5" />
-                    <span>Manual do Usuário</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </>
-          )}
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              tooltip="Configurações"
-              isActive={pathname.startsWith("/configuracoes")}
-              className={cn(
-                pathname.startsWith("/configuracoes") && "bg-slate-200 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold"
-              )}
-            >
-              <Link href="/configuracoes">
-                <Settings className="size-5" />
-                <span>Configurações</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <form action={handleLogout} className="w-full">
-              <SidebarMenuButton type="submit" tooltip="Sair">
-                <LogOut className="size-5" />
-                <span>Sair</span>
-              </SidebarMenuButton>
-            </form>
-          </SidebarMenuItem>
-        </SidebarMenu>
         <div className="mt-2 text-center pb-2 opacity-30">
           <span className="text-[10px] font-mono">v1.1</span>
         </div>
