@@ -1,0 +1,24 @@
+name: Test Self-Hosted Runner
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - teste-runner
+
+jobs:
+  test-runner:
+    runs-on: self-hosted
+    steps:
+      - name: Verificar Sistema
+        run: |
+          echo "O runner está funcionando perfeitamente!"
+          whoami
+          pwd
+          uptime
+
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Listar arquivos baixados
+        run: ls -la
