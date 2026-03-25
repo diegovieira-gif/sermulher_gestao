@@ -127,3 +127,45 @@ export interface MulheresAtendimentoDB {
   tipos_violencia?: number[] | string[] | string;
   status: string; // 'Aberto' | 'Em andamento' | 'Concluido' | 'Arquivado' | variantes legadas
 }
+
+// --- APP AMAR ---
+
+export interface AmarCategoria {
+  id: string;
+  nome: string;
+  slug: string;
+  icone?: string;
+  cor_hex?: string;
+  ordem?: number;
+  status: string;
+}
+
+export interface AmarServico {
+  id: string;
+  titulo: string;
+  slug: string;
+  descricao_curta?: string;
+  documentos_necessarios?: string;
+  endereco_mapa?: string;
+  horario_atendimento?: string;
+  link_externo_acao?: string;
+  status: string;
+  categoria_id: string | AmarCategoria;
+}
+
+export interface AmarCampanha {
+  id: string;
+  titulo: string;
+  imagem_capa?: string;
+  link_destino?: string;
+  data_inicio?: string;
+  data_fim?: string;
+  status: string;
+}
+
+export interface DirectusSchema {
+  amar_categorias: AmarCategoria[];
+  amar_servicos: AmarServico[];
+  amar_campanhas: AmarCampanha[];
+  [collection: string]: any;
+}

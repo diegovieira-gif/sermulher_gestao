@@ -15,6 +15,8 @@ import {
   ShieldAlert,
   Book,
   Megaphone,
+  LayoutGrid,
+  Briefcase,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { logout } from "@/app/login/actions";
@@ -46,7 +48,7 @@ interface MenuItemConfig {
   href: string;
   icon: any;
   roles?: string[];
-  items?: { label: string; href: string }[];
+  items?: { label: string; href: string; icon?: any }[];
 }
 
 const MENU_ITEMS: MenuItemConfig[] = [
@@ -124,6 +126,17 @@ const MENU_ITEMS: MenuItemConfig[] = [
     icon: LayoutDashboard,
     roles: ["admin", "gestor"],
   },
+  {
+    label: "App Amar",
+    href: "/app-amar",
+    icon: HeartHandshake,
+    roles: ["admin", "gestor"],
+    items: [
+      { label: "Categorias", href: "/app-amar/categorias", icon: LayoutGrid },
+      { label: "Serviços", href: "/app-amar/servicos", icon: Briefcase },
+      { label: "Campanhas", href: "/app-amar/campanhas", icon: Megaphone },
+    ],
+  },
 ];
 
 interface SidebarProps {
@@ -200,21 +213,25 @@ export function Sidebar({ userRole }: SidebarProps) {
                       </CollapsibleTrigger>
                       <CollapsibleContent>
                         <SidebarMenuSub>
-                          {item.items?.map((subItem) => (
-                            <SidebarMenuSubItem key={subItem.href}>
-                              <SidebarMenuSubButton
-                                asChild
-                                isActive={pathname === subItem.href}
-                                className={cn(
-                                  pathname === subItem.href && "text-blue-600 dark:text-blue-400 font-medium"
-                                )}
-                              >
-                                <Link href={subItem.href}>
-                                  <span>{subItem.label}</span>
-                                </Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                          ))}
+                          {item.items?.map((subItem) => {
+                            const SubIcon = subItem.icon;
+                            return (
+                              <SidebarMenuSubItem key={subItem.href}>
+                                <SidebarMenuSubButton
+                                  asChild
+                                  isActive={pathname === subItem.href}
+                                  className={cn(
+                                    pathname === subItem.href && "text-blue-600 dark:text-blue-400 font-medium"
+                                  )}
+                                >
+                                  <Link href={subItem.href} className="flex items-center gap-2">
+                                    {SubIcon && <SubIcon className="size-4" />}
+                                    <span>{subItem.label}</span>
+                                  </Link>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            );
+                          })}
                         </SidebarMenuSub>
                       </CollapsibleContent>
                     </SidebarMenuItem>
