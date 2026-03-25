@@ -4,6 +4,7 @@ import { User, LogOut } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { logout } from "@/app/login/actions";
 import { Button } from "@/components/ui/button";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,11 +45,13 @@ export function Header({ title }: HeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 left-64 right-0 z-30 bg-white shadow-md dark:bg-slate-800">
-      <div className="flex h-16 items-center justify-between px-6">
-        <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
+    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 sm:px-6 transition-all">
+      <div className="flex items-center gap-4">
+        <SidebarTrigger className="-ml-1" />
+        <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white truncate">
           {title}
         </h2>
+      </div>
 
         {/* User Menu */}
         <div className="flex items-center gap-3">
@@ -89,7 +92,6 @@ export function Header({ title }: HeaderProps) {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </div>
     </header>
   );
 }
