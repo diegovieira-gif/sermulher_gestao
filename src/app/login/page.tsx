@@ -71,7 +71,7 @@ export default function LoginPage() {
 
         <Card className="border-0 shadow-lg sm:rounded-xl">
           <CardHeader className="space-y-1 pb-2">
-            <CardTitle className="text-xl text-center">Login</CardTitle>
+            <CardTitle className="text-xl text-center">Acesso</CardTitle>
             <CardDescription className="text-center">
               Entre com suas credenciais de acesso
             </CardDescription>
