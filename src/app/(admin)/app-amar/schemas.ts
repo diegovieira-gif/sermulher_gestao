@@ -52,29 +52,15 @@ export type ServicoFormValues = z.infer<typeof servicoSchema>;
 
 // --- CAMPANHA ---
 export const campanhaSchema = z.object({
-  titulo: z.string().min(2, "O título deve ter pelo menos 2 caracteres"),
-  imagem_capa: z
+  titulo: z.string().min(3, "O título deve ter pelo menos 3 caracteres"),
+  url_instagram: z
     .string()
-    .uuid("A imagem deve ser um UUID válido do Directus")
-    .optional()
-    .or(z.literal("")),
-  link_destino: z
-    .string()
-    .url("O link de destino deve ser uma URL válida")
-    .optional()
-    .or(z.literal("")),
-  data_inicio: z
-    .string()
-    .datetime({ message: "A data de início deve ser uma data válida" })
-    .optional()
-    .or(z.literal(""))
-    .or(z.date()),
-  data_fim: z
-    .string()
-    .datetime({ message: "A data de fim deve ser uma data válida" })
-    .optional()
-    .or(z.literal(""))
-    .or(z.date()),
+    .url("A URL deve ser válida")
+    .regex(
+      /instagram\.com\/(?:p|reel)\//i,
+      "Insira um link válido de uma postagem do Instagram (contendo instagram.com/p/ ou /reel/)"
+    )
+    .min(1, "A URL do Instagram é obrigatória"),
   status: z.enum(["published", "draft"]),
 });
 

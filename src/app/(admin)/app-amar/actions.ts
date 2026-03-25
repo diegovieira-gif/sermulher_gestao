@@ -171,3 +171,27 @@ export async function deleteCampanha(id: string) {
     return { success: false, error: error.message };
   }
 }
+
+export async function createCampanha(data: any) {
+  try {
+    const result = await directus.request(createItem("amar_campanhas", data));
+    revalidatePath("/app-amar/campanhas");
+    return { success: true, data: result };
+  } catch (error: any) {
+    console.error("Erro ao criar campanha:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function updateCampanha(id: string, data: any) {
+  try {
+    const result = await directus.request(
+      updateItem("amar_campanhas", id, data)
+    );
+    revalidatePath("/app-amar/campanhas");
+    return { success: true, data: result };
+  } catch (error: any) {
+    console.error("Erro ao atualizar campanha:", error);
+    return { success: false, error: error.message };
+  }
+}

@@ -156,10 +156,7 @@ export interface AmarServico {
 export interface AmarCampanha {
   id: string;
   titulo: string;
-  imagem_capa?: string;
-  link_destino?: string;
-  data_inicio?: string;
-  data_fim?: string;
+  url_instagram: string;
   status: string;
 }
 
