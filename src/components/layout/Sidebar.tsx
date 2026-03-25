@@ -118,18 +118,6 @@ const MENU_ITEMS: MenuItemConfig[] = [
       { label: "RMA (SUAS)", href: "/relatorios/rma" }
     ],
   },
-  {
-    label: "Observatório",
-    href: "/admin/observatorio",
-    icon: LayoutDashboard,
-    roles: ["admin", "gestor"],
-  },
-  {
-    label: "Manual do Usuário",
-    href: "/manual",
-    icon: Book,
-    roles: [],
-  },
 ];
 
 interface SidebarProps {
@@ -252,6 +240,40 @@ export function Sidebar({ userRole }: SidebarProps) {
 
       <SidebarFooter>
         <SidebarMenu>
+          {!isLimited && (
+            <>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  tooltip="Observatório"
+                  isActive={pathname.startsWith("/admin/observatorio")}
+                  className={cn(
+                    pathname.startsWith("/admin/observatorio") && "bg-slate-200 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold"
+                  )}
+                >
+                  <Link href="/admin/observatorio">
+                    <LayoutDashboard className="size-5" />
+                    <span>Observatório</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  tooltip="Manual do Usuário"
+                  isActive={pathname.startsWith("/manual")}
+                  className={cn(
+                    pathname.startsWith("/manual") && "bg-slate-200 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold"
+                  )}
+                >
+                  <Link href="/manual">
+                    <Book className="size-5" />
+                    <span>Manual do Usuário</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </>
+          )}
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
