@@ -2,7 +2,7 @@
 
 import { User, LogOut } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { logout } from "@/app/login/actions";
+import { logout } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import {

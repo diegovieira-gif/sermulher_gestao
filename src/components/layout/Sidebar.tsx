@@ -19,7 +19,7 @@ import {
   Briefcase,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { logout } from "@/app/login/actions";
+import { logout } from "@/app/actions/auth";
 import {
   Sidebar as ShadcnSidebar,
   SidebarContent,
