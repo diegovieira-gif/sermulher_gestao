@@ -31,6 +31,16 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  
+  // --- SERVER ACTIONS ---
+  serverActions: {
+    allowedOrigins: [
+      "fluxo-sermulher.aracaju.se.gov.br",
+      "*.aracaju.se.gov.br",
+      "localhost:3000",
+      "localhost:3002"
+    ],
+  },
 };
 
 export default nextConfig;
