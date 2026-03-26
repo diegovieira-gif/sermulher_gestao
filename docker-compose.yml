@@ -14,10 +14,10 @@ services:
       - "3002:3000"
     environment:
       - NODE_ENV=production
-      - DIRECTUS_API_URL=http://host.docker.internal:8055
       - DIRECTUS_TOKEN=j8EbY77uaPAhN0ZnGrDvoQI9VUGTvl_7
-      - AUTH_SECRET=j8EbY77uaPAhN0ZnGrDvoQI9VUGTvl_7
-      # CORREÇÃO CRÍTICA: Informa ao Next.js qual é a sua verdadeira identidade na web
       - NEXT_PUBLIC_APP_URL=https://fluxo-sermulher.aracaju.se.gov.br
+      - AUTH_SECRET=j8EbY77uaPAhN0ZnGrDvoQI9VUGTvl_7
+      - AUTH_URL=https://fluxo-sermulher.aracaju.se.gov.br
+      - AUTH_TRUST_HOST=true
     extra_hosts:
       - "host.docker.internal:host-gateway"
