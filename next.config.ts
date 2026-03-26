@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
 
   // Configurações Experimentais (React Compiler do Next 15)
   experimental: {
+    // @ts-expect-error - Propriedade reactCompiler pode não estar mais nos tipos do Next 16
     reactCompiler: true,
   },
 
@@ -31,14 +32,13 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  
+
   // --- SERVER ACTIONS ---
   serverActions: {
     allowedOrigins: [
       "fluxo-sermulher.aracaju.se.gov.br",
-      "*.aracaju.se.gov.br",
-      "localhost:3000",
-      "localhost:3002"
+      "localhost:3002",
+      "192.168.0.115:3002"
     ],
   },
 };

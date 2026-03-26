@@ -5,21 +5,19 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        # URL Pública do Directus (acessível pelo navegador do usuário)
+        # ATENÇÃO SÊNIOR: Se o cliente precisar carregar imagens direto do Directus, 
+        # idealmente o Directus também precisará de um domínio HTTPS (ex: api-sermulher.aracaju.se.gov.br).
+        # Por enquanto, vamos manter como está, mas esteja ciente do bloqueio de Mixed Content.
         - NEXT_PUBLIC_DIRECTUS_URL=http://192.168.0.115:8055
     restart: always
     ports:
-      - "3002:3000" # Host:3002 -> Container:3000
+      - "3002:3000"
     environment:
       - NODE_ENV=production
-      # Server Side (Container) -> Usa a rede interna segura do Docker
-      # host.docker.internal garante comunicação confiável entre containers
       - DIRECTUS_API_URL=http://host.docker.internal:8055
       - DIRECTUS_TOKEN=j8EbY77uaPAhN0ZnGrDvoQI9VUGTvl_7
       - AUTH_SECRET=j8EbY77uaPAhN0ZnGrDvoQI9VUGTvl_7
-      # URL da aplicação (importante para redirecionamentos)
-      - NEXT_PUBLIC_APP_URL=http://192.168.0.115:3002
-
-    # Garante mapeamento do host (Linux)
+      # CORREÇÃO CRÍTICA: Informa ao Next.js qual é a sua verdadeira identidade na web
+      - NEXT_PUBLIC_APP_URL=https://fluxo-sermulher.aracaju.se.gov.br
     extra_hosts:
       - "host.docker.internal:host-gateway"
