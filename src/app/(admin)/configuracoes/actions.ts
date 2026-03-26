@@ -20,7 +20,8 @@ export type ConfigCollection =
   | "config_raca_cor"
   | "config_estado_civil"
   | "config_escolaridade"
-  | "config_situacao_trabalho";
+  | "config_situacao_trabalho"
+  | "config_integracao";
 
 const ALLOWED_TYPES = [
   "origens",
@@ -54,6 +55,7 @@ const ALLOWED_TYPES = [
   "config_estado_civil",
   "config_escolaridade",
   "config_situacao_trabalho",
+  "config_integracao",
   "raca-cor",
   "estado-civil",
   "escolaridade",

@@ -14,10 +14,10 @@ services:
       - "3002:3000"
     environment:
       - NODE_ENV=production
+      - DIRECTUS_API_URL=http://192.168.0.115:8055
       - DIRECTUS_TOKEN=mFIVm7yMSPajHMtX0IztD2d7c3FuVThI
       - NEXT_PUBLIC_APP_URL=https://fluxo-sermulher.aracaju.se.gov.br
       - AUTH_SECRET=mFIVm7yMSPajHMtX0IztD2d7c3FuVThI
- 
-       - AUTH_TRUST_HOST=true
+      - AUTH_TRUST_HOST=true
     extra_hosts:
       - "host.docker.internal:host-gateway"

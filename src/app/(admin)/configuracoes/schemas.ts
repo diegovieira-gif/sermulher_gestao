@@ -28,3 +28,6 @@ export const escolaridadeSchema = baseSchema;
 export const situacaoTrabalhoSchema = baseSchema;
 export const bairroSchema = baseSchema;
 
+export const integracaoSchema = baseSchema.extend({
+  gemini_api_key: z.string().optional(),
+});
