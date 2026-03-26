@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { createDirectus, rest, staticToken } from "@directus/sdk";
 
 // Usa variáveis públicas se disponíveis no client, ou as de servidor no backend
@@ -53,3 +54,41 @@ export const directus = createDirectus(directusUrl, {
 })
   .with(rest())
   .with(staticToken(directusToken));
+
+/**
+ * Utilitário para envolver chamadas do Directus, interceptando erros 401 de forma segura.
+ * Pode ser utilizando em Server Actions para impedir que a app quebre e garantir o relogin.
+ */
+export async function safeDirectusCall<T>(request: () => Promise<T>): Promise<T> {
+  try {
+    return await request();
+  } catch (error: any) {
+    // Preservar o redirect interno do próprio framework (se já estiver em curso)
+    if (error?.message === "NEXT_REDIRECT") {
+      throw error;
+    }
+
+    // Verificar se o formato de erro provido aponta para perda de credenciais/token vencido
+    const isUnauthorized =
+      error?.response?.status === 401 ||
+      error?.status === 401 ||
+      error?.message?.includes("Invalid user credentials") ||
+      error?.errors?.some?.(
+        (e: any) =>
+          e?.extensions?.code === "INVALID_CREDENTIALS" ||
+          e?.extensions?.code === "TOKEN_EXPIRED"
+      );
+
+    if (isUnauthorized) {
+      console.warn(
+        "⚠️ Chamada interceptada pela safeDirectusCall: Token inválido ou expirado (401). Redirecionando..."
+      );
+      // Redireciona via API do Next.js de forma segura.
+      // O throw originado pelo redirect escalará e executará na UI.
+      redirect("/login?error=unauthorized");
+    }
+
+    // Ocorreu outro erro de banco ou requisição (500, etc), relança para que seja tratado externamente.
+    throw error;
+  }
+}

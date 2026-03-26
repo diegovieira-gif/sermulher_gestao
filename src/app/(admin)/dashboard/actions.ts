@@ -1,5 +1,6 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { directus } from "@/lib/directus";
 import { readItems, aggregate } from "@directus/sdk";
 
@@ -91,39 +92,29 @@ export async function getDashboardStats(): Promise<{
 
       // C. KPI: Alunas Ativas (Escola)
       // @ts-ignore
-      directus
-        .request(
-          readItems("escola_matriculas", {
-            fields: ["status"],
-            filter: {
-              status: { _in: ["ativa", "cursando", "matriculada", "aprovada"] },
-            },
-            limit: -1,
-          }),
-        )
-        .catch((err) => {
-          console.error("Erro ao buscar matrículas:", err);
-          return [];
+      directus.request(
+        readItems("escola_matriculas", {
+          fields: ["status"],
+          filter: {
+            status: { _in: ["ativa", "cursando", "matriculada", "aprovada"] },
+          },
+          limit: -1,
         }),
+      ),
 
       // D. Lista: Próximos Eventos
       // @ts-ignore
-      directus
-        .request(
-          readItems("eventos_campanhas", {
-            filter: {
-              data_inicio: { _gte: todayStr },
-            },
-            // REMOVIDO "local" para evitar erro 403
-            fields: ["id", "nome", "data_inicio", "tipo_id.nome"],
-            sort: ["data_inicio"],
-            limit: 5,
-          }),
-        )
-        .catch((err) => {
-          console.error("❌ Erro ao buscar eventos para o dashboard:", err);
-          return [];
+      directus.request(
+        readItems("eventos_campanhas", {
+          filter: {
+            data_inicio: { _gte: todayStr },
+          },
+          // REMOVIDO "local" para evitar erro 403
+          fields: ["id", "nome", "data_inicio", "tipo_id.nome"],
+          sort: ["data_inicio"],
+          limit: 5,
         }),
+      ),
 
       // E. KPI: Infratores
       directus.request(
@@ -195,11 +186,45 @@ export async function getDashboardStats(): Promise<{
       success: true,
       data: stats,
     };
-  } catch (error) {
-    console.error("❌ Erro crítico ao gerar dashboard stats:", error);
+  } catch (error: any) {
+    const isUnauthorized =
+      error?.response?.status === 401 ||
+      error?.status === 401 ||
+      error?.message?.includes("Invalid user credentials") ||
+      error?.errors?.some?.((e: any) => e?.extensions?.code === "INVALID_CREDENTIALS");
+
+    if (isUnauthorized) {
+      redirect("/login?error=unauthorized");
+    }
+
+    // Preserva o throw se o next.js já estiver gerenciando o redirect
+    if (error?.message === "NEXT_REDIRECT") {
+      throw error;
+    }
+
+    console.error("❌ Erro em chamadas do Dashboard (Safe Fetch):", error);
+    
+    // Retornando estado zero/vazio de forma robusta e mantendo a tipagem esperada
     return {
       success: false,
-      error: "Erro ao carregar dados do dashboard.",
+      data: {
+        kpis: {
+          totalAtendimentosMes: 0,
+          novosCasos: 0,
+          mulheresAcompanhamento: 0,
+          demandaReprimida: 0,
+        },
+        atendimentosPorDia: [],
+        proximosEventos: [],
+        alertasMedidasProtetivas: [],
+        totalAtendimentos: 0,
+        totalAlunas: 0,
+        totalInfratores: 0,
+        growthAtendimentos: "+0%",
+        growthAlunas: "+0%",
+        growthInfratores: "+0%",
+      },
+      error: "Houve um problema ao carregar os dados. Exibindo dashboard limpo.",
     };
   }
 }
