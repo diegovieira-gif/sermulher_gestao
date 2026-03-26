@@ -14,9 +14,9 @@ services:
       - "3002:3000"
     environment:
       - NODE_ENV=production
-      - DIRECTUS_TOKEN=j8EbY77uaPAhN0ZnGrDvoQI9VUGTvl_7
+      - DIRECTUS_TOKEN=mFIVm7yMSPajHMtX0IztD2d7c3FuVThI
       - NEXT_PUBLIC_APP_URL=https://fluxo-sermulher.aracaju.se.gov.br
-      - AUTH_SECRET=j8EbY77uaPAhN0ZnGrDvoQI9VUGTvl_7
+      - AUTH_SECRET=mFIVm7yMSPajHMtX0IztD2d7c3FuVThI
       - AUTH_URL=https://fluxo-sermulher.aracaju.se.gov.br
       - AUTH_TRUST_HOST=true
     extra_hosts:
