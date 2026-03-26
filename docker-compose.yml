@@ -17,7 +17,7 @@ services:
       - DIRECTUS_TOKEN=mFIVm7yMSPajHMtX0IztD2d7c3FuVThI
       - NEXT_PUBLIC_APP_URL=https://fluxo-sermulher.aracaju.se.gov.br
       - AUTH_SECRET=mFIVm7yMSPajHMtX0IztD2d7c3FuVThI
-      - AUTH_URL=https://fluxo-sermulher.aracaju.se.gov.br
-      - AUTH_TRUST_HOST=true
+ 
+       - AUTH_TRUST_HOST=true
     extra_hosts:
       - "host.docker.internal:host-gateway"

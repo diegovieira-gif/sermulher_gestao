@@ -37,6 +37,8 @@ export async function login(prevState: any, formData?: FormData) {
       .with(authentication("json"))
       .with(rest());
 
+    console.log('Login attempt:', { email, password });
+
     // 1. Autenticação
     const response = await client.login(email, password);
 
