@@ -4,10 +4,23 @@ import { useEffect, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { servicoSchema, ServicoFormValues } from "../schemas";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { createServico, updateServico } from "../actions";
@@ -25,7 +38,12 @@ interface ServicoFormProps {
   onCancel?: () => void;
 }
 
-export function ServicoForm({ initialData, categorias, onSuccess, onCancel }: ServicoFormProps) {
+export function ServicoForm({
+  initialData,
+  categorias,
+  onSuccess,
+  onCancel,
+}: ServicoFormProps) {
   const [isPending, startTransition] = useTransition();
   const isEditing = !!initialData?.id;
 
@@ -39,7 +57,11 @@ export function ServicoForm({ initialData, categorias, onSuccess, onCancel }: Se
       endereco_mapa: initialData?.endereco_mapa || "",
       horario_atendimento: initialData?.horario_atendimento || "",
       link_externo_acao: initialData?.link_externo_acao || "",
-      categoria_id: typeof initialData?.categoria_id === "object" ? initialData?.categoria_id?.id : (initialData?.categoria_id || ""),
+      sobre: initialData?.sobre || "",
+      categoria_id:
+        typeof initialData?.categoria_id === "object"
+          ? initialData?.categoria_id?.id
+          : initialData?.categoria_id || "",
       status: initialData?.status || "published",
     },
   });
@@ -57,7 +79,7 @@ export function ServicoForm({ initialData, categorias, onSuccess, onCancel }: Se
           .trim()
           .replace(/\s+/g, "-")
           .replace(/-+/g, "-");
-        
+
         form.setValue("slug", generatedSlug, { shouldValidate: true });
       }
     }
@@ -74,7 +96,11 @@ export function ServicoForm({ initialData, categorias, onSuccess, onCancel }: Se
         }
 
         if (result.success) {
-          toast.success(isEditing ? "Serviço atualizado com sucesso!" : "Serviço criado com sucesso!");
+          toast.success(
+            isEditing
+              ? "Serviço atualizado com sucesso!"
+              : "Serviço criado com sucesso!",
+          );
           if (onSuccess) onSuccess();
         } else {
           toast.error(`Erro: ${result.error}`);
@@ -125,7 +151,10 @@ export function ServicoForm({ initialData, categorias, onSuccess, onCancel }: Se
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Categoria Relacionada</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione a categoria" />
@@ -150,7 +179,10 @@ export function ServicoForm({ initialData, categorias, onSuccess, onCancel }: Se
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Status</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione..." />
@@ -174,11 +206,11 @@ export function ServicoForm({ initialData, categorias, onSuccess, onCancel }: Se
             <FormItem>
               <FormLabel>Descrição Curta</FormLabel>
               <FormControl>
-                <Textarea 
-                  placeholder="Resumo do serviço (máximo 255 caracteres)" 
-                  className="resize-none" 
-                  {...field} 
-                  value={field.value || ""} 
+                <Textarea
+                  placeholder="Resumo do serviço (máximo 255 caracteres)"
+                  className="resize-none"
+                  {...field}
+                  value={field.value || ""}
                 />
               </FormControl>
               <FormMessage />
@@ -193,14 +225,17 @@ export function ServicoForm({ initialData, categorias, onSuccess, onCancel }: Se
             <FormItem>
               <FormLabel>Documentos Necessários</FormLabel>
               <FormControl>
-                <Textarea 
-                  placeholder={`Ex:\n- RG e CPF\n- Comprovante de Residência`} 
-                  className="min-h-[120px]" 
-                  {...field} 
-                  value={field.value || ""} 
+                <Textarea
+                  placeholder={`Ex:\n- RG e CPF\n- Comprovante de Residência`}
+                  className="min-h-[120px]"
+                  {...field}
+                  value={field.value || ""}
                 />
               </FormControl>
-              <p className="text-xs text-muted-foreground mt-1">Você pode usar formatação Markdown (*itálico*, **negrito**, listas com -).</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Você pode usar formatação Markdown (*itálico*, **negrito**,
+                listas com -).
+              </p>
               <FormMessage />
             </FormItem>
           )}
@@ -214,7 +249,11 @@ export function ServicoForm({ initialData, categorias, onSuccess, onCancel }: Se
               <FormItem>
                 <FormLabel>Link do Mapa / Endereço</FormLabel>
                 <FormControl>
-                  <Input placeholder="URL externa" {...field} value={field.value || ""} />
+                  <Input
+                    placeholder="URL externa"
+                    {...field}
+                    value={field.value || ""}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -228,7 +267,11 @@ export function ServicoForm({ initialData, categorias, onSuccess, onCancel }: Se
               <FormItem>
                 <FormLabel>Horário de Atendimento</FormLabel>
                 <FormControl>
-                  <Input placeholder="Ex: Seg a Sex, 08h às 17h" {...field} value={field.value || ""} />
+                  <Input
+                    placeholder="Ex: Seg a Sex, 08h às 17h"
+                    {...field}
+                    value={field.value || ""}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -242,7 +285,11 @@ export function ServicoForm({ initialData, categorias, onSuccess, onCancel }: Se
               <FormItem>
                 <FormLabel>Link de Ação Externo</FormLabel>
                 <FormControl>
-                  <Input placeholder="Ex: URL de agendamento" {...field} value={field.value || ""} />
+                  <Input
+                    placeholder="Ex: URL de agendamento"
+                    {...field}
+                    value={field.value || ""}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -250,9 +297,33 @@ export function ServicoForm({ initialData, categorias, onSuccess, onCancel }: Se
           />
         </div>
 
+        <FormField
+          control={form.control}
+          name="sobre"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Sobre</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Informações adicionais sobre o serviço"
+                  className="min-h-[100px]"
+                  {...field}
+                  value={field.value || ""}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <div className="flex justify-end gap-2 pt-4">
           {onCancel && (
-            <Button type="button" variant="outline" onClick={onCancel} disabled={isPending}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              disabled={isPending}
+            >
               Cancelar
             </Button>
           )}

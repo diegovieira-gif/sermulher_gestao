@@ -40,32 +40,25 @@ import { toast } from "sonner";
 import { deleteCurso } from "../actions";
 import { CursoForm } from "./curso-form";
 
-interface Categoria {
-  id: string;
-  nome: string;
-}
-
 interface Curso {
-  id: string;
-  titulo: string;
-  descricao: string;
-  categoria: string | Categoria;
-  imagem_capa: string;
-  carga_horaria: number;
-  instrutor: string;
-  status: string;
-  user_created: string;
-  date_created: string;
+  id: number;
+  titulo?: string;
+  descricao?: string;
+  data?: string;
+  horario?: string;
+  local?: string;
+  vagas?: number;
+  status_curso?: string;
+  requisitos?: string;
 }
 
 interface CursosClientProps {
   initialData: Curso[];
-  categorias: Categoria[];
 }
 
-export function CursosClient({ initialData, categorias }: CursosClientProps) {
+export function CursosClient({ initialData }: CursosClientProps) {
   const [isPending, startTransition] = useTransition();
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Curso | null>(null);
 
@@ -73,7 +66,7 @@ export function CursosClient({ initialData, categorias }: CursosClientProps) {
     if (!deleteId) return;
 
     startTransition(async () => {
-      const result = await deleteCurso(deleteId);
+      const result = await deleteCurso(String(deleteId));
       if (result.success) {
         toast.success("Curso excluído com sucesso.");
       } else {
@@ -133,9 +126,10 @@ export function CursosClient({ initialData, categorias }: CursosClientProps) {
           <TableHeader>
             <TableRow>
               <TableHead>Título</TableHead>
-              <TableHead>Categoria</TableHead>
-              <TableHead>Instrutor</TableHead>
-              <TableHead>Carga Horária</TableHead>
+              <TableHead>Data</TableHead>
+              <TableHead>Horário</TableHead>
+              <TableHead>Local</TableHead>
+              <TableHead>Vagas</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
@@ -143,22 +137,27 @@ export function CursosClient({ initialData, categorias }: CursosClientProps) {
           <TableBody>
             {initialData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
+                <TableCell colSpan={7} className="h-24 text-center">
                   Nenhum curso encontrado.
                 </TableCell>
               </TableRow>
             ) : (
               initialData.map((curso) => (
                 <TableRow key={curso.id}>
-                  <TableCell className="font-medium">{curso.titulo}</TableCell>
-                  <TableCell>
-                    {typeof curso.categoria === "object"
-                      ? curso.categoria?.nome
-                      : "-"}
+                  <TableCell className="font-medium">
+                    {curso.titulo || "-"}
                   </TableCell>
-                  <TableCell>{curso.instrutor}</TableCell>
-                  <TableCell>{curso.carga_horaria}h</TableCell>
-                  <TableCell>{statusBadge(curso.status)}</TableCell>
+                  <TableCell>{curso.data || "-"}</TableCell>
+                  <TableCell>{curso.horario || "-"}</TableCell>
+                  <TableCell>{curso.local || "-"}</TableCell>
+                  <TableCell>{curso.vagas ?? "-"}</TableCell>
+                  <TableCell>
+                    {curso.status_curso ? (
+                      <Badge variant="outline">{curso.status_curso}</Badge>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">-</span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -177,6 +176,7 @@ export function CursosClient({ initialData, categorias }: CursosClientProps) {
                           className="text-red-600 focus:text-red-600 focus:bg-red-50"
                           onClick={() => setDeleteId(curso.id)}
                         >
+                          {" "}
                           <Trash2 className="mr-2 h-4 w-4" />
                           <span>Excluir</span>
                         </DropdownMenuItem>
@@ -204,7 +204,6 @@ export function CursosClient({ initialData, categorias }: CursosClientProps) {
           </SheetHeader>
           <CursoForm
             initialData={editingItem as any}
-            categorias={categorias}
             onSuccess={closeForm}
             onCancel={closeForm}
           />

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getCategorias, getCursos } from "../actions";
+import { getCursos } from "../actions";
 import { CursosClient } from "./cursos-client";
 
 export const metadata = {
@@ -9,10 +9,7 @@ export const metadata = {
 };
 
 export default async function CursosPage() {
-  const [cursos, categorias] = await Promise.all([
-    getCursos(),
-    getCategorias(),
-  ]);
+  const cursos = await getCursos();
 
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
@@ -27,10 +24,7 @@ export default async function CursosPage() {
           </Link>
         </Button>
       </div>
-      <CursosClient
-        initialData={cursos as any[]}
-        categorias={categorias as any[]}
-      />
+      <CursosClient initialData={cursos as any[]} />
     </div>
   );
 }

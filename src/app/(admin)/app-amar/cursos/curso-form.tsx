@@ -3,7 +3,6 @@
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { cursoSchema, CursoFormValues } from "../schemas";
 import {
   Form,
@@ -27,48 +26,31 @@ import { toast } from "sonner";
 import { createCurso, updateCurso } from "../actions";
 import { Loader2 } from "lucide-react";
 
-interface Categoria {
-  id: string;
-  nome: string;
-}
-
 interface CursoFormProps {
-  initialData?:
-    | (CursoFormValues & { id?: string; categoria?: any })
-    | undefined;
-  categorias: Categoria[];
+  initialData?: CursoFormValues & { id?: number };
   onSuccess?: () => void;
   onCancel?: () => void;
 }
 
 export function CursoForm({
   initialData,
-  categorias,
   onSuccess,
   onCancel,
 }: CursoFormProps) {
   const [isPending, startTransition] = useTransition();
   const isEditing = !!initialData?.id;
 
-  type CursoFormInput = z.input<typeof cursoSchema>;
-
-  const initialCategoria =
-    typeof initialData?.categoria === "object"
-      ? initialData?.categoria?.id || ""
-      : initialData?.categoria || "";
-
-  const form = useForm<CursoFormInput, any, CursoFormValues>({
+  const form = useForm<CursoFormValues>({
     resolver: zodResolver(cursoSchema),
     defaultValues: {
-      status: initialData?.status || "draft",
       titulo: initialData?.titulo || "",
       descricao: initialData?.descricao || "",
-      categoria: initialCategoria,
-      imagem_capa: initialData?.imagem_capa || "",
-      carga_horaria: initialData?.carga_horaria ?? 0,
-      instrutor: initialData?.instrutor || "",
-      user_created: initialData?.user_created || "",
-      date_created: initialData?.date_created || "",
+      data: initialData?.data || "",
+      horario: initialData?.horario || "",
+      local: initialData?.local || "",
+      vagas: initialData?.vagas ?? undefined,
+      status_curso: initialData?.status_curso || "",
+      requisitos: initialData?.requisitos || "",
     },
   });
 
@@ -77,7 +59,7 @@ export function CursoForm({
       try {
         const result =
           isEditing && initialData?.id
-            ? await updateCurso(initialData.id, values)
+            ? await updateCurso(String(initialData.id), values)
             : await createCurso(values);
 
         if (result.success) {
@@ -110,6 +92,7 @@ export function CursoForm({
                   <Input
                     placeholder="Ex: Curso de empreendedorismo"
                     {...field}
+                    value={field.value || ""}
                   />
                 </FormControl>
                 <FormMessage />
@@ -119,13 +102,25 @@ export function CursoForm({
 
           <FormField
             control={form.control}
-            name="instrutor"
+            name="status_curso"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Instrutor</FormLabel>
-                <FormControl>
-                  <Input placeholder="Nome do instrutor" {...field} />
-                </FormControl>
+                <FormLabel>Status do Curso</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="aberto">Aberto</SelectItem>
+                    <SelectItem value="em_andamento">Em andamento</SelectItem>
+                    <SelectItem value="encerrado">Encerrado</SelectItem>
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -143,6 +138,7 @@ export function CursoForm({
                   placeholder="Descreva o curso"
                   className="min-h-[120px]"
                   {...field}
+                  value={field.value || ""}
                 />
               </FormControl>
               <FormMessage />
@@ -153,27 +149,13 @@ export function CursoForm({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <FormField
             control={form.control}
-            name="categoria"
+            name="data"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Categoria</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma categoria" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {categorias.map((categoria) => (
-                      <SelectItem key={categoria.id} value={categoria.id}>
-                        {categoria.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormLabel>Data</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} value={field.value || ""} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -181,19 +163,15 @@ export function CursoForm({
 
           <FormField
             control={form.control}
-            name="carga_horaria"
+            name="horario"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Carga Horária</FormLabel>
+                <FormLabel>Horário</FormLabel>
                 <FormControl>
                   <Input
-                    type="number"
-                    placeholder="Ex: 40"
-                    value={field.value != null ? String(field.value) : ""}
-                    onChange={(e) => field.onChange(e.target.value)}
-                    onBlur={field.onBlur}
-                    name={field.name}
-                    ref={field.ref}
+                    placeholder="Ex: 08h às 12h"
+                    {...field}
+                    value={field.value || ""}
                   />
                 </FormControl>
                 <FormMessage />
@@ -203,24 +181,27 @@ export function CursoForm({
 
           <FormField
             control={form.control}
-            name="status"
+            name="vagas"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Status</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione..." />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="published">Publicado</SelectItem>
-                    <SelectItem value="draft">Rascunho</SelectItem>
-                  </SelectContent>
-                </Select>
+                <FormLabel>Vagas</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    placeholder="Ex: 30"
+                    value={field.value != null ? String(field.value) : ""}
+                    onChange={(e) =>
+                      field.onChange(
+                        e.target.value === ""
+                          ? undefined
+                          : Number(e.target.value),
+                      )
+                    }
+                    onBlur={field.onBlur}
+                    name={field.name}
+                    ref={field.ref}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -229,47 +210,40 @@ export function CursoForm({
 
         <FormField
           control={form.control}
-          name="imagem_capa"
+          name="local"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Imagem de Capa (UUID)</FormLabel>
+              <FormLabel>Local</FormLabel>
               <FormControl>
-                <Input placeholder="UUID da imagem no Directus" {...field} />
+                <Input
+                  placeholder="Ex: Auditório Municipal"
+                  {...field}
+                  value={field.value || ""}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="user_created"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>User Created</FormLabel>
-                <FormControl>
-                  <Input placeholder="UUID do usuário criador" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="date_created"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Date Created</FormLabel>
-                <FormControl>
-                  <Input type="datetime-local" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name="requisitos"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Requisitos</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Ex: Documento de identidade, ser maior de 18 anos"
+                  className="min-h-[80px]"
+                  {...field}
+                  value={field.value || ""}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <div className="flex justify-end gap-2 pt-4">
           {onCancel && (

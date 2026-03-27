@@ -25,10 +25,11 @@ import { toast } from "sonner";
 import { deleteContato } from "../actions";
 
 interface Contato {
-  id: string;
+  id: number;
   nome: string;
-  email: string;
-  mensagem: string;
+  descricao?: string;
+  telefone?: string;
+  endereco?: string;
 }
 
 interface ContatosClientProps {
@@ -37,13 +38,13 @@ interface ContatosClientProps {
 
 export function ContatosClient({ initialData }: ContatosClientProps) {
   const [isPending, startTransition] = useTransition();
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
 
   const handleDelete = async () => {
     if (!deleteId) return;
 
     startTransition(async () => {
-      const result = await deleteContato(deleteId);
+      const result = await deleteContato(String(deleteId));
       if (result.success) {
         toast.success("Contato apagado com sucesso.");
       } else {
@@ -64,15 +65,16 @@ export function ContatosClient({ initialData }: ContatosClientProps) {
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
-              <TableHead>E-mail</TableHead>
-              <TableHead>Mensagem</TableHead>
+              <TableHead>Telefone</TableHead>
+              <TableHead>Endereço</TableHead>
+              <TableHead>Descrição</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {initialData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="h-24 text-center">
+                <TableCell colSpan={5} className="h-24 text-center">
                   Nenhum contato encontrado.
                 </TableCell>
               </TableRow>
@@ -80,9 +82,12 @@ export function ContatosClient({ initialData }: ContatosClientProps) {
               initialData.map((contato) => (
                 <TableRow key={contato.id}>
                   <TableCell className="font-medium">{contato.nome}</TableCell>
-                  <TableCell>{contato.email}</TableCell>
-                  <TableCell className="max-w-[520px] truncate">
-                    {contato.mensagem}
+                  <TableCell>{contato.telefone || "-"}</TableCell>
+                  <TableCell className="max-w-[200px] truncate">
+                    {contato.endereco || "-"}
+                  </TableCell>
+                  <TableCell className="max-w-[360px] truncate">
+                    {contato.descricao || "-"}
                   </TableCell>
                   <TableCell className="text-right">
                     <Button

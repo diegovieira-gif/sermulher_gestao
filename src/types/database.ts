@@ -151,6 +151,7 @@ export interface AmarServico {
   endereco_mapa?: string;
   horario_atendimento?: string;
   link_externo_acao?: string;
+  sobre?: string;
   status: string;
   categoria_id: string | AmarCategoria;
 }
@@ -172,38 +173,35 @@ export interface AmarSonhos {
 }
 
 export interface AmarCursos {
-  id: string;
-  status: string;
-  titulo: string;
-  descricao: string;
-  categoria: string | AmarCategorias;
-  imagem_capa: string;
-  carga_horaria: number;
-  instrutor: string;
-  user_created: string;
-  date_created: string;
+  id: number;
+  titulo?: string;
+  descricao?: string;
+  data?: string;
+  horario?: string;
+  local?: string;
+  vagas?: number;
+  status_curso?: string;
+  requisitos?: string;
 }
 
 export interface AmarContatos {
-  id: string;
-  status: string;
+  id: number;
   nome: string;
-  email: string;
-  telefone: string;
-  mensagem: string;
-  lido: boolean;
-  date_created: string;
+  descricao?: string;
+  telefone?: string;
+  endereco?: string;
 }
 
 export interface AmarProjetos {
-  id: string;
+  id: number;
   status: string;
+  ordem?: number;
   titulo: string;
-  descricao: string;
-  conteudo: string;
-  imagem_capa: string;
-  user_created: string;
-  date_created: string;
+  descricao?: string;
+  imagem_capa?: string;
+  link_destino?: string;
+  tipo_link?: string;
+  link_imagem?: string;
 }
 
 export interface Database {

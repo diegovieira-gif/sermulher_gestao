@@ -52,6 +52,7 @@ export const servicoSchema = z.object({
     .optional()
     .or(z.literal("")),
   categoria_id: z.string().uuid("O ID da categoria deve ser um UUID válido"),
+  sobre: z.string().optional(),
   status: z.enum(["published", "draft"]),
 });
 
@@ -85,46 +86,38 @@ export type SonhoFormValues = z.infer<typeof sonhoSchema>;
 
 // --- CURSO ---
 export const cursoSchema = z.object({
-  status: z.string().min(1, "O status é obrigatório"),
-  titulo: z.string().min(1, "O título é obrigatório"),
-  descricao: z.string().min(1, "A descrição é obrigatória"),
-  categoria: z.string().min(1, "A categoria é obrigatória"),
-  imagem_capa: z.string().min(1, "A imagem de capa é obrigatória"),
-  carga_horaria: z.coerce.number({
-    invalid_type_error: "A carga horária deve ser numérica",
-  }),
-  instrutor: z.string().min(1, "O instrutor é obrigatório"),
-  user_created: z.string().min(1, "O usuário criador é obrigatório"),
-  date_created: z.string().min(1, "A data de criação é obrigatória"),
+  titulo: z.string().optional(),
+  descricao: z.string().optional(),
+  data: z.string().optional(),
+  horario: z.string().optional(),
+  local: z.string().optional(),
+  vagas: z.coerce.number().optional(),
+  status_curso: z.string().optional(),
+  requisitos: z.string().optional(),
 });
 
 export type CursoFormValues = z.infer<typeof cursoSchema>;
 
 // --- CONTATO ---
 export const contatoSchema = z.object({
-  status: z.string().min(1, "O status é obrigatório"),
   nome: z.string().min(1, "O nome é obrigatório"),
-  email: z
-    .string()
-    .min(1, "O e-mail é obrigatório")
-    .email("Informe um e-mail válido"),
-  telefone: z.string().min(1, "O telefone é obrigatório"),
-  mensagem: z.string().min(1, "A mensagem é obrigatória"),
-  lido: z.boolean(),
-  date_created: z.string().min(1, "A data de criação é obrigatória"),
+  descricao: z.string().optional(),
+  telefone: z.string().optional(),
+  endereco: z.string().optional(),
 });
 
 export type ContatoFormValues = z.infer<typeof contatoSchema>;
 
 // --- PROJETO ---
 export const projetoSchema = z.object({
-  status: z.string().min(1, "O status é obrigatório"),
+  status: z.enum(["published", "draft"]),
+  ordem: z.coerce.number().optional(),
   titulo: z.string().min(1, "O título é obrigatório"),
-  descricao: z.string().min(1, "A descrição é obrigatória"),
-  conteudo: z.string().min(1, "O conteúdo é obrigatório"),
-  imagem_capa: z.string().min(1, "A imagem de capa é obrigatória"),
-  user_created: z.string().min(1, "O usuário criador é obrigatório"),
-  date_created: z.string().min(1, "A data de criação é obrigatória"),
+  descricao: z.string().optional(),
+  imagem_capa: z.string().uuid().optional().or(z.literal("")),
+  link_destino: z.string().optional(),
+  tipo_link: z.string().optional(),
+  link_imagem: z.string().optional(),
 });
 
 export type ProjetoFormValues = z.infer<typeof projetoSchema>;

@@ -270,8 +270,7 @@ export async function getCursos() {
   try {
     const result = await directus.request(
       readItems("amar_cursos", {
-        fields: ["*", { categoria: ["*"] }],
-        sort: ["-date_created"],
+        sort: ["-id"],
       }),
     );
     return result;
@@ -285,7 +284,6 @@ export async function getCursoById(id: string) {
   try {
     const result = await directus.request(
       readItems("amar_cursos", {
-        fields: ["*", { categoria: ["*"] }],
         filter: {
           id: {
             _eq: id,
@@ -340,7 +338,7 @@ export async function getContatos() {
   try {
     const result = await directus.request(
       readItems("amar_contatos", {
-        sort: ["-date_created"],
+        sort: ["-id"],
       }),
     );
     return result;
@@ -386,7 +384,7 @@ export async function getProjetos() {
   try {
     const result = await directus.request(
       readItems("amar_projetos", {
-        sort: ["-date_created"],
+        sort: ["ordem"],
       }),
     );
     return result;

@@ -41,14 +41,15 @@ import { deleteProjeto } from "../actions";
 import { ProjetoForm } from "./projeto-form";
 
 interface Projeto {
-  id: string;
+  id: number;
   titulo: string;
-  descricao: string;
-  conteudo: string;
-  imagem_capa: string;
+  descricao?: string;
   status: string;
-  user_created: string;
-  date_created: string;
+  ordem?: number;
+  imagem_capa?: string;
+  link_destino?: string;
+  tipo_link?: string;
+  link_imagem?: string;
 }
 
 interface ProjetosClientProps {
@@ -57,7 +58,7 @@ interface ProjetosClientProps {
 
 export function ProjetosClient({ initialData }: ProjetosClientProps) {
   const [isPending, startTransition] = useTransition();
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Projeto | null>(null);
 
@@ -65,7 +66,7 @@ export function ProjetosClient({ initialData }: ProjetosClientProps) {
     if (!deleteId) return;
 
     startTransition(async () => {
-      const result = await deleteProjeto(deleteId);
+      const result = await deleteProjeto(String(deleteId));
       if (result.success) {
         toast.success("Projeto excluído com sucesso.");
       } else {
@@ -124,8 +125,10 @@ export function ProjetosClient({ initialData }: ProjetosClientProps) {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Ordem</TableHead>
               <TableHead>Título</TableHead>
               <TableHead>Descrição</TableHead>
+              <TableHead>Tipo Link</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
@@ -133,19 +136,23 @@ export function ProjetosClient({ initialData }: ProjetosClientProps) {
           <TableBody>
             {initialData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="h-24 text-center">
+                <TableCell colSpan={6} className="h-24 text-center">
                   Nenhum projeto encontrado.
                 </TableCell>
               </TableRow>
             ) : (
               initialData.map((projeto) => (
                 <TableRow key={projeto.id}>
+                  <TableCell className="text-muted-foreground">
+                    {projeto.ordem ?? "-"}
+                  </TableCell>
                   <TableCell className="font-medium">
                     {projeto.titulo}
                   </TableCell>
-                  <TableCell className="max-w-[520px] truncate">
-                    {projeto.descricao}
+                  <TableCell className="max-w-[400px] truncate">
+                    {projeto.descricao || "-"}
                   </TableCell>
+                  <TableCell>{projeto.tipo_link || "-"}</TableCell>
                   <TableCell>{statusBadge(projeto.status)}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
