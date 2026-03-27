@@ -1,19 +1,8 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 import { NextResponse } from "next/server";
-import {
-  createDirectus,
-  rest,
-  staticToken,
-  readItems,
-  aggregate,
-} from "@directus/sdk";
+import { createDirectus, rest, staticToken, readItems, aggregate } from "@directus/sdk";
 
-// --- CONFIGURAÇÃO ---
-const API_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-const DIRECTUS_URL = process.env.DIRECTUS_URL || "http://192.168.0.115:8055";
-const DIRECTUS_TOKEN = process.env.DIRECTUS_TOKEN || "";
-
-// Contexto do Banco de Dados
+// Contexto do Banco de Dados (Restauração da sua regra de negócio)
 const DB_SCHEMA_CONTEXT = `
 CONTEXTO DO BANCO DE DADOS:
 1. Tabela 'atendimentos': id, data_abertura, tipo_violencia (lista), bairro, relator_tecnico, status.
@@ -23,56 +12,40 @@ CONTEXTO DO BANCO DE DADOS:
 5. Tabela 'beneficiarias': id, nome_completo, cpf.
 `;
 
-const directus = createDirectus(DIRECTUS_URL)
-  .with(rest())
-  .with(staticToken(DIRECTUS_TOKEN));
-
-// --- FUNÇÃO AUXILIAR: DESCOBRIR MODELO ---
-async function getBestAvailableModel(apiKey: string): Promise<string> {
+export async function POST(request: Request) {
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`,
-    );
-    const data = await response.json();
-    if (!data.models) return "gemini-1.5-flash";
+    const body = await request.json();
 
-    const availableModels = data.models.filter((m: any) =>
-      m.supportedGenerationMethods?.includes("generateContent"),
-    );
-    const cleanName = (name: string) => name.replace("models/", "");
+    // Correção Crítica: O seu frontend envia a propriedade "question"
+    const question = body.question;
 
-    // CORREÇÃO: Prioridade total para o 1.5-flash (Estável e com alta cota)
-    // O 2.5-flash e 2.0-flash tem cotas muito baixas no Free Tier (20 req/dia)
-    const stableFlash = availableModels.find((m: any) =>
-      m.name.includes("gemini-1.5-flash"),
-    );
-    if (stableFlash) return cleanName(stableFlash.name);
-
-    // Se não achar o 1.5, tenta qualquer flash
-    const anyFlash = availableModels.find((m: any) =>
-      m.name.toLowerCase().includes("flash"),
-    );
-    if (anyFlash) return cleanName(anyFlash.name);
-
-    return "gemini-1.5-flash"; // Fallback final
-  } catch (error) {
-    return "gemini-1.5-flash";
-  }
-}
-
-export async function POST(req: Request) {
-  try {
-    const { question } = await req.json();
-
-    if (!question)
+    if (!question) {
       return NextResponse.json({ error: "Pergunta vazia" }, { status: 400 });
-    if (!API_KEY)
-      return NextResponse.json({ type: "text", answer: "Chave API ausente." });
+    }
 
-    const modelName = await getBestAvailableModel(API_KEY);
-    const genAI = new GoogleGenerativeAI(API_KEY);
-    const model = genAI.getGenerativeModel({ model: modelName });
+    // 1. Conecta ao Directus para executar o painel e buscar a chave
+    const directus = createDirectus(process.env.DIRECTUS_API_URL!)
+      .with(rest())
+      .with(staticToken(process.env.DIRECTUS_TOKEN!));
 
+    // 2. Busca a chave na coleção 'config_integracao'
+    const integracoes = await directus.request(readItems("config_integracao", {
+      limit: 1,
+    })).catch(() => []); // Previne erro fatal se a tabela estiver vazia
+
+    // 3. Define a chave e o modelo dinâmico
+    const apiKey = integracoes[0]?.gemini_api_key || process.env.GEMINI_API_KEY;
+    const modeloIA = integracoes[0]?.modelo_ia || "gemini-2.5-flash";
+
+    if (!apiKey) {
+      console.error("[IA] Chave API Ausente.");
+      return NextResponse.json({ error: "Chave API ausente. Configure a integração no painel." }, { status: 500 });
+    }
+
+    // 4. Inicializa o Novo SDK de 2026
+    const ai = new GoogleGenAI({ apiKey: apiKey });
+
+    // 5. Monta o Prompt Original que gera as consultas e os botões
     const prompt = `
     ${DB_SCHEMA_CONTEXT}
     PERGUNTA DO USUÁRIO: "${question}"
@@ -85,7 +58,7 @@ export async function POST(req: Request) {
     - Se a pergunta pedir "quantos por...", "distribuição", "mais comum", USE "groupBy".
     - Se pedir "total", "quantos no geral", USE "aggregate": { "count": "*" }.
 
-    FORMATO JSON:
+    FORMATO JSON ESTRITO (Retorne APENAS o objeto JSON e nada mais):
     {
       "query": { 
         "collection": "nome_tabela", 
@@ -100,19 +73,24 @@ export async function POST(req: Request) {
     }
     `;
 
-    const result = await model.generateContent(prompt);
-    const textAI = result.response
-      .text()
-      .replace(/```json|```/g, "")
-      .trim();
+    // 6. Envia para a IA
+    const response = await ai.models.generateContent({
+      model: modeloIA,
+      contents: prompt,
+    });
 
+    const textAI = response.text?.replace(/```json|```/g, "").trim() || "";
+
+    // 7. Analisa o plano da IA
     let plan;
     try {
       plan = JSON.parse(textAI);
     } catch (e) {
+      console.error("A IA não retornou um JSON válido:", textAI);
       return NextResponse.json({
         type: "text",
-        answer: "Erro de raciocínio da IA.",
+        answer: "Houve uma falha no raciocínio da IA ao tentar buscar esses dados.",
+        suggestions: ["Qual o total de atendimentos?", "Distribuição de infratores por risco?"]
       });
     }
 
@@ -120,157 +98,59 @@ export async function POST(req: Request) {
       return NextResponse.json(plan);
     }
 
-    // --- EXECUÇÃO DIRECTUS COM FALLBACK ---
-    let dbResult;
+    // 8. Executa a ação no Banco de Dados
     const query = plan.query;
+    let dataResult;
 
     try {
-      // 1. TENTATIVA PADRÃO (Agregação Nativa)
+      // CENÁRIO 1: Gráficos e Distribuição (Ex: Infratores por Risco)
       if (query.groupBy && Array.isArray(query.groupBy)) {
-        // @ts-ignore
-        const res = await directus.request(
-          aggregate(query.collection, {
-            aggregate: { count: "*" },
+         const res = await directus.request(aggregate(query.collection, {
+            aggregate: query.aggregate || { count: "*" },
             groupBy: query.groupBy,
-            sort: ["-count"],
-            limit: 5,
-          }),
-        );
-        dbResult = res.map((item: any) => ({
-          nome: item[query.groupBy![0]] || "Não informado",
-          count: Number(item.count || 0),
-        }));
-        plan.type = "list";
+            query: { filter: query.filter || {}, sort: query.sort }
+         }));
+         
+         // Formata para o frontend conseguir ler os cards corretamente
+         dataResult = res.map((item: any) => ({
+             nome: item[query.groupBy[0]] || "Não informado",
+             count: Number(item.count || 0)
+         }));
+         plan.type = "list"; // Força o formato lista para o React desenhar os cards
+
+      // CENÁRIO 2: Contagem Total Exata (Ex: Quantas beneficiárias?)
       } else if (query.aggregate) {
-        // @ts-ignore
-        const res = await directus.request(
-          aggregate(query.collection, {
+         const res = await directus.request(aggregate(query.collection, {
             aggregate: query.aggregate,
-            query: { filter: query.filter || {} },
-          }),
-        );
-        const countVal = res[0]?.count || res[0]?.countAll || 0;
-        dbResult = Number(countVal);
+            query: { filter: query.filter || {} }
+         }));
+         // Pega o número exato gerado pelo banco e converte para Number
+         dataResult = Number(res[0]?.count || res[0]?.countAll || 0);
+
+      // CENÁRIO 3: Listagem Simples (Ex: Me mostre as últimas matriculadas)
       } else {
-        // @ts-ignore
-        dbResult = await directus.request(
-          readItems(query.collection, {
-            filter: query.filter || {},
-            limit: 5,
-          }),
-        );
+         dataResult = await directus.request(readItems(query.collection, {
+            limit: 15,
+            filter: query.filter || {}
+         }));
       }
-    } catch (dbError: any) {
-      console.warn(
-        `⚠️ Erro na query principal (${query.collection}):`,
-        dbError.message,
-      );
 
-      // --- TENTATIVA 2: FALLBACKS ---
-
-      // CASO A: Fallback para Agrupamento (GroupBy)
-      if (query.groupBy && query.groupBy.length > 0) {
-        const groupField = query.groupBy[0];
-        try {
-          // @ts-ignore
-          const rawItems = await directus.request(
-            readItems(query.collection, {
-              limit: 100,
-              fields: ["id", groupField],
-              filter: query.filter || {},
-            }),
-          );
-
-          const counts: Record<string, number> = {};
-          rawItems.forEach((item: any) => {
-            let val = item[groupField];
-            if (Array.isArray(val)) {
-              val.forEach((v) => {
-                const label =
-                  typeof v === "object"
-                    ? v.nome || v.titulo || JSON.stringify(v)
-                    : String(v);
-                counts[label] = (counts[label] || 0) + 1;
-              });
-            } else if (typeof val === "object" && val !== null) {
-              const label = val.nome || val.titulo || val.id || "Outros";
-              counts[label] = (counts[label] || 0) + 1;
-            } else {
-              const k = val ? String(val) : "Não informado";
-              counts[k] = (counts[k] || 0) + 1;
-            }
-          });
-
-          dbResult = Object.entries(counts)
-            .map(([nome, count]) => ({ nome, count }))
-            .sort((a, b) => b.count - a.count)
-            .slice(0, 5);
-          plan.type = "list";
-        } catch (fbError) {
-          return NextResponse.json({
-            type: "text",
-            answer: "Erro ao processar agrupamento de dados.",
-          });
-        }
-      }
-      // CASO B: Fallback para Contagem Simples (NOVO)
-      else if (query.aggregate) {
-        console.log(
-          `🔄 Fallback: Contando itens manualmente em '${query.collection}'...`,
-        );
-        try {
-          // Baixa apenas IDs para contar, limitado a 1000 para não travar
-          // @ts-ignore
-          const items = await directus.request(
-            readItems(query.collection, {
-              fields: ["id"],
-              limit: 1000,
-              filter: query.filter || {},
-            }),
-          );
-
-          dbResult = items.length;
-          if (items.length >= 1000) {
-            plan.answer += " (Exibindo limite de amostra)";
-          }
-          plan.type = "count";
-        } catch (fbError) {
-          return NextResponse.json({
-            type: "text",
-            answer: "Erro de permissão ao contar registros.",
-          });
-        }
-      } else {
-        return NextResponse.json({
-          type: "text",
-          answer: "Erro ao acessar o banco de dados.",
-        });
-      }
-    }
-
-    return NextResponse.json({
-      type: plan.type,
-      answer: plan.answer,
-      data: dbResult,
-      suggestions: plan.suggestions || [],
-      debug_model: modelName,
-    });
-  } catch (error: any) {
-    // TRATAMENTO DE ERRO 429 (COTA)
-    if (
-      error.message?.includes("429") ||
-      error.message?.includes("quota") ||
-      error.status === 429
-    ) {
-      console.warn("⚠️ Cota da IA excedida.");
       return NextResponse.json({
-        type: "text",
-        answer:
-          "⚠️ O limite gratuito de uso da IA foi atingido por hoje. Por favor, tente novamente amanhã ou configure uma chave de API com cota maior.",
+         ...plan,
+         data: dataResult
+      });
+
+    } catch (dbError) {
+      console.error("Erro ao rodar query gerada pela IA:", dbError);
+      return NextResponse.json({
+         type: "text",
+         answer: "A IA entendeu a pergunta, mas não foi possível extrair estes dados específicos do banco no momento.",
+         suggestions: plan.suggestions || []
       });
     }
 
-    console.error("Erro Fatal Route:", error);
-    return NextResponse.json({ error: "Erro interno." }, { status: 500 });
+  } catch (error) {
+    console.error("Erro Fatal na Rota de IA:", error);
+    return NextResponse.json({ error: "Erro interno no servidor da IA." }, { status: 500 });
   }
 }

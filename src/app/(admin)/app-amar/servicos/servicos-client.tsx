@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useMemo } from "react";
 import { Plus, MoreHorizontal, Pencil, Trash2, CheckCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +36,13 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { deleteServico, toggleServicoStatus } from "../actions";
 import { ServicoForm } from "./servico-form";
@@ -46,6 +53,7 @@ interface Servico {
   slug: string;
   status: string;
   categoria_id: {
+    id: string;
     nome: string;
   } | string | null;
 }
@@ -61,6 +69,20 @@ export function ServicosClient({ initialData, categorias }: ServicosClientProps)
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Servico | null>(null);
+
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+
+  const filteredData = useMemo(() => {
+    return initialData.filter((servico) => {
+      if (selectedCategory === "all") return true;
+      
+      const catId = typeof servico.categoria_id === "object" && servico.categoria_id !== null
+        ? servico.categoria_id.id
+        : servico.categoria_id;
+        
+      return catId === selectedCategory;
+    });
+  }, [initialData, selectedCategory]);
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -118,8 +140,23 @@ export function ServicosClient({ initialData, categorias }: ServicosClientProps)
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm">
-        <h3 className="text-lg font-medium">Lista de Serviços</h3>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-4 rounded-lg shadow-sm gap-4">
+        <div className="flex items-center gap-4">
+          <h3 className="text-lg font-medium">Lista de Serviços</h3>
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Filtrar por Categoria" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as Categorias</SelectItem>
+              {categorias?.map((cat) => (
+                <SelectItem key={cat.id} value={cat.id}>
+                  {cat.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <Button onClick={handleCreateNew}>
           <Plus className="mr-2 h-4 w-4" />
           Novo Serviço
@@ -138,14 +175,14 @@ export function ServicosClient({ initialData, categorias }: ServicosClientProps)
             </TableRow>
           </TableHeader>
           <TableBody>
-            {initialData.length === 0 ? (
+            {filteredData.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="h-24 text-center">
                   Nenhum serviço encontrado.
                 </TableCell>
               </TableRow>
             ) : (
-              initialData.map((servico) => (
+              filteredData.map((servico) => (
                 <TableRow key={servico.id}>
                   <TableCell className="font-medium">{servico.titulo}</TableCell>
                   <TableCell className="text-muted-foreground">{servico.slug}</TableCell>

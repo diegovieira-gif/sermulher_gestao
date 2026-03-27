@@ -117,7 +117,7 @@ const MENU_ITEMS: MenuItemConfig[] = [
     roles: ["admin", "gestor"],
     items: [
       { label: "Indicadores Gerais", href: "/relatorios/indicadores" },
-      { label: "RMA (SUAS)", href: "/relatorios/rma" }
+      { label: "RMA (SUAS)", href: "/relatorios/rma" },
     ],
   },
   {
@@ -135,6 +135,10 @@ const MENU_ITEMS: MenuItemConfig[] = [
       { label: "Categorias", href: "/app-amar/categorias", icon: LayoutGrid },
       { label: "Serviços", href: "/app-amar/servicos", icon: Briefcase },
       { label: "Campanhas", href: "/app-amar/campanhas", icon: Megaphone },
+      { label: "Sonhos", href: "/app-amar/sonhos", icon: HeartHandshake },
+      { label: "Cursos", href: "/app-amar/cursos", icon: GraduationCap },
+      { label: "Contatos", href: "/app-amar/contatos", icon: FileText },
+      { label: "Projetos", href: "/app-amar/projetos", icon: Calendar },
     ],
   },
 ];
@@ -156,7 +160,7 @@ export function Sidebar({ userRole }: SidebarProps) {
   const isLimited = userRole === "Busca Ativa" || userRole === "Recepção";
 
   const filteredMenuItems = isLimited
-    ? MENU_ITEMS.filter(item => item.label === "Gestão de Mulheres")
+    ? MENU_ITEMS.filter((item) => item.label === "Gestão de Mulheres")
     : MENU_ITEMS;
 
   return (
@@ -170,8 +174,12 @@ export function Sidebar({ userRole }: SidebarProps) {
                   <ShieldAlert className="size-5" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-bold text-slate-900 dark:text-white">SerMulher</span>
-                  <span className="truncate text-[10px] text-slate-500 dark:text-slate-400">PMM / SerMulher</span>
+                  <span className="truncate font-bold text-slate-900 dark:text-white">
+                    SerMulher
+                  </span>
+                  <span className="truncate text-[10px] text-slate-500 dark:text-slate-400">
+                    PMM / SerMulher
+                  </span>
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -186,10 +194,14 @@ export function Sidebar({ userRole }: SidebarProps) {
             {filteredMenuItems.map((item) => {
               const Icon = item.icon;
               const hasSubmenu = item.items && item.items.length > 0;
-              const isActive = pathname === item.href || (pathname.startsWith(item.href + "/") && item.href !== "/");
+              const isActive =
+                pathname === item.href ||
+                (pathname.startsWith(item.href + "/") && item.href !== "/");
 
               if (hasSubmenu) {
-                const isChildActive = item.items?.some(sub => pathname.startsWith(sub.href));
+                const isChildActive = item.items?.some((sub) =>
+                  pathname.startsWith(sub.href),
+                );
                 return (
                   <Collapsible
                     key={item.label}
@@ -203,7 +215,8 @@ export function Sidebar({ userRole }: SidebarProps) {
                           tooltip={item.label}
                           isActive={isActive || isChildActive}
                           className={cn(
-                            (isActive || isChildActive) && "bg-slate-200 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold"
+                            (isActive || isChildActive) &&
+                              "bg-slate-200 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold",
                           )}
                         >
                           <Icon className="size-5" />
@@ -221,10 +234,14 @@ export function Sidebar({ userRole }: SidebarProps) {
                                   asChild
                                   isActive={pathname === subItem.href}
                                   className={cn(
-                                    pathname === subItem.href && "text-blue-600 dark:text-blue-400 font-medium"
+                                    pathname === subItem.href &&
+                                      "text-blue-600 dark:text-blue-400 font-medium",
                                   )}
                                 >
-                                  <Link href={subItem.href} className="flex items-center gap-2">
+                                  <Link
+                                    href={subItem.href}
+                                    className="flex items-center gap-2"
+                                  >
                                     {SubIcon && <SubIcon className="size-4" />}
                                     <span>{subItem.label}</span>
                                   </Link>
@@ -246,7 +263,8 @@ export function Sidebar({ userRole }: SidebarProps) {
                     tooltip={item.label}
                     isActive={isActive}
                     className={cn(
-                      isActive && "bg-slate-200 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold"
+                      isActive &&
+                        "bg-slate-200 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold",
                     )}
                   >
                     <Link href={item.href}>
@@ -268,7 +286,8 @@ export function Sidebar({ userRole }: SidebarProps) {
                 tooltip="Manual do Usuário"
                 isActive={pathname.startsWith("/manual")}
                 className={cn(
-                  pathname.startsWith("/manual") && "bg-slate-200 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold"
+                  pathname.startsWith("/manual") &&
+                    "bg-slate-200 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold",
                 )}
               >
                 <Link href="/manual">
@@ -277,14 +296,15 @@ export function Sidebar({ userRole }: SidebarProps) {
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            
+
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
                 tooltip="Configurações"
                 isActive={pathname.startsWith("/configuracoes")}
                 className={cn(
-                  pathname.startsWith("/configuracoes") && "bg-slate-200 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold"
+                  pathname.startsWith("/configuracoes") &&
+                    "bg-slate-200 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold",
                 )}
               >
                 <Link href="/configuracoes">

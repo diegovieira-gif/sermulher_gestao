@@ -140,6 +140,8 @@ export interface AmarCategoria {
   status: string;
 }
 
+export type AmarCategorias = AmarCategoria;
+
 export interface AmarServico {
   id: string;
   titulo: string;
@@ -160,9 +162,60 @@ export interface AmarCampanha {
   status: string;
 }
 
-export interface DirectusSchema {
+export interface AmarSonhos {
+  id: number;
+  nome?: string;
+  telefone?: string;
+  cpf?: string;
+  audio?: string;
+  date_created?: string;
+}
+
+export interface AmarCursos {
+  id: string;
+  status: string;
+  titulo: string;
+  descricao: string;
+  categoria: string | AmarCategorias;
+  imagem_capa: string;
+  carga_horaria: number;
+  instrutor: string;
+  user_created: string;
+  date_created: string;
+}
+
+export interface AmarContatos {
+  id: string;
+  status: string;
+  nome: string;
+  email: string;
+  telefone: string;
+  mensagem: string;
+  lido: boolean;
+  date_created: string;
+}
+
+export interface AmarProjetos {
+  id: string;
+  status: string;
+  titulo: string;
+  descricao: string;
+  conteudo: string;
+  imagem_capa: string;
+  user_created: string;
+  date_created: string;
+}
+
+export interface Database {
   amar_categorias: AmarCategoria[];
   amar_servicos: AmarServico[];
   amar_campanhas: AmarCampanha[];
+  amar_sonhos: AmarSonhos[];
+  amar_cursos: AmarCursos[];
+  amar_contatos: AmarContatos[];
+  amar_projetos: AmarProjetos[];
+}
+
+export interface DirectusSchema extends Database {
   [collection: string]: any;
 }
