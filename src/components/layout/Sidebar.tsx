@@ -122,7 +122,7 @@ const MENU_ITEMS: MenuItemConfig[] = [
   },
   {
     label: "Observatório",
-    href: "/admin/observatorio",
+    href: "/observatorio",
     icon: LayoutDashboard,
     roles: ["admin", "gestor"],
   },
