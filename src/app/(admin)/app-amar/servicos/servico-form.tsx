@@ -105,8 +105,9 @@ export function ServicoForm({
         } else {
           toast.error(`Erro: ${result.error}`);
         }
-      } catch (error) {
-        toast.error("Erro inesperado ao salvar o serviço.");
+      } catch (error: any) {
+        console.error("Action throw error:", error);
+        toast.error(`Erro técnico: ${error.message || "Falha na comunicação com o servidor"}`);
       }
     });
   };

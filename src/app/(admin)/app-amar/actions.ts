@@ -11,7 +11,7 @@ export async function getCategorias() {
   try {
     const result = await directus.request(
       readItems("amar_categorias", {
-        sort: ["ordem"],
+        sort: ["nome"],
       }),
     );
     return result;
@@ -61,10 +61,16 @@ export async function createCategoria(data: any) {
   try {
     const result = await directus.request(createItem("amar_categorias", data));
     revalidatePath("/app-amar/categorias");
-    return { success: true, data: result };
+    return { 
+      success: true, 
+      data: result ? JSON.parse(JSON.stringify(result)) : null 
+    };
   } catch (error: any) {
-    console.error("Erro ao criar categoria:", error);
-    return { success: false, error: error.message };
+    if (error?.message === "NEXT_REDIRECT") throw error;
+    const isUnauthorized = error?.response?.status === 401 || error?.status === 401;
+    if (isUnauthorized) redirect("/login?error=unauthorized");
+    console.error("❌ Erro ao criar categoria:", error);
+    return { success: false, error: error.message || "Erro desconhecido" };
   }
 }
 
@@ -96,6 +102,7 @@ export async function getServicos() {
     const result = await directus.request(
       readItems("amar_servicos", {
         fields: ["*", "categoria_id.*"],
+        sort: ["titulo"],
       }),
     );
     return result;
@@ -130,8 +137,11 @@ export async function deleteServico(id: string) {
     revalidatePath("/app-amar/servicos");
     return { success: true };
   } catch (error: any) {
-    console.error("Erro ao excluir serviço:", error);
-    return { success: false, error: error.message };
+    if (error?.message === "NEXT_REDIRECT") throw error;
+    const isUnauthorized = error?.response?.status === 401 || error?.status === 401;
+    if (isUnauthorized) redirect("/login?error=unauthorized");
+    console.error("❌ Erro ao excluir serviço:", error);
+    return { success: false, error: error.message || "Erro desconhecido" };
   }
 }
 
@@ -156,10 +166,15 @@ export async function createServico(data: any) {
 
 export async function updateServico(id: string, data: any) {
   try {
-    console.log(`[updateServico] Incompatibilidade detectada? Atualizando ${id}`, data);
+    // Sanitização técnica: removemos o ID do corpo caso ele tenha vindo do objeto de formulário
+    const { id: _, ...payload } = data;
+    
+    console.log(`[updateServico] Processando atualização para ID: ${id}`);
+    
     const result = await directus.request(
-      updateItem("amar_servicos", id, data),
+      updateItem("amar_servicos", id, payload),
     );
+    
     revalidatePath("/app-amar/servicos");
     return { 
       success: true, 
@@ -171,8 +186,15 @@ export async function updateServico(id: string, data: any) {
     const isUnauthorized = error?.response?.status === 401 || error?.status === 401;
     if (isUnauthorized) redirect("/login?error=unauthorized");
 
-    console.error("❌ Erro ao atualizar serviço:", error);
-    return { success: false, error: error.message || "Erro desconhecido" };
+    console.error("❌ ERRO DETALHADO NO UPDATE SERVIÇO:", {
+      message: error.message,
+      errors: error.errors || error.response?.data?.errors,
+    });
+    
+    return { 
+      success: false, 
+      error: error.message || "Erro ao processar atualização no banco de dados" 
+    };
   }
 }
 
@@ -182,7 +204,7 @@ export async function getCampanhas() {
   try {
     const result = await directus.request(
       readItems("amar_campanhas", {
-        sort: ["-date_created"], // Assuming there is a creation date, otherwise can sort by start date
+        sort: ["titulo"],
       }),
     );
     return result;
@@ -217,8 +239,11 @@ export async function deleteCampanha(id: string) {
     revalidatePath("/app-amar/campanhas");
     return { success: true };
   } catch (error: any) {
-    console.error("Erro ao excluir campanha:", error);
-    return { success: false, error: error.message };
+    if (error?.message === "NEXT_REDIRECT") throw error;
+    const isUnauthorized = error?.response?.status === 401 || error?.status === 401;
+    if (isUnauthorized) redirect("/login?error=unauthorized");
+    console.error("❌ Erro ao excluir campanha:", error);
+    return { success: false, error: error.message || "Erro desconhecido" };
   }
 }
 
@@ -264,7 +289,7 @@ export async function getSonhos() {
   try {
     const result = await directus.request(
       readItems("amar_sonhos", {
-        sort: ["-date_created"],
+        sort: ["nome"],
       }),
     );
     return result;
@@ -297,10 +322,16 @@ export async function createSonho(data: any) {
   try {
     const result = await directus.request(createItem("amar_sonhos", data));
     revalidatePath("/app-amar/sonhos");
-    return { success: true, data: result };
+    return { 
+      success: true, 
+      data: result ? JSON.parse(JSON.stringify(result)) : null 
+    };
   } catch (error: any) {
-    console.error("Erro ao criar sonho:", error);
-    return { success: false, error: error.message };
+    if (error?.message === "NEXT_REDIRECT") throw error;
+    const isUnauthorized = error?.response?.status === 401 || error?.status === 401;
+    if (isUnauthorized) redirect("/login?error=unauthorized");
+    console.error("❌ Erro ao criar sonho:", error);
+    return { success: false, error: error.message || "Erro desconhecido" };
   }
 }
 
@@ -308,10 +339,16 @@ export async function updateSonho(id: string, data: any) {
   try {
     const result = await directus.request(updateItem("amar_sonhos", id, data));
     revalidatePath("/app-amar/sonhos");
-    return { success: true, data: result };
+    return { 
+      success: true, 
+      data: result ? JSON.parse(JSON.stringify(result)) : null 
+    };
   } catch (error: any) {
-    console.error("Erro ao atualizar sonho:", error);
-    return { success: false, error: error.message };
+    if (error?.message === "NEXT_REDIRECT") throw error;
+    const isUnauthorized = error?.response?.status === 401 || error?.status === 401;
+    if (isUnauthorized) redirect("/login?error=unauthorized");
+    console.error("❌ Erro ao atualizar sonho:", error);
+    return { success: false, error: error.message || "Erro desconhecido" };
   }
 }
 
@@ -321,8 +358,11 @@ export async function deleteSonho(id: string) {
     revalidatePath("/app-amar/sonhos");
     return { success: true };
   } catch (error: any) {
-    console.error("Erro ao excluir sonho:", error);
-    return { success: false, error: error.message };
+    if (error?.message === "NEXT_REDIRECT") throw error;
+    const isUnauthorized = error?.response?.status === 401 || error?.status === 401;
+    if (isUnauthorized) redirect("/login?error=unauthorized");
+    console.error("❌ Erro ao excluir sonho:", error);
+    return { success: false, error: error.message || "Erro desconhecido" };
   }
 }
 
@@ -332,7 +372,7 @@ export async function getCursos() {
   try {
     const result = await directus.request(
       readItems("amar_cursos", {
-        sort: ["-id"],
+        sort: ["titulo"],
       }),
     );
     return result;
@@ -365,10 +405,16 @@ export async function createCurso(data: any) {
   try {
     const result = await directus.request(createItem("amar_cursos", data));
     revalidatePath("/app-amar/cursos");
-    return { success: true, data: result };
+    return { 
+      success: true, 
+      data: result ? JSON.parse(JSON.stringify(result)) : null 
+    };
   } catch (error: any) {
-    console.error("Erro ao criar curso:", error);
-    return { success: false, error: error.message };
+    if (error?.message === "NEXT_REDIRECT") throw error;
+    const isUnauthorized = error?.response?.status === 401 || error?.status === 401;
+    if (isUnauthorized) redirect("/login?error=unauthorized");
+    console.error("❌ Erro ao criar curso:", error);
+    return { success: false, error: error.message || "Erro desconhecido" };
   }
 }
 
@@ -376,10 +422,16 @@ export async function updateCurso(id: string, data: any) {
   try {
     const result = await directus.request(updateItem("amar_cursos", id, data));
     revalidatePath("/app-amar/cursos");
-    return { success: true, data: result };
+    return { 
+      success: true, 
+      data: result ? JSON.parse(JSON.stringify(result)) : null 
+    };
   } catch (error: any) {
-    console.error("Erro ao atualizar curso:", error);
-    return { success: false, error: error.message };
+    if (error?.message === "NEXT_REDIRECT") throw error;
+    const isUnauthorized = error?.response?.status === 401 || error?.status === 401;
+    if (isUnauthorized) redirect("/login?error=unauthorized");
+    console.error("❌ Erro ao atualizar curso:", error);
+    return { success: false, error: error.message || "Erro desconhecido" };
   }
 }
 
@@ -389,8 +441,11 @@ export async function deleteCurso(id: string) {
     revalidatePath("/app-amar/cursos");
     return { success: true };
   } catch (error: any) {
-    console.error("Erro ao excluir curso:", error);
-    return { success: false, error: error.message };
+    if (error?.message === "NEXT_REDIRECT") throw error;
+    const isUnauthorized = error?.response?.status === 401 || error?.status === 401;
+    if (isUnauthorized) redirect("/login?error=unauthorized");
+    console.error("❌ Erro ao excluir curso:", error);
+    return { success: false, error: error.message || "Erro desconhecido" };
   }
 }
 
@@ -400,7 +455,7 @@ export async function getContatos() {
   try {
     const result = await directus.request(
       readItems("amar_contatos", {
-        sort: ["-id"],
+        sort: ["nome"],
       }),
     );
     return result;
@@ -435,8 +490,11 @@ export async function deleteContato(id: string) {
     revalidatePath("/app-amar/contatos");
     return { success: true };
   } catch (error: any) {
-    console.error("Erro ao excluir contato:", error);
-    return { success: false, error: error.message };
+    if (error?.message === "NEXT_REDIRECT") throw error;
+    const isUnauthorized = error?.response?.status === 401 || error?.status === 401;
+    if (isUnauthorized) redirect("/login?error=unauthorized");
+    console.error("❌ Erro ao excluir contato:", error);
+    return { success: false, error: error.message || "Erro desconhecido" };
   }
 }
 
@@ -446,7 +504,7 @@ export async function getProjetos() {
   try {
     const result = await directus.request(
       readItems("amar_projetos", {
-        sort: ["ordem"],
+        sort: ["titulo"],
       }),
     );
     return result;
@@ -479,10 +537,16 @@ export async function createProjeto(data: any) {
   try {
     const result = await directus.request(createItem("amar_projetos", data));
     revalidatePath("/app-amar/projetos");
-    return { success: true, data: result };
+    return { 
+      success: true, 
+      data: result ? JSON.parse(JSON.stringify(result)) : null 
+    };
   } catch (error: any) {
-    console.error("Erro ao criar projeto:", error);
-    return { success: false, error: error.message };
+    if (error?.message === "NEXT_REDIRECT") throw error;
+    const isUnauthorized = error?.response?.status === 401 || error?.status === 401;
+    if (isUnauthorized) redirect("/login?error=unauthorized");
+    console.error("❌ Erro ao criar projeto:", error);
+    return { success: false, error: error.message || "Erro desconhecido" };
   }
 }
 
@@ -492,10 +556,16 @@ export async function updateProjeto(id: string, data: any) {
       updateItem("amar_projetos", id, data),
     );
     revalidatePath("/app-amar/projetos");
-    return { success: true, data: result };
+    return { 
+      success: true, 
+      data: result ? JSON.parse(JSON.stringify(result)) : null 
+    };
   } catch (error: any) {
-    console.error("Erro ao atualizar projeto:", error);
-    return { success: false, error: error.message };
+    if (error?.message === "NEXT_REDIRECT") throw error;
+    const isUnauthorized = error?.response?.status === 401 || error?.status === 401;
+    if (isUnauthorized) redirect("/login?error=unauthorized");
+    console.error("❌ Erro ao atualizar projeto:", error);
+    return { success: false, error: error.message || "Erro desconhecido" };
   }
 }
 
@@ -505,7 +575,10 @@ export async function deleteProjeto(id: string) {
     revalidatePath("/app-amar/projetos");
     return { success: true };
   } catch (error: any) {
-    console.error("Erro ao excluir projeto:", error);
-    return { success: false, error: error.message };
+    if (error?.message === "NEXT_REDIRECT") throw error;
+    const isUnauthorized = error?.response?.status === 401 || error?.status === 401;
+    if (isUnauthorized) redirect("/login?error=unauthorized");
+    console.error("❌ Erro ao excluir projeto:", error);
+    return { success: false, error: error.message || "Erro desconhecido" };
   }
 }
