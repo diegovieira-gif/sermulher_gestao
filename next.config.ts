@@ -14,6 +14,7 @@ const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
       allowedOrigins: [
+        "https://fluxo-sermulher.aracaju.se.gov.br",
         "fluxo-sermulher.aracaju.se.gov.br",
         "*.aracaju.se.gov.br",
         "localhost:3000",

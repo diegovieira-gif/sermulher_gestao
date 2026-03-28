@@ -5,6 +5,7 @@ import { createDirectus, rest, staticToken } from "@directus/sdk";
 const directusUrl =
   process.env.NEXT_PUBLIC_API_URL ||
   process.env.NEXT_PUBLIC_DIRECTUS_URL ||
+  process.env.DIRECTUS_URL ||
   "http://192.168.0.115:8055";
 
 const directusToken = process.env.DIRECTUS_TOKEN || "";
