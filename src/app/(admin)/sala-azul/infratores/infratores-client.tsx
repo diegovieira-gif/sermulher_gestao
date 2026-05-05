@@ -331,7 +331,7 @@ export function InfratoresClient({
 
         {/* Rodapé do Relatório */}
         <div className="mt-12 pt-8 border-t border-gray-300 flex justify-between items-center text-xs text-gray-500">
-          <p>Sistema de Gestão Integrada - SerMulher</p>
+          <p>Sistema de Gestão Integrada - SERMULHER</p>
           <p>Página 1 de 1</p>
         </div>
       </div>

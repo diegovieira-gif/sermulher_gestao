@@ -36,7 +36,7 @@ export default function ManualPage() {
           Manual do Usuário
         </h1>
         <p className="text-xl text-gray-500 max-w-2xl">
-          Guia completo de utilização do Sistema SerMulher. Aprenda a gerenciar
+          Guia completo de utilização do Sistema SERMULHER. Aprenda a gerenciar
           atendimentos, cursos e relatórios de forma eficiente.
         </p>
       </div>
@@ -322,7 +322,7 @@ export default function ManualPage() {
       </div>
 
       <div className="text-center text-sm text-gray-400 pt-8 pb-4">
-        <p>SerMulher Gestão Integrada © {new Date().getFullYear()}</p>
+        <p>SERMULHER Gestão Integrada © {new Date().getFullYear()}</p>
         <p>Desenvolvido para facilitar e humanizar o atendimento.</p>
       </div>
     </div>

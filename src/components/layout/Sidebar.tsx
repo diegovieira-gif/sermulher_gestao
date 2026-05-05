@@ -172,23 +172,21 @@ export function Sidebar({ userRole }: SidebarProps) {
             <SidebarMenuButton size="lg" asChild>
               <Link href="/dashboard" className="gap-3">
                 <div className="flex aspect-square size-10 items-center justify-center shrink-0">
-                  <Image 
-                    src="/logo.png" 
-                    alt="Logo Secretaria" 
-                    width={40} 
-                    height={40} 
+                  <Image
+                    src="/logo.png"
+                    alt="Logo Secretaria"
+                    width={40}
+                    height={40}
                     className="object-contain"
                   />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-bold text-slate-900 dark:text-white">
-                    SerMulher
+                    SERMULHER
                   </span>
-                  <span 
-                    className="truncate text-[10px] text-slate-500 dark:text-slate-400" 
-                    title="Secretaria Municipal do Respeito às Políticas para as Mulheres"
-                  >
-                    Secretaria Municipal do Respeito às Políticas para as Mulheres
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight break-words whitespace-normal">
+                    Secretaria Municipal do Respeito às Políticas para as
+                    Mulheres
                   </span>
                 </div>
               </Link>

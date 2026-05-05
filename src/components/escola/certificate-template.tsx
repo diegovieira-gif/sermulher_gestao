@@ -41,7 +41,7 @@ export const CertificateTemplate = forwardRef<
         {/* Cabeçalho */}
         <header className="text-center mt-8">
           <h1 className="text-6xl font-serif font-bold text-purple-800 tracking-wide mb-2">
-            SerMulher
+            SERMULHER
           </h1>
           <h2 className="text-xl uppercase tracking-widest text-gray-600 font-semibold border-b-2 border-purple-200 inline-block pb-2 px-8">
             Secretaria Municipal do Respeito às Políticas para as Mulheres
@@ -113,7 +113,7 @@ export const CertificateTemplate = forwardRef<
         <div className="absolute bottom-2 left-0 right-0 text-center">
           <p className="text-[10px] text-gray-400">
             Este certificado tem validade para fins curriculares de
-            aperfeiçoamento profissional. Sistema de Gestão Integrada SerMulher.
+            aperfeiçoamento profissional. Sistema de Gestão Integrada SERMULHER.
           </p>
         </div>
       </div>

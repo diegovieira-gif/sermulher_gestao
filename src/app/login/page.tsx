@@ -47,11 +47,24 @@ export default function LoginPage() {
     <div className="flex min-h-screen bg-gray-50">
       <div className="hidden lg:flex w-1/2 bg-blue-600 flex-col justify-center items-center text-white p-12 relative overflow-hidden">
         <div className="absolute inset-0 opacity-20">
-          <Image src="/globe.svg" alt="Background" fill className="object-cover" />
+          <Image
+            src="/globe.svg"
+            alt="Background"
+            fill
+            className="object-cover"
+          />
         </div>
         <div className="z-10 text-center">
-          <Image src="/logo.png" alt="SerMulher" width={180} height={180} className="mb-8 mx-auto drop-shadow-lg" />
-          <h1 className="text-5xl font-bold mb-4 tracking-tight">Portal SerMulher</h1>
+          <Image
+            src="/logo.png"
+            alt="SERMULHER"
+            width={180}
+            height={180}
+            className="mb-8 mx-auto drop-shadow-lg"
+          />
+          <h1 className="text-5xl font-bold mb-4 tracking-tight">
+            Portal SERMULHER
+          </h1>
           <p className="text-blue-100 text-lg max-w-md mx-auto">
             Sistema Integrado de Gestão, Monitoramento e Acolhimento
           </p>
@@ -61,13 +74,25 @@ export default function LoginPage() {
       <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 bg-white">
         <div className="w-full max-w-md space-y-8">
           <div className="text-center lg:hidden mb-8">
-            <Image src="/logo.png" alt="SerMulher" width={120} height={120} className="mx-auto" />
-            <h2 className="text-2xl font-bold mt-4 text-gray-900">Portal SerMulher</h2>
+            <Image
+              src="/logo.png"
+              alt="SERMULHER"
+              width={120}
+              height={120}
+              className="mx-auto"
+            />
+            <h2 className="text-2xl font-bold mt-4 text-gray-900">
+              Portal SERMULHER
+            </h2>
           </div>
 
           <div className="text-center">
-            <h2 className="text-3xl font-extrabold text-gray-900">Acesso ao Sistema</h2>
-            <p className="mt-2 text-sm text-gray-600">Insira suas credenciais para continuar</p>
+            <h2 className="text-3xl font-extrabold text-gray-900">
+              Acesso ao Sistema
+            </h2>
+            <p className="mt-2 text-sm text-gray-600">
+              Insira suas credenciais para continuar
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-6">
@@ -78,7 +103,9 @@ export default function LoginPage() {
             )}
             <div className="space-y-4 rounded-md shadow-sm">
               <div>
-                <Label htmlFor="email" className="text-gray-700">Email institucional</Label>
+                <Label htmlFor="email" className="text-gray-700">
+                  Email institucional
+                </Label>
                 <Input
                   id="email"
                   name="email"
@@ -91,7 +118,9 @@ export default function LoginPage() {
                 />
               </div>
               <div>
-                <Label htmlFor="password" className="text-gray-700">Senha</Label>
+                <Label htmlFor="password" className="text-gray-700">
+                  Senha
+                </Label>
                 <Input
                   id="password"
                   name="password"

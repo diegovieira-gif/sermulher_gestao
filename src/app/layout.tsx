@@ -7,7 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "SerMulher - Gestão",
+  title: "SERMULHER - Gestão",
   description: "Sistema de Gestão Integrada de Políticas para as Mulheres",
   icons: {
     icon: "/favicon.ico", // Opcional: ícone se tiver

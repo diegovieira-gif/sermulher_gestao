@@ -65,7 +65,7 @@ export function SmartAssistant() {
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-lg text-purple-900">
           <Sparkles className="h-5 w-5 text-purple-600" />
-          Assistente Inteligente SerMulher
+          Assistente Inteligente SERMULHER
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
