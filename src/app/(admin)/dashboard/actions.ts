@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { directus } from "@/lib/directus";
+import { getDirectusClient } from "@/lib/directus";
 import { readItems, aggregate } from "@directus/sdk";
 
 // Tipo de retorno para o Dashboard
@@ -40,6 +40,8 @@ export async function getDashboardStats(): Promise<{
   data?: DashboardStats;
   error?: string;
 }> {
+  const directus = await getDirectusClient({ requireAuth: true });
+
   // Configuração de datas
   const now = new Date();
 
@@ -190,10 +192,12 @@ export async function getDashboardStats(): Promise<{
     const isUnauthorized =
       error?.response?.status === 401 ||
       error?.status === 401 ||
+      error?.message?.includes("Authentication required") ||
       error?.message?.includes("Invalid user credentials") ||
-      error?.errors?.some?.((e: any) => 
-        e?.extensions?.code === "INVALID_CREDENTIALS" || 
-        e?.extensions?.code === "TOKEN_EXPIRED"
+      error?.errors?.some?.(
+        (e: any) =>
+          e?.extensions?.code === "INVALID_CREDENTIALS" ||
+          e?.extensions?.code === "TOKEN_EXPIRED",
       );
 
     if (isUnauthorized) {
@@ -206,7 +210,7 @@ export async function getDashboardStats(): Promise<{
     }
 
     console.error("❌ Erro em chamadas do Dashboard (Safe Fetch):", error);
-    
+
     // Retornando estado zero/vazio de forma robusta e mantendo a tipagem esperada
     return {
       success: false,
@@ -227,7 +231,8 @@ export async function getDashboardStats(): Promise<{
         growthAlunas: "+0%",
         growthInfratores: "+0%",
       },
-      error: "Houve um problema ao carregar os dados. Exibindo dashboard limpo.",
+      error:
+        "Houve um problema ao carregar os dados. Exibindo dashboard limpo.",
     };
   }
 }

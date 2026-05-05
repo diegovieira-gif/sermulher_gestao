@@ -2,6 +2,19 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createDirectus, rest, staticToken } from "@directus/sdk";
 
+type DirectusErrorShape = {
+  message?: string;
+  response?: {
+    status?: number;
+  };
+  status?: number;
+  errors?: Array<{
+    extensions?: {
+      code?: string;
+    };
+  }>;
+};
+
 // Usa variáveis públicas se disponíveis no client, ou as de servidor no backend
 const directusUrl =
   process.env.NEXT_PUBLIC_API_URL ||
@@ -14,7 +27,7 @@ const directusToken = process.env.DIRECTUS_TOKEN || "";
 const directusTimeoutMs = Number(
   process.env.NEXT_PUBLIC_DIRECTUS_FETCH_TIMEOUT_MS ||
     process.env.DIRECTUS_FETCH_TIMEOUT_MS ||
-    20000
+    20000,
 );
 
 // Fetch customizado para evitar cache agressivo do Next.js
@@ -27,7 +40,9 @@ const noCacheFetch = async (url: RequestInfo | URL, init?: RequestInit) => {
     if (signal.aborted) {
       controller.abort();
     } else {
-      signal.addEventListener("abort", () => controller.abort(), { once: true });
+      signal.addEventListener("abort", () => controller.abort(), {
+        once: true,
+      });
     }
   }
 
@@ -38,7 +53,7 @@ const noCacheFetch = async (url: RequestInfo | URL, init?: RequestInit) => {
     if (userToken) {
       token = userToken;
     }
-  } catch (error) {
+  } catch {
     // Pode falhar caso chamado fora de contexto de requisição (ex: build estático)
   }
 
@@ -59,48 +74,76 @@ const noCacheFetch = async (url: RequestInfo | URL, init?: RequestInit) => {
   }
 };
 
-// Temporary log to verify Directus URL configuration.
-console.log(
-  "[directus] env DIRECTUS_URL:",
-  process.env.DIRECTUS_URL,
-  "resolved:",
-  directusUrl
-);
-
 export const directus = createDirectus(directusUrl, {
   globals: {
-    fetch: noCacheFetch as any,
+    fetch: noCacheFetch as typeof fetch,
   },
-})
-  .with(rest());
+}).with(rest());
+
+type GetDirectusClientOptions = {
+  requireAuth?: boolean;
+};
+
+export async function getDirectusClient(
+  options: GetDirectusClientOptions = {},
+) {
+  const { requireAuth = false } = options;
+  const cookieStore = await cookies();
+  const token = cookieStore.get("directus_token")?.value;
+
+  if (!token) {
+    if (requireAuth) {
+      throw new Error(
+        "Authentication required: directus_token cookie not found",
+      );
+    }
+
+    return directus;
+  }
+
+  return createDirectus(directusUrl, {
+    globals: {
+      fetch: noCacheFetch as typeof fetch,
+    },
+  })
+    .with(staticToken(token))
+    .with(rest());
+}
+
+function isUnauthorizedError(error: unknown): boolean {
+  const directusError = error as DirectusErrorShape;
+
+  return (
+    directusError?.response?.status === 401 ||
+    directusError?.status === 401 ||
+    directusError?.message?.includes("Authentication required") === true ||
+    directusError?.message?.includes("Invalid user credentials") === true ||
+    directusError?.errors?.some(
+      (entry) =>
+        entry?.extensions?.code === "INVALID_CREDENTIALS" ||
+        entry?.extensions?.code === "TOKEN_EXPIRED",
+    ) === true
+  );
+}
 
 /**
  * Utilitário para envolver chamadas do Directus, interceptando erros 401 de forma segura.
  * Pode ser utilizando em Server Actions para impedir que a app quebre e garantir o relogin.
  */
-export async function safeDirectusCall<T>(request: () => Promise<T>): Promise<T> {
+export async function safeDirectusCall<T>(
+  request: () => Promise<T>,
+): Promise<T> {
   try {
     return await request();
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Preservar o redirect interno do próprio framework (se já estiver em curso)
-    if (error?.message === "NEXT_REDIRECT") {
+    if (error instanceof Error && error.message === "NEXT_REDIRECT") {
       throw error;
     }
 
-    // Verificar se o formato de erro provido aponta para perda de credenciais/token vencido
-    const isUnauthorized =
-      error?.response?.status === 401 ||
-      error?.status === 401 ||
-      error?.message?.includes("Invalid user credentials") ||
-      error?.errors?.some?.(
-        (e: any) =>
-          e?.extensions?.code === "INVALID_CREDENTIALS" ||
-          e?.extensions?.code === "TOKEN_EXPIRED"
-      );
-
-    if (isUnauthorized) {
+    if (isUnauthorizedError(error)) {
       console.warn(
-        "⚠️ Chamada interceptada pela safeDirectusCall: Token inválido ou expirado (401). Redirecionando..."
+        "⚠️ Chamada interceptada pela safeDirectusCall: Token inválido ou expirado (401). Redirecionando...",
       );
       // Redireciona via API do Next.js de forma segura.
       // O throw originado pelo redirect escalará e executará na UI.

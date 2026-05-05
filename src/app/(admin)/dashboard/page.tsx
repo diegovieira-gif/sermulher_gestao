@@ -2,7 +2,7 @@ import { getDashboardStats } from "./actions";
 import { OverviewClient } from "./overview-client";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
-import { directus, safeDirectusCall } from "@/lib/directus";
+import { getDirectusClient, safeDirectusCall } from "@/lib/directus";
 import { readMe } from "@directus/sdk";
 
 export const dynamic = "force-dynamic";
@@ -13,9 +13,11 @@ export default async function DashboardPage() {
 
   // 2. Busca dados do usuário autenticado via Directus
   let userName = "Gestão";
-  const user = await safeDirectusCall(() => 
-    directus.request(readMe({ fields: ["first_name"] }))
-  );
+  const user = await safeDirectusCall(async () => {
+    const directus = await getDirectusClient({ requireAuth: true });
+
+    return directus.request(readMe({ fields: ["first_name"] }));
+  });
 
   if (user?.first_name) {
     userName = user.first_name;
