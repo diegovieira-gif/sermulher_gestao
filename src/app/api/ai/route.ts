@@ -1,15 +1,20 @@
 import { GoogleGenAI } from "@google/genai";
 import { NextResponse } from "next/server";
-import { createDirectus, rest, staticToken, readItems, aggregate } from "@directus/sdk";
+import {
+  createDirectus,
+  rest,
+  staticToken,
+  readItems,
+  aggregate,
+} from "@directus/sdk";
 
 // Contexto do Banco de Dados (Restauração da sua regra de negócio)
 const DB_SCHEMA_CONTEXT = `
 CONTEXTO DO BANCO DE DADOS:
-1. Tabela 'atendimentos': id, data_abertura, tipo_violencia (lista), bairro, relator_tecnico, status.
-2. Tabela 'escola_turmas': id, nome, status, data_inicio.
-3. Tabela 'infratores': id, nome_completo, nivel_risco, status_legal.
-4. Tabela 'eventos_campanhas': id, nome, data_inicio, tipo_id.
-5. Tabela 'beneficiarias': id, nome_completo, cpf.
+1. Tabela 'campaigns': id, title, start_date, is_active.
+2. Tabela 'courses': id, title, modality, vacancies, is_active.
+3. Tabela 'services': id, title, location_mode, is_active.
+4. Tabela 'app_users': id, name, location_city, notification_opt_in.
 `;
 
 export async function POST(request: Request) {
@@ -29,9 +34,13 @@ export async function POST(request: Request) {
       .with(staticToken(process.env.DIRECTUS_TOKEN!));
 
     // 2. Busca a chave na coleção 'config_integracao'
-    const integracoes = await directus.request(readItems("config_integracao", {
-      limit: 1,
-    })).catch(() => []); // Previne erro fatal se a tabela estiver vazia
+    const integracoes = await directus
+      .request(
+        readItems("config_integracao", {
+          limit: 1,
+        }),
+      )
+      .catch(() => []); // Previne erro fatal se a tabela estiver vazia
 
     // 3. Define a chave e o modelo dinâmico
     const apiKey = integracoes[0]?.gemini_api_key || process.env.GEMINI_API_KEY;
@@ -39,7 +48,10 @@ export async function POST(request: Request) {
 
     if (!apiKey) {
       console.error("[IA] Chave API Ausente.");
-      return NextResponse.json({ error: "Chave API ausente. Configure a integração no painel." }, { status: 500 });
+      return NextResponse.json(
+        { error: "Chave API ausente. Configure a integração no painel." },
+        { status: 500 },
+      );
     }
 
     // 4. Inicializa o Novo SDK de 2026
@@ -89,8 +101,12 @@ export async function POST(request: Request) {
       console.error("A IA não retornou um JSON válido:", textAI);
       return NextResponse.json({
         type: "text",
-        answer: "Houve uma falha no raciocínio da IA ao tentar buscar esses dados.",
-        suggestions: ["Qual o total de atendimentos?", "Distribuição de infratores por risco?"]
+        answer:
+          "Houve uma falha no raciocínio da IA ao tentar buscar esses dados.",
+        suggestions: [
+          "Qual o total de atendimentos?",
+          "Distribuição de infratores por risco?",
+        ],
       });
     }
 
@@ -105,52 +121,61 @@ export async function POST(request: Request) {
     try {
       // CENÁRIO 1: Gráficos e Distribuição (Ex: Infratores por Risco)
       if (query.groupBy && Array.isArray(query.groupBy)) {
-         const res = await directus.request(aggregate(query.collection, {
+        const res = await directus.request(
+          aggregate(query.collection, {
             aggregate: query.aggregate || { count: "*" },
             groupBy: query.groupBy,
-            query: { filter: query.filter || {}, sort: query.sort }
-         }));
-         
-         // Formata para o frontend conseguir ler os cards corretamente
-         dataResult = res.map((item: any) => ({
-             nome: item[query.groupBy[0]] || "Não informado",
-             count: Number(item.count || 0)
-         }));
-         plan.type = "list"; // Força o formato lista para o React desenhar os cards
+            query: { filter: query.filter || {}, sort: query.sort },
+          }),
+        );
 
-      // CENÁRIO 2: Contagem Total Exata (Ex: Quantas beneficiárias?)
+        // Formata para o frontend conseguir ler os cards corretamente
+        dataResult = res.map((item: any) => ({
+          nome: item[query.groupBy[0]] || "Não informado",
+          count: Number(item.count || 0),
+        }));
+        plan.type = "list"; // Força o formato lista para o React desenhar os cards
+
+        // CENÁRIO 2: Contagem Total Exata (Ex: Quantas beneficiárias?)
       } else if (query.aggregate) {
-         const res = await directus.request(aggregate(query.collection, {
+        const res = await directus.request(
+          aggregate(query.collection, {
             aggregate: query.aggregate,
-            query: { filter: query.filter || {} }
-         }));
-         // Pega o número exato gerado pelo banco e converte para Number
-         dataResult = Number(res[0]?.count || res[0]?.countAll || 0);
+            query: { filter: query.filter || {} },
+          }),
+        );
+        // Pega o número exato gerado pelo banco e converte para Number
+        dataResult = Number(res[0]?.count || res[0]?.countAll || 0);
 
-      // CENÁRIO 3: Listagem Simples (Ex: Me mostre as últimas matriculadas)
+        // CENÁRIO 3: Listagem Simples (Ex: Me mostre as últimas matriculadas)
       } else {
-         dataResult = await directus.request(readItems(query.collection, {
+        dataResult = await directus.request(
+          readItems(query.collection, {
             limit: 15,
-            filter: query.filter || {}
-         }));
+            filter: query.filter || {},
+          }),
+        );
       }
 
       return NextResponse.json({
-         ...plan,
-         data: dataResult
+        ...plan,
+        data: dataResult,
       });
-
     } catch (dbError) {
+      console.log(dbError);
       console.error("Erro ao rodar query gerada pela IA:", dbError);
       return NextResponse.json({
-         type: "text",
-         answer: "A IA entendeu a pergunta, mas não foi possível extrair estes dados específicos do banco no momento.",
-         suggestions: plan.suggestions || []
+        type: "text",
+        answer:
+          "A IA entendeu a pergunta, mas não foi possível extrair estes dados específicos do banco no momento.",
+        suggestions: plan.suggestions || [],
       });
     }
-
   } catch (error) {
     console.error("Erro Fatal na Rota de IA:", error);
-    return NextResponse.json({ error: "Erro interno no servidor da IA." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Erro interno no servidor da IA." },
+      { status: 500 },
+    );
   }
 }
