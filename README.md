@@ -16,7 +16,6 @@ Sistema desenvolvido para a **Secretaria Municipal do Respeito às Políticas pa
 - **Backend:** Server Actions.
 - **Banco de Dados/CMS:** Directus (PostgreSQL).
 - **Relatórios:** React-to-Print (PDFs no navegador).
-- **IA:** Integração com Google Gemini para assistente virtual.
 
 ## ⚙️ Configuração
 
@@ -33,9 +32,6 @@ Crie um arquivo `.env` na raiz:
 # Directus (API & Banco)
 DIRECTUS_URL="http://SEU_IP_OU_DOMINIO:8055"
 DIRECTUS_TOKEN="seu_token_admin_ou_static_token"
-
-# Google Gemini (IA)
-GEMINI_API_KEY="sua_chave_api_gemini"
 ```
 
 ### Instalação e Execução

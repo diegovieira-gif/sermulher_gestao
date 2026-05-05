@@ -20,8 +20,7 @@ export default async function ConfiguracoesPage() {
     racaCor: any[] = [],
     estadoCivil: any[] = [],
     escolaridade: any[] = [],
-    situacaoTrabalho: any[] = [],
-    integracoes: any[] = [];
+    situacaoTrabalho: any[] = [];
 
   try {
     // Busca Paralela (Promise.all) para maior performance em produção
@@ -42,7 +41,6 @@ export default async function ConfiguracoesPage() {
       getAuxItems("config_estado_civil"), // 13
       getAuxItems("config_escolaridade"), // 14
       getAuxItems("config_situacao_trabalho"), // 15
-      getAuxItems("config_integracao"), // 16
     ]);
 
     // Helper para extrair dados seguros
@@ -67,7 +65,6 @@ export default async function ConfiguracoesPage() {
     estadoCivil = getData(13);
     escolaridade = getData(14);
     situacaoTrabalho = getData(15);
-    integracoes = getData(16);
   } catch (error) {
     console.error("Erro crítico ao carregar configurações:", error);
   }
@@ -100,7 +97,6 @@ export default async function ConfiguracoesPage() {
         estadoCivil={estadoCivil}
         escolaridade={escolaridade}
         situacaoTrabalho={situacaoTrabalho}
-        integracoes={integracoes}
       />
     </div>
   );

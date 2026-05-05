@@ -15,7 +15,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import type { DashboardStats } from "./actions";
-import { SmartAssistant } from "./smart-assistant"; // <--- Componente Correto Restaurado
 import {
   BarChart,
   Bar,
@@ -99,9 +98,6 @@ export function OverviewClient({
           {dataAtual}
         </p>
       </div>
-
-      {/* --- ASSISTENTE INTELIGENTE (ORIGINAL) --- */}
-      <SmartAssistant />
 
       {/* Cards de KPIs */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">

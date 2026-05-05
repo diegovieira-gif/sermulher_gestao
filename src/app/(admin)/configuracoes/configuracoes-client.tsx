@@ -18,7 +18,6 @@ import {
   Briefcase,
   Users,
   MapPinned,
-  Key,
 } from "lucide-react";
 
 // Imports dos Componentes Refatorados
@@ -41,7 +40,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { campanhaSchema, periculosidadeSchema, integracaoSchema } from "./schemas";
+import { campanhaSchema, periculosidadeSchema } from "./schemas";
 
 interface ConfiguracoesClientProps {
   origens: any[];
@@ -60,7 +59,6 @@ interface ConfiguracoesClientProps {
   estadoCivil: any[];
   escolaridade: any[];
   situacaoTrabalho: any[];
-  integracoes: any[];
 }
 
 export function ConfiguracoesClient({
@@ -80,11 +78,9 @@ export function ConfiguracoesClient({
   estadoCivil,
   escolaridade,
   situacaoTrabalho,
-  integracoes,
 }: ConfiguracoesClientProps) {
   const menuItems = [
     { label: "Estrutural", isHeader: true },
-    { value: "integracoes", label: "Integrações", icon: Key },
     { value: "setores", label: "Setores", icon: Briefcase },
     { value: "locais", label: "Locais", icon: Building2 },
     { value: "bairros", label: "Endereços", icon: MapPinned },
@@ -141,72 +137,6 @@ export function ConfiguracoesClient({
         {/* CONTEÚDO */}
         <div className="flex-1 bg-card rounded-lg border shadow-sm p-6 min-h-[500px]">
           {/* --- CRUDS PADRONIZADOS --- */}
-          <TabsContent value="integracoes" className="mt-0 space-y-4">
-            <GenericCrudTable
-              title="Chaves de API e Integrações"
-              items={integracoes}
-              columns={[
-                { key: "nome", label: "Nome" },
-                { key: "status", label: "Status" },
-              ]}
-              onSave={(data) => saveAuxItem("config_integracao", data)}
-              onDelete={(id) => deleteAuxItem("config_integracao", id)}
-              formSchema={integracaoSchema}
-              renderFormFields={(form: any) => (
-                <>
-                  <FormField
-                    control={form.control}
-                    name="nome"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nome da Integração (ex: Gemini)</FormLabel>
-                        <FormControl>
-                          <Input {...field} value={field.value || ""} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="gemini_api_key"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>API Key</FormLabel>
-                        <FormControl>
-                          <Input type="password" {...field} value={field.value || ""} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Status</FormLabel>
-                        <Select
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="published">Ativo</SelectItem>
-                            <SelectItem value="draft">Inativo</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </>
-              )}
-            />
-          </TabsContent>
-
           <TabsContent value="setores" className="mt-0 space-y-4">
             <TabPadrao
               title="Setores"

@@ -20,8 +20,7 @@ export type ConfigCollection =
   | "config_raca_cor"
   | "config_estado_civil"
   | "config_escolaridade"
-  | "config_situacao_trabalho"
-  | "config_integracao";
+  | "config_situacao_trabalho";
 
 const ALLOWED_TYPES = [
   "origens",
@@ -55,7 +54,6 @@ const ALLOWED_TYPES = [
   "config_estado_civil",
   "config_escolaridade",
   "config_situacao_trabalho",
-  "config_integracao",
   "raca-cor",
   "estado-civil",
   "escolaridade",
@@ -131,7 +129,7 @@ export async function getAuxItems(type: string) {
 
 export async function saveAuxItem(
   type: string,
-  data: { id?: number; nome: string;[key: string]: any },
+  data: { id?: number; nome: string; [key: string]: any },
 ) {
   try {
     const collection = getCollectionName(type);
