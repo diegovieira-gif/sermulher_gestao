@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { createDirectus, rest, staticToken } from "@directus/sdk";
 
 // Usa variáveis públicas se disponíveis no client, ou as de servidor no backend
@@ -30,9 +31,26 @@ const noCacheFetch = async (url: RequestInfo | URL, init?: RequestInit) => {
     }
   }
 
+  let token = directusToken;
+  try {
+    const cookieStore = await cookies();
+    const userToken = cookieStore.get("directus_token")?.value;
+    if (userToken) {
+      token = userToken;
+    }
+  } catch (error) {
+    // Pode falhar caso chamado fora de contexto de requisição (ex: build estático)
+  }
+
+  const headers = new Headers(init?.headers);
+  if (token && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
   try {
     return await fetch(url, {
       ...init,
+      headers,
       cache: "no-store",
       signal: controller.signal,
     });
@@ -54,8 +72,7 @@ export const directus = createDirectus(directusUrl, {
     fetch: noCacheFetch as any,
   },
 })
-  .with(rest())
-  .with(staticToken(directusToken));
+  .with(rest());
 
 /**
  * Utilitário para envolver chamadas do Directus, interceptando erros 401 de forma segura.
