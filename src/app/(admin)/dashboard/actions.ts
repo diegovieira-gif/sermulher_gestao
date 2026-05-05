@@ -191,7 +191,10 @@ export async function getDashboardStats(): Promise<{
       error?.response?.status === 401 ||
       error?.status === 401 ||
       error?.message?.includes("Invalid user credentials") ||
-      error?.errors?.some?.((e: any) => e?.extensions?.code === "INVALID_CREDENTIALS");
+      error?.errors?.some?.((e: any) => 
+        e?.extensions?.code === "INVALID_CREDENTIALS" || 
+        e?.extensions?.code === "TOKEN_EXPIRED"
+      );
 
     if (isUnauthorized) {
       redirect("/login?error=unauthorized");

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -169,16 +170,25 @@ export function Sidebar({ userRole }: SidebarProps) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/dashboard">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-blue-600 text-white shadow-lg">
-                  <ShieldAlert className="size-5" />
+              <Link href="/dashboard" className="gap-3">
+                <div className="flex aspect-square size-10 items-center justify-center shrink-0">
+                  <Image 
+                    src="/logo.png" 
+                    alt="Logo Secretaria" 
+                    width={40} 
+                    height={40} 
+                    className="object-contain"
+                  />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-bold text-slate-900 dark:text-white">
                     SerMulher
                   </span>
-                  <span className="truncate text-[10px] text-slate-500 dark:text-slate-400">
-                    PMM / SerMulher
+                  <span 
+                    className="truncate text-[10px] text-slate-500 dark:text-slate-400" 
+                    title="Secretaria Municipal do Respeito às Políticas para as Mulheres"
+                  >
+                    Secretaria Municipal do Respeito às Políticas para as Mulheres
                   </span>
                 </div>
               </Link>

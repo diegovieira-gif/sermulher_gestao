@@ -13,33 +13,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useEffect, useState } from "react";
+import { } from "react";
 
 interface HeaderProps {
   title: string;
+  userName?: string;
+  userRole?: string;
 }
 
-export function Header({ title }: HeaderProps) {
-  const [userName, setUserName] = useState("Usuário");
-  const [userRole, setUserRole] = useState("");
-
-  useEffect(() => {
-    // Função simples para ler cookie no navegador
-    const getCookie = (name: string) => {
-      const match = document.cookie.match(
-        new RegExp("(^| )" + name + "=([^;]+)"),
-      );
-      if (match) return decodeURIComponent(match[2]); // Decodifica caracteres especiais
-      return null;
-    };
-
-    const name = getCookie("user_name");
-    const role = getCookie("user_role");
-
-    if (name) setUserName(name); // Atualiza o estado
-    if (role) setUserRole(role);
-  }, []);
-
+export function Header({ title, userName = "Usuário", userRole }: HeaderProps) {
   const handleLogout = async () => {
     await logout();
   };
