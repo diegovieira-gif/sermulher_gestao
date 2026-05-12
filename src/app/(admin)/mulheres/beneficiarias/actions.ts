@@ -16,7 +16,7 @@ import { cookies } from "next/headers";
 import { beneficiariaSchema, entregaBeneficioSchema } from "./schemas";
 
 // URL da API (Fallback seguro para localhost)
-const API_URL = process.env.DIRECTUS_API_URL || "http://192.168.0.115:8055";
+const API_URL = process.env.DIRECTUS_API_URL || "http://192.168.0.118:8055";
 
 // Todos os campos necessários para o form de edição funcionar e o banco gravar
 const BENEFICIARIA_FIELDS = [

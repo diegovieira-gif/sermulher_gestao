@@ -21,7 +21,7 @@ const directusUrl =
   process.env.NEXT_PUBLIC_DIRECTUS_URL ||
   process.env.DIRECTUS_URL ||
   process.env.DIRECTUS_API_URL ||
-  "http://192.168.0.115:8055";
+  "http://192.168.0.118:8055";
 
 const directusToken = process.env.DIRECTUS_TOKEN || "";
 const directusTimeoutMs = Number(

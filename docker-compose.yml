@@ -8,14 +8,14 @@ services:
         # ATENÇÃO SÊNIOR: Se o cliente precisar carregar imagens direto do Directus, 
         # idealmente o Directus também precisará de um domínio HTTPS (ex: api-sermulher.aracaju.se.gov.br).
         # Por enquanto, vamos manter como está, mas esteja ciente do bloqueio de Mixed Content.
-        - NEXT_PUBLIC_DIRECTUS_URL=http://192.168.0.115:8055
+        - NEXT_PUBLIC_DIRECTUS_URL=http://192.168.0.118:8055
     restart: always
     ports:
       - "3002:3000"
     environment:
       - NODE_ENV=production
-      - DIRECTUS_API_URL=http://192.168.0.115:8055
-      - DIRECTUS_TOKEN=mFIVm7yMSPajHMtX0IztD2d7c3FuVThI
+      - DIRECTUS_API_URL=http://192.168.0.118:8055
+      - DIRECTUS_TOKEN=vdXDwWQdcMg_Ih7_7mKlzQfrB-lse_VR
       - NEXT_PUBLIC_APP_URL=https://fluxo-sermulher.aracaju.se.gov.br
       - AUTH_SECRET=mFIVm7yMSPajHMtX0IztD2d7c3FuVThI
       - AUTH_TRUST_HOST=true

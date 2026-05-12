@@ -101,7 +101,7 @@ export function SonhosClient({ initialData }: SonhosClientProps) {
     if (!audioRef.current) return;
 
     const baseUrl =
-      process.env.NEXT_PUBLIC_DIRECTUS_URL || "http://192.168.0.115:8055";
+      process.env.NEXT_PUBLIC_DIRECTUS_URL || "http://192.168.0.118:8055";
     const audioUrl = `${baseUrl}/files/${audioId}`;
 
     console.log("[Audio] Playing WebM:", audioUrl);
