@@ -1,0 +1,38 @@
+# Dependências (reinstaladas no build)
+node_modules
+npm-debug.log*
+
+# Build anterior
+.next
+
+# Controlo de versões
+.git
+.gitignore
+
+# Variáveis de ambiente locais (nunca no contexto de build)
+.env
+.env.*
+!.env.example
+
+# Testes e ferramentas de dev
+tests/
+playwright.config.ts
+
+# Scripts utilitários (não necessários em produção)
+scripts/
+
+# Tooling AI/agentes
+.agents/
+.github/
+
+# Documentação
+*.md
+!README.md
+
+# Ficheiros de desenvolvimento local
+docker-compose.yml
+.dockerignore
+
+# Cache e logs
+.cache
+*.log
