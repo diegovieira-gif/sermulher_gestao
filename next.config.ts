@@ -16,6 +16,8 @@ const nextConfig: NextConfig = {
       allowedOrigins: [
         "https://fluxo-sermulher.aracaju.se.gov.br",
         "fluxo-sermulher.aracaju.se.gov.br",
+        "https://sigma-sermulher.aracaju.se.gov.br",
+        "sigma-sermulher.aracaju.se.gov.br",
         "*.aracaju.se.gov.br",
         "localhost:3000",
         "localhost:3002",
@@ -33,7 +35,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "fluxo-sermulher.aracaju.se.gov.br",
+        hostname: "sigma-sermulher.aracaju.se.gov.br",
       },
       {
         protocol: "https",
