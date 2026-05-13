@@ -19,7 +19,7 @@ const nextConfig: NextConfig = {
         "*.aracaju.se.gov.br",
         "localhost:3000",
         "localhost:3002",
-        "192.168.0.115:3002"
+        "192.168.0.118:3002"
       ],
     },
   },
@@ -30,6 +30,10 @@ const nextConfig: NextConfig = {
         protocol: "http",
         hostname: "192.168.0.118",
         port: "8055",
+      },
+      {
+        protocol: "https",
+        hostname: "fluxo-sermulher.aracaju.se.gov.br",
       },
       {
         protocol: "https",
