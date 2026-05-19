@@ -8,6 +8,7 @@ import {
   FileText,
   Calendar,
   Settings,
+  Globe,
   LogOut,
   HeartHandshake,
   ChevronRight,
@@ -26,7 +27,6 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
-  SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
@@ -36,20 +36,20 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarRail,
-  useSidebar,
 } from "@/components/ui/sidebar";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import type { LucideIcon } from "lucide-react";
 
 interface MenuItemConfig {
   label: string;
   href: string;
-  icon: any;
+  icon: LucideIcon;
   roles?: string[];
-  items?: { label: string; href: string; icon?: any }[];
+  items?: { label: string; href: string; icon?: LucideIcon }[];
 }
 
 const MENU_ITEMS: MenuItemConfig[] = [
@@ -150,7 +150,6 @@ interface SidebarProps {
 
 export function Sidebar({ userRole }: SidebarProps) {
   const pathname = usePathname();
-  const { state } = useSidebar();
 
   const handleLogout = async () => {
     await logout();
@@ -321,6 +320,23 @@ export function Sidebar({ userRole }: SidebarProps) {
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  tooltip="Meu Site"
+                  isActive={pathname.startsWith("/configuracoes/site")}
+                  className={cn(
+                    pathname.startsWith("/configuracoes/site") &&
+                      "bg-slate-200 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold",
+                  )}
+                >
+                  <Link href="/configuracoes/site">
+                    <Globe className="size-5" />
+                    <span>Meu Site</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
 
             <SidebarMenuItem>
               <form action={handleLogout} className="w-full">
