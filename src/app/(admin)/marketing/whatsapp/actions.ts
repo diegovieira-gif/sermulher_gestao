@@ -328,6 +328,153 @@ export async function getEligibleBeneficiariasCount() {
   }
 }
 
+// 4a-bis. Filtros estruturados de público-alvo
+// Cada campo é opcional; quando ausente/vazio, não restringe o público.
+export type BeneficiariaFilter = {
+  busca?: string | null;
+  status?: string | null; // 'ativa' | 'arquivada'
+  raca_cor_id?: number[];
+  estado_civil_id?: number[];
+  escolaridade_id?: number[];
+  situacao_trabalho_id?: number[];
+  bairro?: number[];
+  recebe_bolsa_familia?: boolean | null;
+  recebe_bpc?: boolean | null;
+  possui_medida_protetiva?: boolean | null;
+  filhos_min?: number | null;
+  filhos_max?: number | null;
+  idade_min?: number | null;
+  idade_max?: number | null;
+};
+
+// Subtrai N anos da data de hoje e devolve no formato YYYY-MM-DD.
+function dateMinusYears(years: number): string {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - years);
+  return d.toISOString().slice(0, 10);
+}
+
+// Monta o filtro do Directus a partir do filtro estruturado, sempre
+// combinando com a elegibilidade base (telefone preenchido).
+function buildBeneficiariaFilter(f?: BeneficiariaFilter): Record<string, any> {
+  const and: any[] = [{ ...ELIGIBLE_FILTER }];
+  if (!f) return { _and: and };
+
+  const inList = (field: string, ids?: number[]) => {
+    const clean = (ids || []).filter((v) => v !== null && v !== undefined);
+    if (clean.length > 0) and.push({ [field]: { _in: clean } });
+  };
+
+  inList("raca_cor_id", f.raca_cor_id);
+  inList("estado_civil_id", f.estado_civil_id);
+  inList("escolaridade_id", f.escolaridade_id);
+  inList("situacao_trabalho_id", f.situacao_trabalho_id);
+  inList("bairro", f.bairro);
+
+  if (f.status && f.status.trim() !== "") {
+    and.push({ status: { _eq: f.status } });
+  }
+
+  const boolFilter = (field: string, val?: boolean | null) => {
+    if (val === true || val === false) and.push({ [field]: { _eq: val } });
+  };
+  boolFilter("recebe_bolsa_familia", f.recebe_bolsa_familia);
+  boolFilter("recebe_bpc", f.recebe_bpc);
+  boolFilter("possui_medida_protetiva", f.possui_medida_protetiva);
+
+  if (typeof f.filhos_min === "number")
+    and.push({ quantidade_filhos: { _gte: f.filhos_min } });
+  if (typeof f.filhos_max === "number")
+    and.push({ quantidade_filhos: { _lte: f.filhos_max } });
+
+  // Idade -> faixa de data_nascimento.
+  // idade >= idade_min  => nasceu até (hoje - idade_min anos)
+  if (typeof f.idade_min === "number")
+    and.push({ data_nascimento: { _lte: dateMinusYears(f.idade_min) } });
+  // idade <= idade_max  => nasceu depois de (hoje - (idade_max + 1) anos)
+  if (typeof f.idade_max === "number")
+    and.push({ data_nascimento: { _gte: dateMinusYears(f.idade_max + 1) } });
+
+  const q = (f.busca || "").trim();
+  if (q) {
+    and.push({
+      _or: [
+        { nome_completo: { _icontains: q } },
+        { nome_social: { _icontains: q } },
+        { telefone: { _contains: q } },
+        { cpf: { _contains: q } },
+      ],
+    });
+  }
+
+  return { _and: and };
+}
+
+// 4a-ter. Opções para os selects de filtro (tabelas de configuração).
+export async function getBeneficiariaFilterOptions() {
+  try {
+    return await safeDirectusCall(async () => {
+      const client = await getDirectusClient({ requireAuth: true });
+      const [racas, estadosCivis, escolaridades, situacoesTrabalho, bairros] =
+        await Promise.all([
+          client.request(
+            readItems("config_raca_cor", { fields: ["id", "nome"], sort: ["nome"] })
+          ),
+          client.request(
+            readItems("config_estado_civil", { fields: ["id", "nome"], sort: ["nome"] })
+          ),
+          client.request(
+            readItems("config_escolaridade", { fields: ["id", "nome"], sort: ["nome"] })
+          ),
+          client.request(
+            readItems("config_situacao_trabalho", { fields: ["id", "nome"], sort: ["nome"] })
+          ),
+          client.request(
+            readItems("config_bairros", { fields: ["id", "nome"], sort: ["nome"] })
+          ),
+        ]);
+      return {
+        success: true,
+        data: toPlainObject({
+          racas,
+          estadosCivis,
+          escolaridades,
+          situacoesTrabalho,
+          bairros,
+        }),
+      };
+    });
+  } catch (error: any) {
+    console.error("Erro em getBeneficiariaFilterOptions:", error);
+    return { success: false, data: null, error: "Não foi possível carregar as opções de filtro." };
+  }
+}
+
+// 4a-quater. Contagem de beneficiárias que atendem ao filtro (preview ao vivo).
+export async function getBeneficiariasCountForFilter(filter?: BeneficiariaFilter) {
+  try {
+    return await safeDirectusCall(async () => {
+      const client = await getDirectusClient({ requireAuth: true });
+      const res: any = await client.request(
+        aggregate("beneficiarias", {
+          aggregate: { count: "*" },
+          query: { filter: buildBeneficiariaFilter(filter) },
+        })
+      );
+      const count =
+        Array.isArray(res) && res[0]?.count ? Number(res[0].count) : 0;
+      return { success: true, count };
+    });
+  } catch (error: any) {
+    console.error("Erro em getBeneficiariasCountForFilter:", error);
+    return {
+      success: false,
+      count: 0,
+      error: "Não foi possível contar as beneficiárias para este filtro.",
+    };
+  }
+}
+
 // 4b. Busca server-side, limitada a 50 resultados, para seleção manual.
 // Evita carregar a lista completa (milhares) no navegador.
 export async function searchBeneficiarias(query: string) {
@@ -429,13 +576,24 @@ function formatWhatsappNumber(phone: string): string {
   return cleaned;
 }
 
+// Valida se o número já normalizado tem o formato esperado de celular
+// brasileiro: 55 + DDD (11–99) + 8 ou 9 dígitos => 12 ou 13 dígitos no total.
+// Usado para marcar entradas malformadas como falha ANTES de chamar o GoWA.
+function isValidBrazilianWhatsapp(digits: string): boolean {
+  if (!/^55\d{10,11}$/.test(digits)) return false;
+  const ddd = parseInt(digits.substring(2, 4), 10);
+  return ddd >= 11 && ddd <= 99;
+}
+
 // 6. Trigger WhatsApp dispatch
 // target:
-//   { mode: "all" }                 → todas as beneficiárias elegíveis
-//   { mode: "selected", ids: [...] } → apenas as selecionadas
+//   { mode: "all" }                  → todas as beneficiárias elegíveis
+//   { mode: "selected", ids: [...] }  → apenas as selecionadas
+//   { mode: "filtered", filter }      → as que atendem ao filtro estruturado
 export type DispatchTarget =
   | { mode: "all" }
-  | { mode: "selected"; ids: string[] };
+  | { mode: "selected"; ids: string[] }
+  | { mode: "filtered"; filter: BeneficiariaFilter };
 
 export async function triggerCampaignDispatch(
   campaignId: string,
@@ -463,6 +621,14 @@ export async function triggerCampaignDispatch(
         readItems("beneficiarias", {
           fields: ["id", "nome_completo", "nome_social", "telefone"],
           filter: { id: { _in: target.ids } },
+          limit: -1,
+        })
+      );
+    } else if (target.mode === "filtered") {
+      beneficiariesRaw = await client.request(
+        readItems("beneficiarias", {
+          fields: ["id", "nome_completo", "nome_social", "telefone"],
+          filter: buildBeneficiariaFilter(target.filter),
           limit: -1,
         })
       );
@@ -630,6 +796,23 @@ export async function triggerCampaignDispatch(
 
       if (useGowa) {
         try {
+          // Valida o formato antes de qualquer chamada ao GoWA.
+          if (!isValidBrazilianWhatsapp(formattedPhone)) {
+            errorDetails = `Número em formato inválido: ${phone}`;
+            console.error(`Número inválido (formato): ${phone} -> ${formattedPhone}`);
+            failedCount++;
+            await client.request(
+              createItem("disparos", {
+                campanha_id: campaignId,
+                beneficiaria_id: b.id,
+                status: "failed",
+                data_envio: new Date().toISOString(),
+                detalhes_erro: errorDetails,
+              })
+            );
+            continue;
+          }
+
           // Resolve o JID canônico (corrige o 9º dígito brasileiro). Se o número
           // não estiver no WhatsApp, marca como falha sem tentar enviar.
           const resolved = await resolveGowaJid(

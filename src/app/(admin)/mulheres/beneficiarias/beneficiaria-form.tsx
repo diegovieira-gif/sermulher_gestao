@@ -216,7 +216,7 @@ export function BeneficiariaForm({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit, (err) => console.log("❌ RHF VALIDATION ERRORS:", err))} className="space-y-6">
             <Tabs defaultValue="dados-pessoais" className="w-full">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="dados-pessoais">Dados Pessoais</TabsTrigger>
