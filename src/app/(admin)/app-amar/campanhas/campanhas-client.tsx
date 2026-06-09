@@ -149,7 +149,7 @@ export function CampanhasClient({ initialData }: CampanhasClientProps) {
                         href={campanha.url_instagram} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="flex items-center text-blue-600 hover:underline gap-1 text-sm font-medium bg-blue-50 px-3 py-1 rounded w-fit"
+                        className="flex items-center text-primary hover:underline gap-1 text-sm font-medium bg-primary/10 px-3 py-1 rounded w-fit"
                       >
                         <Instagram className="h-4 w-4" />
                         Ver Postagem

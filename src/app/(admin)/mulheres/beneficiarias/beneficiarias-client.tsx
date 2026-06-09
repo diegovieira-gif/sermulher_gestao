@@ -328,7 +328,7 @@ export function BeneficiariasClient({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>

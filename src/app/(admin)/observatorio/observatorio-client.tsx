@@ -173,7 +173,7 @@ export function ObservatorioClient({
           <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Observatório</h1>
           <p className="text-slate-500 dark:text-slate-400">Gerenciamento de coleções e indicadores do observatório.</p>
         </div>
-        <Button onClick={handleCreate} className="bg-blue-600 hover:bg-blue-700 text-white">
+        <Button onClick={handleCreate} className="bg-primary hover:bg-primary/90 text-primary-foreground">
           <Plus className="mr-2 h-4 w-4" /> Novo Registro
         </Button>
       </div>
@@ -209,7 +209,7 @@ export function ObservatorioClient({
           <div className="p-0">
             {loading ? (
               <div className="flex flex-col items-center justify-center p-20 space-y-4">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 <p className="text-sm text-slate-500">Buscando dados no Directus...</p>
               </div>
             ) : data.length === 0 ? (
@@ -307,7 +307,7 @@ export function ObservatorioClient({
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={saving}>Cancelar</Button>
-            <Button onClick={onSave} disabled={saving} className="bg-blue-600 hover:bg-blue-700">
+            <Button onClick={onSave} disabled={saving} className="bg-primary hover:bg-primary/90">
               {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               {editingId ? "Atualizar" : "Criar"}
             </Button>

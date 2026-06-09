@@ -1,5 +1,10 @@
 import { getAuxItems } from "./actions";
 import { ConfiguracoesClient } from "./configuracoes-client";
+import {
+  getCurrentAccess,
+  listRoles,
+  getPermissionConfigs,
+} from "@/lib/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -69,6 +74,13 @@ export default async function ConfiguracoesPage() {
     console.error("Erro crítico ao carregar configurações:", error);
   }
 
+  // Permissões de menu (somente administradores podem gerenciar).
+  const access = await getCurrentAccess();
+  const isAdmin = access.isAdmin;
+  const [roles, permConfigs] = isAdmin
+    ? await Promise.all([listRoles(), getPermissionConfigs()])
+    : [[], []];
+
   return (
     <div className="p-6 space-y-6">
       <div>
@@ -97,6 +109,9 @@ export default async function ConfiguracoesPage() {
         estadoCivil={estadoCivil}
         escolaridade={escolaridade}
         situacaoTrabalho={situacaoTrabalho}
+        isAdmin={isAdmin}
+        roles={roles}
+        permConfigs={permConfigs}
       />
     </div>
   );

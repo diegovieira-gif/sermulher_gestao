@@ -73,7 +73,7 @@ export default async function EscolaDashboardPage() {
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Turmas Ativas
             </CardTitle>
-            <BookOpen className="h-4 w-4 text-blue-600" />
+            <BookOpen className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-700">
@@ -129,7 +129,7 @@ export default async function EscolaDashboardPage() {
             </Link>
             <Link href="/escola/matriculas">
               <Button className="w-full justify-start gap-3" variant="outline" size="lg">
-                <div className="p-2 bg-blue-100 rounded-full text-blue-600">
+                <div className="p-2 bg-primary/10 rounded-full text-primary">
                   <UserPlus className="h-5 w-5" />
                 </div>
                 <div className="flex flex-col items-start">
