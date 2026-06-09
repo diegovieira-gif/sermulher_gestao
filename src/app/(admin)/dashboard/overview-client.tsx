@@ -4,12 +4,23 @@ import {
   Activity,
   Users,
   Calendar,
-  AlertCircle,
   TrendingUp,
   Clock,
   ArrowRight,
   HeartHandshake,
   ShieldAlert,
+  ShieldCheck,
+  Wallet,
+  Landmark,
+  Baby,
+  GraduationCap,
+  UserCheck,
+  BookOpen,
+  Repeat,
+  Send,
+  Gift,
+  Inbox,
+  type LucideIcon,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,6 +47,94 @@ const COLORS = {
   accent: "#d946ef", // Fuchsia
 };
 
+// Paleta de acentos para os cards de indicadores.
+type Tone =
+  | "violet"
+  | "fuchsia"
+  | "sky"
+  | "amber"
+  | "emerald"
+  | "rose"
+  | "indigo"
+  | "cyan"
+  | "teal"
+  | "orange";
+
+const TONE: Record<Tone, { bar: string; chip: string; icon: string }> = {
+  violet: { bar: "bg-violet-500", chip: "bg-violet-500/10", icon: "text-violet-600" },
+  fuchsia: { bar: "bg-fuchsia-500", chip: "bg-fuchsia-500/10", icon: "text-fuchsia-600" },
+  sky: { bar: "bg-sky-500", chip: "bg-sky-500/10", icon: "text-sky-600" },
+  amber: { bar: "bg-amber-500", chip: "bg-amber-500/10", icon: "text-amber-600" },
+  emerald: { bar: "bg-emerald-500", chip: "bg-emerald-500/10", icon: "text-emerald-600" },
+  rose: { bar: "bg-rose-500", chip: "bg-rose-500/10", icon: "text-rose-600" },
+  indigo: { bar: "bg-indigo-500", chip: "bg-indigo-500/10", icon: "text-indigo-600" },
+  cyan: { bar: "bg-cyan-500", chip: "bg-cyan-500/10", icon: "text-cyan-600" },
+  teal: { bar: "bg-teal-500", chip: "bg-teal-500/10", icon: "text-teal-600" },
+  orange: { bar: "bg-orange-500", chip: "bg-orange-500/10", icon: "text-orange-600" },
+};
+
+interface KpiDef {
+  label: string;
+  value: number;
+  hint?: string;
+  icon: LucideIcon;
+  tone: Tone;
+  href?: string;
+}
+
+function KpiCard({ kpi }: { kpi: KpiDef }) {
+  const tone = TONE[kpi.tone];
+  const Icon = kpi.icon;
+  const valor = kpi.value.toLocaleString("pt-BR");
+
+  const inner = (
+    <div className="group relative flex h-full items-start gap-3 overflow-hidden rounded-xl border border-border bg-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
+      <span className={`absolute inset-y-0 left-0 w-1 ${tone.bar}`} />
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-xs font-medium text-muted-foreground">
+          {kpi.label}
+        </p>
+        <p className="mt-1 text-2xl font-bold tracking-tight text-foreground">
+          {valor}
+        </p>
+        {kpi.hint && (
+          <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+            {kpi.hint}
+          </p>
+        )}
+      </div>
+      <span
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${tone.chip}`}
+      >
+        <Icon className={`h-5 w-5 ${tone.icon}`} />
+      </span>
+    </div>
+  );
+
+  return kpi.href ? (
+    <Link href={kpi.href} className="block h-full">
+      {inner}
+    </Link>
+  ) : (
+    inner
+  );
+}
+
+function KpiGroup({ title, items }: { title: string; items: KpiDef[] }) {
+  return (
+    <section className="space-y-3">
+      <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        {title}
+      </h2>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {items.map((k) => (
+          <KpiCard key={k.label} kpi={k} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export function OverviewClient({
   stats,
   userName = "Gestão",
@@ -49,15 +148,149 @@ export function OverviewClient({
   }
 
   const {
-    kpis = {
-      totalAtendimentosMes: 0,
-      novosCasos: 0,
-      mulheresAcompanhamento: 0,
-      demandaReprimida: 0,
-    },
     atendimentosPorDia = [],
     proximosEventos = [],
   } = stats;
+
+  const ind = stats.indicadores;
+
+  const grupos: { title: string; items: KpiDef[] }[] = [
+    {
+      title: "Visão Geral",
+      items: [
+        {
+          label: "Total de Beneficiárias",
+          value: ind.totalBeneficiarias,
+          hint: "cadastradas no sistema",
+          icon: Users,
+          tone: "violet",
+          href: "/mulheres/beneficiarias",
+        },
+        {
+          label: "Atendimentos (Mês)",
+          value: ind.atendimentosMes,
+          hint: "registrados neste mês",
+          icon: Activity,
+          tone: "fuchsia",
+          href: "/mulheres/atendimentos",
+        },
+        {
+          label: "Eventos Próximos",
+          value: ind.eventosProximos,
+          hint: "na agenda",
+          icon: Calendar,
+          tone: "sky",
+          href: "/eventos",
+        },
+        {
+          label: "Demandas em Aberto",
+          value: ind.demandasAbertas,
+          hint: "aguardando providência",
+          icon: Inbox,
+          tone: "amber",
+          href: "/tramitacoes",
+        },
+      ],
+    },
+    {
+      title: "Perfil das Beneficiárias",
+      items: [
+        {
+          label: "Com Medida Protetiva",
+          value: ind.comMedidaProtetiva,
+          hint: "em vigência",
+          icon: ShieldCheck,
+          tone: "rose",
+        },
+        {
+          label: "Recebem Bolsa Família",
+          value: ind.bolsaFamilia,
+          hint: "benefício social",
+          icon: Wallet,
+          tone: "emerald",
+        },
+        {
+          label: "Recebem BPC",
+          value: ind.bpc,
+          hint: "benefício de prestação continuada",
+          icon: Landmark,
+          tone: "teal",
+        },
+        {
+          label: "Mães (com filhos)",
+          value: ind.comFilhos,
+          hint: "possuem filhos",
+          icon: Baby,
+          tone: "orange",
+        },
+      ],
+    },
+    {
+      title: "Escola da Mulher",
+      items: [
+        {
+          label: "Turmas Ativas",
+          value: ind.turmasAtivas,
+          hint: "em andamento",
+          icon: GraduationCap,
+          tone: "indigo",
+          href: "/escola/turmas",
+        },
+        {
+          label: "Alunas Matriculadas",
+          value: ind.alunasMatriculadas,
+          hint: "cursando",
+          icon: UserCheck,
+          tone: "violet",
+          href: "/escola/matriculas",
+        },
+        {
+          label: "Cursos Disponíveis",
+          value: ind.cursosDisponiveis,
+          hint: "no catálogo",
+          icon: BookOpen,
+          tone: "sky",
+          href: "/escola/cursos",
+        },
+      ],
+    },
+    {
+      title: "Sala Azul & Encaminhamentos",
+      items: [
+        {
+          label: "Infratores Monitorados",
+          value: ind.infratores,
+          hint: "acompanhados",
+          icon: ShieldAlert,
+          tone: "indigo",
+          href: "/sala-azul/infratores",
+        },
+        {
+          label: "Ciclos Reflexivos",
+          value: ind.ciclosReflexivos,
+          hint: "ativos",
+          icon: Repeat,
+          tone: "cyan",
+          href: "/sala-azul/ciclos",
+        },
+        {
+          label: "Encaminhamentos (Mês)",
+          value: ind.encaminhamentosMes,
+          hint: "tramitações recebidas",
+          icon: Send,
+          tone: "fuchsia",
+          href: "/tramitacoes",
+        },
+        {
+          label: "Benefícios Entregues (Mês)",
+          value: ind.beneficiosMes,
+          hint: "no mês corrente",
+          icon: Gift,
+          tone: "emerald",
+        },
+      ],
+    },
+  ];
 
   const dataAtual = new Date().toLocaleDateString("pt-BR", {
     weekday: "long",
@@ -91,92 +324,19 @@ export function OverviewClient({
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Cabeçalho */}
       <div className="flex flex-col gap-1 mb-4">
-        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+        <h1 className="text-3xl font-bold text-foreground tracking-tight">
           Olá, {userName}!
         </h1>
-        <p className="text-sm text-gray-500 capitalize font-medium">
+        <p className="text-sm text-muted-foreground capitalize font-medium">
           {dataAtual}
         </p>
       </div>
 
-      {/* Cards de KPIs */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {/* KPI 1 */}
-        <Card className="border-l-4 border-l-purple-500 shadow-sm hover:shadow-md transition-all">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Atendimentos (Mês)
-            </CardTitle>
-            <Activity className="h-4 w-4 text-purple-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-900">
-              {kpis.totalAtendimentosMes}
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              <span className="text-green-600 font-medium">
-                +{kpis.novosCasos}
-              </span>{" "}
-              novos casos
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* KPI 2 */}
-        <Card className="border-l-4 border-l-pink-500 shadow-sm hover:shadow-md transition-all">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Mulheres Ativas
-            </CardTitle>
-            <Users className="h-4 w-4 text-pink-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-900">
-              {kpis.mulheresAcompanhamento}
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              em acompanhamento regular
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* KPI 3 */}
-        <Card className="border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition-all">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Eventos
-            </CardTitle>
-            <Calendar className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-900">
-              {proximosEventos.length}
-            </div>
-            <p className="text-xs text-gray-500 mt-1">agendados p/ 7 dias</p>
-          </CardContent>
-        </Card>
-
-        {/* KPI 4 */}
-        <Card
-          className={`border-l-4 shadow-sm hover:shadow-md transition-all ${kpis.demandaReprimida > 0 ? "border-l-orange-500 bg-orange-50/30" : "border-l-gray-300"}`}
-        >
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Pendências
-            </CardTitle>
-            <AlertCircle
-              className={`h-4 w-4 ${kpis.demandaReprimida > 0 ? "text-orange-500" : "text-gray-400"}`}
-            />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-900">
-              {kpis.demandaReprimida}
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              casos aguardando triagem
-            </p>
-          </CardContent>
-        </Card>
+      {/* Indicadores agrupados */}
+      <div className="space-y-6">
+        {grupos.map((g) => (
+          <KpiGroup key={g.title} title={g.title} items={g.items} />
+        ))}
       </div>
 
       {/* Gráficos e Listas */}

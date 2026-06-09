@@ -4,6 +4,29 @@ import { redirect } from "next/navigation";
 import { getDirectusClient } from "@/lib/directus";
 import { readItems, aggregate } from "@directus/sdk";
 
+// Indicadores (KPIs) exibidos como cards no Dashboard
+export type DashboardIndicadores = {
+  // Visão geral
+  totalBeneficiarias: number;
+  atendimentosMes: number;
+  eventosProximos: number;
+  demandasAbertas: number;
+  // Perfil das beneficiárias
+  comMedidaProtetiva: number;
+  bolsaFamilia: number;
+  bpc: number;
+  comFilhos: number;
+  // Escola da Mulher
+  turmasAtivas: number;
+  alunasMatriculadas: number;
+  cursosDisponiveis: number;
+  // Sala Azul & Encaminhamentos
+  infratores: number;
+  ciclosReflexivos: number;
+  encaminhamentosMes: number;
+  beneficiosMes: number;
+};
+
 // Tipo de retorno para o Dashboard
 export type DashboardStats = {
   kpis: {
@@ -12,6 +35,7 @@ export type DashboardStats = {
     mulheresAcompanhamento: number;
     demandaReprimida: number;
   };
+  indicadores: DashboardIndicadores;
   atendimentosPorDia: Array<{
     data: string;
     quantidade: number;
@@ -166,13 +190,89 @@ export async function getDashboardStats(): Promise<{
         }))
       : [];
 
+    // --- Indicadores adicionais (cards) ---
+    // Helper resiliente: conta itens de uma coleção (com filtro opcional).
+    // Qualquer falha individual resulta em 0, sem quebrar o dashboard.
+    const countOf = async (
+      collection: string,
+      filter?: Record<string, unknown>,
+    ): Promise<number> => {
+      const res = await directus.request(
+        aggregate(collection, {
+          aggregate: { count: "*" },
+          ...(filter ? { query: { filter } } : {}),
+        }),
+      );
+      return Array.isArray(res) && res[0]?.count ? Number(res[0].count) : 0;
+    };
+
+    const monthRange = { _between: [startOfMonth, endOfMonth] };
+    const statusConcluido = [
+      "Finalizado",
+      "Concluído",
+      "Concluido",
+      "Cancelado",
+      "concluida",
+      "concluido",
+      "encerrado",
+      "finalizado",
+      "cancelada",
+    ];
+
+    const indicadorDefs: Array<[keyof DashboardIndicadores, Promise<number>]> = [
+      ["totalBeneficiarias", countOf("beneficiarias")],
+      ["atendimentosMes", Promise.resolve(totalAtendimentos)],
+      ["eventosProximos", Promise.resolve(eventosFormatados.length)],
+      [
+        "demandasAbertas",
+        countOf("tramitacoes", { status_etapa: { _nin: statusConcluido } }),
+      ],
+      [
+        "comMedidaProtetiva",
+        countOf("beneficiarias", { possui_medida_protetiva: { _eq: true } }),
+      ],
+      [
+        "bolsaFamilia",
+        countOf("beneficiarias", { recebe_bolsa_familia: { _eq: true } }),
+      ],
+      ["bpc", countOf("beneficiarias", { recebe_bpc: { _eq: true } })],
+      ["comFilhos", countOf("beneficiarias", { quantidade_filhos: { _gt: 0 } })],
+      [
+        "turmasAtivas",
+        countOf("escola_turmas", { status: { _nin: statusConcluido } }),
+      ],
+      ["alunasMatriculadas", Promise.resolve(totalAlunas)],
+      ["cursosDisponiveis", countOf("escola_cursos")],
+      ["infratores", Promise.resolve(totalInfratores)],
+      [
+        "ciclosReflexivos",
+        countOf("salas_azul", { status: { _nin: statusConcluido } }),
+      ],
+      [
+        "encaminhamentosMes",
+        countOf("tramitacoes", { data_recebimento: monthRange }),
+      ],
+      [
+        "beneficiosMes",
+        countOf("entregas_beneficios", { data_entrega: monthRange }),
+      ],
+    ];
+
+    const settled = await Promise.allSettled(indicadorDefs.map(([, p]) => p));
+    const indicadores = {} as DashboardIndicadores;
+    indicadorDefs.forEach(([key], i) => {
+      const r = settled[i];
+      indicadores[key] = r.status === "fulfilled" ? r.value : 0;
+    });
+
     const stats: DashboardStats = {
       kpis: {
         totalAtendimentosMes: totalAtendimentos,
         novosCasos: totalAtendimentos,
         mulheresAcompanhamento: totalAlunas,
-        demandaReprimida: 0,
+        demandaReprimida: indicadores.demandasAbertas,
       },
+      indicadores,
       atendimentosPorDia,
       proximosEventos: eventosFormatados,
       alertasMedidasProtetivas: [],
@@ -220,6 +320,23 @@ export async function getDashboardStats(): Promise<{
           novosCasos: 0,
           mulheresAcompanhamento: 0,
           demandaReprimida: 0,
+        },
+        indicadores: {
+          totalBeneficiarias: 0,
+          atendimentosMes: 0,
+          eventosProximos: 0,
+          demandasAbertas: 0,
+          comMedidaProtetiva: 0,
+          bolsaFamilia: 0,
+          bpc: 0,
+          comFilhos: 0,
+          turmasAtivas: 0,
+          alunasMatriculadas: 0,
+          cursosDisponiveis: 0,
+          infratores: 0,
+          ciclosReflexivos: 0,
+          encaminhamentosMes: 0,
+          beneficiosMes: 0,
         },
         atendimentosPorDia: [],
         proximosEventos: [],

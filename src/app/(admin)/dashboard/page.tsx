@@ -39,7 +39,7 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="flex-1 p-8 pt-6 bg-gray-50/50 min-h-screen">
+    <div className="flex-1 p-8 pt-6 bg-background min-h-screen">
       <OverviewClient stats={statsResult.data} userName={userName} />
     </div>
   );
