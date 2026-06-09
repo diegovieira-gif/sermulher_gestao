@@ -22,7 +22,7 @@ export function LayoutClient({
   return (
     <>
       <Header title={title} userName={userName} userRole={userRole} />
-      <main className="flex-1 overflow-y-auto bg-slate-100 p-6 dark:bg-slate-900">{children}</main>
+      <main className="flex-1 overflow-y-auto bg-background p-6">{children}</main>
     </>
   );
 }

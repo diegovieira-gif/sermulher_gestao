@@ -180,10 +180,10 @@ export function Sidebar({ userRole }: SidebarProps) {
                   />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-bold text-slate-900 dark:text-white">
+                  <span className="truncate font-bold text-sidebar-foreground">
                     SERMULHER
                   </span>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight break-words whitespace-normal">
+                  <span className="text-[10px] text-muted-foreground leading-tight break-words whitespace-normal">
                     Secretaria Municipal do Respeito às Políticas para as
                     Mulheres
                   </span>
@@ -223,7 +223,7 @@ export function Sidebar({ userRole }: SidebarProps) {
                           isActive={isActive || isChildActive}
                           className={cn(
                             (isActive || isChildActive) &&
-                              "bg-slate-200 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold",
+                              "bg-sidebar-accent text-sidebar-accent-foreground font-semibold",
                           )}
                         >
                           <Icon className="size-5" />
@@ -242,7 +242,7 @@ export function Sidebar({ userRole }: SidebarProps) {
                                   isActive={pathname === subItem.href}
                                   className={cn(
                                     pathname === subItem.href &&
-                                      "text-blue-600 dark:text-blue-400 font-medium",
+                                      "text-sidebar-accent-foreground font-medium",
                                   )}
                                 >
                                   <Link
@@ -271,7 +271,7 @@ export function Sidebar({ userRole }: SidebarProps) {
                     isActive={isActive}
                     className={cn(
                       isActive &&
-                        "bg-slate-200 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold",
+                        "bg-sidebar-accent text-sidebar-accent-foreground font-semibold",
                     )}
                   >
                     <Link href={item.href}>
@@ -294,7 +294,7 @@ export function Sidebar({ userRole }: SidebarProps) {
                 isActive={pathname.startsWith("/manual")}
                 className={cn(
                   pathname.startsWith("/manual") &&
-                    "bg-slate-200 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold",
+                    "bg-sidebar-accent text-sidebar-accent-foreground font-semibold",
                 )}
               >
                 <Link href="/manual">
@@ -311,7 +311,7 @@ export function Sidebar({ userRole }: SidebarProps) {
                 isActive={pathname.startsWith("/configuracoes")}
                 className={cn(
                   pathname.startsWith("/configuracoes") &&
-                    "bg-slate-200 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold",
+                    "bg-sidebar-accent text-sidebar-accent-foreground font-semibold",
                 )}
               >
                 <Link href="/configuracoes">
@@ -328,7 +328,7 @@ export function Sidebar({ userRole }: SidebarProps) {
                   isActive={pathname.startsWith("/configuracoes/site")}
                   className={cn(
                     pathname.startsWith("/configuracoes/site") &&
-                      "bg-slate-200 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold",
+                      "bg-sidebar-accent text-sidebar-accent-foreground font-semibold",
                   )}
                 >
                   <Link href="/configuracoes/site">
