@@ -133,7 +133,7 @@ export function InfratoresClient({
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
-              <ShieldAlert className="h-6 w-6 text-blue-600" />
+              <ShieldAlert className="h-6 w-6 text-primary" />
               Gestão de Infratores
             </h2>
             <p className="text-sm text-gray-500">
@@ -154,7 +154,7 @@ export function InfratoresClient({
                 setEditingInfrator(null);
                 setIsFormOpen(true);
               }}
-              className="bg-blue-600 hover:bg-blue-700 gap-2"
+              className="bg-primary hover:bg-primary/90 gap-2"
             >
               <Plus className="h-4 w-4" />
               Novo Infrator

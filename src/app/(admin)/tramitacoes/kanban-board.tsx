@@ -196,7 +196,7 @@ export function KanbanBoard({
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-7 text-[10px] text-blue-600 px-2 hover:bg-blue-50"
+                            className="h-7 text-[10px] text-primary px-2 hover:bg-primary/10"
                           >
                             Abrir Prontuário
                           </Button>

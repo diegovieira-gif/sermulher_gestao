@@ -46,7 +46,7 @@ export default function ManualPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <LayoutDashboard className="h-5 w-5 text-blue-600" />
+              <LayoutDashboard className="h-5 w-5 text-primary" />
               1. Visão Geral e Inteligência Artificial
             </CardTitle>
             <CardDescription>

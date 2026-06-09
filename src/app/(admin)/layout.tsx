@@ -3,6 +3,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { LayoutClient } from "./layout-client";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { getDirectusClient, safeDirectusCall } from "@/lib/directus";
+import { getCurrentAccess } from "@/lib/permissions";
 import { readMe } from "@directus/sdk";
 
 type AdminUser = {
@@ -53,14 +54,19 @@ export default async function AdminLayout({
     };
   }
 
+  // Permissões de menu por perfil (Configurações → Permissões).
+  const access = await getCurrentAccess();
+
   return (
     <SidebarProvider>
-      <Sidebar userRole={userRoleCookie} />
+      <Sidebar allowedKeys={access.allowedKeys} />
       <SidebarInset>
         <LayoutClient
           pageTitles={pageTitles}
           userName={userData.firstName}
           userRole={userData.role}
+          allowedKeys={access.allowedKeys}
+          isAdmin={access.isAdmin}
         >
           {children}
         </LayoutClient>
