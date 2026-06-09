@@ -35,6 +35,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import {
   MessageSquare,
@@ -63,7 +64,8 @@ import {
   getWhatsappCampaigns,
   saveWhatsappCampaign,
   deleteWhatsappCampaign,
-  getBeneficiariasList,
+  getEligibleBeneficiariasCount,
+  searchBeneficiarias,
   getDispatchLogs,
   triggerCampaignDispatch,
 } from "./actions";
@@ -114,7 +116,7 @@ export function WhatsappClient() {
 
   // Data Lists
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [beneficiarias, setBeneficiarias] = useState<Beneficiaria[]>([]);
+  const [eligibleCount, setEligibleCount] = useState(0);
   const [dispatchLogs, setDispatchLogs] = useState<any[]>([]);
 
   // Dialog States
@@ -122,12 +124,16 @@ export function WhatsappClient() {
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
   const [dispatchDialogOpen, setDispatchDialogOpen] = useState(false);
   const [selectedCampaignForDispatch, setSelectedCampaignForDispatch] = useState<Campaign | null>(null);
-  
-  // Selection / Search for send campaign dialog
+  const [openingDispatchId, setOpeningDispatchId] = useState<string | null>(null);
+
+  // Público-alvo do disparo
+  // "all" = todas elegíveis (resolvido no servidor); "manual" = seleção específica
+  const [audienceMode, setAudienceMode] = useState<"all" | "manual">("all");
   const [searchBeneficiaria, setSearchBeneficiaria] = useState("");
+  const [searchResults, setSearchResults] = useState<Beneficiaria[]>([]);
+  const [searchingAudience, setSearchingAudience] = useState(false);
   const [selectedBeneficiarias, setSelectedBeneficiarias] = useState<string[]>([]);
   const [dispatching, setDispatching] = useState(false);
-  const [dispatchProgress, setDispatchProgress] = useState({ current: 0, total: 0 });
 
   // Form states for campaign
   const [campaignName, setCampaignName] = useState("");
@@ -136,10 +142,13 @@ export function WhatsappClient() {
 
   const refreshData = async () => {
     startTransition(async () => {
-      const [configRes, campaignsRes, beneficiariasRes, logsRes] = await Promise.all([
+      // Note: a contagem de elegíveis é leve (aggregate); a lista completa
+      // NÃO é mais carregada aqui — ela é buscada sob demanda (busca server-side)
+      // ao abrir o disparo, evitando travar a página com milhares de registros.
+      const [configRes, campaignsRes, countRes, logsRes] = await Promise.all([
         getWhatsappConfig(),
         getWhatsappCampaigns(),
-        getBeneficiariasList(),
+        getEligibleBeneficiariasCount(),
         getDispatchLogs(),
       ]);
 
@@ -161,10 +170,10 @@ export function WhatsappClient() {
         toast.error(campaignsRes.error);
       }
 
-      if (beneficiariasRes.success) {
-        setBeneficiarias(beneficiariasRes.data || []);
-      } else if (beneficiariasRes.error) {
-        toast.error(beneficiariasRes.error);
+      if (countRes.success) {
+        setEligibleCount(countRes.count || 0);
+      } else if (countRes.error) {
+        toast.error(countRes.error);
       }
 
       if (logsRes.success) {
@@ -296,25 +305,58 @@ export function WhatsappClient() {
   };
 
   const handleOpenDispatch = (camp: Campaign) => {
+    // Feedback imediato no botão da linha enquanto o painel abre.
+    setOpeningDispatchId(camp.id ?? null);
     setSelectedCampaignForDispatch(camp);
-    setSelectedBeneficiarias(beneficiarias.map((b) => b.id)); // Select all by default
+    setAudienceMode("all");
+    setSelectedBeneficiarias([]);
     setSearchBeneficiaria("");
+    setSearchResults([]);
     setDispatchDialogOpen(true);
+    // O painel é leve e abre instantaneamente; libera o estado de "abrindo".
+    setTimeout(() => setOpeningDispatchId(null), 400);
   };
 
+  // Busca server-side (debounce) — só quando em modo manual e painel aberto.
+  useEffect(() => {
+    if (!dispatchDialogOpen || audienceMode !== "manual") return;
+    let active = true;
+    setSearchingAudience(true);
+    const t = setTimeout(async () => {
+      const res = await searchBeneficiarias(searchBeneficiaria);
+      if (!active) return;
+      if (res.success) {
+        setSearchResults(res.data || []);
+      } else {
+        toast.error(res.error || "Erro ao buscar beneficiárias.");
+        setSearchResults([]);
+      }
+      setSearchingAudience(false);
+    }, 350);
+    return () => {
+      active = false;
+      clearTimeout(t);
+    };
+  }, [searchBeneficiaria, audienceMode, dispatchDialogOpen]);
+
   const handleTriggerDispatch = async () => {
-    if (!selectedCampaignForDispatch || selectedBeneficiarias.length === 0) {
+    if (!selectedCampaignForDispatch) return;
+
+    if (audienceMode === "manual" && selectedBeneficiarias.length === 0) {
       toast.error("Selecione pelo menos uma beneficiária para envio.");
       return;
     }
 
-    setDispatching(true);
-    setDispatchProgress({ current: 0, total: selectedBeneficiarias.length });
+    const target =
+      audienceMode === "all"
+        ? ({ mode: "all" } as const)
+        : ({ mode: "selected", ids: selectedBeneficiarias } as const);
 
+    setDispatching(true);
     try {
       const res = await triggerCampaignDispatch(
         selectedCampaignForDispatch.id!,
-        selectedBeneficiarias
+        target
       );
 
       if (res.success) {
@@ -335,9 +377,15 @@ export function WhatsappClient() {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedBeneficiarias(beneficiarias.map((b) => b.id));
+      // Seleciona os resultados atualmente carregados (até 50 por busca).
+      setSelectedBeneficiarias((prev) =>
+        Array.from(new Set([...prev, ...searchResults.map((b) => b.id)]))
+      );
     } else {
-      setSelectedBeneficiarias([]);
+      const idsToRemove = new Set(searchResults.map((b) => b.id));
+      setSelectedBeneficiarias((prev) =>
+        prev.filter((id) => !idsToRemove.has(id))
+      );
     }
   };
 
@@ -348,13 +396,6 @@ export function WhatsappClient() {
       setSelectedBeneficiarias((prev) => prev.filter((item) => item !== id));
     }
   };
-
-  const filteredBeneficiarias = beneficiarias.filter(
-    (b) =>
-      b.nome_completo.toLowerCase().includes(searchBeneficiaria.toLowerCase()) ||
-      (b.nome_social && b.nome_social.toLowerCase().includes(searchBeneficiaria.toLowerCase())) ||
-      b.telefone.includes(searchBeneficiaria)
-  );
 
   return (
     <div className="space-y-6">
@@ -422,7 +463,7 @@ export function WhatsappClient() {
             <Users className="h-4 w-4 text-emerald-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{beneficiarias.length}</div>
+            <div className="text-2xl font-bold">{eligibleCount.toLocaleString("pt-BR")}</div>
             <p className="text-xs text-slate-500 mt-1">Beneficiárias com número cadastrado</p>
           </CardContent>
         </Card>
@@ -545,8 +586,13 @@ export function WhatsappClient() {
                             title="Disparar Campanha"
                             className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
                             onClick={() => handleOpenDispatch(camp)}
+                            disabled={openingDispatchId === camp.id}
                           >
-                            <Send className="h-4 w-4" />
+                            {openingDispatchId === camp.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Send className="h-4 w-4" />
+                            )}
                           </Button>
                           <Button
                             variant="ghost"
@@ -591,12 +637,13 @@ export function WhatsappClient() {
                       <TableHead>Campanha</TableHead>
                       <TableHead>Data de Envio</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Detalhes / Erro</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {dispatchLogs.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="h-24 text-center text-slate-400">
+                        <TableCell colSpan={6} className="h-24 text-center text-slate-400">
                           Nenhum registro de disparo encontrado.
                         </TableCell>
                       </TableRow>
@@ -619,11 +666,36 @@ export function WhatsappClient() {
                           </TableCell>
                           <TableCell>
                             <Badge
-                              variant={log.status === "sent" ? "default" : "destructive"}
-                              className={log.status === "sent" ? "bg-green-600" : ""}
+                              variant={
+                                log.status === "sent"
+                                  ? "default"
+                                  : log.status === "scheduled"
+                                  ? "secondary"
+                                  : "destructive"
+                              }
+                              className={
+                                log.status === "sent"
+                                  ? "bg-green-600 hover:bg-green-600 text-white"
+                                  : log.status === "scheduled"
+                                  ? "bg-blue-600 hover:bg-blue-600 text-white"
+                                  : ""
+                              }
                             >
-                              {log.status === "sent" ? "Enviado" : "Falhou"}
+                              {log.status === "sent"
+                                ? "Enviado"
+                                : log.status === "scheduled"
+                                ? "Em Fila"
+                                : "Falhou"}
                             </Badge>
+                          </TableCell>
+                          <TableCell className="align-top">
+                            {log.detalhes_erro ? (
+                              <p className="max-w-[320px] whitespace-pre-wrap break-words text-xs leading-relaxed text-red-600">
+                                {log.detalhes_erro}
+                              </p>
+                            ) : (
+                              <span className="text-xs text-slate-400">-</span>
+                            )}
                           </TableCell>
                         </TableRow>
                       ))
@@ -803,96 +875,144 @@ export function WhatsappClient() {
                 </p>
               </div>
 
-              {/* Search input */}
-              <div className="relative">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                <Input
-                  className="pl-9 h-9"
-                  placeholder="Buscar beneficiária por nome ou telefone..."
-                  value={searchBeneficiaria}
-                  onChange={(e) => setSearchBeneficiaria(e.target.value)}
-                />
+              {/* Seleção de público */}
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setAudienceMode("all")}
+                  className={cn(
+                    "flex flex-col items-start gap-0.5 rounded-lg border p-3 text-left transition-colors",
+                    audienceMode === "all"
+                      ? "border-purple-300 bg-purple-50 dark:bg-purple-950/20 ring-1 ring-purple-300"
+                      : "border-slate-200 hover:bg-slate-50",
+                  )}
+                >
+                  <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-800 dark:text-slate-200">
+                    <Users className="h-4 w-4 text-purple-600" />
+                    Todas as elegíveis
+                  </span>
+                  <span className="text-xs text-slate-500">
+                    {eligibleCount.toLocaleString("pt-BR")} beneficiárias
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAudienceMode("manual")}
+                  className={cn(
+                    "flex flex-col items-start gap-0.5 rounded-lg border p-3 text-left transition-colors",
+                    audienceMode === "manual"
+                      ? "border-purple-300 bg-purple-50 dark:bg-purple-950/20 ring-1 ring-purple-300"
+                      : "border-slate-200 hover:bg-slate-50",
+                  )}
+                >
+                  <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-800 dark:text-slate-200">
+                    <Search className="h-4 w-4 text-purple-600" />
+                    Selecionar
+                  </span>
+                  <span className="text-xs text-slate-500">
+                    {selectedBeneficiarias.length} selecionada(s)
+                  </span>
+                </button>
               </div>
 
-              {/* Beneficiary List Selector */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center px-2 py-1">
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      id="select-all"
-                      checked={
-                        filteredBeneficiarias.length > 0 &&
-                        filteredBeneficiarias.every((b) => selectedBeneficiarias.includes(b.id))
-                      }
-                      onCheckedChange={(checked) => handleSelectAll(!!checked)}
-                    />
-                    <label htmlFor="select-all" className="text-xs font-semibold text-slate-700 cursor-pointer">
-                      Selecionar Todas Filtradas ({filteredBeneficiarias.length})
-                    </label>
-                  </div>
-                  <span className="text-xs text-slate-500 font-medium">
-                    {selectedBeneficiarias.length} selecionadas
+              {audienceMode === "all" ? (
+                <div className="flex items-start gap-2 rounded-lg border border-purple-100 bg-purple-50/60 dark:bg-purple-950/10 p-4 text-sm text-purple-900 dark:text-purple-300">
+                  <Info className="h-4 w-4 mt-0.5 shrink-0" />
+                  <span>
+                    A mensagem será enviada para{" "}
+                    <strong>
+                      todas as {eligibleCount.toLocaleString("pt-BR")} beneficiárias
+                    </strong>{" "}
+                    com WhatsApp cadastrado. O envio é processado no servidor.
                   </span>
                 </div>
+              ) : (
+                <div className="space-y-2">
+                  {/* Busca server-side */}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                    <Input
+                      className="pl-9 h-9"
+                      placeholder="Buscar por nome ou telefone..."
+                      value={searchBeneficiaria}
+                      onChange={(e) => setSearchBeneficiaria(e.target.value)}
+                    />
+                  </div>
 
-                <div className="border border-slate-100 rounded-lg max-h-[300px] overflow-y-auto divide-y divide-slate-100">
-                  {filteredBeneficiarias.length === 0 ? (
-                    <div className="p-4 text-center text-xs text-slate-400">
-                      Nenhuma beneficiária elegível com WhatsApp cadastrado foi encontrada.
+                  <div className="flex justify-between items-center px-2 py-1">
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="select-all"
+                        checked={
+                          searchResults.length > 0 &&
+                          searchResults.every((b) => selectedBeneficiarias.includes(b.id))
+                        }
+                        onCheckedChange={(checked) => handleSelectAll(!!checked)}
+                        disabled={searchResults.length === 0}
+                      />
+                      <label htmlFor="select-all" className="text-xs font-semibold text-slate-700 cursor-pointer">
+                        Selecionar resultados ({searchResults.length})
+                      </label>
                     </div>
-                  ) : (
-                    filteredBeneficiarias.map((b) => (
-                      <div key={b.id} className="flex items-center justify-between p-3 hover:bg-slate-50/50">
-                        <div className="flex items-center gap-2">
-                          <Checkbox
-                            id={`b-${b.id}`}
-                            checked={selectedBeneficiarias.includes(b.id)}
-                            onCheckedChange={(checked) => handleSelectOne(b.id, !!checked)}
-                          />
-                          <div className="flex flex-col text-left">
-                            <label htmlFor={`b-${b.id}`} className="text-xs font-medium text-slate-800 dark:text-slate-200 cursor-pointer">
-                              {b.nome_social || b.nome_completo}
-                            </label>
-                            <span className="text-[10px] text-slate-500 font-mono">{b.telefone}</span>
+                    <span className="text-xs text-slate-500 font-medium">
+                      {selectedBeneficiarias.length} selecionada(s)
+                    </span>
+                  </div>
+
+                  <div className="border border-slate-100 rounded-lg max-h-[300px] overflow-y-auto divide-y divide-slate-100">
+                    {searchingAudience ? (
+                      <div className="flex items-center justify-center gap-2 p-6 text-xs text-slate-400">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Buscando beneficiárias...
+                      </div>
+                    ) : searchResults.length === 0 ? (
+                      <div className="p-4 text-center text-xs text-slate-400">
+                        {searchBeneficiaria
+                          ? "Nenhuma beneficiária encontrada para esta busca."
+                          : "Digite um nome ou telefone para localizar beneficiárias."}
+                      </div>
+                    ) : (
+                      searchResults.map((b) => (
+                        <div key={b.id} className="flex items-center justify-between p-3 hover:bg-slate-50/50">
+                          <div className="flex items-center gap-2">
+                            <Checkbox
+                              id={`b-${b.id}`}
+                              checked={selectedBeneficiarias.includes(b.id)}
+                              onCheckedChange={(checked) => handleSelectOne(b.id, !!checked)}
+                            />
+                            <div className="flex flex-col text-left">
+                              <label htmlFor={`b-${b.id}`} className="text-xs font-medium text-slate-800 dark:text-slate-200 cursor-pointer">
+                                {b.nome_social || b.nome_completo}
+                              </label>
+                              <span className="text-[10px] text-slate-500 font-mono">{b.telefone}</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))
-                  )}
+                      ))
+                    )}
+                  </div>
+                  <p className="text-[10px] text-slate-400 px-1">
+                    Mostrando até 50 resultados por busca. Refine o termo para
+                    encontrar outras beneficiárias.
+                  </p>
                 </div>
-              </div>
+              )}
             </div>
           )}
 
           {/* Bottom Actions */}
-          <div className="border-t pt-4 mt-auto space-y-4">
-            {dispatching && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs font-semibold">
-                  <span>Enviando Mensagens...</span>
-                  <span>
-                    {dispatchProgress.current} / {dispatchProgress.total}
-                  </span>
-                </div>
-                {/* Progress bar */}
-                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden">
-                  <div
-                    className="bg-purple-600 h-2.5 rounded-full transition-all duration-300"
-                    style={{
-                      width: `${(dispatchProgress.current / dispatchProgress.total) * 100}%`,
-                    }}
-                  />
-                </div>
-              </div>
-            )}
-
+          <div className="border-t pt-4 mt-auto">
             <div className="flex justify-end gap-3">
               <Button variant="ghost" onClick={() => setDispatchDialogOpen(false)} disabled={dispatching}>
                 Cancelar
               </Button>
               <Button
                 onClick={handleTriggerDispatch}
-                disabled={selectedBeneficiarias.length === 0 || dispatching}
+                disabled={
+                  dispatching ||
+                  (audienceMode === "manual" && selectedBeneficiarias.length === 0) ||
+                  (audienceMode === "all" && eligibleCount === 0)
+                }
                 className="bg-purple-600 hover:bg-purple-700 text-white"
               >
                 {dispatching ? (
@@ -903,7 +1023,9 @@ export function WhatsappClient() {
                 ) : (
                   <>
                     <Send className="mr-2 h-4 w-4" />
-                    Disparar WhatsApp Lote
+                    {audienceMode === "all"
+                      ? `Disparar para todas (${eligibleCount.toLocaleString("pt-BR")})`
+                      : `Disparar para ${selectedBeneficiarias.length}`}
                   </>
                 )}
               </Button>

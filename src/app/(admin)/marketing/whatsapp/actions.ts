@@ -5,13 +5,24 @@ import { getDirectusClient, safeDirectusCall } from "@/lib/directus";
 import {
   readItems,
   createItem,
+  createItems,
   updateItem,
   deleteItem,
   readItem,
   readMe,
   readSingleton,
   updateSingleton,
+  aggregate,
 } from "@directus/sdk";
+
+// Filtro base de elegibilidade: beneficiária com telefone preenchido.
+// Observação: o Directus rejeita `_neq: ""`; usar `_nempty` (cobre nulo e vazio).
+const ELIGIBLE_FILTER = { telefone: { _nempty: true } } as const;
+
+// Considera elegível quem tem ao menos 8 dígitos no telefone.
+function temTelefoneValido(b: { telefone?: string | null }): boolean {
+  return !!b.telefone && b.telefone.replace(/\D/g, "").length >= 8;
+}
 
 // Helper for deep plain objects to avoid Next.js payload issues
 function toPlainObject<T>(value: T): T {
@@ -216,38 +227,70 @@ export async function deleteWhatsappCampaign(id: string) {
   }
 }
 
-// 4. Beneficiaries List (Target Audience)
-export async function getBeneficiariasList() {
+// 4. Público-alvo (audiência)
+
+// 4a. Contagem leve de beneficiárias elegíveis (com telefone) — usada na UI
+// sem precisar trafegar milhares de registros.
+export async function getEligibleBeneficiariasCount() {
   try {
     return await safeDirectusCall(async () => {
       const client = await getDirectusClient({ requireAuth: true });
+      const res: any = await client.request(
+        aggregate("beneficiarias", {
+          aggregate: { count: "*" },
+          query: { filter: ELIGIBLE_FILTER },
+        })
+      );
+      const count =
+        Array.isArray(res) && res[0]?.count ? Number(res[0].count) : 0;
+      return { success: true, count };
+    });
+  } catch (error: any) {
+    console.error("Erro em getEligibleBeneficiariasCount:", error);
+    return {
+      success: false,
+      count: 0,
+      error: "Não foi possível contar as beneficiárias elegíveis.",
+    };
+  }
+}
+
+// 4b. Busca server-side, limitada a 50 resultados, para seleção manual.
+// Evita carregar a lista completa (milhares) no navegador.
+export async function searchBeneficiarias(query: string) {
+  try {
+    return await safeDirectusCall(async () => {
+      const client = await getDirectusClient({ requireAuth: true });
+      const q = (query || "").trim();
+
+      const filter: any = { ...ELIGIBLE_FILTER };
+      if (q) {
+        filter._or = [
+          { nome_completo: { _icontains: q } },
+          { nome_social: { _icontains: q } },
+          { telefone: { _contains: q } },
+        ];
+      }
+
       const items: any = await client.request(
         readItems("beneficiarias", {
           fields: ["id", "nome_completo", "nome_social", "telefone", "cpf"],
-          limit: -1,
+          filter,
           sort: ["nome_completo"],
+          limit: 50,
         })
       );
 
-      console.log("DEBUG getBeneficiariasList - items:", {
-        type: typeof items,
-        isArray: Array.isArray(items),
-        keys: items ? Object.keys(items) : null,
-        preview: items ? JSON.stringify(items).substring(0, 500) : null
-      });
-
-      // Filter beneficiaries that have a phone number
-      const filtered = (Array.isArray(items) ? items : []).filter(
-        (b: any) => b.telefone && b.telefone.replace(/\D/g, "").length >= 8
+      const list = (Array.isArray(items) ? items : []).filter(
+        temTelefoneValido
       );
-
-      return { success: true, data: toPlainObject(filtered) };
+      return { success: true, data: toPlainObject(list) };
     });
   } catch (error: any) {
-    console.error("Erro em getBeneficiariasList:", error);
+    console.error("Erro em searchBeneficiarias:", error);
     return {
       success: false,
-      error: "Você não tem permissão para listar as beneficiárias ou a coleção não existe."
+      error: "Não foi possível buscar as beneficiárias.",
     };
   }
 }
@@ -265,6 +308,7 @@ export async function getDispatchLogs() {
             "status",
             "data_envio",
             "date_created",
+            "detalhes_erro",
             "campanha_id.id",
             "campanha_id.nome",
             "beneficiaria_id.id",
@@ -300,10 +344,17 @@ function formatWhatsappNumber(phone: string): string {
   return cleaned;
 }
 
-// 6. Trigger WhatsApp dispatch to list of beneficiaries
+// 6. Trigger WhatsApp dispatch
+// target:
+//   { mode: "all" }                 → todas as beneficiárias elegíveis
+//   { mode: "selected", ids: [...] } → apenas as selecionadas
+export type DispatchTarget =
+  | { mode: "all" }
+  | { mode: "selected"; ids: string[] };
+
 export async function triggerCampaignDispatch(
   campaignId: string,
-  beneficiaryIds: string[]
+  target: DispatchTarget
 ) {
   try {
     const client = await getDirectusClient({ requireAuth: true });
@@ -314,22 +365,43 @@ export async function triggerCampaignDispatch(
       return { success: false, error: "Campanha ou mensagem não encontrada." };
     }
 
-    // Update status to running
-    await client.request(
-      updateItem("campanhas", campaignId, {
-        status: "running",
-        data_envio: new Date().toISOString(),
-      })
-    );
+    // 2. Fetch beneficiaries details conforme o modo de público
+    let beneficiariesRaw: any[];
+    if (target.mode === "selected") {
+      if (!target.ids || target.ids.length === 0) {
+        return {
+          success: false,
+          error: "Selecione pelo menos uma beneficiária para envio.",
+        };
+      }
+      beneficiariesRaw = await client.request(
+        readItems("beneficiarias", {
+          fields: ["id", "nome_completo", "nome_social", "telefone"],
+          filter: { id: { _in: target.ids } },
+          limit: -1,
+        })
+      );
+    } else {
+      beneficiariesRaw = await client.request(
+        readItems("beneficiarias", {
+          fields: ["id", "nome_completo", "nome_social", "telefone"],
+          filter: ELIGIBLE_FILTER,
+          limit: -1,
+        })
+      );
+    }
 
-    // 2. Fetch beneficiaries details
-    const beneficiaries = await client.request(
-      readItems("beneficiarias", {
-        fields: ["id", "nome_completo", "nome_social", "telefone"],
-        filter: { id: { _in: beneficiaryIds } },
-        limit: -1,
-      })
-    );
+    // Garante elegibilidade (telefone com ao menos 8 dígitos)
+    const beneficiaries = (
+      Array.isArray(beneficiariesRaw) ? beneficiariesRaw : []
+    ).filter(temTelefoneValido);
+
+    if (beneficiaries.length === 0) {
+      return {
+        success: false,
+        error: "Nenhuma beneficiária elegível (com telefone válido) encontrada.",
+      };
+    }
 
     // 3. Get WhatsApp Settings
     const configResult = await getWhatsappConfig();
@@ -343,67 +415,139 @@ export async function triggerCampaignDispatch(
     const useN8n = !!config?.n8n_webhook_url;
 
     if (!useEvolution && !useN8n) {
-      // Revert status to draft
-      await client.request(
-        updateItem("campanhas", campaignId, { status: "draft" })
-      );
       return {
         success: false,
         error: "Configurações de disparo incompletas. Configure a Evolution API ou n8n Webhook.",
       };
     }
 
-    // 4. Send messages and log them
-    const results = [];
-    let successCount = 0;
-    let failedCount = 0;
+    const isBatch = beneficiaries.length > 1;
 
-    // Send payload to n8n if Webhook is configured
-    if (useN8n) {
+    // --- CASE A: BATCH DISPATCH (MORE THAN 1 RECIPIENT) ---
+    if (isBatch && useN8n) {
+      // Update campaign status to running
+      await client.request(
+        updateItem("campanhas", campaignId, {
+          status: "running",
+          data_envio: new Date().toISOString(),
+        })
+      );
+
+      // Create disparos logs in Directus as "scheduled"
+      const dataToCreate = beneficiaries.map((b: any) => ({
+        campanha_id: campaignId,
+        beneficiaria_id: b.id,
+        status: "scheduled",
+      }));
+      
+      const createdDisparos: any = await client.request(createItems("disparos", dataToCreate));
+
+      // Prepare payload for n8n
+      const payload = {
+        campaignId,
+        campaignName: campaign.nome,
+        messageTemplate: campaign.mensagem,
+        directus: {
+          url: process.env.DIRECTUS_API_URL,
+          token: process.env.DIRECTUS_TOKEN
+        },
+        config: {
+          evolution_api_url: config.evolution_api_url,
+          evolution_api_token: config.evolution_api_token,
+          evolution_api_instance: config.evolution_api_instance
+        },
+        recipients: beneficiaries.map((b: any, index: number) => ({
+          disparo_id: createdDisparos[index].id,
+          beneficiaria_id: b.id,
+          nome: b.nome_social || b.nome_completo,
+          telefone: b.telefone,
+          formattedPhone: formatWhatsappNumber(b.telefone),
+        })),
+      };
+
       try {
-        const payload = {
-          campaignId,
-          campaignName: campaign.nome,
-          messageTemplate: campaign.mensagem,
-          recipients: beneficiaries.map((b: any) => ({
-            id: b.id,
-            nome: b.nome_social || b.nome_completo,
-            telefone: b.telefone,
-            formattedPhone: formatWhatsappNumber(b.telefone),
-          })),
-        };
-
-        fetch(config.n8n_webhook_url, {
+        const res = await fetch(config.n8n_webhook_url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
-        }).catch((err) => console.error("Falha silenciosa ao chamar n8n:", err));
-      } catch (err) {
-        console.error("Erro ao notificar webhook n8n:", err);
+        });
+
+        if (!res.ok) {
+          throw new Error(`n8n webhook respondeu com ${res.status}`);
+        }
+      } catch (err: any) {
+        console.error("Erro ao chamar n8n webhook:", err);
+        // Revert campaign status to draft and delete the created disparos
+        await client.request(updateItem("campanhas", campaignId, { status: "draft" }));
+        return {
+          success: false,
+          error: `Falha ao acionar o n8n para disparo em lote: ${err.message || err}`,
+        };
+      }
+
+      revalidatePath("/marketing/whatsapp");
+      return {
+        success: true,
+        successCount: 0,
+        failedCount: 0,
+        total: beneficiaries.length,
+        isBatchN8n: true,
+      };
+    }
+
+    // --- CASE B: INDIVIDUAL DISPATCH OR FALLBACK BATCH ---
+    // (If it is a single contact OR if it's a batch but n8n is not configured)
+
+    // Pré-checagem: se vamos enviar diretamente pela Evolution, garantir que a
+    // instância está realmente conectada (state "open"). Evita o erro confuso
+    // "Connection Closed" quando a sessão do WhatsApp está caída/instável.
+    if (useEvolution) {
+      const conn = await testEvolutionConnection({
+        url: config.evolution_api_url,
+        token: config.evolution_api_token,
+        instance: config.evolution_api_instance,
+      });
+      if (!conn.success || !conn.isConnected) {
+        return {
+          success: false,
+          error: `A instância "${config.evolution_api_instance}" do WhatsApp não está conectada (estado: ${
+            (conn as any).state || "desconhecido"
+          }). Reconecte a instância na Evolution API e tente novamente.`,
+        };
       }
     }
 
-    // If Evolution API is configured, send directly and log status
-    if (useEvolution) {
-      const cleanUrl = config.evolution_api_url.replace(/\/$/, "");
-      const sendUrl = `${cleanUrl}/message/sendText/${config.evolution_api_instance}`;
+    await client.request(
+      updateItem("campanhas", campaignId, {
+        status: "running",
+        data_envio: new Date().toISOString(),
+      })
+    );
 
-      for (const b of beneficiaries) {
-        const phone = b.telefone;
-        if (!phone) continue;
+    let successCount = 0;
+    let failedCount = 0;
 
-        const formattedPhone = formatWhatsappNumber(phone);
-        const name = b.nome_social || b.nome_completo;
-        const firstName = name.split(" ")[0];
+    const cleanUrl = config.evolution_api_url?.replace(/\/$/, "");
+    const sendUrl = `${cleanUrl}/message/sendText/${config.evolution_api_instance}`;
 
-        // Format message parameters
-        const customizedMessage = campaign.mensagem
-          .replace(/{nome_completo}/g, name)
-          .replace(/{primeiro_nome}/g, firstName)
-          .replace(/{whatsapp}/g, phone);
+    for (const b of beneficiaries) {
+      const phone = b.telefone;
+      if (!phone) continue;
 
-        let sentSuccess = false;
+      const formattedPhone = formatWhatsappNumber(phone);
+      const name = b.nome_social || b.nome_completo;
+      const firstName = name.split(" ")[0];
 
+      // Format message parameters
+      const customizedMessage = campaign.mensagem
+        .replace(/{nome_completo}/g, name)
+        .replace(/{primeiro_nome}/g, firstName)
+        .replace(/{whatsapp}/g, phone);
+
+      let sentSuccess = false;
+      let errorDetails = null;
+
+      if (useEvolution) {
         try {
           const apiRes = await fetch(sendUrl, {
             method: "POST",
@@ -422,37 +566,67 @@ export async function triggerCampaignDispatch(
             successCount++;
           } else {
             const errLog = await apiRes.text().catch(() => "");
+            errorDetails = `Evolution API ${apiRes.status}: ${errLog || "Sem resposta"}`;
             console.error(`Erro Evolution API para ${phone}:`, errLog);
             failedCount++;
           }
-        } catch (apiErr) {
+        } catch (apiErr: any) {
+          errorDetails = `Falha de rede/conexão: ${apiErr?.message || apiErr}`;
           console.error(`Erro ao disparar Evolution para ${phone}:`, apiErr);
           failedCount++;
         }
+      } else {
+        // Only n8n configured but doing individual fallback (or similar)
+        // We will mock/call n8n for this single recipient
+        try {
+          const res = await fetch(config.n8n_webhook_url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              campaignId,
+              campaignName: campaign.nome,
+              messageTemplate: campaign.mensagem,
+              directus: {
+                url: process.env.DIRECTUS_API_URL,
+                token: process.env.DIRECTUS_TOKEN
+              },
+              config: {
+                evolution_api_url: config.evolution_api_url,
+                evolution_api_token: config.evolution_api_token,
+                evolution_api_instance: config.evolution_api_instance
+              },
+              recipients: [{
+                disparo_id: null,
+                beneficiaria_id: b.id,
+                nome: name,
+                telefone: phone,
+                formattedPhone,
+              }]
+            }),
+          });
+          if (res.ok) {
+            sentSuccess = true;
+            successCount++;
+          } else {
+            errorDetails = `n8n webhook respondeu com ${res.status}`;
+            failedCount++;
+          }
+        } catch (err: any) {
+          errorDetails = `Falha ao acionar n8n: ${err?.message || err}`;
+          failedCount++;
+        }
+      }
 
-        // Log result in Directus
-        await client.request(
-          createItem("disparos", {
-            campanha_id: campaignId,
-            beneficiaria_id: b.id,
-            status: sentSuccess ? "sent" : "failed",
-            data_envio: new Date().toISOString(),
-          })
-        );
-      }
-    } else {
-      // If only n8n is used, assume sent/scheduled via n8n
-      for (const b of beneficiaries) {
-        await client.request(
-          createItem("disparos", {
-            campanha_id: campaignId,
-            beneficiaria_id: b.id,
-            status: "sent",
-            data_envio: new Date().toISOString(),
-          })
-        );
-        successCount++;
-      }
+      // Log result in Directus
+      await client.request(
+        createItem("disparos", {
+          campanha_id: campaignId,
+          beneficiaria_id: b.id,
+          status: sentSuccess ? "sent" : "failed",
+          data_envio: new Date().toISOString(),
+          detalhes_erro: errorDetails,
+        })
+      );
     }
 
     // Set campaign as completed
