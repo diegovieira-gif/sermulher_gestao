@@ -9,6 +9,8 @@ import {
   deleteItem,
   readItem,
   readMe,
+  readSingleton,
+  updateSingleton,
 } from "@directus/sdk";
 
 // Helper for deep plain objects to avoid Next.js payload issues
@@ -33,9 +35,8 @@ export async function getWhatsappConfig() {
         console.log("DEBUG getWhatsappConfig - Failed to fetch user profile:", meError?.message);
       }
 
-      const items = await client.request(
-        readItems("configuracoes_site", {
-          limit: 1,
+      const configItem = await client.request(
+        readSingleton("configuracoes_site", {
           fields: [
             "id",
             "evolution_api_url",
@@ -47,7 +48,7 @@ export async function getWhatsappConfig() {
       );
       return {
         success: true,
-        data: items?.[0] ? toPlainObject(items[0]) : null,
+        data: configItem ? toPlainObject(configItem) : null,
       };
     });
   } catch (error: any) {
@@ -71,22 +72,9 @@ export async function saveWhatsappConfig(data: {
       const client = await getDirectusClient({ requireAuth: true });
       const { id, ...payload } = data;
 
-      let result;
-      if (id) {
-        result = await client.request(updateItem("configuracoes_site", id, payload));
-      } else {
-        // Find the first configuration if ID is missing (singleton)
-        const existing = await client.request(
-          readItems("configuracoes_site", { limit: 1, fields: ["id"] })
-        );
-        if (existing?.[0]?.id) {
-          result = await client.request(
-            updateItem("configuracoes_site", existing[0].id, payload)
-          );
-        } else {
-          result = await client.request(createItem("configuracoes_site", payload));
-        }
-      }
+      const result = await client.request(
+        updateSingleton("configuracoes_site", payload)
+      );
 
       revalidatePath("/marketing/whatsapp");
       return { success: true, data: toPlainObject(result) };
@@ -99,6 +87,7 @@ export async function saveWhatsappConfig(data: {
     };
   }
 }
+
 
 // 2. Test connection with Evolution API
 export async function testEvolutionConnection(config: {
