@@ -178,7 +178,7 @@ export async function deleteWhatsappCampaign(id: string) {
 export async function getBeneficiariasList() {
   return safeDirectusCall(async () => {
     const client = await getDirectusClient({ requireAuth: true });
-    const items = await client.request(
+    const items: any = await client.request(
       readItems("beneficiarias", {
         fields: ["id", "nome_completo", "nome_social", "telefone", "cpf"],
         limit: -1,
@@ -186,14 +186,22 @@ export async function getBeneficiariasList() {
       })
     );
 
+    console.log("DEBUG getBeneficiariasList - items:", {
+      type: typeof items,
+      isArray: Array.isArray(items),
+      keys: items ? Object.keys(items) : null,
+      preview: items ? JSON.stringify(items).substring(0, 500) : null
+    });
+
     // Filter beneficiaries that have a phone number
-    const filtered = items.filter(
+    const filtered = (Array.isArray(items) ? items : []).filter(
       (b: any) => b.telefone && b.telefone.replace(/\D/g, "").length >= 8
     );
 
     return { success: true, data: toPlainObject(filtered) };
   });
 }
+
 
 // 5. Dispatch History Logs
 export async function getDispatchLogs() {
