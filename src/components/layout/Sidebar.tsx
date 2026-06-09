@@ -45,47 +45,52 @@ import {
 import type { LucideIcon } from "lucide-react";
 
 interface MenuItemConfig {
+  /** Chave estável (ver src/lib/menu-registry.ts) usada para permissões. */
+  key: string;
   label: string;
   href: string;
   icon: LucideIcon;
-  roles?: string[];
   items?: { label: string; href: string; icon?: LucideIcon }[];
 }
 
 const MENU_ITEMS: MenuItemConfig[] = [
   {
+    key: "dashboard",
     label: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
-    roles: [],
   },
   {
+    key: "tramitacoes",
     label: "Gestão de Demandas",
     href: "/tramitacoes",
     icon: GitPullRequest,
-    roles: [],
   },
   {
+    key: "eventos",
     label: "Agenda Institucional",
     href: "/eventos",
     icon: Calendar,
-    roles: [],
   },
   {
+    key: "marketing",
     label: "Marketing e Comunicação",
     href: "/marketing",
     icon: Megaphone,
+<<<<<<< HEAD
     roles: [],
     items: [
       { label: "Mídias Sociais", href: "/marketing" },
       { label: "Campanhas WhatsApp", href: "/marketing/whatsapp" },
     ],
+=======
+>>>>>>> 013fd523175712af60bc0e646cc8120da252c6e8
   },
   {
+    key: "mulheres",
     label: "Gestão de Mulheres",
     href: "/mulheres",
     icon: HeartHandshake,
-    roles: [],
     items: [
       { label: "Indicadores", href: "/mulheres" },
       { label: "Beneficiárias", href: "/mulheres/beneficiarias" },
@@ -93,10 +98,10 @@ const MENU_ITEMS: MenuItemConfig[] = [
     ],
   },
   {
+    key: "escola",
     label: "Escola da Mulher",
     href: "/escola",
     icon: GraduationCap,
-    roles: [],
     items: [
       { label: "Painel da Escola", href: "/escola" },
       { label: "Cursos", href: "/escola/cursos" },
@@ -105,10 +110,10 @@ const MENU_ITEMS: MenuItemConfig[] = [
     ],
   },
   {
+    key: "sala-azul",
     label: "Sala Azul",
     href: "/sala-azul",
     icon: ShieldAlert,
-    roles: [],
     items: [
       { label: "Painel Sala Azul", href: "/sala-azul" },
       { label: "Ciclos Reflexivos", href: "/sala-azul/ciclos" },
@@ -116,26 +121,26 @@ const MENU_ITEMS: MenuItemConfig[] = [
     ],
   },
   {
+    key: "relatorios",
     label: "Relatórios",
     href: "/relatorios",
     icon: FileText,
-    roles: ["admin", "gestor"],
     items: [
       { label: "Indicadores Gerais", href: "/relatorios/indicadores" },
       { label: "RMA (SUAS)", href: "/relatorios/rma" },
     ],
   },
   {
+    key: "observatorio",
     label: "Observatório",
     href: "/observatorio",
     icon: LayoutDashboard,
-    roles: ["admin", "gestor"],
   },
   {
+    key: "app-amar",
     label: "App Amar",
     href: "/app-amar",
     icon: HeartHandshake,
-    roles: ["admin", "gestor"],
     items: [
       { label: "Categorias", href: "/app-amar/categorias", icon: LayoutGrid },
       { label: "Serviços", href: "/app-amar/servicos", icon: Briefcase },
@@ -149,23 +154,21 @@ const MENU_ITEMS: MenuItemConfig[] = [
 ];
 
 interface SidebarProps {
-  userRole: string;
+  /** Chaves de menu que o perfil atual pode acessar (ver menu-registry). */
+  allowedKeys: string[];
 }
 
-export function Sidebar({ userRole }: SidebarProps) {
+export function Sidebar({ allowedKeys }: SidebarProps) {
   const pathname = usePathname();
 
   const handleLogout = async () => {
     await logout();
   };
 
-  // RBAC logic: Filter menu items
-  // Roles: 'Busca Ativa' or 'Recepção' only see 'Gestão de Mulheres'
-  const isLimited = userRole === "Busca Ativa" || userRole === "Recepção";
-
-  const filteredMenuItems = isLimited
-    ? MENU_ITEMS.filter((item) => item.label === "Gestão de Mulheres")
-    : MENU_ITEMS;
+  // Filtra os itens conforme as permissões do perfil (configuráveis em
+  // Configurações → Permissões). Admins recebem todas as chaves.
+  const can = (key: string) => allowedKeys.includes(key);
+  const filteredMenuItems = MENU_ITEMS.filter((item) => can(item.key));
 
   return (
     <ShadcnSidebar variant="sidebar" collapsible="icon">
@@ -291,40 +294,49 @@ export function Sidebar({ userRole }: SidebarProps) {
         <SidebarGroup className="mt-auto pt-4">
           <SidebarGroupLabel>Sistema</SidebarGroupLabel>
           <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                tooltip="Manual do Usuário"
-                isActive={pathname.startsWith("/manual")}
-                className={cn(
-                  pathname.startsWith("/manual") &&
-                    "bg-sidebar-accent text-sidebar-accent-foreground font-semibold",
-                )}
-              >
-                <Link href="/manual">
-                  <Book className="size-5" />
-                  <span>Manual do Usuário</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+            {can("manual") && (
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  tooltip="Manual do Usuário"
+                  isActive={pathname.startsWith("/manual")}
+                  className={cn(
+                    pathname.startsWith("/manual") &&
+                      "bg-sidebar-accent text-sidebar-accent-foreground font-semibold",
+                  )}
+                >
+                  <Link href="/manual">
+                    <Book className="size-5" />
+                    <span>Manual do Usuário</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
 
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                tooltip="Configurações"
-                isActive={pathname.startsWith("/configuracoes")}
-                className={cn(
-                  pathname.startsWith("/configuracoes") &&
-                    "bg-sidebar-accent text-sidebar-accent-foreground font-semibold",
-                )}
-              >
-                <Link href="/configuracoes">
-                  <Settings className="size-5" />
-                  <span>Configurações</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+            {can("configuracoes") && (
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  tooltip="Configurações"
+                  isActive={
+                    pathname.startsWith("/configuracoes") &&
+                    !pathname.startsWith("/configuracoes/site")
+                  }
+                  className={cn(
+                    pathname.startsWith("/configuracoes") &&
+                      !pathname.startsWith("/configuracoes/site") &&
+                      "bg-sidebar-accent text-sidebar-accent-foreground font-semibold",
+                  )}
+                >
+                  <Link href="/configuracoes">
+                    <Settings className="size-5" />
+                    <span>Configurações</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
 
+            {can("site") && (
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
@@ -341,6 +353,7 @@ export function Sidebar({ userRole }: SidebarProps) {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+            )}
 
             <SidebarMenuItem>
               <form action={handleLogout} className="w-full">
