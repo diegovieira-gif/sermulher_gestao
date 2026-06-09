@@ -23,6 +23,17 @@ export function proxy(request: NextRequest) {
   }
 
   // 2. Redirecionamento: Se tenta acessar Login COM token -> Manda pro Dashboard
+  // Mas se a URL tiver parâmetro de erro (ex: token expirou/inválido), limpamos os cookies e permitimos o acesso ao Login
+  const hasAuthError = request.nextUrl.searchParams.has("error");
+
+  if (isPublicRoute && hasAuthError) {
+    const response = NextResponse.next();
+    response.cookies.delete("directus_token");
+    response.cookies.delete("user_name");
+    response.cookies.delete("user_role");
+    return response;
+  }
+
   if (isPublicRoute && sessionToken) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
