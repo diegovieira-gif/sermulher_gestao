@@ -110,6 +110,46 @@ export async function getDirectusClient(
     .with(rest());
 }
 
+/**
+ * Cliente Directus que SEMPRE usa o token administrativo estático
+ * (`DIRECTUS_TOKEN`), ignorando o cookie do usuário logado.
+ *
+ * Usado para funcionalidades de nível de aplicação que precisam ler/gravar
+ * dados privilegiados (ex.: configuração de permissões de menu), de forma
+ * independente das permissões do perfil do usuário final no Directus.
+ */
+export function getDirectusAdmin() {
+  if (!directusToken) {
+    throw new Error(
+      "DIRECTUS_TOKEN não configurado: cliente administrativo indisponível.",
+    );
+  }
+
+  return createDirectus(directusUrl, {
+    globals: {
+      // Fetch simples com timeout, sem sobrescrever o Authorization pelo cookie.
+      fetch: (async (url: RequestInfo | URL, init?: RequestInit) => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(
+          () => controller.abort(),
+          directusTimeoutMs,
+        );
+        try {
+          return await fetch(url, {
+            ...init,
+            cache: "no-store",
+            signal: controller.signal,
+          });
+        } finally {
+          clearTimeout(timeoutId);
+        }
+      }) as typeof fetch,
+    },
+  })
+    .with(staticToken(directusToken))
+    .with(rest());
+}
+
 function isUnauthorizedError(error: unknown): boolean {
   const directusError = error as DirectusErrorShape;
 

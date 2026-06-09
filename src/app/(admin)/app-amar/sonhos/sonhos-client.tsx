@@ -203,9 +203,9 @@ export function SonhosClient({ initialData }: SonhosClientProps) {
                           title="Reproduzir áudio"
                         >
                           {playingAudioId === sonho.id ? (
-                            <Pause className="h-4 w-4 text-blue-600" />
+                            <Pause className="h-4 w-4 text-primary" />
                           ) : (
-                            <Play className="h-4 w-4 text-blue-600" />
+                            <Play className="h-4 w-4 text-primary" />
                           )}
                         </Button>
                         <Button

@@ -18,11 +18,13 @@ import {
   Briefcase,
   Users,
   MapPinned,
+  ShieldCheck,
 } from "lucide-react";
 
 // Imports dos Componentes Refatorados
 import { TabEncaminhamentos } from "./tabs/tab-encaminhamentos";
 import { TabPadrao } from "./tabs/tab-padrao";
+import { TabPermissoes } from "./tabs/tab-permissoes";
 
 // Imports de UI necessários para os casos inline (Campanhas/Periculosidade)
 import {
@@ -59,6 +61,14 @@ interface ConfiguracoesClientProps {
   estadoCivil: any[];
   escolaridade: any[];
   situacaoTrabalho: any[];
+  isAdmin?: boolean;
+  roles?: { id: string; name: string; isAdmin: boolean }[];
+  permConfigs?: {
+    role: string;
+    role_nome?: string | null;
+    permitir_tudo?: boolean | null;
+    menus?: string[] | null;
+  }[];
 }
 
 export function ConfiguracoesClient({
@@ -78,6 +88,9 @@ export function ConfiguracoesClient({
   estadoCivil,
   escolaridade,
   situacaoTrabalho,
+  isAdmin = false,
+  roles = [],
+  permConfigs = [],
 }: ConfiguracoesClientProps) {
   const menuItems = [
     { label: "Estrutural", isHeader: true },
@@ -104,6 +117,17 @@ export function ConfiguracoesClient({
     { value: "campanhas", label: "Campanhas", icon: Megaphone },
     { value: "periculosidade", label: "Periculosidade", icon: Siren },
     { value: "status-legal", label: "Status Legal", icon: Scale },
+
+    ...(isAdmin
+      ? [
+          { label: "Acesso & Segurança", isHeader: true },
+          {
+            value: "permissoes",
+            label: "Permissões de Menu",
+            icon: ShieldCheck,
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -363,6 +387,13 @@ export function ConfiguracoesClient({
               )}
             />
           </TabsContent>
+
+          {/* PERMISSÕES DE MENU (somente admin) */}
+          {isAdmin && (
+            <TabsContent value="permissoes" className="mt-0 space-y-4">
+              <TabPermissoes roles={roles} configs={permConfigs} />
+            </TabsContent>
+          )}
 
           {/* PERICULOSIDADE (Inline por enquanto) */}
           <TabsContent value="periculosidade" className="mt-0 space-y-4">

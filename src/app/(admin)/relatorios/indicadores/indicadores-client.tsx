@@ -250,12 +250,12 @@ export function IndicadoresClient({ dados, mesInicial, anoInicial }: Indicadores
 
                 {/* BLOCO 3: Ações (Resumo Numérico) */}
                 <section className="break-inside-avoid">
-                    <h4 className="text-sm font-bold uppercase bg-slate-200 p-2 border-l-4 border-blue-600 mb-4">
+                    <h4 className="text-sm font-bold uppercase bg-slate-200 p-2 border-l-4 border-primary mb-4">
                         2. Resumo das Ações Técnicas
                     </h4>
                     <div className="grid grid-cols-3 gap-4 text-center">
                         <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                            <p className="text-xs font-bold text-blue-600 uppercase mb-1">Total de Atendimentos</p>
+                            <p className="text-xs font-bold text-primary uppercase mb-1">Total de Atendimentos</p>
                             <div className="text-3xl font-black text-slate-800">{dados.acoes.atendimentosTecnicos.total}</div>
                             <div className="text-[10px] text-slate-500 mt-1 flex justify-center gap-2">
                                 <span>IND: <b>{dados.acoes.atendimentosTecnicos.individual}</b></span>

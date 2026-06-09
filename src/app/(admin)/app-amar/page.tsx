@@ -132,7 +132,7 @@ export default async function AppAmarPage() {
             >
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Icon className="h-5 w-5 text-blue-600" />
+                  <Icon className="h-5 w-5 text-primary" />
                   {section.title}
                 </CardTitle>
               </CardHeader>

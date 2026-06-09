@@ -104,7 +104,7 @@ export default async function SalaAzulPage() {
           <div className="flex h-full cursor-pointer flex-col justify-between rounded-xl border bg-card p-6 shadow-sm transition-all hover:bg-accent/50 hover:border-primary/50">
             <div className="flex items-center gap-4">
               <div className="rounded-full bg-blue-100 p-3 dark:bg-blue-900/30">
-                <Users className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                <Users className="h-8 w-8 text-primary" />
               </div>
               <div>
                 <h3 className="text-xl font-semibold">Gestão de Infratores</h3>
