@@ -123,35 +123,60 @@ export async function testEvolutionConnection(config: {
     }
 
     const cleanUrl = url.replace(/\/$/, "");
-    const testUrl = `${cleanUrl}/app/devices`;
+    const headers = {
+      "Content-Type": "application/json",
+      Authorization: gowaAuthHeader(token),
+    };
 
-    const res = await fetch(testUrl, {
+    // Endpoint principal: /app/status retorna { results: { is_connected, is_logged_in, jid } }.
+    // Fallback: /app/devices (versões mais antigas) retorna { results: [ { device } ] }.
+    const statusRes = await fetch(`${cleanUrl}/app/status`, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: gowaAuthHeader(token),
-      },
+      headers,
       cache: "no-store",
     });
 
-    if (!res.ok) {
-      const errorText = await res.text().catch(() => "");
+    if (statusRes.ok) {
+      const data = await statusRes.json();
+      const r = data?.results ?? {};
+      const isConnected = !!(r.is_logged_in ?? r.is_connected);
       return {
-        success: false,
-        error: `GoWA respondeu com status ${res.status}: ${errorText || "Sem resposta"}`,
+        success: true,
+        state: r.is_logged_in
+          ? "open"
+          : r.is_connected
+            ? "connecting"
+            : "disconnected",
+        isConnected,
+        raw: data,
       };
     }
 
-    const data = await res.json();
-    // GoWA: { code: "SUCCESS", results: [{ name, device }] }
-    const devices = Array.isArray(data?.results) ? data.results : [];
-    const isConnected = devices.length > 0;
+    // /app/status indisponível → tenta /app/devices
+    const devicesRes = await fetch(`${cleanUrl}/app/devices`, {
+      method: "GET",
+      headers,
+      cache: "no-store",
+    });
 
+    if (devicesRes.ok) {
+      const data = await devicesRes.json();
+      const devices = Array.isArray(data?.results) ? data.results : [];
+      const isConnected = devices.length > 0;
+      return {
+        success: true,
+        state: isConnected ? "open" : "disconnected",
+        isConnected,
+        raw: data,
+      };
+    }
+
+    const errorText = await statusRes.text().catch(() => "");
     return {
-      success: true,
-      state: isConnected ? "open" : "disconnected",
-      isConnected,
-      raw: data,
+      success: false,
+      error: `GoWA em ${cleanUrl} respondeu ${statusRes.status} em /app/status${
+        errorText ? `: ${errorText}` : ""
+      }. Verifique se a URL aponta para o GoWA (e não para um proxy/outro serviço).`,
     };
   } catch (error: any) {
     console.error("Erro ao testar conexão com o GoWA:", error);
@@ -557,6 +582,9 @@ export async function triggerCampaignDispatch(
 
       if (useGowa) {
         try {
+          // O GoWA resolve o JID canônico e valida o número (IsOnWhatsApp)
+          // quando APP_ACCOUNT_VALIDATION=true. Enviamos o número com sufixo
+          // padrão; números fora do WhatsApp retornam erro e são logados abaixo.
           const apiRes = await fetch(sendUrl, {
             method: "POST",
             headers: {
