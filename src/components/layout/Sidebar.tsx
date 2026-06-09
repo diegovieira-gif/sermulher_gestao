@@ -76,6 +76,10 @@ const MENU_ITEMS: MenuItemConfig[] = [
     href: "/marketing",
     icon: Megaphone,
     roles: [],
+    items: [
+      { label: "Mídias Sociais", href: "/marketing" },
+      { label: "Campanhas WhatsApp", href: "/marketing/whatsapp" },
+    ],
   },
   {
     label: "Gestão de Mulheres",
