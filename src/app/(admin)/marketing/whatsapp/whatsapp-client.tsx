@@ -210,7 +210,6 @@ export function WhatsappClient() {
       const res = await testEvolutionConnection({
         url: config.evolution_api_url,
         token: config.evolution_api_token,
-        instance: config.evolution_api_instance,
       });
 
       if (res.success) {
@@ -221,9 +220,9 @@ export function WhatsappClient() {
           loading: false,
         });
         if (res.isConnected) {
-          toast.success("Conectado à Evolution API com sucesso!");
+          toast.success("Conectado ao GoWA com sucesso!");
         } else {
-          toast.warning(`Instância ativa mas status é: ${res.state}. Abra o WhatsApp.`);
+          toast.warning("GoWA acessível, mas nenhum WhatsApp logado. Faça o login/QR Code no painel do GoWA.");
         }
       } else {
         setConnectionState({
@@ -414,9 +413,9 @@ export function WhatsappClient() {
         {/* Connection Widget */}
         <div className="flex items-center gap-3 bg-purple-50 dark:bg-purple-950/20 border border-purple-100 dark:border-purple-900/50 rounded-xl p-3">
           <div className="flex flex-col">
-            <span className="text-xs text-purple-700 dark:text-purple-300 font-medium">Evolution API</span>
+            <span className="text-xs text-purple-700 dark:text-purple-300 font-medium">GoWA (WhatsApp)</span>
             <span className="text-[10px] text-slate-500 font-mono truncate max-w-[120px]">
-              {config.evolution_api_instance || "Nenhum configurado"}
+              {config.evolution_api_url || "Nenhum configurado"}
             </span>
           </div>
           <Button
@@ -716,7 +715,7 @@ export function WhatsappClient() {
                 Configuração de Integração
               </CardTitle>
               <CardDescription>
-                Configure os parâmetros de conexão da Evolution API e do n8n para disparo automático.
+                Configure os parâmetros de conexão do GoWA (WhatsApp) e do n8n para disparo automático.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -724,35 +723,27 @@ export function WhatsappClient() {
                 <div className="space-y-4">
                   <h4 className="font-medium text-slate-900 dark:text-slate-100 border-b pb-2 flex items-center gap-2">
                     <Smartphone className="h-4 w-4 text-purple-600" />
-                    Evolution API (WhatsApp Direto)
+                    GoWA (WhatsApp Direto)
                   </h4>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-700 dark:text-slate-300">URL da Evolution API</label>
+                      <label className="text-sm font-medium text-slate-700 dark:text-slate-300">URL do GoWA</label>
                       <Input
-                        placeholder="https://api.exemplo.com"
+                        placeholder="http://192.168.0.118:3000"
                         value={config.evolution_api_url}
                         onChange={(e) => setConfig({ ...config, evolution_api_url: e.target.value })}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Token Global / API Key</label>
+                      <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Basic Auth (usuário:senha)</label>
                       <Input
                         type="password"
-                        placeholder="API Key"
+                        placeholder="usuario:senha"
                         value={config.evolution_api_token}
                         onChange={(e) => setConfig({ ...config, evolution_api_token: e.target.value })}
                       />
-                    </div>
-                    <div className="space-y-2 md:col-span-2">
-                      <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Nome da Instância</label>
-                      <Input
-                        placeholder="sermulher_whatsapp"
-                        value={config.evolution_api_instance}
-                        onChange={(e) => setConfig({ ...config, evolution_api_instance: e.target.value })}
-                      />
                       <p className="text-[11px] text-slate-500">
-                        O nome exato da instância do WhatsApp criada dentro do painel da Evolution API.
+                        As credenciais Basic Auth do GoWA, no formato <code>usuario:senha</code> (variáveis SERVICE_USER_GOWA e SERVICE_PASSWORD_GOWA).
                       </p>
                     </div>
                   </div>

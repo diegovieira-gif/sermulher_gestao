@@ -100,26 +100,36 @@ export async function saveWhatsappConfig(data: {
 }
 
 
-// 2. Test connection with Evolution API
+// Helper: monta o header Authorization Basic do GoWA a partir do token
+// guardado no formato "usuario:senha".
+function gowaAuthHeader(token: string): string {
+  return "Basic " + Buffer.from(token).toString("base64");
+}
+
+// 2. Test connection with GoWA (go-whatsapp-web-multidevice)
+// Reaproveita os campos de config:
+//   url   = URL base do GoWA (ex.: http://192.168.0.118:3000)
+//   token = credenciais Basic Auth no formato "usuario:senha"
+//   instance = ignorado (o GoWA mantém 1 sessão por container)
 export async function testEvolutionConnection(config: {
   url: string;
   token: string;
-  instance: string;
+  instance?: string;
 }) {
   try {
-    const { url, token, instance } = config;
-    if (!url || !token || !instance) {
+    const { url, token } = config;
+    if (!url || !token) {
       return { success: false, error: "Parâmetros de conexão incompletos." };
     }
 
     const cleanUrl = url.replace(/\/$/, "");
-    const testUrl = `${cleanUrl}/instance/connectionState/${instance}`;
+    const testUrl = `${cleanUrl}/app/devices`;
 
     const res = await fetch(testUrl, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        apikey: token,
+        Authorization: gowaAuthHeader(token),
       },
       cache: "no-store",
     });
@@ -128,24 +138,26 @@ export async function testEvolutionConnection(config: {
       const errorText = await res.text().catch(() => "");
       return {
         success: false,
-        error: `Evolution API respondeu com status ${res.status}: ${errorText || "Sem resposta"}`,
+        error: `GoWA respondeu com status ${res.status}: ${errorText || "Sem resposta"}`,
       };
     }
 
     const data = await res.json();
-    const isConnected = data?.instance?.state === "open";
+    // GoWA: { code: "SUCCESS", results: [{ name, device }] }
+    const devices = Array.isArray(data?.results) ? data.results : [];
+    const isConnected = devices.length > 0;
 
     return {
       success: true,
-      state: data?.instance?.state || "unknown",
+      state: isConnected ? "open" : "disconnected",
       isConnected,
       raw: data,
     };
   } catch (error: any) {
-    console.error("Erro ao testar conexão com Evolution API:", error);
+    console.error("Erro ao testar conexão com o GoWA:", error);
     return {
       success: false,
-      error: error?.message || "Não foi possível alcançar a Evolution API.",
+      error: error?.message || "Não foi possível alcançar o GoWA.",
     };
   }
 }
@@ -407,17 +419,14 @@ export async function triggerCampaignDispatch(
     const configResult = await getWhatsappConfig();
     const config = configResult.success ? configResult.data : null;
 
-    const useEvolution = !!(
-      config?.evolution_api_url &&
-      config?.evolution_api_token &&
-      config?.evolution_api_instance
-    );
+    // GoWA precisa apenas de URL base + credenciais Basic Auth (usuario:senha).
+    const useGowa = !!(config?.evolution_api_url && config?.evolution_api_token);
     const useN8n = !!config?.n8n_webhook_url;
 
-    if (!useEvolution && !useN8n) {
+    if (!useGowa && !useN8n) {
       return {
         success: false,
-        error: "Configurações de disparo incompletas. Configure a Evolution API ou n8n Webhook.",
+        error: "Configurações de disparo incompletas. Configure o GoWA ou o Webhook do n8n.",
       };
     }
 
@@ -452,9 +461,9 @@ export async function triggerCampaignDispatch(
           token: process.env.DIRECTUS_TOKEN
         },
         config: {
-          evolution_api_url: config.evolution_api_url,
-          evolution_api_token: config.evolution_api_token,
-          evolution_api_instance: config.evolution_api_instance
+          gowa_url: config.evolution_api_url,
+          // credenciais Basic Auth no formato "usuario:senha"
+          gowa_basic_auth: config.evolution_api_token,
         },
         recipients: beneficiaries.map((b: any, index: number) => ({
           disparo_id: createdDisparos[index].id,
@@ -498,21 +507,20 @@ export async function triggerCampaignDispatch(
     // --- CASE B: INDIVIDUAL DISPATCH OR FALLBACK BATCH ---
     // (If it is a single contact OR if it's a batch but n8n is not configured)
 
-    // Pré-checagem: se vamos enviar diretamente pela Evolution, garantir que a
-    // instância está realmente conectada (state "open"). Evita o erro confuso
-    // "Connection Closed" quando a sessão do WhatsApp está caída/instável.
-    if (useEvolution) {
+    // Pré-checagem: se vamos enviar diretamente pelo GoWA, garantir que há um
+    // dispositivo logado (sessão ativa). Evita falhas confusas quando o WhatsApp
+    // está desconectado/sem QR pareado.
+    if (useGowa) {
       const conn = await testEvolutionConnection({
         url: config.evolution_api_url,
         token: config.evolution_api_token,
-        instance: config.evolution_api_instance,
       });
       if (!conn.success || !conn.isConnected) {
         return {
           success: false,
-          error: `A instância "${config.evolution_api_instance}" do WhatsApp não está conectada (estado: ${
+          error: `O WhatsApp não está conectado no GoWA (estado: ${
             (conn as any).state || "desconhecido"
-          }). Reconecte a instância na Evolution API e tente novamente.`,
+          }). Faça o login/QR Code no painel do GoWA e tente novamente.`,
         };
       }
     }
@@ -528,7 +536,7 @@ export async function triggerCampaignDispatch(
     let failedCount = 0;
 
     const cleanUrl = config.evolution_api_url?.replace(/\/$/, "");
-    const sendUrl = `${cleanUrl}/message/sendText/${config.evolution_api_instance}`;
+    const sendUrl = `${cleanUrl}/send/message`;
 
     for (const b of beneficiaries) {
       const phone = b.telefone;
@@ -547,17 +555,17 @@ export async function triggerCampaignDispatch(
       let sentSuccess = false;
       let errorDetails = null;
 
-      if (useEvolution) {
+      if (useGowa) {
         try {
           const apiRes = await fetch(sendUrl, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              apikey: config.evolution_api_token,
+              Authorization: gowaAuthHeader(config.evolution_api_token),
             },
             body: JSON.stringify({
-              number: formattedPhone,
-              text: customizedMessage,
+              phone: `${formattedPhone}@s.whatsapp.net`,
+              message: customizedMessage,
             }),
           });
 
@@ -566,13 +574,13 @@ export async function triggerCampaignDispatch(
             successCount++;
           } else {
             const errLog = await apiRes.text().catch(() => "");
-            errorDetails = `Evolution API ${apiRes.status}: ${errLog || "Sem resposta"}`;
-            console.error(`Erro Evolution API para ${phone}:`, errLog);
+            errorDetails = `GoWA ${apiRes.status}: ${errLog || "Sem resposta"}`;
+            console.error(`Erro GoWA para ${phone}:`, errLog);
             failedCount++;
           }
         } catch (apiErr: any) {
           errorDetails = `Falha de rede/conexão: ${apiErr?.message || apiErr}`;
-          console.error(`Erro ao disparar Evolution para ${phone}:`, apiErr);
+          console.error(`Erro ao disparar GoWA para ${phone}:`, apiErr);
           failedCount++;
         }
       } else {
@@ -591,9 +599,8 @@ export async function triggerCampaignDispatch(
                 token: process.env.DIRECTUS_TOKEN
               },
               config: {
-                evolution_api_url: config.evolution_api_url,
-                evolution_api_token: config.evolution_api_token,
-                evolution_api_instance: config.evolution_api_instance
+                gowa_url: config.evolution_api_url,
+                gowa_basic_auth: config.evolution_api_token,
               },
               recipients: [{
                 disparo_id: null,
