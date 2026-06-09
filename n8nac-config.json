@@ -7,6 +7,12 @@
       "name": "sermulher",
       "kind": "external-instance",
       "url": "http://192.168.0.118"
+    },
+    {
+      "id": "sermulher-2-2",
+      "name": "sermulher-2",
+      "kind": "external-instance",
+      "url": "http://192.168.0.118:5678"
     }
   ],
   "environments": [
@@ -14,7 +20,7 @@
       "id": "sermulher-2",
       "name": "sermulher",
       "syncSlug": "sermulher",
-      "environmentTargetId": "sermulher",
+      "environmentTargetId": "sermulher-2-2",
       "projectId": "personal",
       "projectName": "Personal",
       "workflowsPath": "workflows",
