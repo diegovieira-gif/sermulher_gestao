@@ -151,12 +151,30 @@ export function WhatsappClient() {
           evolution_api_instance: configRes.data.evolution_api_instance || "",
           n8n_webhook_url: configRes.data.n8n_webhook_url || "",
         });
+      } else if (configRes.error) {
+        toast.error(configRes.error);
       }
-      if (campaignsRes.success) setCampaigns(campaignsRes.data || []);
-      if (beneficiariasRes.success) setBeneficiarias(beneficiariasRes.data || []);
-      if (logsRes.success) setDispatchLogs(logsRes.data || []);
+
+      if (campaignsRes.success) {
+        setCampaigns(campaignsRes.data || []);
+      } else if (campaignsRes.error) {
+        toast.error(campaignsRes.error);
+      }
+
+      if (beneficiariasRes.success) {
+        setBeneficiarias(beneficiariasRes.data || []);
+      } else if (beneficiariasRes.error) {
+        toast.error(beneficiariasRes.error);
+      }
+
+      if (logsRes.success) {
+        setDispatchLogs(logsRes.data || []);
+      } else if (logsRes.error) {
+        toast.error(logsRes.error);
+      }
     });
   };
+
 
   useEffect(() => {
     refreshData();

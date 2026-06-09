@@ -8,6 +8,7 @@ import {
   updateItem,
   deleteItem,
   readItem,
+  readMe,
 } from "@directus/sdk";
 
 // Helper for deep plain objects to avoid Next.js payload issues
@@ -17,25 +18,45 @@ function toPlainObject<T>(value: T): T {
 
 // 1. WhatsApp Connection Configuration Settings
 export async function getWhatsappConfig() {
-  return safeDirectusCall(async () => {
-    const client = await getDirectusClient({ requireAuth: true });
-    const items = await client.request(
-      readItems("configuracoes_site", {
-        limit: 1,
-        fields: [
-          "id",
-          "evolution_api_url",
-          "evolution_api_token",
-          "evolution_api_instance",
-          "n8n_webhook_url",
-        ],
-      })
-    );
+  try {
+    return await safeDirectusCall(async () => {
+      const client = await getDirectusClient({ requireAuth: true });
+
+      try {
+        const me = await client.request(
+          readMe({
+            fields: ["id", "email", "first_name", "last_name", "role.name", "role.id", "role.admin_access"],
+          })
+        );
+        console.log("DEBUG getWhatsappConfig - Logged in user:", JSON.stringify(me, null, 2));
+      } catch (meError: any) {
+        console.log("DEBUG getWhatsappConfig - Failed to fetch user profile:", meError?.message);
+      }
+
+      const items = await client.request(
+        readItems("configuracoes_site", {
+          limit: 1,
+          fields: [
+            "id",
+            "evolution_api_url",
+            "evolution_api_token",
+            "evolution_api_instance",
+            "n8n_webhook_url",
+          ],
+        })
+      );
+      return {
+        success: true,
+        data: items?.[0] ? toPlainObject(items[0]) : null,
+      };
+    });
+  } catch (error: any) {
+    console.error("Erro em getWhatsappConfig:", error);
     return {
-      success: true,
-      data: items?.[0] ? toPlainObject(items[0]) : null,
+      success: false,
+      error: "Sem permissão para acessar 'configuracoes_site' ou coleção não existe."
     };
-  });
+  }
 }
 
 export async function saveWhatsappConfig(data: {
@@ -45,30 +66,38 @@ export async function saveWhatsappConfig(data: {
   evolution_api_instance: string | null;
   n8n_webhook_url: string | null;
 }) {
-  return safeDirectusCall(async () => {
-    const client = await getDirectusClient({ requireAuth: true });
-    const { id, ...payload } = data;
+  try {
+    return await safeDirectusCall(async () => {
+      const client = await getDirectusClient({ requireAuth: true });
+      const { id, ...payload } = data;
 
-    let result;
-    if (id) {
-      result = await client.request(updateItem("configuracoes_site", id, payload));
-    } else {
-      // Find the first configuration if ID is missing (singleton)
-      const existing = await client.request(
-        readItems("configuracoes_site", { limit: 1, fields: ["id"] })
-      );
-      if (existing?.[0]?.id) {
-        result = await client.request(
-          updateItem("configuracoes_site", existing[0].id, payload)
-        );
+      let result;
+      if (id) {
+        result = await client.request(updateItem("configuracoes_site", id, payload));
       } else {
-        result = await client.request(createItem("configuracoes_site", payload));
+        // Find the first configuration if ID is missing (singleton)
+        const existing = await client.request(
+          readItems("configuracoes_site", { limit: 1, fields: ["id"] })
+        );
+        if (existing?.[0]?.id) {
+          result = await client.request(
+            updateItem("configuracoes_site", existing[0].id, payload)
+          );
+        } else {
+          result = await client.request(createItem("configuracoes_site", payload));
+        }
       }
-    }
 
-    revalidatePath("/marketing/whatsapp");
-    return { success: true, data: toPlainObject(result) };
-  });
+      revalidatePath("/marketing/whatsapp");
+      return { success: true, data: toPlainObject(result) };
+    });
+  } catch (error: any) {
+    console.error("Erro em saveWhatsappConfig:", error);
+    return {
+      success: false,
+      error: "Você não tem permissão para salvar configurações ou a coleção não existe."
+    };
+  }
 }
 
 // 2. Test connection with Evolution API
@@ -123,17 +152,25 @@ export async function testEvolutionConnection(config: {
 
 // 3. Campaigns CRUD
 export async function getWhatsappCampaigns() {
-  return safeDirectusCall(async () => {
-    const client = await getDirectusClient({ requireAuth: true });
-    const items = await client.request(
-      readItems("campanhas", {
-        filter: { canal: { _eq: "whatsapp" } },
-        sort: ["-date_created"],
-        limit: -1,
-      })
-    );
-    return { success: true, data: toPlainObject(items) };
-  });
+  try {
+    return await safeDirectusCall(async () => {
+      const client = await getDirectusClient({ requireAuth: true });
+      const items = await client.request(
+        readItems("campanhas", {
+          filter: { canal: { _eq: "whatsapp" } },
+          sort: ["-date_created"],
+          limit: -1,
+        })
+      );
+      return { success: true, data: toPlainObject(items) };
+    });
+  } catch (error: any) {
+    console.error("Erro em getWhatsappCampaigns:", error);
+    return {
+      success: false,
+      error: "Sem permissão para acessar a coleção 'campanhas' ou ela não existe."
+    };
+  }
 }
 
 export async function saveWhatsappCampaign(data: {
@@ -144,88 +181,120 @@ export async function saveWhatsappCampaign(data: {
   status: "draft" | "scheduled" | "running" | "paused" | "completed";
   data_envio?: string | null;
 }) {
-  return safeDirectusCall(async () => {
-    const client = await getDirectusClient({ requireAuth: true });
-    const { id, ...payload } = data;
+  try {
+    return await safeDirectusCall(async () => {
+      const client = await getDirectusClient({ requireAuth: true });
+      const { id, ...payload } = data;
 
-    const dataToSend = {
-      ...payload,
-      canal: "whatsapp",
+      const dataToSend = {
+        ...payload,
+        canal: "whatsapp",
+      };
+
+      let result;
+      if (id) {
+        result = await client.request(updateItem("campanhas", id, dataToSend));
+      } else {
+        result = await client.request(createItem("campanhas", dataToSend));
+      }
+
+      revalidatePath("/marketing/whatsapp");
+      return { success: true, data: toPlainObject(result) };
+    });
+  } catch (error: any) {
+    console.error("Erro em saveWhatsappCampaign:", error);
+    return {
+      success: false,
+      error: "Você não tem permissão para salvar campanhas ou a coleção não existe."
     };
-
-    let result;
-    if (id) {
-      result = await client.request(updateItem("campanhas", id, dataToSend));
-    } else {
-      result = await client.request(createItem("campanhas", dataToSend));
-    }
-
-    revalidatePath("/marketing/whatsapp");
-    return { success: true, data: toPlainObject(result) };
-  });
+  }
 }
 
 export async function deleteWhatsappCampaign(id: string) {
-  return safeDirectusCall(async () => {
-    const client = await getDirectusClient({ requireAuth: true });
-    await client.request(deleteItem("campanhas", id));
-    revalidatePath("/marketing/whatsapp");
-    return { success: true };
-  });
+  try {
+    return await safeDirectusCall(async () => {
+      const client = await getDirectusClient({ requireAuth: true });
+      await client.request(deleteItem("campanhas", id));
+      revalidatePath("/marketing/whatsapp");
+      return { success: true };
+    });
+  } catch (error: any) {
+    console.error("Erro em deleteWhatsappCampaign:", error);
+    return {
+      success: false,
+      error: "Você não tem permissão para excluir esta campanha ou a coleção não existe."
+    };
+  }
 }
 
 // 4. Beneficiaries List (Target Audience)
 export async function getBeneficiariasList() {
-  return safeDirectusCall(async () => {
-    const client = await getDirectusClient({ requireAuth: true });
-    const items: any = await client.request(
-      readItems("beneficiarias", {
-        fields: ["id", "nome_completo", "nome_social", "telefone", "cpf"],
-        limit: -1,
-        sort: ["nome_completo"],
-      })
-    );
+  try {
+    return await safeDirectusCall(async () => {
+      const client = await getDirectusClient({ requireAuth: true });
+      const items: any = await client.request(
+        readItems("beneficiarias", {
+          fields: ["id", "nome_completo", "nome_social", "telefone", "cpf"],
+          limit: -1,
+          sort: ["nome_completo"],
+        })
+      );
 
-    console.log("DEBUG getBeneficiariasList - items:", {
-      type: typeof items,
-      isArray: Array.isArray(items),
-      keys: items ? Object.keys(items) : null,
-      preview: items ? JSON.stringify(items).substring(0, 500) : null
+      console.log("DEBUG getBeneficiariasList - items:", {
+        type: typeof items,
+        isArray: Array.isArray(items),
+        keys: items ? Object.keys(items) : null,
+        preview: items ? JSON.stringify(items).substring(0, 500) : null
+      });
+
+      // Filter beneficiaries that have a phone number
+      const filtered = (Array.isArray(items) ? items : []).filter(
+        (b: any) => b.telefone && b.telefone.replace(/\D/g, "").length >= 8
+      );
+
+      return { success: true, data: toPlainObject(filtered) };
     });
-
-    // Filter beneficiaries that have a phone number
-    const filtered = (Array.isArray(items) ? items : []).filter(
-      (b: any) => b.telefone && b.telefone.replace(/\D/g, "").length >= 8
-    );
-
-    return { success: true, data: toPlainObject(filtered) };
-  });
+  } catch (error: any) {
+    console.error("Erro em getBeneficiariasList:", error);
+    return {
+      success: false,
+      error: "Você não tem permissão para listar as beneficiárias ou a coleção não existe."
+    };
+  }
 }
 
 
 // 5. Dispatch History Logs
 export async function getDispatchLogs() {
-  return safeDirectusCall(async () => {
-    const client = await getDirectusClient({ requireAuth: true });
-    const items = await client.request(
-      readItems("disparos", {
-        fields: [
-          "id",
-          "status",
-          "data_envio",
-          "date_created",
-          "campanha_id.id",
-          "campanha_id.nome",
-          "beneficiaria_id.id",
-          "beneficiaria_id.nome_completo",
-          "beneficiaria_id.telefone",
-        ],
-        sort: ["-date_created"],
-        limit: 100, // Show last 100 logs
-      })
-    );
-    return { success: true, data: toPlainObject(items) };
-  });
+  try {
+    return await safeDirectusCall(async () => {
+      const client = await getDirectusClient({ requireAuth: true });
+      const items = await client.request(
+        readItems("disparos", {
+          fields: [
+            "id",
+            "status",
+            "data_envio",
+            "date_created",
+            "campanha_id.id",
+            "campanha_id.nome",
+            "beneficiaria_id.id",
+            "beneficiaria_id.nome_completo",
+            "beneficiaria_id.telefone",
+          ],
+          sort: ["-date_created"],
+          limit: 100, // Show last 100 logs
+        })
+      );
+      return { success: true, data: toPlainObject(items) };
+    });
+  } catch (error: any) {
+    console.error("Erro em getDispatchLogs:", error);
+    return {
+      success: false,
+      error: "Sem permissão para acessar a coleção 'disparos' ou ela não existe."
+    };
+  }
 }
 
 // Helper to format phone number for Brazilian WhatsApp
