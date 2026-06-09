@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -66,6 +67,7 @@ export function BeneficiariaForm({
   beneficiaria,
   formOptions,
 }: BeneficiariaFormProps) {
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<BeneficiariaFormValues>({
@@ -99,9 +101,24 @@ export function BeneficiariaForm({
     },
   });
 
+  // Helper local para parsear campos JSON que podem vir como string
+  const safeJsonParse = (val: any) => {
+    if (typeof val === "string") {
+      try {
+        return JSON.parse(val);
+      } catch {
+        return null;
+      }
+    }
+    return val;
+  };
+
   // Atualiza o formulário quando a beneficiária muda
   useEffect(() => {
     if (beneficiaria) {
+      const parsedContato = safeJsonParse(beneficiaria.contato);
+      const parsedEndereco = safeJsonParse(beneficiaria.endereco);
+
       // Normaliza os dados do Directus para o formulário
       const normalizedData: BeneficiariaFormValues = {
         ...beneficiaria,
@@ -115,12 +132,12 @@ export function BeneficiariaForm({
         // melhor_turno_contato agora fica dentro de contato
         contato: {
           melhor_turno_contato:
-            beneficiaria.contato?.melhor_turno_contato || null,
+            parsedContato?.melhor_turno_contato || null,
         },
         numero_cad_unico: beneficiaria.numero_cad_unico || "",
         escolaridade_id: beneficiaria.escolaridade_id,
         situacao_trabalho_id: beneficiaria.situacao_trabalho_id,
-        endereco: beneficiaria.endereco || {
+        endereco: parsedEndereco || {
           logradouro: "",
           numero: "",
           bairro: "",
@@ -173,6 +190,7 @@ export function BeneficiariaForm({
 
       if (result.success) {
         toast.success(result.message);
+        router.refresh();
         onOpenChange(false);
         form.reset();
       } else {

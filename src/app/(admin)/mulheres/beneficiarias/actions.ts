@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 
 import { revalidatePath } from "next/cache";
 import {
@@ -42,6 +42,17 @@ const BENEFICIARIA_FIELDS = [
 ];
 
 // --- Helpers Internos ---
+
+function parseJsonField(field: any) {
+  if (typeof field === "string") {
+    try {
+      return JSON.parse(field);
+    } catch {
+      return null;
+    }
+  }
+  return field;
+}
 
 function parseFormData(formData: FormData) {
   const data: any = {};
@@ -118,9 +129,15 @@ export async function getBeneficiarias(page = 1, search = "", limit = 10) {
     // @ts-ignore
     const total = Number(countResult[0]?.count) || 0;
 
+    const parsedItems = items.map((item: any) => ({
+      ...item,
+      endereco: parseJsonField(item.endereco),
+      contato: parseJsonField(item.contato),
+    }));
+
     return {
       success: true,
-      data: items,
+      data: parsedItems,
       meta: {
         total,
         page,
@@ -140,7 +157,12 @@ export async function getBeneficiaria(id: number) {
     const item = await client.request(
       readItem("beneficiarias", id, { fields: BENEFICIARIA_FIELDS as any }),
     );
-    return { success: true, data: item };
+    const parsedItem = {
+      ...item,
+      endereco: parseJsonField(item.endereco),
+      contato: parseJsonField(item.contato),
+    };
+    return { success: true, data: parsedItem };
   } catch (error) {
     return { success: false, error: "Erro ao buscar beneficiária." };
   }
@@ -188,7 +210,11 @@ export async function getBeneficiariasExport(search = "") {
         filter,
       }),
     );
-    return { success: true, data: items };
+    const parsedItems = items.map((item: any) => ({
+      ...item,
+      endereco: parseJsonField(item.endereco),
+    }));
+    return { success: true, data: parsedItems };
   } catch (error) {
     return { success: false, error: "Erro ao exportar." };
   }

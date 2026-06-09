@@ -106,6 +106,42 @@ function gowaAuthHeader(token: string): string {
   return "Basic " + Buffer.from(token).toString("base64");
 }
 
+// Resolve o JID canônico do número no WhatsApp via GoWA /user/check.
+// Resolve o problema do "9º dígito" brasileiro: o número discável tem o 9 extra
+// (5579999800850), mas a conta no WhatsApp pode estar registrada sem ele
+// (557999800850). Enviar para o JID errado = mensagem não entregue.
+// Retorna o JID canônico (ex.: "557999800850@s.whatsapp.net") ou null se o
+// número não estiver no WhatsApp / a checagem falhar.
+async function resolveGowaJid(
+  cleanUrl: string,
+  token: string,
+  digits: string
+): Promise<{ jid: string | null; onWhatsapp: boolean; checked: boolean }> {
+  try {
+    const res = await fetch(
+      `${cleanUrl}/user/check?phone=${encodeURIComponent(digits)}`,
+      {
+        method: "GET",
+        headers: { Authorization: gowaAuthHeader(token) },
+        cache: "no-store",
+      }
+    );
+    if (!res.ok) {
+      return { jid: null, onWhatsapp: false, checked: false };
+    }
+    const data = await res.json().catch(() => null);
+    const r = data?.results ?? data ?? {};
+    const onWhatsapp = !!(r.is_on_whatsapp ?? r.isOnWhatsApp);
+    let jid: string | null = r.jid || r.JID || null;
+    if (jid && !jid.includes("@")) {
+      jid = `${jid}@s.whatsapp.net`;
+    }
+    return { jid, onWhatsapp, checked: true };
+  } catch {
+    return { jid: null, onWhatsapp: false, checked: false };
+  }
+}
+
 // 2. Test connection with GoWA (go-whatsapp-web-multidevice)
 // Reaproveita os campos de config:
 //   url   = URL base do GoWA (ex.: http://192.168.0.118:3000)
@@ -376,8 +412,20 @@ function formatWhatsappNumber(phone: string): string {
     cleaned = "55" + cleaned;
   }
 
-  // Ensure 13 digits for Brazilian mobile (some regions don't use 9th digit on WhatsApp,
-  // but Evolution API usually expects the number as it is on WhatsApp)
+  // Regra do 9º dígito brasileiro:
+  // O número discável tem o 9 extra (55 + DDD + 9 + 8 dígitos = 13).
+  // Porém, contas de WhatsApp em DDDs >= 31 (ex.: Sergipe = 79) normalmente
+  // estão registradas SEM esse 9 (55 + DDD + 8 dígitos = 12). O GoWA NÃO
+  // corrige isso sozinho — ele envia para o JID exato que recebe. Então
+  // removemos o 9 nesses DDDs para acertar o JID canônico e a mensagem chegar.
+  if (cleaned.startsWith("55") && cleaned.length === 13) {
+    const ddd = parseInt(cleaned.substring(2, 4), 10);
+    const ninthDigit = cleaned.charAt(4);
+    if (ninthDigit === "9" && ddd >= 31) {
+      cleaned = cleaned.substring(0, 4) + cleaned.substring(5);
+    }
+  }
+
   return cleaned;
 }
 
@@ -582,29 +630,44 @@ export async function triggerCampaignDispatch(
 
       if (useGowa) {
         try {
-          // O GoWA resolve o JID canônico e valida o número (IsOnWhatsApp)
-          // quando APP_ACCOUNT_VALIDATION=true. Enviamos o número com sufixo
-          // padrão; números fora do WhatsApp retornam erro e são logados abaixo.
-          const apiRes = await fetch(sendUrl, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: gowaAuthHeader(config.evolution_api_token),
-            },
-            body: JSON.stringify({
-              phone: `${formattedPhone}@s.whatsapp.net`,
-              message: customizedMessage,
-            }),
-          });
+          // Resolve o JID canônico (corrige o 9º dígito brasileiro). Se o número
+          // não estiver no WhatsApp, marca como falha sem tentar enviar.
+          const resolved = await resolveGowaJid(
+            cleanUrl,
+            config.evolution_api_token,
+            formattedPhone
+          );
 
-          if (apiRes.ok) {
-            sentSuccess = true;
-            successCount++;
-          } else {
-            const errLog = await apiRes.text().catch(() => "");
-            errorDetails = `GoWA ${apiRes.status}: ${errLog || "Sem resposta"}`;
-            console.error(`Erro GoWA para ${phone}:`, errLog);
+          if (resolved.checked && !resolved.onWhatsapp) {
+            // Número confirmadamente fora do WhatsApp: não tenta enviar.
+            errorDetails = "Número não está no WhatsApp";
+            console.error(`Número fora do WhatsApp: ${phone}`);
             failedCount++;
+          } else {
+            const targetJid =
+              resolved.jid || `${formattedPhone}@s.whatsapp.net`;
+
+            const apiRes = await fetch(sendUrl, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: gowaAuthHeader(config.evolution_api_token),
+              },
+              body: JSON.stringify({
+                phone: targetJid,
+                message: customizedMessage,
+              }),
+            });
+
+            if (apiRes.ok) {
+              sentSuccess = true;
+              successCount++;
+            } else {
+              const errLog = await apiRes.text().catch(() => "");
+              errorDetails = `GoWA ${apiRes.status}: ${errLog || "Sem resposta"}`;
+              console.error(`Erro GoWA para ${phone}:`, errLog);
+              failedCount++;
+            }
           }
         } catch (apiErr: any) {
           errorDetails = `Falha de rede/conexão: ${apiErr?.message || apiErr}`;
