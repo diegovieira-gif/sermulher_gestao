@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getDirectusClient, safeDirectusCall } from "@/lib/directus";
+import { getDirectusClient, getDirectusAdmin, safeDirectusCall } from "@/lib/directus";
 import {
   readItems,
   createItem,
@@ -253,6 +253,12 @@ export async function saveWhatsappCampaign(data: {
   mensagem: string;
   status: "draft" | "scheduled" | "running" | "paused" | "completed";
   data_envio?: string | null;
+  // Agendamento (campanhas automáticas)
+  tipo?: "manual" | "automatica";
+  ativa?: boolean;
+  horario?: string | null; // 'HH:MM'
+  dias_semana?: number[] | null; // 0-6 (dom-sáb); vazio = todos os dias
+  filtro_json?: BeneficiariaFilter | null;
 }) {
   try {
     return await safeDirectusCall(async () => {
@@ -608,9 +614,27 @@ export async function triggerCampaignDispatch(
   campaignId: string,
   target: DispatchTarget
 ) {
-  try {
-    const client = await getDirectusClient({ requireAuth: true });
+  const client = await getDirectusClient({ requireAuth: true });
+  return dispatchCampaignWithClient(client, campaignId, target);
+}
 
+// Variante para execução automática (cron): usa o cliente admin estático,
+// pois não há sessão/cookie de usuário no contexto do agendador.
+export async function triggerCampaignDispatchAdmin(
+  campaignId: string,
+  target: DispatchTarget
+) {
+  const client = getDirectusAdmin();
+  return dispatchCampaignWithClient(client, campaignId, target);
+}
+
+// Núcleo do disparo, independente de como o cliente Directus foi obtido.
+async function dispatchCampaignWithClient(
+  client: any,
+  campaignId: string,
+  target: DispatchTarget
+) {
+  try {
     // 1. Fetch campaign message template
     const campaign = await client.request(readItem("campanhas", campaignId));
     if (!campaign || !campaign.mensagem) {
@@ -934,5 +958,116 @@ export async function triggerCampaignDispatch(
   } catch (error: any) {
     console.error("Erro no disparo da campanha:", error);
     return { success: false, error: error?.message || "Erro desconhecido ao processar disparos." };
+  }
+}
+
+// 7. Execução de campanhas automáticas (agendadas) — chamada pelo cron.
+// Critério de "devida agora": tipo=automatica, ativa=true, hora do `horario`
+// igual à hora atual, dia da semana permitido e ainda não executada hoje.
+// Fuso fixo America/Maceio (Sergipe). Idempotente via `ultima_execucao`.
+const SCHEDULER_TZ = "America/Maceio";
+
+function nowInScheduleTz(): { dateStr: string; hour: number; weekday: number } {
+  const now = new Date();
+  // YYYY-MM-DD no fuso alvo (en-CA produz exatamente esse formato)
+  const dateStr = new Intl.DateTimeFormat("en-CA", {
+    timeZone: SCHEDULER_TZ,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
+  const hour = Number(
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone: SCHEDULER_TZ,
+      hour: "2-digit",
+      hour12: false,
+    }).format(now)
+  );
+  // getDay() sobre a data "local" do fuso alvo
+  const weekday = new Date(
+    now.toLocaleString("en-US", { timeZone: SCHEDULER_TZ })
+  ).getDay();
+  return { dateStr, hour: hour % 24, weekday };
+}
+
+export async function runDueAutomaticCampaigns() {
+  try {
+    const client = getDirectusAdmin();
+    const { dateStr, hour, weekday } = nowInScheduleTz();
+
+    const campaigns: any[] = await client.request(
+      readItems("campanhas", {
+        filter: {
+          _and: [
+            { canal: { _eq: "whatsapp" } },
+            { tipo: { _eq: "automatica" } },
+            { ativa: { _eq: true } },
+          ],
+        },
+        limit: -1,
+      })
+    );
+
+    const results: any[] = [];
+
+    for (const c of Array.isArray(campaigns) ? campaigns : []) {
+      const horario = String(c.horario || "").trim();
+      const horarioHour = horario ? Number(horario.split(":")[0]) : NaN;
+      const hourMatch = Number.isFinite(horarioHour) && horarioHour === hour;
+
+      const dias: number[] = Array.isArray(c.dias_semana) ? c.dias_semana : [];
+      const dayMatch = dias.length === 0 || dias.includes(weekday);
+
+      const alreadyRan =
+        c.ultima_execucao &&
+        String(c.ultima_execucao).slice(0, 10) === dateStr;
+
+      if (!hourMatch || !dayMatch || alreadyRan) {
+        results.push({
+          id: c.id,
+          nome: c.nome,
+          skipped: true,
+          reason: !horario
+            ? "sem horário definido"
+            : !hourMatch
+              ? "fora do horário"
+              : !dayMatch
+                ? "dia da semana não selecionado"
+                : "já executada hoje",
+        });
+        continue;
+      }
+
+      // Marca ANTES de disparar para garantir idempotência (evita duplo envio
+      // se o cron disparar mais de uma vez na mesma hora).
+      await client.request(
+        updateItem("campanhas", c.id, { ultima_execucao: dateStr })
+      );
+
+      let filter: BeneficiariaFilter = {};
+      if (c.filtro_json) {
+        filter =
+          typeof c.filtro_json === "string"
+            ? (JSON.parse(c.filtro_json) as BeneficiariaFilter)
+            : (c.filtro_json as BeneficiariaFilter);
+      }
+
+      const res = await dispatchCampaignWithClient(client, String(c.id), {
+        mode: "filtered",
+        filter,
+      });
+
+      results.push({ id: c.id, nome: c.nome, dispatched: true, result: res });
+    }
+
+    return {
+      success: true,
+      executedAt: `${dateStr} ${String(hour).padStart(2, "0")}:00 ${SCHEDULER_TZ}`,
+      considered: campaigns.length,
+      results,
+    };
+  } catch (error: any) {
+    console.error("Erro em runDueAutomaticCampaigns:", error);
+    return { success: false, error: error?.message || "Falha ao executar campanhas automáticas." };
   }
 }

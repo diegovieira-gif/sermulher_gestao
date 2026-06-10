@@ -75,6 +75,12 @@ import {
   type BeneficiariaFilter,
   type DispatchTarget,
 } from "./actions";
+import {
+  AudienceFilterPanel,
+  EMPTY_FILTER,
+  countActiveFilters,
+  type FilterOptions,
+} from "./audience-filter-panel";
 
 interface Beneficiaria {
   id: string;
@@ -84,51 +90,6 @@ interface Beneficiaria {
   cpf?: string;
 }
 
-type ConfigOption = { id: number; nome: string };
-interface FilterOptions {
-  racas: ConfigOption[];
-  estadosCivis: ConfigOption[];
-  escolaridades: ConfigOption[];
-  situacoesTrabalho: ConfigOption[];
-  bairros: ConfigOption[];
-}
-
-const EMPTY_FILTER: BeneficiariaFilter = {
-  busca: "",
-  status: "",
-  raca_cor_id: [],
-  estado_civil_id: [],
-  escolaridade_id: [],
-  situacao_trabalho_id: [],
-  bairro: [],
-  recebe_bolsa_familia: null,
-  recebe_bpc: null,
-  possui_medida_protetiva: null,
-  filhos_min: null,
-  filhos_max: null,
-  idade_min: null,
-  idade_max: null,
-  aniversariantes_hoje: false,
-};
-
-// Conta quantos critérios estão ativos no filtro (para exibir no resumo).
-function countActiveFilters(f: BeneficiariaFilter): number {
-  let n = 0;
-  if (f.busca && f.busca.trim()) n++;
-  if (f.status && f.status.trim()) n++;
-  n += (f.raca_cor_id?.length ? 1 : 0);
-  n += (f.estado_civil_id?.length ? 1 : 0);
-  n += (f.escolaridade_id?.length ? 1 : 0);
-  n += (f.situacao_trabalho_id?.length ? 1 : 0);
-  n += (f.bairro?.length ? 1 : 0);
-  if (f.recebe_bolsa_familia === true || f.recebe_bolsa_familia === false) n++;
-  if (f.recebe_bpc === true || f.recebe_bpc === false) n++;
-  if (f.possui_medida_protetiva === true || f.possui_medida_protetiva === false) n++;
-  if (typeof f.filhos_min === "number" || typeof f.filhos_max === "number") n++;
-  if (typeof f.idade_min === "number" || typeof f.idade_max === "number") n++;
-  if (f.aniversariantes_hoje) n++;
-  return n;
-}
 
 interface Campaign {
   id?: string;
@@ -138,7 +99,24 @@ interface Campaign {
   status: "draft" | "scheduled" | "running" | "paused" | "completed";
   data_envio?: string | null;
   date_created?: string;
+  // Agendamento (campanhas automáticas)
+  tipo?: "manual" | "automatica";
+  ativa?: boolean;
+  horario?: string | null;
+  dias_semana?: number[] | null;
+  filtro_json?: BeneficiariaFilter | null;
+  ultima_execucao?: string | null;
 }
+
+const DIAS_SEMANA = [
+  { lbl: "Dom", v: 0 },
+  { lbl: "Seg", v: 1 },
+  { lbl: "Ter", v: 2 },
+  { lbl: "Qua", v: 3 },
+  { lbl: "Qui", v: 4 },
+  { lbl: "Sex", v: 5 },
+  { lbl: "Sáb", v: 6 },
+];
 
 interface ConnectionConfig {
   id?: number;
@@ -198,6 +176,16 @@ export function WhatsappClient() {
   const [campaignName, setCampaignName] = useState("");
   const [campaignObjective, setCampaignObjective] = useState("");
   const [campaignMessage, setCampaignMessage] = useState("");
+
+  // Agendamento da campanha (no formulário)
+  const [campTipo, setCampTipo] = useState<"manual" | "automatica">("manual");
+  const [campAtiva, setCampAtiva] = useState(true);
+  const [campHorario, setCampHorario] = useState("08:00");
+  const [campDias, setCampDias] = useState<number[]>([]);
+  const [campFiltro, setCampFiltro] = useState<BeneficiariaFilter>(EMPTY_FILTER);
+  const [campFiltroCount, setCampFiltroCount] = useState<number | null>(null);
+  const [campCounting, setCampCounting] = useState(false);
+  const [savingCampaign, setSavingCampaign] = useState(false);
 
   const refreshData = async () => {
     startTransition(async () => {
@@ -309,12 +297,27 @@ export function WhatsappClient() {
       setCampaignName(camp.nome);
       setCampaignObjective(camp.objetivo || "");
       setCampaignMessage(camp.mensagem);
+      setCampTipo(camp.tipo === "automatica" ? "automatica" : "manual");
+      setCampAtiva(camp.ativa ?? true);
+      setCampHorario(camp.horario || "08:00");
+      setCampDias(Array.isArray(camp.dias_semana) ? camp.dias_semana : []);
+      setCampFiltro(
+        camp.filtro_json && typeof camp.filtro_json === "object"
+          ? { ...EMPTY_FILTER, ...camp.filtro_json }
+          : EMPTY_FILTER,
+      );
     } else {
       setEditingCampaign(null);
       setCampaignName("");
       setCampaignObjective("");
       setCampaignMessage("");
+      setCampTipo("manual");
+      setCampAtiva(true);
+      setCampHorario("08:00");
+      setCampDias([]);
+      setCampFiltro(EMPTY_FILTER);
     }
+    setCampFiltroCount(null);
     setCampaignFormOpen(true);
   };
 
@@ -324,7 +327,12 @@ export function WhatsappClient() {
       toast.error("Nome da campanha e mensagem são obrigatórios.");
       return;
     }
+    if (campTipo === "automatica" && !/^\d{1,2}:\d{2}$/.test(campHorario.trim())) {
+      toast.error("Informe um horário válido (HH:MM) para a campanha automática.");
+      return;
+    }
 
+    setSavingCampaign(true);
     try {
       const res = await saveWhatsappCampaign({
         id: editingCampaign?.id,
@@ -332,6 +340,11 @@ export function WhatsappClient() {
         objetivo: campaignObjective,
         mensagem: campaignMessage,
         status: editingCampaign?.status || "draft",
+        tipo: campTipo,
+        ativa: campTipo === "automatica" ? campAtiva : false,
+        horario: campTipo === "automatica" ? campHorario.trim() : null,
+        dias_semana: campTipo === "automatica" ? campDias : null,
+        filtro_json: campTipo === "automatica" ? campFiltro : null,
       });
 
       if (res.success) {
@@ -339,10 +352,12 @@ export function WhatsappClient() {
         setCampaignFormOpen(false);
         refreshData();
       } else {
-        toast.error("Erro ao salvar campanha.");
+        toast.error((res as any).error || "Erro ao salvar campanha.");
       }
     } catch (err) {
       toast.error("Erro ao processar requisição.");
+    } finally {
+      setSavingCampaign(false);
     }
   };
 
@@ -397,9 +412,10 @@ export function WhatsappClient() {
     };
   }, [searchBeneficiaria, audienceMode, dispatchDialogOpen]);
 
-  // Carrega as opções dos selects de filtro na 1ª vez que o disparo é aberto.
+  // Carrega as opções dos selects de filtro na 1ª vez que o disparo OU o
+  // formulário de campanha é aberto.
   useEffect(() => {
-    if (!dispatchDialogOpen || filterOptions || loadingFilterOptions) return;
+    if ((!dispatchDialogOpen && !campaignFormOpen) || filterOptions || loadingFilterOptions) return;
     let active = true;
     setLoadingFilterOptions(true);
     (async () => {
@@ -439,101 +455,29 @@ export function WhatsappClient() {
     };
   }, [filterValue, audienceMode, dispatchDialogOpen]);
 
-  // Alterna um id em um campo multi-seleção do filtro.
-  const toggleFilterId = (
-    field: "raca_cor_id" | "estado_civil_id" | "escolaridade_id" | "situacao_trabalho_id" | "bairro",
-    id: number,
-  ) => {
-    setFilterValue((prev) => {
-      const cur = (prev[field] as number[]) || [];
-      const next = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
-      return { ...prev, [field]: next };
-    });
-  };
+  // Contagem ao vivo do público no formulário de campanha automática (debounce).
+  useEffect(() => {
+    if (!campaignFormOpen || campTipo !== "automatica") return;
+    let active = true;
+    setCampCounting(true);
+    const t = setTimeout(async () => {
+      const res = await getBeneficiariasCountForFilter(campFiltro);
+      if (!active) return;
+      if (res.success) setCampFiltroCount(res.count ?? 0);
+      else setCampFiltroCount(0);
+      setCampCounting(false);
+    }, 400);
+    return () => {
+      active = false;
+      clearTimeout(t);
+    };
+  }, [campFiltro, campTipo, campaignFormOpen]);
 
   const resetFilter = () => {
     setFilterValue(EMPTY_FILTER);
   };
 
   const activeFilterCount = countActiveFilters(filterValue);
-
-  const renderChipGroup = (
-    label: string,
-    field: "raca_cor_id" | "estado_civil_id" | "escolaridade_id" | "situacao_trabalho_id" | "bairro",
-    opts: ConfigOption[],
-  ) => {
-    const selected = (filterValue[field] as number[]) || [];
-    return (
-      <div className="space-y-1.5">
-        <div className="flex items-center justify-between">
-          <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{label}</label>
-          {selected.length > 0 && (
-            <span className="text-[10px] text-purple-600 font-medium">{selected.length} selec.</span>
-          )}
-        </div>
-        <div className="flex flex-wrap gap-1.5">
-          {opts.length === 0 ? (
-            <span className="text-[11px] text-slate-400">Sem opções</span>
-          ) : (
-            opts.map((o) => {
-              const active = selected.includes(o.id);
-              return (
-                <button
-                  key={o.id}
-                  type="button"
-                  onClick={() => toggleFilterId(field, o.id)}
-                  className={cn(
-                    "rounded-full border px-2.5 py-1 text-[11px] transition-colors",
-                    active
-                      ? "border-purple-300 bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200"
-                      : "border-slate-200 text-slate-600 hover:bg-slate-50",
-                  )}
-                >
-                  {o.nome}
-                </button>
-              );
-            })
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  const renderTriState = (
-    label: string,
-    field: "recebe_bolsa_familia" | "recebe_bpc" | "possui_medida_protetiva",
-  ) => {
-    const val = filterValue[field];
-    const opt = (lbl: string, v: boolean | null) => (
-      <button
-        type="button"
-        onClick={() => setFilterValue((p) => ({ ...p, [field]: v }))}
-        className={cn(
-          "flex-1 rounded-md px-2 py-1 text-[11px] font-medium transition-colors",
-          val === v ? "bg-purple-600 text-white" : "text-slate-600 hover:bg-slate-100",
-        )}
-      >
-        {lbl}
-      </button>
-    );
-    return (
-      <div className="space-y-1">
-        <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{label}</label>
-        <div className="flex items-center gap-1 rounded-lg border border-slate-200 p-0.5">
-          {opt("Qualquer", null)}
-          {opt("Sim", true)}
-          {opt("Não", false)}
-        </div>
-      </div>
-    );
-  };
-
-  // Lê um input numérico opcional (vazio => null).
-  const numOrNull = (v: string): number | null => {
-    if (v.trim() === "") return null;
-    const n = Number(v);
-    return Number.isFinite(n) ? n : null;
-  };
 
   const handleTriggerDispatch = async () => {
     if (!selectedCampaignForDispatch) return;
@@ -983,7 +927,7 @@ export function WhatsappClient() {
 
       {/* CAMPAIGN DIALOG FORM */}
       <Dialog open={campaignFormOpen} onOpenChange={setCampaignFormOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[600px] max-h-[88vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingCampaign ? "Editar Campanha" : "Nova Campanha WhatsApp"}</DialogTitle>
             <DialogDescription>
@@ -1035,12 +979,146 @@ export function WhatsappClient() {
               </p>
             </div>
 
+            {/* Tipo de campanha: manual x automática */}
+            <div className="space-y-2 pt-2 border-t">
+              <label className="text-sm font-medium">Tipo de envio</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCampTipo("manual")}
+                  className={cn(
+                    "flex flex-col items-start gap-0.5 rounded-lg border p-3 text-left transition-colors",
+                    campTipo === "manual"
+                      ? "border-purple-300 bg-purple-50 dark:bg-purple-950/20 ring-1 ring-purple-300"
+                      : "border-slate-200 hover:bg-slate-50",
+                  )}
+                >
+                  <span className="flex items-center gap-1.5 text-sm font-semibold">
+                    <Send className="h-4 w-4 text-purple-600" /> Manual
+                  </span>
+                  <span className="text-[11px] text-slate-500">Você dispara quando quiser</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCampTipo("automatica")}
+                  className={cn(
+                    "flex flex-col items-start gap-0.5 rounded-lg border p-3 text-left transition-colors",
+                    campTipo === "automatica"
+                      ? "border-purple-300 bg-purple-50 dark:bg-purple-950/20 ring-1 ring-purple-300"
+                      : "border-slate-200 hover:bg-slate-50",
+                  )}
+                >
+                  <span className="flex items-center gap-1.5 text-sm font-semibold">
+                    <History className="h-4 w-4 text-purple-600" /> Automática
+                  </span>
+                  <span className="text-[11px] text-slate-500">Agendada por filtro/horário</span>
+                </button>
+              </div>
+            </div>
+
+            {campTipo === "automatica" && (
+              <div className="space-y-4 rounded-lg border border-purple-100 bg-purple-50/40 dark:bg-purple-950/10 p-3">
+                {/* Ativa */}
+                <button
+                  type="button"
+                  onClick={() => setCampAtiva((v) => !v)}
+                  className="flex w-full items-center justify-between"
+                >
+                  <span className="flex flex-col text-left">
+                    <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                      Agendamento ativo
+                    </span>
+                    <span className="text-[11px] text-slate-500">
+                      Desligue para pausar sem perder a configuração.
+                    </span>
+                  </span>
+                  <Checkbox checked={campAtiva} className="pointer-events-none" />
+                </button>
+
+                {/* Horário + dias */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Horário (HH:MM)</label>
+                    <Input
+                      type="time"
+                      className="h-9"
+                      value={campHorario}
+                      onChange={(e) => setCampHorario(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Dias da semana</label>
+                    <div className="flex flex-wrap gap-1">
+                      {DIAS_SEMANA.map((d) => {
+                        const active = campDias.includes(d.v);
+                        return (
+                          <button
+                            key={d.v}
+                            type="button"
+                            onClick={() =>
+                              setCampDias((prev) =>
+                                prev.includes(d.v) ? prev.filter((x) => x !== d.v) : [...prev, d.v],
+                              )
+                            }
+                            className={cn(
+                              "rounded-md border px-2 py-1 text-[11px] transition-colors",
+                              active
+                                ? "border-purple-300 bg-purple-100 text-purple-800"
+                                : "border-slate-200 text-slate-600 hover:bg-slate-50",
+                            )}
+                          >
+                            {d.lbl}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[10px] text-slate-400">Vazio = todos os dias.</p>
+                  </div>
+                </div>
+
+                {/* Público (filtro) + contagem ao vivo */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      Público-alvo (filtros)
+                    </label>
+                    <span className="text-[11px] text-purple-700 dark:text-purple-300 flex items-center gap-1">
+                      {campCounting ? (
+                        <>
+                          <Loader2 className="h-3 w-3 animate-spin" /> ...
+                        </>
+                      ) : (
+                        <>
+                          <strong>{(campFiltroCount ?? 0).toLocaleString("pt-BR")}</strong> alvo(s)
+                        </>
+                      )}
+                    </span>
+                  </div>
+                  <AudienceFilterPanel
+                    value={campFiltro}
+                    onChange={setCampFiltro}
+                    options={filterOptions}
+                    loadingOptions={loadingFilterOptions}
+                  />
+                </div>
+
+                <p className="text-[10px] text-slate-500 flex items-start gap-1">
+                  <Info className="h-3 w-3 mt-0.5 shrink-0" />
+                  O agendador (n8n) verifica de hora em hora e dispara esta campanha no
+                  horário definido, uma vez por dia, para o público do filtro. Ex.:
+                  marque <strong>🎂 Aniversariantes de hoje</strong> para parabenizar diariamente.
+                </p>
+              </div>
+            )}
+
             <DialogFooter>
-              <Button type="button" variant="ghost" onClick={() => setCampaignFormOpen(false)}>
+              <Button type="button" variant="ghost" onClick={() => setCampaignFormOpen(false)} disabled={savingCampaign}>
                 Cancelar
               </Button>
-              <Button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white">
-                {editingCampaign ? "Atualizar" : "Salvar"}
+              <Button type="submit" disabled={savingCampaign} className="bg-purple-600 hover:bg-purple-700 text-white">
+                {savingCampaign ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>
+                ) : editingCampaign ? "Atualizar" : "Salvar"}
               </Button>
             </DialogFooter>
           </form>
@@ -1169,158 +1247,12 @@ export function WhatsappClient() {
                     </Button>
                   </div>
 
-                  {loadingFilterOptions && !filterOptions ? (
-                    <div className="flex items-center justify-center gap-2 p-6 text-xs text-slate-400">
-                      <Loader2 className="h-4 w-4 animate-spin" /> Carregando filtros...
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {/* Busca textual */}
-                      <div className="relative">
-                        <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                        <Input
-                          className="pl-9 h-9"
-                          placeholder="Nome, telefone ou CPF..."
-                          value={filterValue.busca || ""}
-                          onChange={(e) =>
-                            setFilterValue((p) => ({ ...p, busca: e.target.value }))
-                          }
-                        />
-                      </div>
-
-                      {/* Aniversariantes de hoje (atalho) */}
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setFilterValue((p) => ({
-                            ...p,
-                            aniversariantes_hoje: !p.aniversariantes_hoje,
-                          }))
-                        }
-                        className={cn(
-                          "flex w-full items-center justify-between rounded-lg border p-3 text-left transition-colors",
-                          filterValue.aniversariantes_hoje
-                            ? "border-purple-300 bg-purple-50 ring-1 ring-purple-300 dark:bg-purple-950/20"
-                            : "border-slate-200 hover:bg-slate-50",
-                        )}
-                      >
-                        <span className="flex flex-col">
-                          <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                            🎂 Aniversariantes de hoje
-                          </span>
-                          <span className="text-[11px] text-slate-500">
-                            Quem faz aniversário na data de hoje
-                          </span>
-                        </span>
-                        <Checkbox checked={!!filterValue.aniversariantes_hoje} className="pointer-events-none" />
-                      </button>
-
-                      {/* Status */}
-                      <div className="space-y-1">
-                        <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Situação cadastral</label>
-                        <div className="flex items-center gap-1 rounded-lg border border-slate-200 p-0.5">
-                          {[
-                            { lbl: "Todas", v: "" },
-                            { lbl: "Ativas", v: "ativa" },
-                            { lbl: "Arquivadas", v: "arquivada" },
-                          ].map((s) => (
-                            <button
-                              key={s.v}
-                              type="button"
-                              onClick={() => setFilterValue((p) => ({ ...p, status: s.v }))}
-                              className={cn(
-                                "flex-1 rounded-md px-2 py-1 text-[11px] font-medium transition-colors",
-                                (filterValue.status || "") === s.v
-                                  ? "bg-purple-600 text-white"
-                                  : "text-slate-600 hover:bg-slate-100",
-                              )}
-                            >
-                              {s.lbl}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Faixas numéricas */}
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1">
-                          <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Idade</label>
-                          <div className="flex items-center gap-1.5">
-                            <Input
-                              type="number"
-                              min={0}
-                              className="h-8"
-                              placeholder="mín"
-                              value={filterValue.idade_min ?? ""}
-                              onChange={(e) =>
-                                setFilterValue((p) => ({ ...p, idade_min: numOrNull(e.target.value) }))
-                              }
-                            />
-                            <span className="text-xs text-slate-400">a</span>
-                            <Input
-                              type="number"
-                              min={0}
-                              className="h-8"
-                              placeholder="máx"
-                              value={filterValue.idade_max ?? ""}
-                              onChange={(e) =>
-                                setFilterValue((p) => ({ ...p, idade_max: numOrNull(e.target.value) }))
-                              }
-                            />
-                          </div>
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Nº de filhos</label>
-                          <div className="flex items-center gap-1.5">
-                            <Input
-                              type="number"
-                              min={0}
-                              className="h-8"
-                              placeholder="mín"
-                              value={filterValue.filhos_min ?? ""}
-                              onChange={(e) =>
-                                setFilterValue((p) => ({ ...p, filhos_min: numOrNull(e.target.value) }))
-                              }
-                            />
-                            <span className="text-xs text-slate-400">a</span>
-                            <Input
-                              type="number"
-                              min={0}
-                              className="h-8"
-                              placeholder="máx"
-                              value={filterValue.filhos_max ?? ""}
-                              onChange={(e) =>
-                                setFilterValue((p) => ({ ...p, filhos_max: numOrNull(e.target.value) }))
-                              }
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Programas / proteção (tri-state) */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        {renderTriState("Bolsa Família", "recebe_bolsa_familia")}
-                        {renderTriState("BPC", "recebe_bpc")}
-                        {renderTriState("Medida protetiva", "possui_medida_protetiva")}
-                      </div>
-
-                      {/* Multi-seleções relacionais */}
-                      {filterOptions && (
-                        <div className="space-y-4">
-                          {renderChipGroup("Bairro", "bairro", filterOptions.bairros)}
-                          {renderChipGroup("Raça / Cor", "raca_cor_id", filterOptions.racas)}
-                          {renderChipGroup("Estado civil", "estado_civil_id", filterOptions.estadosCivis)}
-                          {renderChipGroup("Escolaridade", "escolaridade_id", filterOptions.escolaridades)}
-                          {renderChipGroup("Situação de trabalho", "situacao_trabalho_id", filterOptions.situacoesTrabalho)}
-                        </div>
-                      )}
-
-                      <p className="text-[10px] text-slate-400">
-                        Apenas beneficiárias com WhatsApp cadastrado entram no envio. Critérios
-                        vazios não restringem o público.
-                      </p>
-                    </div>
-                  )}
+                  <AudienceFilterPanel
+                    value={filterValue}
+                    onChange={setFilterValue}
+                    options={filterOptions}
+                    loadingOptions={loadingFilterOptions}
+                  />
                 </div>
               ) : (
                 <div className="space-y-2">
