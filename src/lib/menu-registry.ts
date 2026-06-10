@@ -38,7 +38,6 @@ export const MENU_REGISTRY: MenuMeta[] = [
   { key: "app-amar", label: "App Amar", href: "/app-amar", group: "main" },
   { key: "manual", label: "Manual do Usuário", href: "/manual", group: "system" },
   { key: "configuracoes", label: "Configurações", href: "/configuracoes", group: "system" },
-  { key: "site", label: "Meu Site", href: "/configuracoes/site", group: "system" },
 ];
 
 /** Todas as chaves de menu existentes. */

@@ -8,7 +8,6 @@ import {
   FileText,
   Calendar,
   Settings,
-  Globe,
   LogOut,
   HeartHandshake,
   ChevronRight,
@@ -327,25 +326,6 @@ export function Sidebar({ allowedKeys }: SidebarProps) {
                   <Link href="/configuracoes">
                     <Settings className="size-5" />
                     <span>Configurações</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            )}
-
-            {can("site") && (
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  tooltip="Meu Site"
-                  isActive={pathname.startsWith("/configuracoes/site")}
-                  className={cn(
-                    pathname.startsWith("/configuracoes/site") &&
-                      "bg-sidebar-accent text-sidebar-accent-foreground font-semibold",
-                  )}
-                >
-                  <Link href="/configuracoes/site">
-                    <Globe className="size-5" />
-                    <span>Meu Site</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

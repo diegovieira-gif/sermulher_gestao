@@ -21,7 +21,6 @@ const pageTitles: Record<string, string> = {
   "/sala-azul": "Sala Azul",
   "/eventos": "Eventos e Campanhas",
   "/configuracoes": "Configurações",
-  "/configuracoes/site": "Gestão do Site",
   "/observatorio": "Observatório",
 };
 
