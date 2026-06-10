@@ -237,6 +237,7 @@ const schemaPlan = {
     fieldDef("vagas", "integer"),
     fieldDef("status_curso", "string"),
     fieldDef("requisitos", "text"),
+    fieldDef("link", "string"),
   ],
 
   amar_contatos: [

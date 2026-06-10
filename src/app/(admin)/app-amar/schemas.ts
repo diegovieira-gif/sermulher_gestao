@@ -94,6 +94,7 @@ export const cursoSchema = z.object({
   vagas: z.coerce.number().optional(),
   status_curso: z.string().optional(),
   requisitos: z.string().optional(),
+  link: z.string().url("Informe uma URL válida").optional().or(z.literal("")),
 });
 
 export type CursoFormValues = z.infer<typeof cursoSchema>;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Plus, MoreHorizontal, Pencil, Trash2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -50,6 +50,7 @@ interface Curso {
   vagas?: number;
   status_curso?: string;
   requisitos?: string;
+  link?: string;
 }
 
 interface CursosClientProps {
@@ -130,6 +131,7 @@ export function CursosClient({ initialData }: CursosClientProps) {
               <TableHead>Horário</TableHead>
               <TableHead>Local</TableHead>
               <TableHead>Vagas</TableHead>
+              <TableHead>Link</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
@@ -137,7 +139,7 @@ export function CursosClient({ initialData }: CursosClientProps) {
           <TableBody>
             {initialData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center">
+                <TableCell colSpan={8} className="h-24 text-center">
                   Nenhum curso encontrado.
                 </TableCell>
               </TableRow>
@@ -151,6 +153,20 @@ export function CursosClient({ initialData }: CursosClientProps) {
                   <TableCell>{curso.horario || "-"}</TableCell>
                   <TableCell>{curso.local || "-"}</TableCell>
                   <TableCell>{curso.vagas ?? "-"}</TableCell>
+                  <TableCell>
+                    {curso.link ? (
+                      <a
+                        href={curso.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-purple-600 hover:underline inline-flex items-center gap-1"
+                      >
+                        Abrir <ExternalLink className="h-3 w-3" />
+                      </a>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">-</span>
+                    )}
+                  </TableCell>
                   <TableCell>
                     {curso.status_curso ? (
                       <Badge variant="outline">{curso.status_curso}</Badge>

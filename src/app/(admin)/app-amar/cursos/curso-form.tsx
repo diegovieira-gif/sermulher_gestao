@@ -51,6 +51,7 @@ export function CursoForm({
       vagas: initialData?.vagas ?? undefined,
       status_curso: initialData?.status_curso || "",
       requisitos: initialData?.requisitos || "",
+      link: initialData?.link || "",
     },
   });
 
@@ -217,6 +218,25 @@ export function CursoForm({
               <FormControl>
                 <Input
                   placeholder="Ex: Auditório Municipal"
+                  {...field}
+                  value={field.value || ""}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="link"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Link (inscrição / material)</FormLabel>
+              <FormControl>
+                <Input
+                  type="url"
+                  placeholder="https://exemplo.com/inscricao"
                   {...field}
                   value={field.value || ""}
                 />
