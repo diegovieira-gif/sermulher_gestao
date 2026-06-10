@@ -56,6 +56,8 @@ import {
   History,
   Info,
   ExternalLink,
+  SlidersHorizontal,
+  RotateCcw,
 } from "lucide-react";
 import {
   getWhatsappConfig,
@@ -68,6 +70,10 @@ import {
   searchBeneficiarias,
   getDispatchLogs,
   triggerCampaignDispatch,
+  getBeneficiariaFilterOptions,
+  getBeneficiariasCountForFilter,
+  type BeneficiariaFilter,
+  type DispatchTarget,
 } from "./actions";
 
 interface Beneficiaria {
@@ -76,6 +82,52 @@ interface Beneficiaria {
   nome_social: string;
   telefone: string;
   cpf?: string;
+}
+
+type ConfigOption = { id: number; nome: string };
+interface FilterOptions {
+  racas: ConfigOption[];
+  estadosCivis: ConfigOption[];
+  escolaridades: ConfigOption[];
+  situacoesTrabalho: ConfigOption[];
+  bairros: ConfigOption[];
+}
+
+const EMPTY_FILTER: BeneficiariaFilter = {
+  busca: "",
+  status: "",
+  raca_cor_id: [],
+  estado_civil_id: [],
+  escolaridade_id: [],
+  situacao_trabalho_id: [],
+  bairro: [],
+  recebe_bolsa_familia: null,
+  recebe_bpc: null,
+  possui_medida_protetiva: null,
+  filhos_min: null,
+  filhos_max: null,
+  idade_min: null,
+  idade_max: null,
+  aniversariantes_hoje: false,
+};
+
+// Conta quantos critérios estão ativos no filtro (para exibir no resumo).
+function countActiveFilters(f: BeneficiariaFilter): number {
+  let n = 0;
+  if (f.busca && f.busca.trim()) n++;
+  if (f.status && f.status.trim()) n++;
+  n += (f.raca_cor_id?.length ? 1 : 0);
+  n += (f.estado_civil_id?.length ? 1 : 0);
+  n += (f.escolaridade_id?.length ? 1 : 0);
+  n += (f.situacao_trabalho_id?.length ? 1 : 0);
+  n += (f.bairro?.length ? 1 : 0);
+  if (f.recebe_bolsa_familia === true || f.recebe_bolsa_familia === false) n++;
+  if (f.recebe_bpc === true || f.recebe_bpc === false) n++;
+  if (f.possui_medida_protetiva === true || f.possui_medida_protetiva === false) n++;
+  if (typeof f.filhos_min === "number" || typeof f.filhos_max === "number") n++;
+  if (typeof f.idade_min === "number" || typeof f.idade_max === "number") n++;
+  if (f.aniversariantes_hoje) n++;
+  return n;
 }
 
 interface Campaign {
@@ -127,13 +179,20 @@ export function WhatsappClient() {
   const [openingDispatchId, setOpeningDispatchId] = useState<string | null>(null);
 
   // Público-alvo do disparo
-  // "all" = todas elegíveis (resolvido no servidor); "manual" = seleção específica
-  const [audienceMode, setAudienceMode] = useState<"all" | "manual">("all");
+  // "all" = todas elegíveis; "manual" = seleção específica; "filtered" = por filtros
+  const [audienceMode, setAudienceMode] = useState<"all" | "manual" | "filtered">("all");
   const [searchBeneficiaria, setSearchBeneficiaria] = useState("");
   const [searchResults, setSearchResults] = useState<Beneficiaria[]>([]);
   const [searchingAudience, setSearchingAudience] = useState(false);
   const [selectedBeneficiarias, setSelectedBeneficiarias] = useState<string[]>([]);
   const [dispatching, setDispatching] = useState(false);
+
+  // Filtros estruturados de público
+  const [filterOptions, setFilterOptions] = useState<FilterOptions | null>(null);
+  const [loadingFilterOptions, setLoadingFilterOptions] = useState(false);
+  const [filterValue, setFilterValue] = useState<BeneficiariaFilter>(EMPTY_FILTER);
+  const [filteredCount, setFilteredCount] = useState<number | null>(null);
+  const [countingFilter, setCountingFilter] = useState(false);
 
   // Form states for campaign
   const [campaignName, setCampaignName] = useState("");
@@ -338,6 +397,144 @@ export function WhatsappClient() {
     };
   }, [searchBeneficiaria, audienceMode, dispatchDialogOpen]);
 
+  // Carrega as opções dos selects de filtro na 1ª vez que o disparo é aberto.
+  useEffect(() => {
+    if (!dispatchDialogOpen || filterOptions || loadingFilterOptions) return;
+    let active = true;
+    setLoadingFilterOptions(true);
+    (async () => {
+      const res = await getBeneficiariaFilterOptions();
+      if (!active) return;
+      if (res.success && res.data) {
+        setFilterOptions(res.data as FilterOptions);
+      } else {
+        toast.error((res as any).error || "Erro ao carregar opções de filtro.");
+      }
+      setLoadingFilterOptions(false);
+    })();
+    return () => {
+      active = false;
+    };
+  }, [dispatchDialogOpen, filterOptions, loadingFilterOptions]);
+
+  // Contagem ao vivo do público filtrado (debounce).
+  useEffect(() => {
+    if (!dispatchDialogOpen || audienceMode !== "filtered") return;
+    let active = true;
+    setCountingFilter(true);
+    const t = setTimeout(async () => {
+      const res = await getBeneficiariasCountForFilter(filterValue);
+      if (!active) return;
+      if (res.success) {
+        setFilteredCount(res.count ?? 0);
+      } else {
+        toast.error((res as any).error || "Erro ao contar o público.");
+        setFilteredCount(0);
+      }
+      setCountingFilter(false);
+    }, 400);
+    return () => {
+      active = false;
+      clearTimeout(t);
+    };
+  }, [filterValue, audienceMode, dispatchDialogOpen]);
+
+  // Alterna um id em um campo multi-seleção do filtro.
+  const toggleFilterId = (
+    field: "raca_cor_id" | "estado_civil_id" | "escolaridade_id" | "situacao_trabalho_id" | "bairro",
+    id: number,
+  ) => {
+    setFilterValue((prev) => {
+      const cur = (prev[field] as number[]) || [];
+      const next = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
+      return { ...prev, [field]: next };
+    });
+  };
+
+  const resetFilter = () => {
+    setFilterValue(EMPTY_FILTER);
+  };
+
+  const activeFilterCount = countActiveFilters(filterValue);
+
+  const renderChipGroup = (
+    label: string,
+    field: "raca_cor_id" | "estado_civil_id" | "escolaridade_id" | "situacao_trabalho_id" | "bairro",
+    opts: ConfigOption[],
+  ) => {
+    const selected = (filterValue[field] as number[]) || [];
+    return (
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{label}</label>
+          {selected.length > 0 && (
+            <span className="text-[10px] text-purple-600 font-medium">{selected.length} selec.</span>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {opts.length === 0 ? (
+            <span className="text-[11px] text-slate-400">Sem opções</span>
+          ) : (
+            opts.map((o) => {
+              const active = selected.includes(o.id);
+              return (
+                <button
+                  key={o.id}
+                  type="button"
+                  onClick={() => toggleFilterId(field, o.id)}
+                  className={cn(
+                    "rounded-full border px-2.5 py-1 text-[11px] transition-colors",
+                    active
+                      ? "border-purple-300 bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200"
+                      : "border-slate-200 text-slate-600 hover:bg-slate-50",
+                  )}
+                >
+                  {o.nome}
+                </button>
+              );
+            })
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderTriState = (
+    label: string,
+    field: "recebe_bolsa_familia" | "recebe_bpc" | "possui_medida_protetiva",
+  ) => {
+    const val = filterValue[field];
+    const opt = (lbl: string, v: boolean | null) => (
+      <button
+        type="button"
+        onClick={() => setFilterValue((p) => ({ ...p, [field]: v }))}
+        className={cn(
+          "flex-1 rounded-md px-2 py-1 text-[11px] font-medium transition-colors",
+          val === v ? "bg-purple-600 text-white" : "text-slate-600 hover:bg-slate-100",
+        )}
+      >
+        {lbl}
+      </button>
+    );
+    return (
+      <div className="space-y-1">
+        <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{label}</label>
+        <div className="flex items-center gap-1 rounded-lg border border-slate-200 p-0.5">
+          {opt("Qualquer", null)}
+          {opt("Sim", true)}
+          {opt("Não", false)}
+        </div>
+      </div>
+    );
+  };
+
+  // Lê um input numérico opcional (vazio => null).
+  const numOrNull = (v: string): number | null => {
+    if (v.trim() === "") return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  };
+
   const handleTriggerDispatch = async () => {
     if (!selectedCampaignForDispatch) return;
 
@@ -345,11 +542,17 @@ export function WhatsappClient() {
       toast.error("Selecione pelo menos uma beneficiária para envio.");
       return;
     }
+    if (audienceMode === "filtered" && (filteredCount ?? 0) === 0) {
+      toast.error("Nenhuma beneficiária corresponde aos filtros selecionados.");
+      return;
+    }
 
-    const target =
+    const target: DispatchTarget =
       audienceMode === "all"
-        ? ({ mode: "all" } as const)
-        : ({ mode: "selected", ids: selectedBeneficiarias } as const);
+        ? { mode: "all" }
+        : audienceMode === "filtered"
+          ? { mode: "filtered", filter: filterValue }
+          : { mode: "selected", ids: selectedBeneficiarias };
 
     setDispatching(true);
     try {
@@ -867,7 +1070,7 @@ export function WhatsappClient() {
               </div>
 
               {/* Seleção de público */}
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
                   onClick={() => setAudienceMode("all")}
@@ -880,10 +1083,30 @@ export function WhatsappClient() {
                 >
                   <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-800 dark:text-slate-200">
                     <Users className="h-4 w-4 text-purple-600" />
-                    Todas as elegíveis
+                    Todas
                   </span>
                   <span className="text-xs text-slate-500">
-                    {eligibleCount.toLocaleString("pt-BR")} beneficiárias
+                    {eligibleCount.toLocaleString("pt-BR")} elegíveis
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAudienceMode("filtered")}
+                  className={cn(
+                    "flex flex-col items-start gap-0.5 rounded-lg border p-3 text-left transition-colors",
+                    audienceMode === "filtered"
+                      ? "border-purple-300 bg-purple-50 dark:bg-purple-950/20 ring-1 ring-purple-300"
+                      : "border-slate-200 hover:bg-slate-50",
+                  )}
+                >
+                  <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-800 dark:text-slate-200">
+                    <SlidersHorizontal className="h-4 w-4 text-purple-600" />
+                    Por filtros
+                  </span>
+                  <span className="text-xs text-slate-500">
+                    {activeFilterCount > 0
+                      ? `${activeFilterCount} filtro(s)`
+                      : "Segmentar"}
                   </span>
                 </button>
                 <button
@@ -916,6 +1139,188 @@ export function WhatsappClient() {
                     </strong>{" "}
                     com WhatsApp cadastrado. O envio é processado no servidor.
                   </span>
+                </div>
+              ) : audienceMode === "filtered" ? (
+                <div className="space-y-4">
+                  {/* Resumo do público filtrado */}
+                  <div className="flex items-center justify-between rounded-lg border border-purple-100 bg-purple-50/60 dark:bg-purple-950/10 p-3">
+                    <div className="flex items-center gap-2 text-sm text-purple-900 dark:text-purple-300">
+                      <Users className="h-4 w-4" />
+                      {countingFilter ? (
+                        <span className="flex items-center gap-1.5">
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" /> Calculando...
+                        </span>
+                      ) : (
+                        <span>
+                          <strong>{(filteredCount ?? 0).toLocaleString("pt-BR")}</strong>{" "}
+                          beneficiária(s) correspondem
+                        </span>
+                      )}
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs text-slate-500"
+                      onClick={resetFilter}
+                      disabled={activeFilterCount === 0}
+                    >
+                      <RotateCcw className="h-3.5 w-3.5 mr-1" /> Limpar
+                    </Button>
+                  </div>
+
+                  {loadingFilterOptions && !filterOptions ? (
+                    <div className="flex items-center justify-center gap-2 p-6 text-xs text-slate-400">
+                      <Loader2 className="h-4 w-4 animate-spin" /> Carregando filtros...
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {/* Busca textual */}
+                      <div className="relative">
+                        <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                        <Input
+                          className="pl-9 h-9"
+                          placeholder="Nome, telefone ou CPF..."
+                          value={filterValue.busca || ""}
+                          onChange={(e) =>
+                            setFilterValue((p) => ({ ...p, busca: e.target.value }))
+                          }
+                        />
+                      </div>
+
+                      {/* Aniversariantes de hoje (atalho) */}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setFilterValue((p) => ({
+                            ...p,
+                            aniversariantes_hoje: !p.aniversariantes_hoje,
+                          }))
+                        }
+                        className={cn(
+                          "flex w-full items-center justify-between rounded-lg border p-3 text-left transition-colors",
+                          filterValue.aniversariantes_hoje
+                            ? "border-purple-300 bg-purple-50 ring-1 ring-purple-300 dark:bg-purple-950/20"
+                            : "border-slate-200 hover:bg-slate-50",
+                        )}
+                      >
+                        <span className="flex flex-col">
+                          <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                            🎂 Aniversariantes de hoje
+                          </span>
+                          <span className="text-[11px] text-slate-500">
+                            Quem faz aniversário na data de hoje
+                          </span>
+                        </span>
+                        <Checkbox checked={!!filterValue.aniversariantes_hoje} className="pointer-events-none" />
+                      </button>
+
+                      {/* Status */}
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Situação cadastral</label>
+                        <div className="flex items-center gap-1 rounded-lg border border-slate-200 p-0.5">
+                          {[
+                            { lbl: "Todas", v: "" },
+                            { lbl: "Ativas", v: "ativa" },
+                            { lbl: "Arquivadas", v: "arquivada" },
+                          ].map((s) => (
+                            <button
+                              key={s.v}
+                              type="button"
+                              onClick={() => setFilterValue((p) => ({ ...p, status: s.v }))}
+                              className={cn(
+                                "flex-1 rounded-md px-2 py-1 text-[11px] font-medium transition-colors",
+                                (filterValue.status || "") === s.v
+                                  ? "bg-purple-600 text-white"
+                                  : "text-slate-600 hover:bg-slate-100",
+                              )}
+                            >
+                              {s.lbl}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Faixas numéricas */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Idade</label>
+                          <div className="flex items-center gap-1.5">
+                            <Input
+                              type="number"
+                              min={0}
+                              className="h-8"
+                              placeholder="mín"
+                              value={filterValue.idade_min ?? ""}
+                              onChange={(e) =>
+                                setFilterValue((p) => ({ ...p, idade_min: numOrNull(e.target.value) }))
+                              }
+                            />
+                            <span className="text-xs text-slate-400">a</span>
+                            <Input
+                              type="number"
+                              min={0}
+                              className="h-8"
+                              placeholder="máx"
+                              value={filterValue.idade_max ?? ""}
+                              onChange={(e) =>
+                                setFilterValue((p) => ({ ...p, idade_max: numOrNull(e.target.value) }))
+                              }
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Nº de filhos</label>
+                          <div className="flex items-center gap-1.5">
+                            <Input
+                              type="number"
+                              min={0}
+                              className="h-8"
+                              placeholder="mín"
+                              value={filterValue.filhos_min ?? ""}
+                              onChange={(e) =>
+                                setFilterValue((p) => ({ ...p, filhos_min: numOrNull(e.target.value) }))
+                              }
+                            />
+                            <span className="text-xs text-slate-400">a</span>
+                            <Input
+                              type="number"
+                              min={0}
+                              className="h-8"
+                              placeholder="máx"
+                              value={filterValue.filhos_max ?? ""}
+                              onChange={(e) =>
+                                setFilterValue((p) => ({ ...p, filhos_max: numOrNull(e.target.value) }))
+                              }
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Programas / proteção (tri-state) */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        {renderTriState("Bolsa Família", "recebe_bolsa_familia")}
+                        {renderTriState("BPC", "recebe_bpc")}
+                        {renderTriState("Medida protetiva", "possui_medida_protetiva")}
+                      </div>
+
+                      {/* Multi-seleções relacionais */}
+                      {filterOptions && (
+                        <div className="space-y-4">
+                          {renderChipGroup("Bairro", "bairro", filterOptions.bairros)}
+                          {renderChipGroup("Raça / Cor", "raca_cor_id", filterOptions.racas)}
+                          {renderChipGroup("Estado civil", "estado_civil_id", filterOptions.estadosCivis)}
+                          {renderChipGroup("Escolaridade", "escolaridade_id", filterOptions.escolaridades)}
+                          {renderChipGroup("Situação de trabalho", "situacao_trabalho_id", filterOptions.situacoesTrabalho)}
+                        </div>
+                      )}
+
+                      <p className="text-[10px] text-slate-400">
+                        Apenas beneficiárias com WhatsApp cadastrado entram no envio. Critérios
+                        vazios não restringem o público.
+                      </p>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -1002,7 +1407,8 @@ export function WhatsappClient() {
                 disabled={
                   dispatching ||
                   (audienceMode === "manual" && selectedBeneficiarias.length === 0) ||
-                  (audienceMode === "all" && eligibleCount === 0)
+                  (audienceMode === "all" && eligibleCount === 0) ||
+                  (audienceMode === "filtered" && (countingFilter || (filteredCount ?? 0) === 0))
                 }
                 className="bg-purple-600 hover:bg-purple-700 text-white"
               >
@@ -1016,7 +1422,9 @@ export function WhatsappClient() {
                     <Send className="mr-2 h-4 w-4" />
                     {audienceMode === "all"
                       ? `Disparar para todas (${eligibleCount.toLocaleString("pt-BR")})`
-                      : `Disparar para ${selectedBeneficiarias.length}`}
+                      : audienceMode === "filtered"
+                        ? `Disparar para ${(filteredCount ?? 0).toLocaleString("pt-BR")} filtrada(s)`
+                        : `Disparar para ${selectedBeneficiarias.length}`}
                   </>
                 )}
               </Button>

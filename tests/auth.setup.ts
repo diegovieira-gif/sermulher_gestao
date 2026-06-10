@@ -13,7 +13,7 @@ setup("autenticar", async ({ page }) => {
   );
   await page.fill(
     'input[name="password"]',
-    process.env.TEST_USER_PASSWORD || "Irland@2023",
+    process.env.TEST_USER_PASSWORD || "@Sermulher2025",
   );
 
   // Clica em entrar

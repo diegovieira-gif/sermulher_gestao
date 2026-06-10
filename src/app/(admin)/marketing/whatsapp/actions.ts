@@ -345,6 +345,8 @@ export type BeneficiariaFilter = {
   filhos_max?: number | null;
   idade_min?: number | null;
   idade_max?: number | null;
+  // Quando true, restringe a quem faz aniversário HOJE (mês+dia de data_nascimento).
+  aniversariantes_hoje?: boolean | null;
 };
 
 // Subtrai N anos da data de hoje e devolve no formato YYYY-MM-DD.
@@ -394,6 +396,13 @@ function buildBeneficiariaFilter(f?: BeneficiariaFilter): Record<string, any> {
   // idade <= idade_max  => nasceu depois de (hoje - (idade_max + 1) anos)
   if (typeof f.idade_max === "number")
     and.push({ data_nascimento: { _gte: dateMinusYears(f.idade_max + 1) } });
+
+  // Aniversariantes de hoje: usa funções de data do Directus (month/day).
+  if (f.aniversariantes_hoje) {
+    const now = new Date();
+    and.push({ "month(data_nascimento)": { _eq: now.getMonth() + 1 } });
+    and.push({ "day(data_nascimento)": { _eq: now.getDate() } });
+  }
 
   const q = (f.busca || "").trim();
   if (q) {
