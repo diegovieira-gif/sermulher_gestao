@@ -35,12 +35,19 @@ export async function POST(request: Request) {
       forwardedProto === "https" ||
       (!forwardedProto && new URL(request.url).protocol === "https:");
 
+    // `expires` do Directus vem em MILISSEGUNDOS; o `maxAge` do cookie é em
+    // SEGUNDOS. Sem a conversão, o cookie vivia ~10 dias enquanto o token
+    // expirava em ~15 min → 401 silencioso depois de um tempo logado.
+    const expiresMs =
+      typeof authResult.expires === "number" ? authResult.expires : 0;
+    const maxAgeSeconds = expiresMs > 0 ? Math.floor(expiresMs / 1000) : 86400;
+
     const cookieStore = await cookies();
     cookieStore.set("directus_token", authResult.access_token, {
       httpOnly: true,
       secure: isHttps,
       sameSite: "lax",
-      maxAge: authResult.expires || 86400,
+      maxAge: maxAgeSeconds,
       path: "/",
     });
 
