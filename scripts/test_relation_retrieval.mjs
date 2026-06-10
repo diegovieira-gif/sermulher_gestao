@@ -11,7 +11,7 @@ if (fs.existsSync(".env.local")) {
 }
 
 const API_URL = process.env.DIRECTUS_API_URL || "http://192.168.0.118:8055";
-const token = process.env.DIRECTUS_TOKEN || "ugnm7KeQBsjvqAv3U7YPSHCGDpi49v1f";
+const token = process.env.DIRECTUS_TOKEN;
 
 const client = createDirectus(API_URL)
   .with(rest())
