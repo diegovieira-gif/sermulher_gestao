@@ -81,6 +81,7 @@ import {
   countActiveFilters,
   type FilterOptions,
 } from "./audience-filter-panel";
+import { MessageEditor } from "./message-editor";
 
 interface Beneficiaria {
   id: string;
@@ -96,6 +97,7 @@ interface Campaign {
   nome: string;
   objetivo?: string;
   mensagem: string;
+  imagem?: string | null;
   status: "draft" | "scheduled" | "running" | "paused" | "completed";
   data_envio?: string | null;
   date_created?: string;
@@ -176,6 +178,7 @@ export function WhatsappClient() {
   const [campaignName, setCampaignName] = useState("");
   const [campaignObjective, setCampaignObjective] = useState("");
   const [campaignMessage, setCampaignMessage] = useState("");
+  const [campaignImage, setCampaignImage] = useState<string | null>(null);
 
   // Agendamento da campanha (no formulário)
   const [campTipo, setCampTipo] = useState<"manual" | "automatica">("manual");
@@ -297,6 +300,7 @@ export function WhatsappClient() {
       setCampaignName(camp.nome);
       setCampaignObjective(camp.objetivo || "");
       setCampaignMessage(camp.mensagem);
+      setCampaignImage(camp.imagem || null);
       setCampTipo(camp.tipo === "automatica" ? "automatica" : "manual");
       setCampAtiva(camp.ativa ?? true);
       setCampHorario(camp.horario || "08:00");
@@ -311,6 +315,7 @@ export function WhatsappClient() {
       setCampaignName("");
       setCampaignObjective("");
       setCampaignMessage("");
+      setCampaignImage(null);
       setCampTipo("manual");
       setCampAtiva(true);
       setCampHorario("08:00");
@@ -339,6 +344,7 @@ export function WhatsappClient() {
         nome: campaignName,
         objetivo: campaignObjective,
         mensagem: campaignMessage,
+        imagem: campaignImage,
         status: editingCampaign?.status || "draft",
         tipo: campTipo,
         ativa: campTipo === "automatica" ? campAtiva : false,
@@ -431,7 +437,12 @@ export function WhatsappClient() {
     return () => {
       active = false;
     };
-  }, [dispatchDialogOpen, filterOptions, loadingFilterOptions]);
+    // `loadingFilterOptions` é deliberadamente omitido das deps: incluí-lo fazia
+    // o efeito se auto-cancelar — setLoadingFilterOptions(true) mudava a dep,
+    // disparava o cleanup (active=false) ANTES do fetch resolver, e o resultado
+    // era descartado, deixando "Carregando filtros..." girando para sempre.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatchDialogOpen, campaignFormOpen, filterOptions]);
 
   // Contagem ao vivo do público filtrado (debounce).
   useEffect(() => {
@@ -966,16 +977,16 @@ export function WhatsappClient() {
                   </Badge>
                 </div>
               </div>
-              <textarea
-                className="w-full h-36 p-3 rounded-lg border border-slate-200 dark:border-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600 dark:bg-slate-950"
-                placeholder="Olá {primeiro_nome}, informamos que no mês de Outubro estamos com exames preventivos agendados..."
+              <MessageEditor
                 value={campaignMessage}
-                onChange={(e) => setCampaignMessage(e.target.value)}
-                required
+                onChange={setCampaignMessage}
+                imageId={campaignImage}
+                onImageChange={setCampaignImage}
+                placeholder="Olá {primeiro_nome}, informamos que no mês de Outubro estamos com exames preventivos agendados..."
               />
               <p className="text-[10px] text-slate-500 flex items-center gap-1">
                 <Info className="h-3 w-3" />
-                Variáveis dinâmicas como &quot;{`{primeiro_nome}`}&quot; e &quot;{`{nome_completo}`}&quot; serão substituídas automaticamente antes de enviar.
+                Variáveis dinâmicas como &quot;{`{primeiro_nome}`}&quot; e &quot;{`{nome_completo}`}&quot; serão substituídas automaticamente antes de enviar. Se anexar uma imagem, a mensagem vira a legenda dela.
               </p>
             </div>
 

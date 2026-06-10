@@ -13,6 +13,7 @@ import {
   readSingleton,
   updateSingleton,
   aggregate,
+  uploadFiles,
 } from "@directus/sdk";
 
 // Filtro base de elegibilidade: beneficiária com telefone preenchido.
@@ -253,6 +254,7 @@ export async function saveWhatsappCampaign(data: {
   mensagem: string;
   status: "draft" | "scheduled" | "running" | "paused" | "completed";
   data_envio?: string | null;
+  imagem?: string | null; // UUID do arquivo (directus_files) anexado ao disparo
   // Agendamento (campanhas automáticas)
   tipo?: "manual" | "automatica";
   ativa?: boolean;
@@ -286,6 +288,37 @@ export async function saveWhatsappCampaign(data: {
       success: false,
       error: "Você não tem permissão para salvar campanhas ou a coleção não existe."
     };
+  }
+}
+
+// Sobe uma imagem para o Directus (directus_files) e devolve o UUID do arquivo,
+// para ser anexado a uma campanha. Usa o cliente admin (uploads exigem privilégio).
+export async function uploadCampaignImage(formData: FormData) {
+  try {
+    const file = formData.get("file");
+    if (!(file instanceof File)) {
+      return { success: false, error: "Nenhum arquivo enviado." };
+    }
+    if (!file.type.startsWith("image/")) {
+      return { success: false, error: "O arquivo precisa ser uma imagem." };
+    }
+    // Limite defensivo (WhatsApp/GoWA não aceitam mídia muito grande).
+    if (file.size > 5 * 1024 * 1024) {
+      return { success: false, error: "Imagem muito grande (máx. 5 MB)." };
+    }
+
+    const admin = getDirectusAdmin();
+    const payload = new FormData();
+    payload.append("file", file, file.name);
+    const result = await admin.request(uploadFiles(payload));
+    const id = (result as { id?: string })?.id;
+    if (!id) {
+      return { success: false, error: "Falha ao salvar a imagem." };
+    }
+    return { success: true, id };
+  } catch (error: any) {
+    console.error("Erro em uploadCampaignImage:", error?.errors || error);
+    return { success: false, error: "Não foi possível enviar a imagem." };
   }
 }
 
@@ -809,6 +842,38 @@ async function dispatchCampaignWithClient(
 
     const cleanUrl = config.evolution_api_url?.replace(/\/$/, "");
     const sendUrl = `${cleanUrl}/send/message`;
+    const sendImageUrl = `${cleanUrl}/send/image`;
+
+    // Se a campanha tem imagem anexada, busca os bytes UMA vez (do Directus) e
+    // reaproveita em cada envio via GoWA /send/image (multipart). A mensagem vira
+    // a legenda (caption), com as mesmas variáveis dinâmicas.
+    let campaignImage: { bytes: ArrayBuffer; type: string; name: string } | null = null;
+    if (campaign.imagem) {
+      try {
+        const directusBase = (
+          process.env.NEXT_PUBLIC_DIRECTUS_URL ||
+          process.env.DIRECTUS_API_URL ||
+          "http://192.168.0.118:8055"
+        ).replace(/\/$/, "");
+        const assetRes = await fetch(`${directusBase}/assets/${campaign.imagem}`, {
+          headers: { Authorization: `Bearer ${process.env.DIRECTUS_TOKEN}` },
+        });
+        if (assetRes.ok) {
+          const ab = await assetRes.arrayBuffer();
+          campaignImage = {
+            bytes: ab,
+            type: assetRes.headers.get("content-type") || "image/jpeg",
+            name: "imagem",
+          };
+        } else {
+          console.error(
+            `Não foi possível baixar a imagem da campanha (${assetRes.status}); enviando como texto.`
+          );
+        }
+      } catch (imgErr) {
+        console.error("Erro ao baixar imagem da campanha:", imgErr);
+      }
+    }
 
     for (const b of beneficiaries) {
       const phone = b.telefone;
@@ -863,17 +928,38 @@ async function dispatchCampaignWithClient(
             const targetJid =
               resolved.jid || `${formattedPhone}@s.whatsapp.net`;
 
-            const apiRes = await fetch(sendUrl, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: gowaAuthHeader(config.evolution_api_token),
-              },
-              body: JSON.stringify({
-                phone: targetJid,
-                message: customizedMessage,
-              }),
-            });
+            let apiRes: Response;
+            if (campaignImage) {
+              // Envio com mídia: multipart para /send/image, com a mensagem
+              // personalizada como legenda.
+              const form = new FormData();
+              form.append("phone", targetJid);
+              form.append("caption", customizedMessage);
+              form.append(
+                "image",
+                new Blob([campaignImage.bytes], { type: campaignImage.type }),
+                campaignImage.name
+              );
+              apiRes = await fetch(sendImageUrl, {
+                method: "POST",
+                headers: {
+                  Authorization: gowaAuthHeader(config.evolution_api_token),
+                },
+                body: form,
+              });
+            } else {
+              apiRes = await fetch(sendUrl, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: gowaAuthHeader(config.evolution_api_token),
+                },
+                body: JSON.stringify({
+                  phone: targetJid,
+                  message: customizedMessage,
+                }),
+              });
+            }
 
             if (apiRes.ok) {
               sentSuccess = true;

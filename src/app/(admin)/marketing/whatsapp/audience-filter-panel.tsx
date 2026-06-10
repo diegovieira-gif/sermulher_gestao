@@ -1,8 +1,7 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2 } from "lucide-react";
+import { Loader2, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { BeneficiariaFilter } from "./actions";
 
@@ -187,7 +186,19 @@ export function AudienceFilterPanel({ value, onChange, options, loadingOptions }
             Quem faz aniversário na data de execução
           </span>
         </span>
-        <Checkbox checked={!!value.aniversariantes_hoje} className="pointer-events-none" />
+        {/* Visual de checkbox (não usar <Checkbox>: ele renderiza um <button>
+            e ficaria aninhado dentro deste <button>, gerando erro de hidratação). */}
+        <span
+          aria-hidden
+          className={cn(
+            "flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border",
+            value.aniversariantes_hoje
+              ? "border-purple-600 bg-purple-600 text-white"
+              : "border-slate-300",
+          )}
+        >
+          {value.aniversariantes_hoje && <Check className="h-3 w-3" />}
+        </span>
       </button>
 
       {/* Situação cadastral */}

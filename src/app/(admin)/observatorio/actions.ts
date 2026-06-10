@@ -1,7 +1,7 @@
 
 "use server";
 
-import { directus } from "@/lib/directus";
+import { directus, getDirectusAdmin } from "@/lib/directus";
 import { readItems, createItem, updateItem, deleteItem } from "@directus/sdk";
 import { revalidatePath } from "next/cache";
 import { ObserCollection } from "./types";
@@ -11,18 +11,27 @@ export async function getCollectionData(collection: ObserCollection, search?: st
     const filter: any = {};
     
     if (search) {
-      // Assuming 'nome' or 'titulo' or 'serie_nome' are the main searchable fields
-      filter._or = [
-        { nome: { _contains: search } },
-        { titulo: { _contains: search } },
-        { serie_nome: { _contains: search } },
-      ];
+      if (collection === "obser_dashboards") {
+        filter._or = [
+          { period_label: { _contains: search } },
+          { cram_periodo: { _contains: search } },
+        ];
+      } else {
+        filter._or = [
+          { nome: { _contains: search } },
+          { titulo: { _contains: search } },
+          { serie_nome: { _contains: search } },
+        ];
+      }
     }
 
-    const items = await directus.request(
+    const sort = collection === "obser_dashboards" ? ["-id"] : ["ordem", "-id"];
+    const adminDirectus = getDirectusAdmin();
+
+    const items = await adminDirectus.request(
       readItems(collection as any, {
         filter,
-        sort: ["ordem", "-id"],
+        sort,
         limit: 100,
         fields: ['*']
       })
@@ -41,10 +50,11 @@ export async function getCollectionData(collection: ObserCollection, search?: st
 export async function saveItem(collection: ObserCollection, data: any, id?: number) {
   try {
     let result;
+    const adminDirectus = getDirectusAdmin();
     if (id) {
-      result = await directus.request(updateItem(collection as any, id, data));
+      result = await adminDirectus.request(updateItem(collection as any, id, data));
     } else {
-      result = await directus.request(createItem(collection as any, data));
+      result = await adminDirectus.request(createItem(collection as any, data));
     }
     revalidatePath("/observatorio");
     return { success: true, data: result };
@@ -56,7 +66,8 @@ export async function saveItem(collection: ObserCollection, data: any, id?: numb
 
 export async function removeItem(collection: ObserCollection, id: number) {
   try {
-    await directus.request(deleteItem(collection as any, id));
+    const adminDirectus = getDirectusAdmin();
+    await adminDirectus.request(deleteItem(collection as any, id));
     revalidatePath("/observatorio");
     return { success: true };
   } catch (error: any) {
@@ -68,7 +79,8 @@ export async function removeItem(collection: ObserCollection, id: number) {
 export async function getRelationData(collection: string) {
   try {
     const fields = collection === 'obser_periodos' ? ['id', 'nome'] : ['id', 'nome', 'titulo'];
-    const items = await directus.request(
+    const adminDirectus = getDirectusAdmin();
+    const items = await adminDirectus.request(
       readItems(collection as any, {
         limit: -1,
         fields: fields as any[]
