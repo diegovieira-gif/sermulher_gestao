@@ -54,6 +54,25 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error("[Login API] Erro:", error);
-    return NextResponse.json({ error: "Credenciais inválidas ou erro no servidor." }, { status: 401 });
+    // DIAGNÓSTICO TEMPORÁRIO: expõe o motivo real da falha (causa, código,
+    // URL alvo) para depurar conectividade/URL do Directus em produção.
+    // Remover depois de resolver.
+    const detail =
+      error?.cause?.message ||
+      error?.message ||
+      error?.errors?.[0]?.message ||
+      (typeof error === "string" ? error : "") ||
+      "sem detalhe";
+    return NextResponse.json(
+      {
+        error: "Credenciais inválidas ou erro no servidor.",
+        debug: {
+          detail,
+          code: error?.cause?.code || error?.code || null,
+          directusUrl: process.env.DIRECTUS_API_URL || null,
+        },
+      },
+      { status: 401 },
+    );
   }
 }
