@@ -67,10 +67,11 @@ export async function removeItem(collection: ObserCollection, id: number) {
 
 export async function getRelationData(collection: string) {
   try {
+    const fields = collection === 'obser_periodos' ? ['id', 'nome'] : ['id', 'nome', 'titulo'];
     const items = await directus.request(
       readItems(collection as any, {
         limit: -1,
-        fields: ['id', 'nome', 'titulo']
+        fields: fields as any[]
       })
     );
     return { success: true, data: items };

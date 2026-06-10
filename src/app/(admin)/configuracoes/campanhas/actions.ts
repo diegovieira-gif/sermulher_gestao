@@ -1,6 +1,6 @@
 "use server";
 
-import { directus } from "@/lib/directus";
+import { directus, getDirectusAdmin } from "@/lib/directus";
 import { readItems, createItem, updateItem, deleteItem } from "@directus/sdk";
 import { revalidatePath } from "next/cache";
 
@@ -17,8 +17,9 @@ export type Campanha = {
 // Listar apenas campanhas ativas
 export async function getCampanhas() {
   try {
+    const adminDirectus = getDirectusAdmin();
     // @ts-ignore fields are dynamic
-    const items = await directus.request(
+    const items = await adminDirectus.request(
       readItems(COLLECTION, {
         filter: { status: { _eq: "ativo" } },
         sort: ["id"],

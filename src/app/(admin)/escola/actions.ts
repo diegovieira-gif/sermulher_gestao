@@ -1,6 +1,8 @@
 "use server";
 
-import { directus } from "@/lib/directus";
+import { getDirectusAdmin } from "@/lib/directus";
+
+const directus = getDirectusAdmin();
 import { EscolaAlunoDB, EscolaCursoDB, EscolaTurmaDB } from "@/types/database";
 import { createItem, deleteItem, readItems, updateItem } from "@directus/sdk";
 import { revalidatePath } from "next/cache";

@@ -1,7 +1,9 @@
 "use server";
 
-import { directus } from "@/lib/directus";
+import { getDirectusAdmin } from "@/lib/directus";
 import { readItems } from "@directus/sdk";
+
+const directus = getDirectusAdmin();
 
 export type IndicadoresData = {
     identificacao: {
@@ -339,8 +341,6 @@ export async function getIndicadoresCRAM(
         const racaCorData = Object.entries(perfilRaca).map(([name, value]) => ({ name, value }));
         const escolaridadeData = Object.entries(perfilEscolaridade).map(([name, value]) => ({ name, value }));
         const faixaEtariaData = Object.entries(perfilFaixaEtaria).map(([name, value]) => ({ name, value }));
-
-
         return {
             success: true,
             data: {

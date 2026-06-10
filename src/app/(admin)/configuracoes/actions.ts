@@ -1,6 +1,6 @@
 "use server";
 
-import { directus } from "@/lib/directus";
+import { directus, getDirectusAdmin } from "@/lib/directus";
 import { createItem, deleteItem, readItems, updateItem } from "@directus/sdk";
 import { revalidatePath } from "next/cache";
 
@@ -112,8 +112,9 @@ function getCollectionName(type: string): ConfigCollection {
 export async function getAuxItems(type: string) {
   try {
     const collectionName = getCollectionName(type);
+    const adminDirectus = getDirectusAdmin();
     // @ts-ignore
-    const items = await directus.request(
+    const items = await adminDirectus.request(
       readItems(collectionName, { limit: -1, sort: ["nome"] }),
     );
     return { success: true, data: items };

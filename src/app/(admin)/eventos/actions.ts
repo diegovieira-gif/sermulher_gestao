@@ -1,7 +1,9 @@
 "use server";
 
-import { directus } from "@/lib/directus";
+import { getDirectusAdmin } from "@/lib/directus";
 import { createItem, deleteItem, readItems, updateItem } from "@directus/sdk";
+
+const directus = getDirectusAdmin();
 import { revalidatePath } from "next/cache";
 import { Evento, insertEventoSchema } from "./schemas";
 

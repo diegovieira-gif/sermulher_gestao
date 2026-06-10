@@ -1,7 +1,9 @@
 "use server";
 
-import { directus } from "@/lib/directus";
+import { getDirectusAdmin } from "@/lib/directus";
 import { readItems } from "@directus/sdk";
+
+const directus = getDirectusAdmin();
 
 /**
  * Tipos de retorno para o RMA

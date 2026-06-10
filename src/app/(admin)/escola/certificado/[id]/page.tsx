@@ -1,4 +1,6 @@
-import { directus } from "@/lib/directus";
+import { getDirectusAdmin } from "@/lib/directus";
+
+const directus = getDirectusAdmin();
 import { readItems } from "@directus/sdk";
 import CertificadoClient from "./certificado-client";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
