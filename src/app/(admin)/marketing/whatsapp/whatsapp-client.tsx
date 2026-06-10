@@ -807,8 +807,8 @@ export function WhatsappClient() {
                           </TableCell>
                           <TableCell className="text-slate-500 text-sm">
                             {log.data_envio
-                              ? new Date(log.data_envio).toLocaleString("pt-BR")
-                              : new Date(log.date_created).toLocaleString("pt-BR")}
+                              ? new Date(log.data_envio).toLocaleString("pt-BR", { timeZone: "America/Maceio" })
+                              : new Date(log.date_created).toLocaleString("pt-BR", { timeZone: "America/Maceio" })}
                           </TableCell>
                           <TableCell>
                             <Badge
