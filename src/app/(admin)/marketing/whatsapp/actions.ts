@@ -1068,6 +1068,18 @@ export async function runDueAutomaticCampaigns() {
     };
   } catch (error: any) {
     console.error("Erro em runDueAutomaticCampaigns:", error);
-    return { success: false, error: error?.message || "Falha ao executar campanhas automáticas." };
+    const detail =
+      error?.message ||
+      error?.errors?.[0]?.message ||
+      (typeof error === "string" ? error : "") ||
+      (() => {
+        try {
+          return JSON.stringify(error);
+        } catch {
+          return "";
+        }
+      })() ||
+      "Falha ao executar campanhas automáticas.";
+    return { success: false, error: detail };
   }
 }
