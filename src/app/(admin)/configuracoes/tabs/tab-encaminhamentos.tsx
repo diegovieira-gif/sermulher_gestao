@@ -42,17 +42,6 @@ export function TabEncaminhamentos({ data }: TabEncaminhamentosProps) {
             </span>
           ),
         },
-        {
-          key: "status",
-          label: "Status",
-          render: (item) => (
-            <span
-              className={`px-2 py-1 rounded text-xs ${item.status === "published" ? "bg-green-100 text-green-800" : "bg-gray-100"}`}
-            >
-              {item.status === "published" ? "Ativo" : "Inativo"}
-            </span>
-          ),
-        },
       ]}
       onSave={(v) => saveAuxItem("config_encaminhamentos", v)}
       onDelete={(id) => deleteAuxItem("config_encaminhamentos", id)}

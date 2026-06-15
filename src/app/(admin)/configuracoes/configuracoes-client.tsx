@@ -297,7 +297,6 @@ export function ConfiguracoesClient({
               columns={[
                 { key: "nome", label: "Nome" },
                 { key: "mes", label: "Mês" },
-                { key: "status", label: "Status" },
               ]}
               onSave={(data) => saveAuxItem("config_campanhas", data)}
               onDelete={(id) => deleteAuxItem("config_campanhas", id)}
