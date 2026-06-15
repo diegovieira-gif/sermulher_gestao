@@ -5,6 +5,7 @@ export const contatoSchema = z.object({
 });
 
 export const enderecoSchema = z.object({
+  cep: z.string().optional().nullable(),
   logradouro: z.string().optional().nullable(),
   numero: z.string().optional().nullable(),
   bairro: z.string().optional().nullable(),
@@ -31,7 +32,7 @@ export const beneficiariaSchema = z.object({
         const cpfLimpo = val.replace(/\D/g, "");
         return cpfLimpo.length === 11;
       },
-      { message: "CPF deve conter 11 dígitos numéricos" },
+      "CPF deve conter 11 dígitos numéricos",
     ),
 
   data_nascimento: z.string().optional().nullable(),
@@ -52,7 +53,7 @@ export const beneficiariaSchema = z.object({
         if (!val || val.trim() === "") return true;
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
       },
-      { message: "Email inválido" },
+      "Email inválido",
     )
     .optional()
     .nullable(),

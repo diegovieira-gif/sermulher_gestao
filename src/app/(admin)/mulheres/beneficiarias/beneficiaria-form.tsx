@@ -72,6 +72,8 @@ export function BeneficiariaForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSearchingCPF, setIsSearchingCPF] = useState(false);
   const [lastSearchedCpf, setLastSearchedCpf] = useState("");
+  const [isSearchingCEP, setIsSearchingCEP] = useState(false);
+  const [lastSearchedCep, setLastSearchedCep] = useState("");
 
   const form = useForm<BeneficiariaFormValues>({
     resolver: zodResolver(beneficiariaSchema),
@@ -89,6 +91,7 @@ export function BeneficiariaForm({
         melhor_turno_contato: null,
       },
       endereco: {
+        cep: "",
         logradouro: "",
         numero: "",
         bairro: "",
@@ -162,10 +165,44 @@ export function BeneficiariaForm({
     }
   }, [cpfValue, lastSearchedCpf, beneficiaria, form]);
 
+  const cepValue = form.watch("endereco.cep");
+
+  useEffect(() => {
+    const cleanCep = (cepValue || "").replace(/\D/g, "");
+    if (cleanCep.length === 8 && cleanCep !== lastSearchedCep) {
+      const searchCep = async () => {
+        setIsSearchingCEP(true);
+        setLastSearchedCep(cleanCep);
+        try {
+          const res = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+          if (res.ok) {
+            const data = await res.json();
+            if (!data.erro) {
+              toast.success("CEP localizado!");
+              if (data.logradouro) form.setValue("endereco.logradouro", data.logradouro, { shouldValidate: true });
+              if (data.bairro) form.setValue("endereco.bairro", data.bairro, { shouldValidate: true });
+              if (data.localidade) form.setValue("endereco.cidade", data.localidade, { shouldValidate: true });
+            } else {
+              toast.error("CEP não cadastrado ou inválido.");
+            }
+          }
+        } catch (err) {
+          console.error("Error searching CEP:", err);
+          toast.error("Erro ao buscar dados do CEP.");
+        } finally {
+          setIsSearchingCEP(false);
+        }
+      };
+      searchCep();
+    }
+  }, [cepValue, lastSearchedCep, form]);
+
   useEffect(() => {
     if (!open) {
       setLastSearchedCpf("");
       setIsSearchingCPF(false);
+      setLastSearchedCep("");
+      setIsSearchingCEP(false);
     }
   }, [open]);
 
@@ -206,6 +243,7 @@ export function BeneficiariaForm({
         escolaridade_id: beneficiaria.escolaridade_id,
         situacao_trabalho_id: beneficiaria.situacao_trabalho_id,
         endereco: parsedEndereco || {
+          cep: "",
           logradouro: "",
           numero: "",
           bairro: "",
@@ -234,6 +272,7 @@ export function BeneficiariaForm({
           melhor_turno_contato: null,
         },
         endereco: {
+          cep: "",
           logradouro: "",
           numero: "",
           bairro: "",
@@ -534,19 +573,52 @@ export function BeneficiariaForm({
                 <div className="space-y-4">
                   <h3 className="text-sm font-semibold">Endereço</h3>
 
-                  <FormField
-                    control={form.control}
-                    name="endereco.logradouro"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Logradouro *</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Rua das Flores" {...field} value={field.value || ""} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="endereco.cep"
+                      render={({ field }) => (
+                        <FormItem className="md:col-span-1">
+                          <FormLabel>CEP</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Input
+                                placeholder="00000-000"
+                                {...field}
+                                value={field.value || ""}
+                                onChange={(e) => {
+                                  const value = e.target.value.replace(/\D/g, "");
+                                  field.onChange(value.slice(0, 8));
+                                }}
+                                className={isSearchingCEP ? "pr-10" : ""}
+                                autoComplete="off"
+                              />
+                              {isSearchingCEP && (
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                  <Loader2Icon className="h-4 w-4 animate-spin text-muted-foreground" />
+                                </div>
+                              )}
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="endereco.logradouro"
+                      render={({ field }) => (
+                        <FormItem className="md:col-span-3">
+                          <FormLabel>Logradouro *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Rua das Flores" {...field} value={field.value || ""} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
                   <div className="grid grid-cols-3 gap-4">
                     <FormField
