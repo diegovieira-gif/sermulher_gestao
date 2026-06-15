@@ -141,7 +141,7 @@ export function KanbanBoard({
         {COLUNAS.map((col) => (
           <div
             key={col.id}
-            className={`flex flex-col h-full max-h-full rounded-xl border ${col.color} p-4`}
+            className={`flex flex-col h-full max-h-full min-h-0 rounded-xl border ${col.color} p-4`}
           >
             <div className="flex items-center justify-between mb-4 sticky top-0 z-10">
               <h3 className="font-semibold text-gray-700 flex items-center gap-2">
@@ -152,7 +152,7 @@ export function KanbanBoard({
               </Badge>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar pb-20">
+            <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar pb-20">
               {cards
                 .filter((c) => c.status_etapa === col.id)
                 .map((card) => (
@@ -160,8 +160,8 @@ export function KanbanBoard({
                     key={card.id}
                     className="shadow-sm hover:shadow-md transition-all bg-white group relative animate-in fade-in slide-in-from-bottom-2"
                   >
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-start mb-2">
+                    <CardContent className="p-3">
+                      <div className="flex justify-between items-start mb-1.5">
                         <Badge
                           variant="outline"
                           className={`text-[10px] uppercase tracking-wide ${
@@ -180,16 +180,16 @@ export function KanbanBoard({
                       </div>
 
                       <h4
-                        className="font-bold text-gray-800 truncate"
+                        className="font-semibold text-sm text-gray-800 truncate"
                         title={card.beneficiaria.nome}
                       >
                         {card.beneficiaria.nome}
                       </h4>
-                      <p className="text-xs text-gray-500 mb-3 font-mono">
+                      <p className="text-[11px] text-gray-500 mb-2 font-mono">
                         {card.beneficiaria.cpf}
                       </p>
 
-                      <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
+                      <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-gray-100">
                         <Link
                           href={`/mulheres/atendimentos/${card.atendimento_id}`}
                         >
