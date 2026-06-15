@@ -161,7 +161,20 @@ export default async function AtendimentoDetailPage({ params }: PageProps) {
 
   const atendimento = atendimentoResult.data;
   const beneficiaria = atendimento.beneficiaria;
-  const endereco = beneficiaria?.endereco || {};
+  
+  // Parse seguro do endereço caso venha como string JSON do Directus
+  const rawEndereco = beneficiaria?.endereco;
+  const endereco =
+    typeof rawEndereco === "string"
+      ? (() => {
+          try {
+            return JSON.parse(rawEndereco);
+          } catch (e) {
+            console.error("Erro ao converter endereco:", e);
+            return {};
+          }
+        })()
+      : rawEndereco || {};
 
   // Tratamento de Fallback para Prioridade e Origem (Relacional vs Texto)
   const prioridadeLabel =
