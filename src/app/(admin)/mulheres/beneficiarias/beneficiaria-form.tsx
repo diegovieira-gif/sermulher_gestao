@@ -162,6 +162,13 @@ export function BeneficiariaForm({
     }
   }, [cpfValue, lastSearchedCpf, beneficiaria, form]);
 
+  useEffect(() => {
+    if (!open) {
+      setLastSearchedCpf("");
+      setIsSearchingCPF(false);
+    }
+  }, [open]);
+
   // Helper local para parsear campos JSON que podem vir como string
   const safeJsonParse = (val: any) => {
     if (typeof val === "string") {
@@ -310,6 +317,7 @@ export function BeneficiariaForm({
                                 field.onChange(value.slice(0, 11));
                               }}
                               className={isSearchingCPF ? "pr-10" : ""}
+                              autoComplete="off"
                             />
                             {isSearchingCPF && (
                               <div className="absolute right-3 top-1/2 -translate-y-1/2">
