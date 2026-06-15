@@ -18,6 +18,7 @@ import {
   Megaphone,
   LayoutGrid,
   Briefcase,
+  Activity,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { logout } from "@/app/actions/auth";
@@ -326,6 +327,25 @@ export function Sidebar({ allowedKeys }: SidebarProps) {
                   <Link href="/configuracoes">
                     <Settings className="size-5" />
                     <span>Configurações</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
+
+            {can("auditoria") && (
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  tooltip="Auditoria"
+                  isActive={pathname.startsWith("/auditoria")}
+                  className={cn(
+                    pathname.startsWith("/auditoria") &&
+                      "bg-sidebar-accent text-sidebar-accent-foreground font-semibold",
+                  )}
+                >
+                  <Link href="/auditoria">
+                    <Activity className="size-5" />
+                    <span>Auditoria</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

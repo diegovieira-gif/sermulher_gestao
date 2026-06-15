@@ -22,6 +22,7 @@ const pageTitles: Record<string, string> = {
   "/eventos": "Eventos e Campanhas",
   "/configuracoes": "Configurações",
   "/observatorio": "Observatório",
+  "/auditoria": "Auditoria",
 };
 
 export default async function AdminLayout({

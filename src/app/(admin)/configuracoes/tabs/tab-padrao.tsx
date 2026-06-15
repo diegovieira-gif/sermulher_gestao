@@ -55,17 +55,7 @@ export function TabPadrao({
           },
         ]
       : []),
-    {
-      key: "status",
-      label: "Status",
-      render: (item: any) => (
-        <span
-          className={`px-2 py-1 rounded text-xs ${item.status === "published" ? "bg-green-100 text-green-800" : "bg-gray-100"}`}
-        >
-          {item.status === "published" ? "Ativo" : "Inativo"}
-        </span>
-      ),
-    },
+
   ];
 
   return (
