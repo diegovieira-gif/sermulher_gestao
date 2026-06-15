@@ -46,10 +46,12 @@ export async function getMulheresDashboardStats(): Promise<
 > {
   try {
     const agora = new Date();
-    const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1);
+    const anoMesAtual = `${agora.getFullYear()}-${String(
+      agora.getMonth() + 1
+    ).padStart(2, "0")}`;
 
-    // Buscar beneficiárias e mulheres_atendimentos em paralelo
-    const [beneficiarias, mulheresAtendimentos] = await Promise.all([
+    // Buscar beneficiárias e atendimentos em paralelo
+    const [beneficiarias, atendimentos] = await Promise.all([
       directus
         .request(
           readItems("beneficiarias", {
@@ -60,19 +62,17 @@ export async function getMulheresDashboardStats(): Promise<
         .catch(() => []),
       directus
         .request(
-          readItems("mulheres_atendimentos", {
+          readItems("atendimentos", {
             fields: [
               "id",
               "status",
-              "situacao_violencia",
-              "tipo_atendimento",
-              "data_atendimento",
-              "date_created",
+              "data_abertura",
+              "tipos_violencia",
               "beneficiaria.id",
               "beneficiaria.nome_completo",
             ],
             limit: -1,
-            sort: ["-date_created"],
+            sort: ["-data_abertura"],
           })
         )
         .catch(() => []),
@@ -80,23 +80,32 @@ export async function getMulheresDashboardStats(): Promise<
 
     // 1. KPIs
     const totalBeneficiarias = beneficiarias.length;
-    const atendimentosEmAndamento = mulheresAtendimentos.filter(
-      (a: any) => a.status === "Em andamento"
+    
+    // Casos ativos são os que estão "Aberto" ou "Em andamento"
+    const atendimentosEmAndamento = atendimentos.filter(
+      (a: any) => a.status === "Em andamento" || a.status === "Aberto"
     ).length;
 
-    // Novos atendimentos este mês (baseado em date_created ou data_atendimento)
-    const novosAtendimentosMes = mulheresAtendimentos.filter((a: any) => {
-      const dataRef = a.date_created || a.data_atendimento;
+    // Novos atendimentos este mês (baseado em data_abertura)
+    const novosAtendimentosMes = atendimentos.filter((a: any) => {
+      const dataRef = a.data_abertura;
       if (!dataRef) return false;
-      const data = new Date(dataRef);
-      return data >= inicioMes;
+      return dataRef.startsWith(anoMesAtual);
     }).length;
 
-    // 2. Gráfico: Tipos de Violência - Agrupar por situacao_violencia
+    // 2. Gráfico: Tipos de Violência - Agrupar por tipos_violencia (que é uma string separada por vírgula no banco)
     const contagemViolencia: Record<string, number> = {};
-    mulheresAtendimentos.forEach((item: any) => {
-      const tipo = item.situacao_violencia || "Não informado";
-      contagemViolencia[tipo] = (contagemViolencia[tipo] || 0) + 1;
+    atendimentos.forEach((item: any) => {
+      if (item.tipos_violencia) {
+        const tipos = item.tipos_violencia
+          .split(",")
+          .map((t: string) => t.trim())
+          .filter(Boolean);
+        
+        tipos.forEach((tipo: string) => {
+          contagemViolencia[tipo] = (contagemViolencia[tipo] || 0) + 1;
+        });
+      }
     });
 
     const tiposViolenciaData = Object.entries(contagemViolencia).map(
@@ -116,18 +125,25 @@ export async function getMulheresDashboardStats(): Promise<
       });
     }
 
-    // 3. Últimos 5 atendimentos (ordenados por date_created ou data_atendimento)
-    const ultimosAtendimentos = mulheresAtendimentos
+    // 3. Últimos 5 atendimentos (ordenados por data_abertura)
+    const ultimosAtendimentos = atendimentos
       .slice(0, 5)
       .map((a: any) => {
-        const dataRef = a.data_atendimento || a.date_created;
+        const dataRef = a.data_abertura;
+        let dataFormatada = "-";
+        if (dataRef) {
+          try {
+            const [ano, mes, dia] = dataRef.split("-");
+            dataFormatada = `${dia}/${mes}/${ano}`;
+          } catch {
+            dataFormatada = dataRef;
+          }
+        }
         return {
           id: a.id,
           nomeBeneficiaria: a.beneficiaria?.nome_completo || "Não informado",
-          data: dataRef
-            ? new Date(dataRef).toLocaleDateString("pt-BR")
-            : "-",
-          tipoAtendimento: a.tipo_atendimento || "Não informado",
+          data: dataFormatada,
+          tipoAtendimento: a.tipos_violencia || "Não informado",
           status: a.status || "Sem status",
         };
       });
