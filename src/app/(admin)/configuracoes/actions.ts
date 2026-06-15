@@ -20,7 +20,8 @@ export type ConfigCollection =
   | "config_raca_cor"
   | "config_estado_civil"
   | "config_escolaridade"
-  | "config_situacao_trabalho";
+  | "config_situacao_trabalho"
+  | "config_ubs";
 
 const ALLOWED_TYPES = [
   "origens",
@@ -54,6 +55,8 @@ const ALLOWED_TYPES = [
   "config_estado_civil",
   "config_escolaridade",
   "config_situacao_trabalho",
+  "config_ubs",
+  "ubs",
   "raca-cor",
   "estado-civil",
   "escolaridade",
@@ -96,6 +99,8 @@ function getCollectionName(type: string): ConfigCollection {
       return "config_encaminhamentos";
     case "campanhas":
       return "config_campanhas";
+    case "ubs":
+      return "config_ubs";
     case "raca-cor":
       return "config_raca_cor";
     case "estado-civil":

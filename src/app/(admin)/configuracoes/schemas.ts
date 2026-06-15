@@ -27,3 +27,8 @@ export const estadoCivilSchema = baseSchema;
 export const escolaridadeSchema = baseSchema;
 export const situacaoTrabalhoSchema = baseSchema;
 export const bairroSchema = baseSchema;
+
+export const ubsSchema = baseSchema.extend({
+  endereco: z.string().optional().nullable(),
+  telefone: z.string().optional().nullable(),
+});

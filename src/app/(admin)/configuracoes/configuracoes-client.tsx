@@ -25,6 +25,7 @@ import {
 import { TabEncaminhamentos } from "./tabs/tab-encaminhamentos";
 import { TabPadrao } from "./tabs/tab-padrao";
 import { TabPermissoes } from "./tabs/tab-permissoes";
+import { TabUbs } from "./tabs/tab-ubs";
 
 // Imports de UI necessários para os casos inline (Campanhas/Periculosidade)
 import {
@@ -61,6 +62,7 @@ interface ConfiguracoesClientProps {
   estadoCivil: any[];
   escolaridade: any[];
   situacaoTrabalho: any[];
+  ubs: any[];
   isAdmin?: boolean;
   roles?: { id: string; name: string; isAdmin: boolean }[];
   permConfigs?: {
@@ -88,6 +90,7 @@ export function ConfiguracoesClient({
   estadoCivil,
   escolaridade,
   situacaoTrabalho,
+  ubs,
   isAdmin = false,
   roles = [],
   permConfigs = [],
@@ -97,6 +100,7 @@ export function ConfiguracoesClient({
     { value: "setores", label: "Setores", icon: Briefcase },
     { value: "locais", label: "Locais", icon: Building2 },
     { value: "bairros", label: "Endereços", icon: MapPinned },
+    { value: "ubs", label: "Unidades de Saúde", icon: MapPin },
 
     { label: "Demografia", isHeader: true },
     { value: "demografia", label: "Dados Demográficos", icon: Users },
@@ -186,6 +190,10 @@ export function ConfiguracoesClient({
               collectionName="config_bairros"
               type="bairros"
             />
+          </TabsContent>
+
+          <TabsContent value="ubs" className="mt-0 space-y-4">
+            <TabUbs data={ubs} />
           </TabsContent>
 
           <TabsContent value="demografia" className="mt-0 space-y-8">
