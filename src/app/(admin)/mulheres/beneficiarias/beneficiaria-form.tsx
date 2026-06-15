@@ -9,7 +9,7 @@ import {
   type Beneficiaria,
   type BeneficiariaFormValues,
 } from "./schemas";
-import { saveBeneficiaria } from "./actions";
+import { saveBeneficiaria, findBeneficiariaByCPF } from "./actions";
 import { BAIRROS_ARACAJU } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
@@ -41,6 +41,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+const Loader2Icon = Loader2 as React.ComponentType<any>;
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 
 interface FormOption {
@@ -69,6 +70,8 @@ export function BeneficiariaForm({
 }: BeneficiariaFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSearchingCPF, setIsSearchingCPF] = useState(false);
+  const [lastSearchedCpf, setLastSearchedCpf] = useState("");
 
   const form = useForm<BeneficiariaFormValues>({
     resolver: zodResolver(beneficiariaSchema),
@@ -100,6 +103,64 @@ export function BeneficiariaForm({
       possui_medida_protetiva: false,
     },
   });
+
+  const cpfValue = form.watch("cpf");
+
+  useEffect(() => {
+    if (beneficiaria) return; // Do not auto-search when editing an existing record
+    const cleanCpf = (cpfValue || "").replace(/\D/g, "");
+    if (cleanCpf.length === 11 && cleanCpf !== lastSearchedCpf) {
+      const searchCpf = async () => {
+        setIsSearchingCPF(true);
+        setLastSearchedCpf(cleanCpf);
+        try {
+          const res = await findBeneficiariaByCPF(cleanCpf);
+          if (res.success && res.data) {
+            const data = res.data;
+            toast.success("Dados da beneficiária localizados na rede municipal!");
+            
+            if (data.userName) form.setValue("nome_completo", data.userName, { shouldValidate: true });
+            if (data.userSocialName) form.setValue("nome_social", data.userSocialName, { shouldValidate: true });
+            
+            if (data.userBorn) {
+              const parts = data.userBorn.split("/");
+              if (parts.length === 3) {
+                form.setValue("data_nascimento", `${parts[2]}-${parts[1]}-${parts[0]}`, { shouldValidate: true });
+              }
+            }
+            
+            if (data.userPhone1) {
+              let phone = data.userPhone1.replace(/\D/g, "");
+              if (phone.startsWith("55") && (phone.length === 12 || phone.length === 13)) {
+                phone = phone.substring(2);
+              }
+              form.setValue("telefone", phone, { shouldValidate: true });
+            }
+            
+            if (data.userMail) form.setValue("email", data.userMail, { shouldValidate: true });
+            
+            form.setValue("endereco.logradouro", data.userAddressStreet || "", { shouldValidate: true });
+            form.setValue("endereco.numero", data.userAddressNumber || "", { shouldValidate: true });
+            
+            if (data.userAddressDistrict) {
+              form.setValue("endereco.bairro", data.userAddressDistrict.trim(), { shouldValidate: true });
+            }
+            
+            if (data.userAddressCity === "2800308") {
+              form.setValue("endereco.cidade", "Aracaju", { shouldValidate: true });
+            } else if (data.userAddressCity) {
+              form.setValue("endereco.cidade", data.userAddressCity, { shouldValidate: true });
+            }
+          }
+        } catch (err) {
+          console.error("Error searching CPF:", err);
+        } finally {
+          setIsSearchingCPF(false);
+        }
+      };
+      searchCpf();
+    }
+  }, [cpfValue, lastSearchedCpf, beneficiaria, form]);
 
   // Helper local para parsear campos JSON que podem vir como string
   const safeJsonParse = (val: any) => {
@@ -228,7 +289,45 @@ export function BeneficiariaForm({
 
               {/* Aba: Dados Pessoais */}
               <TabsContent value="dados-pessoais" className="space-y-4 mt-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="cpf"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          CPF
+                          <InfoTooltip text="Cadastro de Pessoa Física." />
+                        </FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input
+                              placeholder="000.000.000-00"
+                              {...field}
+                              value={field.value || ""}
+                              onChange={(e) => {
+                                const value = e.target.value.replace(/\D/g, "");
+                                field.onChange(value.slice(0, 11));
+                              }}
+                              className={isSearchingCPF ? "pr-10" : ""}
+                            />
+                            {isSearchingCPF && (
+                              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                <Loader2Icon className="h-4 w-4 animate-spin text-muted-foreground" />
+                              </div>
+                            )}
+                          </div>
+                        </FormControl>
+                        {isSearchingCPF && (
+                          <p className="text-[10px] text-muted-foreground animate-pulse mt-1">
+                            Buscando dados cadastrais...
+                          </p>
+                        )}
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
                   <FormField
                     control={form.control}
                     name="nome_completo"
@@ -245,6 +344,9 @@ export function BeneficiariaForm({
                       </FormItem>
                     )}
                   />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <FormField
                     control={form.control}
                     name="nome_social"
@@ -256,33 +358,6 @@ export function BeneficiariaForm({
                         </FormLabel>
                         <FormControl>
                           <Input placeholder="Nome Social" {...field} value={field.value || ""} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="cpf"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          CPF
-                          <InfoTooltip text="Cadastro de Pessoa Física." />
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="000.000.000-00"
-                            {...field}
-                            value={field.value || ""}
-                            onChange={(e) => {
-                              const value = e.target.value.replace(/\D/g, "");
-                              field.onChange(value.slice(0, 11));
-                            }}
-                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -702,7 +777,7 @@ export function BeneficiariaForm({
                 Cancelar
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isSubmitting && <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />}
                 {beneficiaria ? "Atualizar" : "Cadastrar"}
               </Button>
             </div>

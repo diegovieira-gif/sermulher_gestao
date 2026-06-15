@@ -422,3 +422,35 @@ export async function deletarEntrega(id: number, beneficiariaId: number) {
     return { success: false, error: "Erro ao excluir." };
   }
 }
+
+export async function findBeneficiariaByCPF(cpf: string) {
+  try {
+    const cleanCpf = cpf.replace(/\D/g, "");
+    if (cleanCpf.length !== 11) {
+      return { success: false, error: "CPF inválido. Deve conter 11 dígitos numéricos." };
+    }
+
+    const response = await fetch("https://homolog.siged.educacao.aju.br/webservice/users/findByCPF", {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer 0ed9b204df3f68caeb3deca2301872c9",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ userCPF: cleanCpf })
+    });
+
+    if (!response.ok) {
+      return { success: false, error: `Erro na API externa: ${response.statusText}` };
+    }
+
+    const json = await response.json();
+    if (json.status === "success" && Array.isArray(json.data) && json.data.length > 0) {
+      return { success: true, data: json.data[0] };
+    }
+
+    return { success: true, data: null };
+  } catch (error: any) {
+    console.error("Error fetching findByCPF:", error);
+    return { success: false, error: error?.message || "Erro de conexão ao buscar CPF." };
+  }
+}
