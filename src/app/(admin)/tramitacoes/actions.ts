@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { directus } from "@/lib/directus";
-import { readItems, updateItem } from "@directus/sdk";
+import { readItems, updateItem, deleteItem } from "@directus/sdk";
 import { StatusEtapa } from "@/app/(admin)/mulheres/atendimentos/[id]/schemas";
 
 export type KanbanCard = {
@@ -103,5 +103,16 @@ export async function getSetoresOptions() {
     return setores;
   } catch (e) {
     return [];
+  }
+}
+
+export async function deleteTramitacao(id: number) {
+  try {
+    await directus.request(deleteItem("tramitacoes", id));
+    revalidatePath("/tramitacoes");
+    return { success: true, message: "Demanda excluída com sucesso!" };
+  } catch (error) {
+    console.error("Erro ao excluir tramitação:", error);
+    return { success: false, error: "Erro ao excluir demanda." };
   }
 }
