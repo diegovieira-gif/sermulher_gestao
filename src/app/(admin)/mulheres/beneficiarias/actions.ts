@@ -96,25 +96,57 @@ async function getAuthenticatedClient() {
 
 // --- Ações de Leitura (Queries) ---
 
-export async function getBeneficiarias(page = 1, search = "", limit = 10) {
+export async function getBeneficiarias(
+  page = 1,
+  search = "",
+  limit = 10,
+  filters?: {
+    medidaProtetiva?: boolean;
+    bolsaFamilia?: boolean;
+    bpc?: boolean;
+    bairro?: string;
+  },
+  sortField = "nome_completo",
+  sortOrder: "asc" | "desc" = "asc"
+) {
   const { client } = await getAuthenticatedClient();
   const offset = (page - 1) * limit;
 
-  const filter = search
-    ? {
+  const filterConditions: any[] = [];
+
+  if (search) {
+    filterConditions.push({
       _or: [
         { nome_completo: { _icontains: search } },
         { cpf: { _contains: search } },
       ],
-    }
-    : {};
+    });
+  }
+
+  if (filters?.medidaProtetiva) {
+    filterConditions.push({ possui_medida_protetiva: { _eq: true } });
+  }
+
+  if (filters?.bolsaFamilia) {
+    filterConditions.push({ recebe_bolsa_familia: { _eq: true } });
+  }
+
+  if (filters?.bpc) {
+    filterConditions.push({ recebe_bpc: { _eq: true } });
+  }
+
+  if (filters?.bairro) {
+    filterConditions.push({ endereco: { _icontains: filters.bairro } });
+  }
+
+  const filter = filterConditions.length > 0 ? { _and: filterConditions } : {};
 
   try {
     const items = await client.request(
       readItems("beneficiarias", {
         // @ts-ignore
         fields: BENEFICIARIA_FIELDS,
-        sort: ["nome_completo"],
+        sort: [sortOrder === "desc" ? `-${sortField}` : sortField],
         limit,
         offset,
         filter,
@@ -150,6 +182,48 @@ export async function getBeneficiarias(page = 1, search = "", limit = 10) {
   } catch (error) {
     console.error("Erro ao buscar beneficiárias:", error);
     return { success: false, error: "Erro ao buscar dados." };
+  }
+}
+
+export async function getBeneficiariasMetrics() {
+  const { client } = await getAuthenticatedClient();
+  try {
+    const [totalRes, mpRes, bfRes, bpcRes, recentRes] = await Promise.all([
+      client.request(aggregate("beneficiarias", { aggregate: { count: "*" } })),
+      client.request(aggregate("beneficiarias", { aggregate: { count: "*" }, query: { filter: { possui_medida_protetiva: { _eq: true } } } })),
+      client.request(aggregate("beneficiarias", { aggregate: { count: "*" }, query: { filter: { recebe_bolsa_familia: { _eq: true } } } })),
+      client.request(aggregate("beneficiarias", { aggregate: { count: "*" }, query: { filter: { recebe_bpc: { _eq: true } } } })),
+      client.request(
+        aggregate("beneficiarias", {
+          aggregate: { count: "*" },
+          query: {
+            filter: {
+              created_at: {
+                _gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+              },
+            },
+          },
+        }),
+      ),
+    ]);
+
+    return {
+      success: true,
+      data: {
+        total: Number(totalRes[0]?.count) || 0,
+        medidaProtetiva: Number(mpRes[0]?.count) || 0,
+        bolsaFamilia: Number(bfRes[0]?.count) || 0,
+        bpc: Number(bpcRes[0]?.count) || 0,
+        recentes: Number(recentRes[0]?.count) || 0,
+      },
+    };
+  } catch (error) {
+    console.error("Erro ao buscar métricas:", error);
+    return {
+      success: false,
+      error: "Erro ao carregar métricas.",
+      data: { total: 0, medidaProtetiva: 0, bolsaFamilia: 0, bpc: 0, recentes: 0 },
+    };
   }
 }
 
