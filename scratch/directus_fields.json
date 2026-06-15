@@ -1,0 +1,132 @@
+{
+  "success": true,
+  "ubs_id_created": true,
+  "ubsFields": [
+    {
+      "field": "id",
+      "type": "integer"
+    },
+    {
+      "field": "user_created",
+      "type": "string"
+    },
+    {
+      "field": "date_created",
+      "type": "timestamp"
+    },
+    {
+      "field": "user_updated",
+      "type": "string"
+    },
+    {
+      "field": "date_updated",
+      "type": "timestamp"
+    },
+    {
+      "field": "nome",
+      "type": "string"
+    },
+    {
+      "field": "endereco",
+      "type": "string"
+    },
+    {
+      "field": "telefone",
+      "type": "string"
+    }
+  ],
+  "beneficiariasFields": [
+    {
+      "field": "id",
+      "type": "integer"
+    },
+    {
+      "field": "nome_completo",
+      "type": "string"
+    },
+    {
+      "field": "cpf",
+      "type": "string"
+    },
+    {
+      "field": "data_nascimento",
+      "type": "date"
+    },
+    {
+      "field": "contato",
+      "type": "json"
+    },
+    {
+      "field": "endereco",
+      "type": "json"
+    },
+    {
+      "field": "perfil_socioeconomico",
+      "type": "text"
+    },
+    {
+      "field": "tags",
+      "type": "text"
+    },
+    {
+      "field": "recebe_bolsa_familia",
+      "type": "boolean"
+    },
+    {
+      "field": "recebe_bpc",
+      "type": "boolean"
+    },
+    {
+      "field": "possui_medida_protetiva",
+      "type": "boolean"
+    },
+    {
+      "field": "telefone",
+      "type": "string"
+    },
+    {
+      "field": "email",
+      "type": "string"
+    },
+    {
+      "field": "nome_social",
+      "type": "string"
+    },
+    {
+      "field": "numero_cad_unico",
+      "type": "string"
+    },
+    {
+      "field": "quantidade_filhos",
+      "type": "string"
+    },
+    {
+      "field": "raca_cor_id",
+      "type": "integer"
+    },
+    {
+      "field": "estado_civil_id",
+      "type": "integer"
+    },
+    {
+      "field": "escolaridade_id",
+      "type": "integer"
+    },
+    {
+      "field": "situacao_trabalho_id",
+      "type": "integer"
+    },
+    {
+      "field": "created_at",
+      "type": "dateTime"
+    },
+    {
+      "field": "updated_at",
+      "type": "dateTime"
+    },
+    {
+      "field": "ubs_id",
+      "type": "integer"
+    }
+  ]
+}

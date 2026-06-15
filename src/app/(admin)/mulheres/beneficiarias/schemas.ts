@@ -42,6 +42,7 @@ export const beneficiariaSchema = z.object({
   estado_civil_id: z.coerce.number().optional().nullable(),
   escolaridade_id: z.coerce.number().optional().nullable(),
   situacao_trabalho_id: z.coerce.number().optional().nullable(),
+  ubs_id: z.coerce.number().optional().nullable(),
 
   quantidade_filhos: z.coerce.number().min(0).optional().nullable(),
 

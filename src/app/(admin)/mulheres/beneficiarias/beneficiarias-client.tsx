@@ -181,6 +181,7 @@ interface BeneficiariasClientProps {
     escolaridades: any[];
     situacoesTrabalho: any[];
     bairros: any[];
+    ubs: any[];
   } | null;
   metrics: {
     total: number;

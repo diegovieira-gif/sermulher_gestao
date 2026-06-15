@@ -29,6 +29,7 @@ const BENEFICIARIA_FIELDS = [
   "estado_civil_id",
   "escolaridade_id",
   "situacao_trabalho_id",
+  "ubs_id",
   "quantidade_filhos",
   "telefone",
   "email",
@@ -247,17 +248,18 @@ export async function getBeneficiaria(id: number) {
 export async function getBeneficiariaFormOptions() {
   const { client } = await getAuthenticatedClient();
   try {
-    const [racas, estadosCivis, escolaridades, situacoesTrabalho, bairros] = await Promise.all([
+    const [racas, estadosCivis, escolaridades, situacoesTrabalho, bairros, ubs] = await Promise.all([
       client.request(readItems("config_raca_cor", { fields: ["id", "nome"], sort: ["nome"] })),
       client.request(readItems("config_estado_civil", { fields: ["id", "nome"], sort: ["nome"] })),
       client.request(readItems("config_escolaridade", { fields: ["id", "nome"], sort: ["nome"] })),
       client.request(readItems("config_situacao_trabalho", { fields: ["id", "nome"], sort: ["nome"] })),
       client.request(readItems("config_bairros", { fields: ["id", "nome"], sort: ["nome"] })),
+      client.request(readItems("config_ubs", { fields: ["id", "nome"], sort: ["nome"] })),
     ]);
 
     return {
       success: true,
-      data: { racas, estadosCivis, escolaridades, situacoesTrabalho, bairros }
+      data: { racas, estadosCivis, escolaridades, situacoesTrabalho, bairros, ubs }
     };
   } catch (error) {
     console.error("Erro ao buscar opções do formulário:", error);

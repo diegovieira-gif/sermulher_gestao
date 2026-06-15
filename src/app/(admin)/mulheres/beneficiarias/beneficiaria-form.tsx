@@ -59,6 +59,7 @@ interface BeneficiariaFormProps {
     escolaridades: FormOption[];
     situacoesTrabalho: FormOption[];
     bairros: FormOption[];
+    ubs: FormOption[];
   };
 }
 
@@ -104,6 +105,7 @@ export function BeneficiariaForm({
       recebe_bolsa_familia: false,
       recebe_bpc: false,
       possui_medida_protetiva: false,
+      ubs_id: undefined,
     },
   });
 
@@ -255,6 +257,7 @@ export function BeneficiariaForm({
         recebe_bolsa_familia: beneficiaria.recebe_bolsa_familia || false,
         recebe_bpc: beneficiaria.recebe_bpc || false,
         possui_medida_protetiva: beneficiaria.possui_medida_protetiva || false,
+        ubs_id: beneficiaria.ubs_id,
       };
       form.reset(normalizedData);
     } else {
@@ -285,6 +288,7 @@ export function BeneficiariaForm({
         recebe_bolsa_familia: false,
         recebe_bpc: false,
         possui_medida_protetiva: false,
+        ubs_id: undefined,
       });
     }
   }, [beneficiaria, form]);
@@ -711,8 +715,33 @@ export function BeneficiariaForm({
                     )}
                   />
 
-                  {/* Espaço vazio para alinhar grid se necessário */}
-                  <div className="hidden md:block"></div>
+                  <FormField
+                    control={form.control}
+                    name="ubs_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Unidade de Saúde (UBS)</FormLabel>
+                        <Select
+                          onValueChange={(val) => field.onChange(val ? Number(val) : null)}
+                          value={field.value ? String(field.value) : undefined}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione a Unidade de Saúde" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {formOptions?.ubs?.map((item) => (
+                              <SelectItem key={item.id} value={String(item.id)}>
+                                {item.nome}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
