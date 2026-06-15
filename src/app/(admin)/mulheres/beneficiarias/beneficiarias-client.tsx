@@ -107,15 +107,64 @@ const formatCPF = (cpf: string | null | undefined): string => {
   return clean.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
 };
 
+const normalizePhone = (phone: string | null | undefined): string => {
+  if (!phone) return "";
+  let clean = phone.replace(/\D/g, "");
+  if (clean.startsWith("55") && (clean.length === 12 || clean.length === 13)) {
+    clean = clean.substring(2);
+  }
+  return clean;
+};
+
 const formatPhone = (phone: string | null | undefined): string => {
   if (!phone) return "-";
-  const clean = phone.replace(/\D/g, "");
+  const clean = normalizePhone(phone);
   if (clean.length === 11) {
     return clean.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
   } else if (clean.length === 10) {
     return clean.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
+  } else if (clean.length === 9) {
+    return clean.replace(/(\d{5})(\d{4})/, "$1-$2");
+  } else if (clean.length === 8) {
+    return clean.replace(/(\d{4})(\d{4})/, "$1-$2");
   }
   return phone;
+};
+
+const maskCPF = (cpf: string | null | undefined): string => {
+  if (!cpf) return "-";
+  const clean = cpf.replace(/\D/g, "");
+  if (clean.length !== 11) return cpf;
+  return `${clean.substring(0, 3)}.***.***-${clean.substring(9)}`;
+};
+
+const maskPhone = (phone: string | null | undefined): string => {
+  if (!phone) return "-";
+  const clean = normalizePhone(phone);
+  if (clean.length === 11) {
+    return `(${clean.substring(0, 2)}) ${clean.substring(2, 3)}****-${clean.substring(7)}`;
+  } else if (clean.length === 10) {
+    return `(${clean.substring(0, 2)}) ****-${clean.substring(6)}`;
+  } else if (clean.length === 9) {
+    return `${clean.substring(0, 1)}****-${clean.substring(5)}`;
+  } else if (clean.length === 8) {
+    return `****-${clean.substring(4)}`;
+  }
+  if (clean.length > 4) {
+    return `${"*".repeat(clean.length - 4)}${clean.substring(clean.length - 4)}`;
+  }
+  return "****";
+};
+
+const isValidNomeSocial = (name: string | null | undefined): boolean => {
+  if (!name) return false;
+  const clean = name.trim();
+  return !(
+    clean === "00" ||
+    clean === "0" ||
+    clean.toLowerCase() === "false" ||
+    clean === ""
+  );
 };
 
 interface BeneficiariasClientProps {
@@ -255,8 +304,8 @@ export function BeneficiariasClient({
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  const currentSortField = searchParams.get("sortField") || "nome_completo";
-  const currentSortOrder = (searchParams.get("sortOrder") as "asc" | "desc") || "asc";
+  const currentSortField = searchParams.get("sortField") || "created_at";
+  const currentSortOrder = (searchParams.get("sortOrder") as "asc" | "desc") || "desc";
 
   const handleSort = (field: string) => {
     setIsLoadingData(true);
@@ -791,23 +840,23 @@ export function BeneficiariasClient({
                       </div>
                       <div className="flex flex-col">
                         <span className="font-semibold text-slate-900 leading-none">{b.nome_completo}</span>
-                        {b.nome_social && (
+                        {isValidNomeSocial(b.nome_social) && (
                           <span className="text-xs text-slate-500 mt-1 italic">
                             Nome social: {b.nome_social}
                           </span>
                         )}
                         <div className="flex flex-wrap gap-1 mt-1.5 items-center">
-                          {b.possui_medida_protetiva && (
+                          {!!b.possui_medida_protetiva && (
                             <Badge className="bg-red-50 text-red-700 border border-red-200 text-[10px] py-0 px-1.5 font-medium hover:bg-red-50">
                               Medida Protetiva
                             </Badge>
                           )}
-                          {b.recebe_bolsa_familia && (
+                          {!!b.recebe_bolsa_familia && (
                             <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] py-0 px-1.5 font-medium hover:bg-emerald-50">
                               Bolsa Família
                             </Badge>
                           )}
-                          {b.recebe_bpc && (
+                          {!!b.recebe_bpc && (
                             <Badge className="bg-blue-50 text-blue-700 border border-blue-200 text-[10px] py-0 px-1.5 font-medium hover:bg-blue-50">
                               BPC
                             </Badge>
@@ -822,11 +871,11 @@ export function BeneficiariasClient({
                     </div>
                   </TableCell>
                   <TableCell className="font-mono text-xs text-slate-600">
-                    {formatCPF(b.cpf)}
+                    {maskCPF(b.cpf)}
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col">
-                      <span className="text-slate-800 text-sm font-medium">{formatPhone(b.telefone)}</span>
+                      <span className="text-slate-800 text-sm font-medium">{maskPhone(b.telefone)}</span>
                       {b.email && (
                         <span className="text-xs text-slate-400 font-normal mt-0.5 truncate max-w-[180px]">
                           {b.email}
@@ -1044,7 +1093,7 @@ export function BeneficiariasClient({
                     <SheetTitle className="text-xl font-bold text-slate-900 leading-tight">
                       {previewBeneficiaria.nome_completo}
                     </SheetTitle>
-                    {previewBeneficiaria.nome_social && (
+                    {isValidNomeSocial(previewBeneficiaria.nome_social) && (
                       <p className="text-xs text-slate-500 mt-0.5 italic">
                         Nome social: {previewBeneficiaria.nome_social}
                       </p>
@@ -1060,19 +1109,19 @@ export function BeneficiariasClient({
 
               {/* Status Badges */}
               <div className="flex flex-wrap gap-2">
-                {previewBeneficiaria.possui_medida_protetiva && (
+                 {!!previewBeneficiaria.possui_medida_protetiva && (
                   <Badge className="bg-red-50 text-red-700 border border-red-200 font-semibold text-xs py-1 px-2.5 hover:bg-red-50">
                     <ShieldAlert className="h-3.5 w-3.5 mr-1" />
                     Medida Protetiva
                   </Badge>
                 )}
-                {previewBeneficiaria.recebe_bolsa_familia && (
+                {!!previewBeneficiaria.recebe_bolsa_familia && (
                   <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold text-xs py-1 px-2.5 hover:bg-emerald-50">
                     <Gift className="h-3.5 w-3.5 mr-1" />
                     Bolsa Família
                   </Badge>
                 )}
-                {previewBeneficiaria.recebe_bpc && (
+                {!!previewBeneficiaria.recebe_bpc && (
                   <Badge className="bg-blue-50 text-blue-700 border border-blue-200 font-semibold text-xs py-1 px-2.5 hover:bg-blue-50">
                     <Gift className="h-3.5 w-3.5 mr-1" />
                     BPC

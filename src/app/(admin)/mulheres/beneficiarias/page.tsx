@@ -29,8 +29,8 @@ export default async function BeneficiariasPage({ searchParams }: PageProps) {
   const bpc = params?.bpc === "true";
   const bairro = params?.bairro || "";
 
-  const sortField = params?.sortField || "nome_completo";
-  const sortOrder = (params?.sortOrder as "asc" | "desc") || "asc";
+  const sortField = params?.sortField || "created_at";
+  const sortOrder = (params?.sortOrder as "asc" | "desc") || "desc";
 
   // Busca dados com paginação, busca, filtros e ordenação
   const [result, formOptionsResult, metricsResult] = await Promise.all([

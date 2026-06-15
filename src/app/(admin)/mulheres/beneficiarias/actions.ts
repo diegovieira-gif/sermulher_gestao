@@ -106,8 +106,8 @@ export async function getBeneficiarias(
     bpc?: boolean;
     bairro?: string;
   },
-  sortField = "nome_completo",
-  sortOrder: "asc" | "desc" = "asc"
+  sortField = "created_at",
+  sortOrder: "asc" | "desc" = "desc"
 ) {
   const { client } = await getAuthenticatedClient();
   const offset = (page - 1) * limit;
