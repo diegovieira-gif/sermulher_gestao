@@ -43,10 +43,38 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  Calendar,
+  MapPin,
 } from "lucide-react";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { toast } from "sonner";
+import { formatDateDisplay } from "@/lib/utils";
 import type { Beneficiaria } from "./schemas";
+
+const getInitials = (name: string): string => {
+  if (!name) return "";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+};
+
+const formatCPF = (cpf: string | null | undefined): string => {
+  if (!cpf) return "-";
+  const clean = cpf.replace(/\D/g, "");
+  if (clean.length !== 11) return cpf;
+  return clean.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+};
+
+const formatPhone = (phone: string | null | undefined): string => {
+  if (!phone) return "-";
+  const clean = phone.replace(/\D/g, "");
+  if (clean.length === 11) {
+    return clean.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+  } else if (clean.length === 10) {
+    return clean.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
+  }
+  return phone;
+};
 
 interface BeneficiariasClientProps {
   initialData: any[]; // Changed from beneficiarias
@@ -253,20 +281,21 @@ export function BeneficiariasClient({
       <div className="rounded-md border bg-white shadow-sm overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="bg-gray-50/50">
-              <TableHead>Nome Completo</TableHead>
-              <TableHead>CPF</TableHead>
-              <TableHead>Telefone</TableHead>
-              <TableHead>Cidade / Bairro</TableHead>
-              <TableHead>Idade</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
+            <TableRow className="bg-slate-50/75">
+              <TableHead className="font-semibold text-slate-700">Beneficiária</TableHead>
+              <TableHead className="font-semibold text-slate-700">CPF</TableHead>
+              <TableHead className="font-semibold text-slate-700">Contato</TableHead>
+              <TableHead className="font-semibold text-slate-700">Localização</TableHead>
+              <TableHead className="font-semibold text-slate-700">Idade</TableHead>
+              <TableHead className="font-semibold text-slate-700">Cadastro</TableHead>
+              <TableHead className="text-right font-semibold text-slate-700">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredData.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={6}
+                  colSpan={7}
                   className="h-32 text-center text-muted-foreground"
                 >
                   Nenhum registro encontrado.
@@ -274,30 +303,65 @@ export function BeneficiariasClient({
               </TableRow>
             ) : (
               filteredData.map((b: any) => (
-                <TableRow key={b.id} className="hover:bg-gray-50/50">
-                  <TableCell className="font-medium">
+                <TableRow key={b.id} className="hover:bg-slate-50/40 transition-colors duration-200">
+                  <TableCell className="font-medium py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 text-purple-800 font-semibold text-xs border border-purple-200/50 shadow-sm">
+                        {getInitials(b.nome_completo)}
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-slate-900 leading-none">{b.nome_completo}</span>
+                        {b.nome_social && (
+                          <span className="text-xs text-slate-500 mt-1 italic">
+                            Nome social: {b.nome_social}
+                          </span>
+                        )}
+                        <div className="flex flex-wrap gap-1 mt-1.5 items-center">
+                          {b.possui_medida_protetiva && (
+                            <Badge className="bg-red-50 text-red-700 border border-red-200 text-[10px] py-0 px-1.5 font-medium hover:bg-red-50">
+                              Medida Protetiva
+                            </Badge>
+                          )}
+                          {b.recebe_bolsa_familia && (
+                            <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] py-0 px-1.5 font-medium hover:bg-emerald-50">
+                              Bolsa Família
+                            </Badge>
+                          )}
+                          {b.recebe_bpc && (
+                            <Badge className="bg-blue-50 text-blue-700 border border-blue-200 text-[10px] py-0 px-1.5 font-medium hover:bg-blue-50">
+                              BPC
+                            </Badge>
+                          )}
+                          {b.origem_dado === "importacao_odoo" && (
+                            <Badge className="bg-amber-50 text-amber-700 border border-amber-200 text-[10px] py-0 px-1.5 font-medium hover:bg-amber-50">
+                              Importado
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="font-mono text-xs text-slate-600">
+                    {formatCPF(b.cpf)}
+                  </TableCell>
+                  <TableCell>
                     <div className="flex flex-col">
-                      <span>{b.nome_completo}</span>
-                      {b.origem_dado === "importacao_odoo" && (
-                        <span className="text-[10px] text-amber-600 bg-amber-50 w-fit px-1 rounded mt-0.5">
-                          Importado
+                      <span className="text-slate-800 text-sm font-medium">{formatPhone(b.telefone)}</span>
+                      {b.email && (
+                        <span className="text-xs text-slate-400 font-normal mt-0.5 truncate max-w-[180px]">
+                          {b.email}
                         </span>
                       )}
                     </div>
                   </TableCell>
                   <TableCell>
-                    {b.cpf || <span className="text-gray-400">-</span>}
-                  </TableCell>
-                  <TableCell>
-                    {b.telefone || <span className="text-gray-400">-</span>}
-                  </TableCell>
-                  <TableCell>
-                    {b.endereco?.cidade && b.endereco?.bairro ? (
-                      <div className="flex flex-col text-sm">
-                        <span>{b.endereco.cidade}</span>
-                        <span className="text-gray-500 text-xs">
-                          {b.endereco.bairro}
-                        </span>
+                    {b.endereco?.cidade || b.endereco?.bairro ? (
+                      <div className="flex items-start gap-1 text-slate-800 text-sm">
+                        <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0 mt-0.5" />
+                        <div className="flex flex-col">
+                          <span className="font-medium leading-none">{b.endereco.bairro || "-"}</span>
+                          <span className="text-slate-500 text-xs mt-1">{b.endereco.cidade || "-"}</span>
+                        </div>
                       </div>
                     ) : (
                       <span className="text-gray-400 text-sm">-</span>
@@ -305,19 +369,43 @@ export function BeneficiariasClient({
                   </TableCell>
                   <TableCell>
                     {b.data_nascimento ? (
-                      (() => {
-                        const today = new Date();
-                        const birthDate = new Date(b.data_nascimento);
-                        let age = today.getFullYear() - birthDate.getFullYear();
-                        const m = today.getMonth() - birthDate.getMonth();
-                        if (
-                          m < 0 ||
-                          (m === 0 && today.getDate() < birthDate.getDate())
-                        ) {
-                          age--;
-                        }
-                        return age + " anos";
-                      })()
+                      <div className="flex flex-col">
+                        <span className="text-slate-800 text-sm font-medium">
+                          {(() => {
+                            const today = new Date();
+                            const birthDate = new Date(b.data_nascimento);
+                            let age = today.getFullYear() - birthDate.getFullYear();
+                            const m = today.getMonth() - birthDate.getMonth();
+                            if (
+                              m < 0 ||
+                              (m === 0 && today.getDate() < birthDate.getDate())
+                            ) {
+                              age--;
+                            }
+                            return age + " anos";
+                          })()}
+                        </span>
+                        <span className="text-slate-400 text-xs font-mono mt-0.5">
+                          {formatDateDisplay(b.data_nascimento)}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {b.created_at ? (
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-1 text-slate-800 text-sm font-medium">
+                          <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                          <span>{formatDateDisplay(b.created_at)}</span>
+                        </div>
+                        {b.updated_at && b.updated_at !== b.created_at && (
+                          <span className="text-[10px] text-slate-400 mt-1 pl-4.5">
+                            Atu: {formatDateDisplay(b.updated_at)}
+                          </span>
+                        )}
+                      </div>
                     ) : (
                       <span className="text-gray-400">-</span>
                     )}
@@ -329,7 +417,8 @@ export function BeneficiariasClient({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
+                          className="h-8 w-8 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-full"
+                          title="Visualizar"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -337,18 +426,20 @@ export function BeneficiariasClient({
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                        className="h-8 w-8 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-full"
                         onClick={() => handleEdit(b)}
                         aria-label="Editar"
+                        title="Editar"
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-full"
                         onClick={() => handleDeleteClick(b.id)}
                         aria-label="Excluir"
+                        title="Excluir"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

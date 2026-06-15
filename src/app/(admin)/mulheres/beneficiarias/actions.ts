@@ -39,6 +39,8 @@ const BENEFICIARIA_FIELDS = [
   "recebe_bolsa_familia",
   "recebe_bpc",
   "possui_medida_protetiva",
+  "created_at",
+  "updated_at",
 ];
 
 // --- Helpers Internos ---
