@@ -49,18 +49,15 @@ interface EventoFormProps {
   onSuccess?: () => void;
 }
 
-// Função auxiliar para formatar a data recebida no formato YYYY-MM-DD
-function formatarParaDate(data: string | Date | undefined | null): string {
+// Função auxiliar para formatar a data recebida no formato YYYY-MM-DDTHH:mm
+function formatarParaDatetimeLocal(data: string | Date | undefined | null): string {
   if (!data) return "";
   try {
-    if (typeof data === "string" && /^\d{4}-\d{2}-\d{2}/.test(data)) {
-      return data.slice(0, 10);
-    }
     const date = new Date(data);
     if (isNaN(date.getTime())) return "";
     const offset = date.getTimezoneOffset();
     const localDate = new Date(date.getTime() - offset * 60 * 1000);
-    return localDate.toISOString().slice(0, 10);
+    return localDate.toISOString().slice(0, 16);
   } catch {
     return "";
   }
@@ -100,8 +97,8 @@ export function EventoForm({
         form.reset({
           nome: evento.nome || "",
           tipo_id: resolvedTipoId || undefined,
-          data_inicio: formatarParaDate(evento.data_inicio),
-          data_fim: formatarParaDate(evento.data_fim),
+          data_inicio: formatarParaDatetimeLocal(evento.data_inicio),
+          data_fim: formatarParaDatetimeLocal(evento.data_fim),
           descricao: evento.descricao || "",
           tipo: evento.tipo || undefined,
           recorrencia: evento.recorrencia || "nao_recorrente",
@@ -128,6 +125,8 @@ export function EventoForm({
       const payload = {
         ...data,
         tipo_id: Number(data.tipo_id),
+        data_inicio: new Date(data.data_inicio).toISOString(),
+        data_fim: new Date(data.data_fim).toISOString(),
         id: evento?.id, // Passa ID se for edição
       };
 
@@ -213,7 +212,7 @@ export function EventoForm({
                   <FormItem>
                     <FormLabel>Início</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input type="datetime-local" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -227,7 +226,7 @@ export function EventoForm({
                   <FormItem>
                     <FormLabel>Fim (Término)</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input type="datetime-local" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
