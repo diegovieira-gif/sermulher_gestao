@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   insertEventoSchema,
   type Evento,
   type EventoFormValues,
+  tipoEventoEnum,
+  recorrenciaEnum,
 } from "./schemas";
 import { saveEvento } from "./actions";
 import { Button } from "@/components/ui/button";
@@ -47,6 +49,23 @@ interface EventoFormProps {
   onSuccess?: () => void;
 }
 
+// Função auxiliar para formatar a data recebida no formato YYYY-MM-DD
+function formatarParaDate(data: string | Date | undefined | null): string {
+  if (!data) return "";
+  try {
+    if (typeof data === "string" && /^\d{4}-\d{2}-\d{2}/.test(data)) {
+      return data.slice(0, 10);
+    }
+    const date = new Date(data);
+    if (isNaN(date.getTime())) return "";
+    const offset = date.getTimezoneOffset();
+    const localDate = new Date(date.getTime() - offset * 60 * 1000);
+    return localDate.toISOString().slice(0, 10);
+  } catch {
+    return "";
+  }
+}
+
 export function EventoForm({
   open,
   onOpenChange,
@@ -59,19 +78,49 @@ export function EventoForm({
   const form = useForm<EventoFormValues>({
     resolver: zodResolver(insertEventoSchema),
     defaultValues: {
-      nome: evento?.nome || "",
-      tipo_id: evento?.tipo_id || undefined,
-      data_inicio: evento?.data_inicio
-        ? new Date(evento.data_inicio).toISOString().slice(0, 16)
-        : "",
-      data_fim: evento?.data_fim
-        ? new Date(evento.data_fim).toISOString().slice(0, 16)
-        : "",
-      descricao: evento?.descricao || "",
-      local: evento?.local || "",
-      status: (evento?.status as any) || "planejado",
+      nome: "",
+      tipo_id: undefined,
+      data_inicio: "",
+      data_fim: "",
+      descricao: "",
+      tipo: undefined,
+      recorrencia: "nao_recorrente",
+      local: "",
     },
   });
+
+  useEffect(() => {
+    if (open) {
+      if (evento) {
+        const resolvedTipoId =
+          typeof evento.tipo_id === "object" && evento.tipo_id !== null
+            ? (evento.tipo_id as any).id
+            : evento.tipo_id;
+
+        form.reset({
+          nome: evento.nome || "",
+          tipo_id: resolvedTipoId || undefined,
+          data_inicio: formatarParaDate(evento.data_inicio),
+          data_fim: formatarParaDate(evento.data_fim),
+          descricao: evento.descricao || "",
+          tipo: evento.tipo || undefined,
+          recorrencia: evento.recorrencia || "nao_recorrente",
+          local: evento.local || "",
+        });
+      } else {
+        form.reset({
+          nome: "",
+          tipo_id: undefined,
+          data_inicio: "",
+          data_fim: "",
+          descricao: "",
+          tipo: undefined,
+          recorrencia: "nao_recorrente",
+          local: "",
+        });
+      }
+    }
+  }, [evento, open, form]);
 
   const onSubmit = async (data: EventoFormValues) => {
     setIsSubmitting(true);
@@ -134,7 +183,7 @@ export function EventoForm({
                     <FormLabel>Tipo de Evento</FormLabel>
                     <Select
                       onValueChange={(val) => field.onChange(Number(val))}
-                      defaultValue={field.value?.toString()}
+                      value={field.value?.toString() || ""}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -164,7 +213,7 @@ export function EventoForm({
                   <FormItem>
                     <FormLabel>Início</FormLabel>
                     <FormControl>
-                      <Input type="datetime-local" {...field} />
+                      <Input type="date" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -178,7 +227,7 @@ export function EventoForm({
                   <FormItem>
                     <FormLabel>Fim (Término)</FormLabel>
                     <FormControl>
-                      <Input type="datetime-local" {...field} />
+                      <Input type="date" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -186,31 +235,17 @@ export function EventoForm({
               />
             </div>
 
-            {/* Local e Status */}
+            {/* Tipo (Categoria) e Recorrência */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="local"
+                name="tipo"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Local</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Ex: Auditório A" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
+                    <FormLabel>Categoria (Tipo)</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={field.value || ""}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -218,10 +253,39 @@ export function EventoForm({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="planejado">Planejado</SelectItem>
-                        <SelectItem value="confirmado">Confirmado</SelectItem>
-                        <SelectItem value="realizado">Realizado</SelectItem>
-                        <SelectItem value="cancelado">Cancelado</SelectItem>
+                        {tipoEventoEnum.map((tipo) => (
+                          <SelectItem key={tipo.value} value={tipo.value}>
+                            {tipo.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="recorrencia"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Recorrência</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value || ""}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {recorrenciaEnum.map((rec) => (
+                          <SelectItem key={rec.value} value={rec.value}>
+                            {rec.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -229,6 +293,21 @@ export function EventoForm({
                 )}
               />
             </div>
+
+            {/* Local */}
+            <FormField
+              control={form.control}
+              name="local"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Local</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ex: Auditório A" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             {/* Descrição */}
             <FormField

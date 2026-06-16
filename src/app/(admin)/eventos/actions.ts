@@ -122,8 +122,11 @@ export async function getGlobalEvents(): Promise<{
               "data_inicio",
               "data_fim",
               "descricao",
+              "tipo_id.id",
               "tipo_id.nome",
-              "status",
+              "tipo",
+              "recorrencia",
+              "local",
             ],
             limit: -1,
           }),
@@ -170,7 +173,7 @@ export async function getGlobalEvents(): Promise<{
           type: "manual",
           color: "#a855f7", // Purple (Identidade visual da página)
           description: evt.descricao,
-          status: evt.status,
+          status: evt.tipo,
         });
       });
     }

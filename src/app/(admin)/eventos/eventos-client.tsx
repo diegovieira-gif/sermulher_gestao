@@ -30,10 +30,17 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { EventoForm } from "./evento-form";
 import { deleteEvento } from "./actions";
-import { Plus, Edit, Trash2, Calendar, Repeat } from "lucide-react";
+import { Plus, Edit, Trash2, Calendar, Repeat, Eye } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
-import { statusEventoEnum } from "./schemas";
+import { tipoEventoEnum } from "./schemas";
 import type { Evento } from "./schemas";
 
 type TipoEventoOption = { id: number; nome: string; icone?: string };
@@ -95,26 +102,27 @@ function getBadgeVariant(
   }
 }
 
-// Função para obter a variante de badge baseada no status do evento
-function getStatusBadgeVariant(status?: string) {
-  switch (status) {
-    case "confirmado":
-      return "default"; // verde
-    case "planejado":
-      return "secondary"; // amarelo/cinza
-    case "realizado":
-      return "outline"; // azul
-    case "cancelado":
-      return "destructive"; // vermelho
-    default:
-      return "secondary";
-  }
+// Função para obter o rótulo do tipo de evento (Categoria)
+function getTipoLabel(tipo?: string): string {
+  if (!tipo) return "Não especificado";
+  const option = tipoEventoEnum.find((t) => t.value === tipo);
+  return option ? option.label : tipo;
 }
 
-// Função para obter o rótulo do status
-function getStatusLabel(status?: string): string {
-  const statusOption = statusEventoEnum.find((s) => s.value === status);
-  return statusOption ? statusOption.label : "Planejado";
+// Função para obter a variante de badge baseada no tipo de evento (Categoria)
+function getTipoBadgeVariant(tipo?: string): "default" | "secondary" | "outline" | "success" | "info" {
+  switch (tipo) {
+    case "campanha":
+      return "default";
+    case "evento":
+      return "info";
+    case "roda_conversa":
+      return "secondary";
+    case "curso":
+      return "success";
+    default:
+      return "outline";
+  }
 }
 
 export function EventosClient({
@@ -127,7 +135,12 @@ export function EventosClient({
   const [eventoToDelete, setEventoToDelete] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [tipoFilter, setTipoFilter] = useState("todos");
-  const [statusFilter, setStatusFilter] = useState("todos");
+  const [categoriaFilter, setCategoriaFilter] = useState("todos");
+  const [situacaoFilter, setSituacaoFilter] = useState("todos");
+
+  // Visualização de detalhes
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [selectedViewEvento, setSelectedViewEvento] = useState<any | null>(null);
 
   const handleNew = () => {
     setSelectedEvento(null);
@@ -137,6 +150,11 @@ export function EventosClient({
   const handleEdit = (evento: any) => {
     setSelectedEvento(evento);
     setFormOpen(true);
+  };
+
+  const handleView = (evento: any) => {
+    setSelectedViewEvento(evento);
+    setViewDialogOpen(true);
   };
 
   const handleDeleteClick = (id: number) => {
@@ -176,10 +194,14 @@ export function EventosClient({
           : evento.tipo_id,
       ) === tipoFilter;
 
-    const statusMatch =
-      statusFilter === "todos" || evento.status === statusFilter;
+    const categoriaMatch =
+      categoriaFilter === "todos" || evento.tipo === categoriaFilter;
 
-    return tipoMatch && statusMatch;
+    const situacao = calcularStatus(evento.data_inicio, evento.data_fim);
+    const situacaoMatch =
+      situacaoFilter === "todos" || situacao === situacaoFilter;
+
+    return tipoMatch && categoriaMatch && situacaoMatch;
   });
 
   return (
@@ -213,18 +235,31 @@ export function EventosClient({
           </SelectContent>
         </Select>
 
-        {/* Filtro de Status */}
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        {/* Filtro de Categoria (Campo 'tipo' na tabela) */}
+        <Select value={categoriaFilter} onValueChange={setCategoriaFilter}>
           <SelectTrigger className="w-[180px] bg-white">
-            <SelectValue placeholder="Status" />
+            <SelectValue placeholder="Categoria" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="todos">Todos os status</SelectItem>
-            {statusEventoEnum.map((status) => (
-              <SelectItem key={status.value} value={status.value}>
-                {status.label}
+            <SelectItem value="todos">Todas as categorias</SelectItem>
+            {tipoEventoEnum.map((tipo) => (
+              <SelectItem key={tipo.value} value={tipo.value}>
+                {tipo.label}
               </SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+
+        {/* Filtro de Situação (Calculado) */}
+        <Select value={situacaoFilter} onValueChange={setSituacaoFilter}>
+          <SelectTrigger className="w-[180px] bg-white">
+            <SelectValue placeholder="Situação" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todas as situações</SelectItem>
+            <SelectItem value="Breve">Em Breve</SelectItem>
+            <SelectItem value="Em Andamento">Em Andamento</SelectItem>
+            <SelectItem value="Encerrado">Encerrado</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -242,16 +277,16 @@ export function EventosClient({
                 <InfoTooltip text="Data de início do evento." />
               </TableHead>
               <TableHead>
-                Tipo
-                <InfoTooltip text="Categoria do evento conforme configurações." />
+                Tipo de Evento
+                <InfoTooltip text="Tipo personalizado associado ao evento." />
+              </TableHead>
+              <TableHead>
+                Categoria
+                <InfoTooltip text="Categoria geral do evento (Campanha, Evento, etc.)." />
               </TableHead>
               <TableHead>
                 Situação
-                <InfoTooltip text="Status atual do evento (Planejado, Em Andamento, Concluído, Cancelado)." />
-              </TableHead>
-              <TableHead>
-                Status
-                <InfoTooltip text="Situação de publicação do evento no sistema." />
+                <InfoTooltip text="Status temporal calculado a partir das datas." />
               </TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
@@ -291,14 +326,21 @@ export function EventosClient({
                 return (
                   <TableRow key={evento.id}>
                     <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        {evento.nome}
-                        {isRecorrente && (
-                          <div
-                            title={`Evento recorrente (${evento.recorrencia})`}
-                          >
-                            <Repeat className="h-4 w-4 text-muted-foreground" />
-                          </div>
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          {evento.nome}
+                          {isRecorrente && (
+                            <div
+                              title={`Evento recorrente (${evento.recorrencia})`}
+                            >
+                              <Repeat className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                          )}
+                        </div>
+                        {evento.local && (
+                          <span className="text-xs text-muted-foreground font-normal mt-0.5">
+                            {evento.local}
+                          </span>
                         )}
                       </div>
                     </TableCell>
@@ -316,15 +358,23 @@ export function EventosClient({
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={getBadgeVariant(status)}>{status}</Badge>
+                      <Badge variant={getTipoBadgeVariant(evento.tipo)}>
+                        {getTipoLabel(evento.tipo)}
+                      </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={getStatusBadgeVariant(evento.status)}>
-                        {getStatusLabel(evento.status)}
-                      </Badge>
+                      <Badge variant={getBadgeVariant(status)}>{status}</Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title="Visualizar Detalhes"
+                          onClick={() => handleView(evento)}
+                        >
+                          <Eye className="h-4 w-4 text-sky-600" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"
@@ -355,6 +405,119 @@ export function EventosClient({
         tiposEventoOptions={tiposEventoOptions}
         evento={selectedEvento}
       />
+
+      {/* Modal de Visualização de Detalhes */}
+      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+        <DialogContent className="max-w-md bg-white border border-gray-100 shadow-lg rounded-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl font-bold text-gray-800">
+              <Calendar className="h-5 w-5 text-purple-600" />
+              Detalhes do Evento
+            </DialogTitle>
+          </DialogHeader>
+          {selectedViewEvento && (
+            <div className="space-y-4 pt-2">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 leading-snug">
+                  {selectedViewEvento.nome}
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1">
+                    Categoria
+                  </span>
+                  <Badge variant={getTipoBadgeVariant(selectedViewEvento.tipo)}>
+                    {getTipoLabel(selectedViewEvento.tipo)}
+                  </Badge>
+                </div>
+
+                <div>
+                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1">
+                    Tipo de Evento
+                  </span>
+                  <Badge variant="outline" className="border-gray-200 text-gray-600">
+                    {(() => {
+                      const tipoObj =
+                        typeof selectedViewEvento.tipo_id === "object" &&
+                        selectedViewEvento.tipo_id !== null
+                          ? selectedViewEvento.tipo_id
+                          : typeof selectedViewEvento.tipo_id === "number"
+                            ? tiposEventoOptions.find(
+                                (t) => t.id === selectedViewEvento.tipo_id,
+                              )
+                            : null;
+                      return tipoObj?.nome || "Sem tipo";
+                    })()}
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 text-sm border-t pt-3 border-gray-100">
+                <div>
+                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-0.5">
+                    Início
+                  </span>
+                  <span className="text-gray-700 font-medium block">
+                    {formatarData(selectedViewEvento.data_inicio)}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-0.5">
+                    Fim (Término)
+                  </span>
+                  <span className="text-gray-700 font-medium block">
+                    {selectedViewEvento.data_fim
+                      ? formatarData(selectedViewEvento.data_fim)
+                      : "Sem data de término"}
+                  </span>
+                </div>
+              </div>
+
+              {selectedViewEvento.local && (
+                <div className="text-sm border-t pt-3 border-gray-100">
+                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-0.5">
+                    Local
+                  </span>
+                  <span className="text-gray-700 font-medium block">
+                    {selectedViewEvento.local}
+                  </span>
+                </div>
+              )}
+
+              {selectedViewEvento.recorrencia &&
+                selectedViewEvento.recorrencia !== "nao_recorrente" && (
+                  <div className="text-sm border-t pt-3 border-gray-100">
+                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-0.5">
+                      Recorrência
+                    </span>
+                    <span className="text-gray-700 font-medium block capitalize">
+                      {selectedViewEvento.recorrencia === "mensal" ? "Mensal" : "Anual"}
+                    </span>
+                  </div>
+                )}
+
+              {selectedViewEvento.descricao && (
+                <div className="text-sm pt-3 border-t border-gray-100">
+                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1">
+                    Descrição
+                  </span>
+                  <p className="text-gray-600 bg-gray-50/70 p-3 rounded-lg border border-gray-100 text-xs leading-relaxed whitespace-pre-line">
+                    {selectedViewEvento.descricao}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter className="pt-4 border-t border-gray-100">
+            <Button onClick={() => setViewDialogOpen(false)} className="bg-gray-800 hover:bg-gray-900 text-white">
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
