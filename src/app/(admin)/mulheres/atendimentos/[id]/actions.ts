@@ -5,10 +5,16 @@ import { directus } from "@/lib/directus";
 import { readItems, readItem, createItem } from "@directus/sdk";
 import { z } from "zod";
 import { tramitacaoSchema } from "./schemas";
+import { getCurrentDemandAccess } from "@/lib/demanda-permissions";
 
 export type TramitacaoInput = z.infer<typeof tramitacaoSchema>;
 
 export type SetorOption = {
+  id: number;
+  nome: string;
+};
+
+export type ConfigOption = {
   id: number;
   nome: string;
 };
@@ -165,6 +171,18 @@ export async function saveTramitacao(data: unknown) {
   try {
     const validatedData = tramitacaoSchema.parse(data);
 
+    // Defesa: impede registrar tramitação de um tipo não permitido ao perfil.
+    const demandAccess = await getCurrentDemandAccess();
+    if (
+      demandAccess.allowedTipos !== null &&
+      !demandAccess.allowedTipos.includes(validatedData.tipo_demanda)
+    ) {
+      return {
+        success: false,
+        error: "Seu perfil não tem acesso a este tipo de demanda.",
+      };
+    }
+
     const payload = {
       ...validatedData,
       usuario_responsavel: null,
@@ -212,5 +230,47 @@ export async function getSetores(): Promise<
     return { success: true, data: setores as SetorOption[] };
   } catch (error) {
     return { success: false, error: "Erro ao buscar setores" };
+  }
+}
+
+/**
+ * Busca os tipos de demanda configuráveis (coleção config_tipos_demanda)
+ * para o dropdown "Tipo de Demanda".
+ */
+export async function getTiposDemanda(): Promise<
+  { success: true; data: ConfigOption[] } | { success: false; error: string }
+> {
+  try {
+    const tipos = await directus.request(
+      readItems("config_tipos_demanda", {
+        fields: ["id", "nome"],
+        sort: ["nome"],
+        limit: -1,
+      }),
+    );
+    return { success: true, data: tipos as ConfigOption[] };
+  } catch (error) {
+    return { success: false, error: "Erro ao buscar tipos de demanda" };
+  }
+}
+
+/**
+ * Busca os status de etapa configuráveis (coleção config_status_etapa)
+ * para o dropdown "Status da Etapa" e as colunas do Kanban.
+ */
+export async function getStatusEtapas(): Promise<
+  { success: true; data: ConfigOption[] } | { success: false; error: string }
+> {
+  try {
+    const status = await directus.request(
+      readItems("config_status_etapa", {
+        fields: ["id", "nome"],
+        sort: ["id"],
+        limit: -1,
+      }),
+    );
+    return { success: true, data: status as ConfigOption[] };
+  } catch (error) {
+    return { success: false, error: "Erro ao buscar status de etapa" };
   }
 }

@@ -9,6 +9,8 @@ export type ConfigCollection =
   | "config_prioridades"
   | "config_tipos_evento"
   | "config_tipos_agressao"
+  | "config_tipos_demanda"
+  | "config_status_etapa"
   | "config_niveis_periculosidade"
   | "config_status_legal"
   | "config_bairros"
@@ -45,6 +47,8 @@ const ALLOWED_TYPES = [
   "config_prioridades",
   "config_tipos_evento",
   "config_tipos_agressao",
+  "config_tipos_demanda",
+  "config_status_etapa",
   "config_niveis_periculosidade",
   "config_status_legal",
   "config_bairros",

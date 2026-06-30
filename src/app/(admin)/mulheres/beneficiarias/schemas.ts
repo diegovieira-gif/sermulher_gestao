@@ -47,6 +47,7 @@ export const beneficiariaSchema = z.object({
   quantidade_filhos: z.coerce.number().min(0).optional().nullable(),
 
   telefone: z.string().optional().nullable(),
+  telefone_validado: z.coerce.boolean().optional(),
   email: z
     .string()
     .refine(
@@ -87,3 +88,24 @@ export const entregaBeneficioSchema = z.object({
   quantidade: z.coerce.number().int().positive().default(1),
   observacao: z.string().optional(),
 });
+
+// Participação em eventos/campanhas (coleção participacoes_evento)
+export const participacaoEventoSchema = z.object({
+  beneficiaria: z.coerce.number().int().positive(),
+  evento: z.coerce.number().int().positive(),
+  data_participacao: z.string().min(1),
+  observacao: z.string().optional(),
+});
+
+// Inscrição/participação em cursos (coleção inscricoes_curso)
+export const inscricaoCursoSchema = z.object({
+  beneficiaria: z.coerce.number().int().positive(),
+  curso: z.coerce.number().int().positive(),
+  data_inscricao: z.string().min(1),
+  observacao: z.string().optional(),
+});
+
+export type ParticipacaoEventoFormInput = z.input<typeof participacaoEventoSchema>;
+export type ParticipacaoEventoFormValues = z.infer<typeof participacaoEventoSchema>;
+export type InscricaoCursoFormInput = z.input<typeof inscricaoCursoSchema>;
+export type InscricaoCursoFormValues = z.infer<typeof inscricaoCursoSchema>;

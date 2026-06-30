@@ -36,23 +36,17 @@ import {
   getSetores,
   type TramitacaoWithRelations,
   type SetorOption,
+  type ConfigOption,
 } from "./actions";
-import { TipoDemanda, StatusEtapa } from "./schemas";
+import { StatusEtapa } from "./schemas";
 
-// Tipos de demanda disponíveis (usando enum do schema)
-const TIPOS_DEMANDA = [
-  { value: TipoDemanda.JURIDICA, label: "Jurídica", icon: Scale },
-  { value: TipoDemanda.TERAPIA, label: "Terapia", icon: Heart },
-  { value: TipoDemanda.MEDIDA_PROTETIVA, label: "Medida Protetiva", icon: Shield },
-  { value: TipoDemanda.EXAME, label: "Exame", icon: Stethoscope },
-];
-
-// Status de etapa disponíveis (usando enum do schema)
-const STATUS_ETAPA = [
-  { value: StatusEtapa.AGUARDANDO, label: "Aguardando" },
-  { value: StatusEtapa.EM_ATENDIMENTO, label: "Em atendimento" },
-  { value: StatusEtapa.FINALIZADO, label: "Finalizado" },
-];
+// Mapa de ícones para a timeline, por nome do tipo de demanda (fallback: Clock).
+const TIPO_DEMANDA_ICONS: Record<string, React.ComponentType<any>> = {
+  "Jurídica": Scale,
+  "Terapia": Heart,
+  "Medida Protetiva": Shield,
+  "Exame": Stethoscope,
+};
 
 // Schema de validação do formulário
 const tramitacaoFormSchema = z.object({
@@ -68,12 +62,16 @@ interface TramitacoesClientProps {
   atendimentoId: number;
   initialTramitacoes: TramitacaoWithRelations[];
   setores: SetorOption[];
+  tiposDemanda: ConfigOption[];
+  statusEtapas: ConfigOption[];
 }
 
 export function TramitacoesClient({
   atendimentoId,
   initialTramitacoes,
   setores,
+  tiposDemanda,
+  statusEtapas,
 }: TramitacoesClientProps) {
   const [tramitacoes, setTramitacoes] = useState<TramitacaoWithRelations[]>(
     initialTramitacoes
@@ -97,7 +95,7 @@ export function TramitacoesClient({
     setIsLoading(true);
     try {
       const result = await getTramitacoes(atendimentoId);
-      if (result.success) {
+      if (result.success && result.data) {
         setTramitacoes(result.data);
       }
     } catch (error) {
@@ -154,8 +152,7 @@ export function TramitacoesClient({
   // Função para obter ícone baseado no tipo de demanda
   const getTipoDemandaIcon = (tipo: string | null) => {
     if (!tipo) return Clock;
-    const tipoEntry = TIPOS_DEMANDA.find(t => t.value === tipo);
-    return tipoEntry?.icon || Clock;
+    return TIPO_DEMANDA_ICONS[tipo] || Clock;
   };
 
   // Função para renderizar relato técnico (com quebra de linha)
@@ -344,9 +341,9 @@ export function TramitacoesClient({
                           <SelectValue placeholder="Selecione o tipo de demanda" />
                         </SelectTrigger>
                         <SelectContent>
-                          {TIPOS_DEMANDA.map((tipo) => (
-                            <SelectItem key={tipo.value} value={tipo.value}>
-                              {tipo.label}
+                          {tiposDemanda.map((tipo) => (
+                            <SelectItem key={tipo.id} value={tipo.nome}>
+                              {tipo.nome}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -406,9 +403,9 @@ export function TramitacoesClient({
                           <SelectValue placeholder="Selecione o status" />
                         </SelectTrigger>
                         <SelectContent>
-                          {STATUS_ETAPA.map((status) => (
-                            <SelectItem key={status.value} value={status.value}>
-                              {status.label}
+                          {statusEtapas.map((status) => (
+                            <SelectItem key={status.id} value={status.nome}>
+                              {status.nome}
                             </SelectItem>
                           ))}
                         </SelectContent>

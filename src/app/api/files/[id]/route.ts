@@ -2,52 +2,48 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const directusUrl =
       process.env.NEXT_PUBLIC_DIRECTUS_URL || "http://192.168.0.118:8055";
     const directusToken = process.env.DIRECTUS_TOKEN || "";
 
-    // URL do arquivo no Directus com token no header
-    const fileUrl = `${directusUrl}/files/${id}`;
+    // O conteúdo binário do arquivo fica em /assets/{id} (NÃO em /files/{id},
+    // que devolve apenas os metadados em JSON). O parâmetro ?download faz o
+    // Directus marcar o anexo como download (Content-Disposition: attachment).
+    const isDownload = request.nextUrl.searchParams.has("download");
+    const assetUrl = `${directusUrl}/assets/${id}${isDownload ? "?download" : ""}`;
 
-    console.log("[API Proxy] Fetching file:", fileUrl);
-
-    // Fazer requisição com token de autenticação do servidor
-    const response = await fetch(fileUrl, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${directusToken}`,
-        "cache-control": "no-store",
-      },
+    const upstream = await fetch(assetUrl, {
+      headers: { Authorization: `Bearer ${directusToken}` },
+      cache: "no-store",
     });
 
-    if (!response.ok) {
-      console.error(
-        "[API Proxy] Erro:",
-        response.status,
-        await response.text(),
-      );
+    if (!upstream.ok || !upstream.body) {
+      const detail = await upstream.text().catch(() => "");
+      console.error("[API Proxy] Erro:", upstream.status, detail);
       return NextResponse.json(
         { error: "Arquivo não encontrado ou sem permissão" },
-        { status: response.status },
+        { status: upstream.status || 404 },
       );
     }
 
-    // Obter o buffer do arquivo
-    const buffer = await response.arrayBuffer();
+    // Repassa o tipo e a disposição vindos do Directus (preserva o nome real do
+    // arquivo). Faz streaming do corpo, sem carregar tudo em memória.
+    const headers = new Headers();
+    headers.set(
+      "Content-Type",
+      upstream.headers.get("content-type") || "application/octet-stream",
+    );
+    const disposition = upstream.headers.get("content-disposition");
+    if (disposition) headers.set("Content-Disposition", disposition);
+    const length = upstream.headers.get("content-length");
+    if (length) headers.set("Content-Length", length);
+    headers.set("Cache-Control", "private, max-age=3600");
 
-    // Retornar como resposta com headers apropriados para download
-    return new NextResponse(buffer, {
-      status: 200,
-      headers: {
-        "Content-Type": "audio/webm",
-        "Content-Disposition": `attachment; filename="sonho.webm"`,
-        "Cache-Control": "public, max-age=3600",
-      },
-    });
+    return new NextResponse(upstream.body, { status: 200, headers });
   } catch (error) {
     console.error("[API Proxy] Erro:", error);
     return NextResponse.json(

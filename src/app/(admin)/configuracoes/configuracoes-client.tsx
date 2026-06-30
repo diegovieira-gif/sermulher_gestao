@@ -19,12 +19,16 @@ import {
   Users,
   MapPinned,
   ShieldCheck,
+  ClipboardList,
+  ListChecks,
+  ListFilter,
 } from "lucide-react";
 
 // Imports dos Componentes Refatorados
 import { TabEncaminhamentos } from "./tabs/tab-encaminhamentos";
 import { TabPadrao } from "./tabs/tab-padrao";
 import { TabPermissoes } from "./tabs/tab-permissoes";
+import { TabDemandas } from "./tabs/tab-demandas";
 import { TabUbs } from "./tabs/tab-ubs";
 
 // Imports de UI necessários para os casos inline (Campanhas/Periculosidade)
@@ -63,6 +67,8 @@ interface ConfiguracoesClientProps {
   escolaridade: any[];
   situacaoTrabalho: any[];
   ubs: any[];
+  tiposDemanda: any[];
+  statusEtapa: any[];
   isAdmin?: boolean;
   roles?: { id: string; name: string; isAdmin: boolean }[];
   permConfigs?: {
@@ -70,6 +76,12 @@ interface ConfiguracoesClientProps {
     role_nome?: string | null;
     permitir_tudo?: boolean | null;
     menus?: string[] | null;
+  }[];
+  demandConfigs?: {
+    role: string;
+    role_nome?: string | null;
+    permitir_tudo?: boolean | null;
+    tipos?: string[] | null;
   }[];
 }
 
@@ -91,9 +103,12 @@ export function ConfiguracoesClient({
   escolaridade,
   situacaoTrabalho,
   ubs,
+  tiposDemanda,
+  statusEtapa,
   isAdmin = false,
   roles = [],
   permConfigs = [],
+  demandConfigs = [],
 }: ConfiguracoesClientProps) {
   const menuItems = [
     { label: "Estrutural", isHeader: true },
@@ -115,6 +130,8 @@ export function ConfiguracoesClient({
     },
     { value: "encaminhamentos", label: "Encaminhamentos", icon: Map },
     { value: "beneficios", label: "Benefícios", icon: HeartHandshake },
+    { value: "tipos-demanda", label: "Tipos de Tramitação", icon: ClipboardList },
+    { value: "status-etapa", label: "Status de Etapa", icon: ListChecks },
 
     { label: "Outros", isHeader: true },
     { value: "tipos-evento", label: "Tipos de Evento", icon: CalendarDays },
@@ -129,6 +146,11 @@ export function ConfiguracoesClient({
             value: "permissoes",
             label: "Permissões de Menu",
             icon: ShieldCheck,
+          },
+          {
+            value: "acesso-demandas",
+            label: "Acesso a Demandas",
+            icon: ListFilter,
           },
         ]
       : []),
@@ -260,6 +282,26 @@ export function ConfiguracoesClient({
               data={beneficios}
               collectionName="config_beneficios"
               type="beneficios"
+            />
+          </TabsContent>
+
+          <TabsContent value="tipos-demanda" className="mt-0 space-y-4">
+            <TabPadrao
+              title="Tipos de Tramitação"
+              description="Opções do campo 'Tipo de Demanda' nas tramitações dos atendimentos."
+              data={tiposDemanda}
+              collectionName="config_tipos_demanda"
+              type="config_tipos_demanda"
+            />
+          </TabsContent>
+
+          <TabsContent value="status-etapa" className="mt-0 space-y-4">
+            <TabPadrao
+              title="Status de Etapa"
+              description="Opções do campo 'Status da Etapa' e colunas do Kanban de tramitações."
+              data={statusEtapa}
+              collectionName="config_status_etapa"
+              type="config_status_etapa"
             />
           </TabsContent>
 
@@ -399,6 +441,12 @@ export function ConfiguracoesClient({
           {isAdmin && (
             <TabsContent value="permissoes" className="mt-0 space-y-4">
               <TabPermissoes roles={roles} configs={permConfigs} />
+            </TabsContent>
+          )}
+
+          {isAdmin && (
+            <TabsContent value="acesso-demandas" className="mt-0 space-y-4">
+              <TabDemandas roles={roles} configs={demandConfigs} tipos={tiposDemanda} />
             </TabsContent>
           )}
 

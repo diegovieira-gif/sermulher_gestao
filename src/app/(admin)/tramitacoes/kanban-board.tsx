@@ -35,31 +35,39 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-const COLUNAS = [
-  {
-    id: "Aguardando",
-    title: "📥 Aguardando",
-    color: "bg-yellow-50 border-yellow-200",
-  },
-  {
-    id: "Em atendimento",
-    title: "👩‍💻 Em Análise",
-    color: "bg-blue-50 border-blue-200",
-  },
-  {
-    id: "Finalizado",
-    title: "✅ Concluído",
-    color: "bg-green-50 border-green-200",
-  },
+// Estilo (emoji + cor) por nome de status. Nomes não mapeados usam um padrão neutro.
+const COLUNA_ESTILOS: Record<string, { title: string; color: string }> = {
+  "Aguardando": { title: "📥 Aguardando", color: "bg-yellow-50 border-yellow-200" },
+  "Em atendimento": { title: "👩‍💻 Em Análise", color: "bg-blue-50 border-blue-200" },
+  "Finalizado": { title: "✅ Concluído", color: "bg-green-50 border-green-200" },
+};
+
+// Fallback caso a coleção config_status_etapa esteja vazia/indisponível.
+const COLUNAS_PADRAO = [
+  { id: "Aguardando", title: "📥 Aguardando", color: "bg-yellow-50 border-yellow-200" },
+  { id: "Em atendimento", title: "👩‍💻 Em Análise", color: "bg-blue-50 border-blue-200" },
+  { id: "Finalizado", title: "✅ Concluído", color: "bg-green-50 border-green-200" },
 ];
 
 export function KanbanBoard({
   initialData,
   setores,
+  statusEtapas = [],
 }: {
   initialData: KanbanCard[];
   setores: any[];
+  statusEtapas?: { id: number; nome: string }[];
 }) {
+  // Colunas derivadas da coleção config_status_etapa (com fallback estático).
+  const COLUNAS =
+    statusEtapas.length > 0
+      ? statusEtapas.map((s) => ({
+          id: s.nome,
+          title: COLUNA_ESTILOS[s.nome]?.title || s.nome,
+          color: COLUNA_ESTILOS[s.nome]?.color || "bg-slate-50 border-slate-200",
+        }))
+      : COLUNAS_PADRAO;
+
   const [cards, setCards] = useState(initialData);
   const [loadingId, setLoadingId] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<"kanban" | "table">("kanban");

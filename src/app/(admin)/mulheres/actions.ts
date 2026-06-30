@@ -1,6 +1,6 @@
 "use server";
 
-import { directus } from "@/lib/directus";
+import { getDirectusClient } from "@/lib/directus";
 import { readItems } from "@directus/sdk";
 
 // Tipos para as estatísticas
@@ -45,37 +45,39 @@ export async function getMulheresDashboardStats(): Promise<
   | { success: false; error: string }
 > {
   try {
-    const agora = new Date();
-    const anoMesAtual = `${agora.getFullYear()}-${String(
-      agora.getMonth() + 1
-    ).padStart(2, "0")}`;
+    const directus = await getDirectusClient({ requireAuth: true });
 
-    // Buscar beneficiárias e atendimentos em paralelo
+    // Prefixo ano-mês atual (ex.: "2026-06"). Usar componentes locais evita
+    // discrepâncias de timezone (o container roda tipicamente em UTC).
+    const now = new Date();
+    const anoMesAtual = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+
+    // Buscar beneficiárias e atendimentos em paralelo.
+    // Importante: não silenciar erros com `[]` — um erro transitório (timeout,
+    // 4xx) zeraria os KPIs sem aviso. Falhas reais devem propagar para o catch
+    // externo e exibir o card de erro na página.
     const [beneficiarias, atendimentos] = await Promise.all([
-      directus
-        .request(
-          readItems("beneficiarias", {
-            fields: ["id"],
-            limit: -1,
-          })
-        )
-        .catch(() => []),
-      directus
-        .request(
-          readItems("atendimentos", {
-            fields: [
-              "id",
-              "status",
-              "data_abertura",
-              "tipos_violencia",
-              "beneficiaria.id",
-              "beneficiaria.nome_completo",
-            ],
-            limit: -1,
-            sort: ["-data_abertura"],
-          })
-        )
-        .catch(() => []),
+      directus.request(
+        readItems("beneficiarias", {
+          fields: ["id"],
+          limit: -1,
+        })
+      ),
+      directus.request(
+        readItems("atendimentos", {
+          fields: [
+            "id",
+            "status",
+            "data_abertura",
+            "date_created",
+            "tipos_violencia",
+            "beneficiaria.id",
+            "beneficiaria.nome_completo",
+          ],
+          limit: -1,
+          sort: ["-data_abertura"],
+        })
+      ),
     ]);
 
     // 1. KPIs
@@ -86,11 +88,13 @@ export async function getMulheresDashboardStats(): Promise<
       (a: any) => a.status === "Em andamento" || a.status === "Aberto"
     ).length;
 
-    // Novos atendimentos este mês (baseado em data_abertura)
+    // Novos atendimentos este mês: compara o prefixo ano-mês de data_abertura
+    // (com fallback para date_created, caso o registro tenha sido criado direto
+    // no Directus sem preencher data_abertura).
     const novosAtendimentosMes = atendimentos.filter((a: any) => {
-      const dataRef = a.data_abertura;
+      const dataRef = a.data_abertura || a.date_created;
       if (!dataRef) return false;
-      return dataRef.startsWith(anoMesAtual);
+      return String(dataRef).slice(0, 7) === anoMesAtual;
     }).length;
 
     // 2. Gráfico: Tipos de Violência - Agrupar por tipos_violencia (que é uma string separada por vírgula no banco)
@@ -133,7 +137,8 @@ export async function getMulheresDashboardStats(): Promise<
         let dataFormatada = "-";
         if (dataRef) {
           try {
-            const [ano, mes, dia] = dataRef.split("-");
+            const datePart = dataRef.split("T")[0];
+            const [ano, mes, dia] = datePart.split("-");
             dataFormatada = `${dia}/${mes}/${ano}`;
           } catch {
             dataFormatada = dataRef;

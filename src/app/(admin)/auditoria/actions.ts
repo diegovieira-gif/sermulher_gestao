@@ -31,11 +31,12 @@ export async function getAuditLogs(params: {
   search?: string;
   collection?: string;
   action?: string;
+  user?: string;
   page?: number;
   limit?: number;
 } = {}) {
   try {
-    const { search, collection, action, page = 1, limit = 20 } = params;
+    const { search, collection, action, user, page = 1, limit = 20 } = params;
     const directusUrl =
       process.env.NEXT_PUBLIC_DIRECTUS_URL ||
       process.env.DIRECTUS_URL ||
@@ -73,6 +74,10 @@ export async function getAuditLogs(params: {
 
     if (collection && collection !== "all") {
       andFilters.push({ collection: { _eq: collection } });
+    }
+
+    if (user) {
+      andFilters.push({ user: { _eq: user } });
     }
 
     if (search) {

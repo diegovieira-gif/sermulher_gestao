@@ -87,6 +87,7 @@ export function BeneficiariaForm({
       estado_civil_id: undefined,
       quantidade_filhos: 0,
       telefone: "",
+      telefone_validado: false,
       email: "",
       contato: {
         melhor_turno_contato: null,
@@ -231,6 +232,7 @@ export function BeneficiariaForm({
         ...beneficiaria,
         // Garante que telefone e email sejam strings
         telefone: beneficiaria.telefone || "",
+        telefone_validado: beneficiaria.telefone_validado || false,
         email: beneficiaria.email || "",
         nome_social: beneficiaria.nome_social || "",
         raca_cor_id: beneficiaria.raca_cor_id,
@@ -270,6 +272,7 @@ export function BeneficiariaForm({
         estado_civil_id: undefined,
         quantidade_filhos: 0,
         telefone: "",
+        telefone_validado: false,
         email: "",
         contato: {
           melhor_turno_contato: null,
@@ -572,6 +575,22 @@ export function BeneficiariaForm({
                     />
 
                   </div>
+
+                  <FormField
+                    control={form.control}
+                    name="telefone_validado"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">Telefone validado</FormLabel>
+                          <InfoTooltip text="Marque quando o telefone tiver sido confirmado/validado com a beneficiária." />
+                        </div>
+                        <FormControl>
+                          <Switch checked={!!field.value} onCheckedChange={field.onChange} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
                 <div className="space-y-4">

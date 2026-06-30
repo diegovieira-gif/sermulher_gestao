@@ -5,7 +5,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BeneficiosTab } from "./beneficios-tab";
-import { getBeneficiaria, getHistoricoBeneficios } from "../actions";
+import { EventosTab } from "./eventos-tab";
+import { CursosTab } from "./cursos-tab";
+import {
+  getBeneficiaria,
+  getHistoricoBeneficios,
+  getParticipacoesEvento,
+  getEventosOptions,
+  getInscricoesCurso,
+  getCursosOptions,
+} from "../actions";
 import { getAuxItems } from "../../../configuracoes/actions";
 
 interface PageProps {
@@ -20,10 +29,22 @@ export default async function BeneficiariaDetalhePage({ params }: PageProps) {
     return notFound();
   }
 
-  const [beneficiariaResult, historicoResult, beneficiosResult] = await Promise.all([
+  const [
+    beneficiariaResult,
+    historicoResult,
+    beneficiosResult,
+    participacoesEventoResult,
+    eventosOptionsResult,
+    inscricoesCursoResult,
+    cursosOptionsResult,
+  ] = await Promise.all([
     getBeneficiaria(beneficiariaId),
     getHistoricoBeneficios(String(beneficiariaId)),
     getAuxItems("config_beneficios"),
+    getParticipacoesEvento(String(beneficiariaId)),
+    getEventosOptions(),
+    getInscricoesCurso(String(beneficiariaId)),
+    getCursosOptions(),
   ]);
 
   if (!beneficiariaResult.success || !beneficiariaResult.data) {
@@ -33,6 +54,14 @@ export default async function BeneficiariaDetalhePage({ params }: PageProps) {
   const beneficiaria = beneficiariaResult.data;
   const historico = historicoResult.success && historicoResult.data ? historicoResult.data : [];
   const beneficios = beneficiosResult.success && beneficiosResult.data ? beneficiosResult.data : [];
+  const participacoesEvento =
+    participacoesEventoResult.success && participacoesEventoResult.data ? participacoesEventoResult.data : [];
+  const eventosOptions =
+    eventosOptionsResult.success && eventosOptionsResult.data ? eventosOptionsResult.data : [];
+  const inscricoesCurso =
+    inscricoesCursoResult.success && inscricoesCursoResult.data ? inscricoesCursoResult.data : [];
+  const cursosOptions =
+    cursosOptionsResult.success && cursosOptionsResult.data ? cursosOptionsResult.data : [];
 
   const contato = typeof beneficiaria.contato === "string"
     ? safeJsonParse(beneficiaria.contato, {})
@@ -69,6 +98,8 @@ export default async function BeneficiariaDetalhePage({ params }: PageProps) {
         <TabsList>
           <TabsTrigger value="dados">Dados</TabsTrigger>
           <TabsTrigger value="beneficios">Benefícios</TabsTrigger>
+          <TabsTrigger value="eventos">Eventos</TabsTrigger>
+          <TabsTrigger value="cursos">Cursos</TabsTrigger>
         </TabsList>
 
         <TabsContent value="dados" className="space-y-4">
@@ -109,6 +140,24 @@ export default async function BeneficiariaDetalhePage({ params }: PageProps) {
             beneficiariaNome={beneficiaria.nome_completo}
             beneficiosOptions={beneficios as any}
             historico={historico as any}
+          />
+        </TabsContent>
+
+        <TabsContent value="eventos">
+          <EventosTab
+            beneficiariaId={beneficiaria.id}
+            beneficiariaNome={beneficiaria.nome_completo}
+            eventosOptions={eventosOptions as any}
+            historico={participacoesEvento as any}
+          />
+        </TabsContent>
+
+        <TabsContent value="cursos">
+          <CursosTab
+            beneficiariaId={beneficiaria.id}
+            beneficiariaNome={beneficiaria.nome_completo}
+            cursosOptions={cursosOptions as any}
+            historico={inscricoesCurso as any}
           />
         </TabsContent>
       </Tabs>

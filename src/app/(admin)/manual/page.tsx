@@ -37,6 +37,10 @@ import {
   ClipboardList,
   LogOut,
   Globe,
+  UserCog,
+  KeyRound,
+  ListFilter,
+  History,
   type LucideIcon,
 } from "lucide-react";
 
@@ -289,7 +293,8 @@ const TOC: { id: string; label: string; icon: LucideIcon }[] = [
   { id: "app-amar", label: "App Amar", icon: Smartphone },
   { id: "relatorios", label: "Relatórios", icon: FileText },
   { id: "configuracoes", label: "Configurações", icon: Settings },
-  { id: "permissoes", label: "Permissões de Menu", icon: Lock },
+  { id: "perfil", label: "Meu Perfil", icon: UserCog },
+  { id: "permissoes", label: "Controle de Acesso", icon: Lock },
 ];
 
 export default function ManualPage() {
@@ -312,7 +317,7 @@ export default function ManualPage() {
             </span>
             <div className="flex gap-2">
               <Badge className="bg-white/20 text-white hover:bg-white/30">
-                Versão 1.1
+                Versão 1.2
               </Badge>
               <Badge className="bg-white/20 text-white hover:bg-white/30">
                 Atualizado em {new Date().getFullYear()}
@@ -551,6 +556,47 @@ export default function ManualPage() {
               do setor de destino.
             </AccordionContent>
           </AccordionItem>
+          <AccordionItem value="m5">
+            <AccordionTrigger>
+              Eventos e Cursos da beneficiária{" "}
+              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25">
+                Novo
+              </Badge>
+            </AccordionTrigger>
+            <AccordionContent className="space-y-2 text-sm text-muted-foreground">
+              <p>
+                Na ficha da beneficiária, as abas <strong>Eventos</strong> e{" "}
+                <strong>Cursos</strong> registram de quais eventos/campanhas e
+                cursos ela participou. Clique em <strong>Registrar</strong>,
+                escolha o item, informe a data e uma observação opcional.
+              </p>
+              <p>
+                A aba <strong>Benefícios</strong> continua registrando as entregas
+                de benefícios da mesma forma.
+              </p>
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="m6">
+            <AccordionTrigger>
+              Filtros e telefone validado{" "}
+              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25">
+                Novo
+              </Badge>
+            </AccordionTrigger>
+            <AccordionContent className="space-y-2 text-sm text-muted-foreground">
+              <p className="flex items-center gap-2">
+                <ListFilter className="h-4 w-4 text-primary" />
+                O botão <strong>Filtros</strong> abre um painel para refinar a
+                lista por <strong>bairro</strong>, ordenação e marcadores
+                (Medida Protetiva, Bolsa Família, BPC). Os filtros ativos
+                aparecem como etiquetas removíveis.
+              </p>
+              <p>
+                No cadastro, o campo <strong>Telefone validado</strong> permite
+                marcar que o número foi confirmado com a beneficiária.
+              </p>
+            </AccordionContent>
+          </AccordionItem>
         </Accordion>
       </Section>
 
@@ -571,6 +617,18 @@ export default function ManualPage() {
         <Callout variant="tip" title="Filtre pelo seu setor">
           Use os filtros do topo para ver apenas as demandas que dizem respeito
           à sua equipe, reduzindo o ruído e focando no que é seu.
+        </Callout>
+        <Callout variant="new" title="Tipos e status configuráveis + acesso por perfil">
+          Os valores de <strong>Tipo de Demanda</strong> e{" "}
+          <strong>Status da Etapa</strong> agora são cadastráveis em{" "}
+          <strong>Configurações</strong> (submenus “Tipos de Tramitação” e
+          “Status de Etapa”). Além disso, administradores podem restringir, por
+          perfil, <strong>quais tipos de demanda</strong> cada equipe enxerga —
+          veja{" "}
+          <a href="#permissoes" className="font-medium text-primary underline">
+            Controle de Acesso
+          </a>
+          .
         </Callout>
       </Section>
 
@@ -821,6 +879,8 @@ export default function ManualPage() {
             "Encaminhamentos e Benefícios",
             "Tipos de Evento e Campanhas",
             "Níveis de Periculosidade e Status Legal",
+            "Tipos de Tramitação e Status de Etapa",
+            "Acesso a Demandas (por perfil)",
           ].map((t) => (
             <div
               key={t}
@@ -837,63 +897,186 @@ export default function ManualPage() {
         </Callout>
       </Section>
 
-      {/* 13. Permissões de Menu */}
+      {/* 13. Controle de Acesso */}
       <Section
         id="permissoes"
         number={13}
-        title="Permissões de Menu"
-        description="Controle, por perfil, quais módulos cada usuário enxerga."
+        title="Controle de Acesso (Perfis)"
+        description="Como organizar perfis e definir o que cada equipe acessa."
         icon={Lock}
         iconClass="text-violet-600"
       >
         <Badge className="bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25">
-          <Sparkles className="mr-1 h-3 w-3" /> Novidade
+          <Sparkles className="mr-1 h-3 w-3" /> Apenas administradores
         </Badge>
         <p className="text-sm leading-relaxed text-muted-foreground">
-          Administradores podem definir, diretamente pelo sistema, quais itens do
-          menu lateral cada <strong>perfil de usuário</strong> pode acessar. É a
-          forma de adaptar o sistema a equipes como Recepção, Busca Ativa,
-          Jurídico, etc.
+          O acesso é organizado por <strong>perfil</strong> (o “grupo” do
+          usuário). Cada usuário pertence a um perfil, e o que ele enxerga
+          depende de duas camadas configuráveis pelo administrador:{" "}
+          <strong>Permissões de Menu</strong> (quais módulos) e{" "}
+          <strong>Acesso a Demandas</strong> (quais tipos de demanda).
         </p>
-        <Steps
-          items={[
-            <>
-              Acesse <strong>Configurações → Acesso &amp; Segurança → Permissões
-              de Menu</strong>.
-            </>,
-            <>
-              Na lista à esquerda, escolha o <strong>perfil</strong> que deseja
-              ajustar.
-            </>,
-            <>
-              Marque ou desmarque os módulos, ou ative <strong>Acesso total</strong>{" "}
-              para liberar tudo.
-            </>,
-            <>
-              Clique em <strong>Salvar permissões</strong>. O menu do usuário se
-              ajusta automaticamente no próximo acesso.
-            </>,
-          ]}
-        />
-        <div className="grid gap-3 sm:grid-cols-3">
-          <Callout variant="tip" title="Dashboard é fixo">
-            O Dashboard nunca pode ser desativado — é a página inicial de todos.
-          </Callout>
-          <Callout variant="warn" title="Administradores">
-            Perfis administradores têm acesso irrestrito e não podem ser
-            limitados.
-          </Callout>
-          <Callout variant="new" title="Bloqueio por URL">
-            Mesmo digitando o endereço direto, um usuário sem permissão é
-            redirecionado para o Dashboard.
-          </Callout>
+
+        <div className="rounded-lg border bg-muted/40 p-4 text-sm text-muted-foreground space-y-1">
+          <p className="font-semibold text-foreground">Como as camadas funcionam</p>
+          <p>
+            <strong>1. Perfil (Directus):</strong> define a identidade do grupo
+            e o acesso aos dados.
+          </p>
+          <p>
+            <strong>2. Permissões de Menu (app):</strong> filtram os módulos do
+            menu lateral.
+          </p>
+          <p>
+            <strong>3. Acesso a Demandas (app):</strong> filtra os tipos de
+            demanda nas tramitações e no quadro Kanban.
+          </p>
         </div>
+
+        {/* Tutorial: configurar perfis e usuários */}
+        <div className="space-y-3">
+          <h3 className="flex items-center gap-2 font-semibold text-foreground">
+            <KeyRound className="h-4 w-4 text-primary" />
+            Passo a passo: ativar um perfil para uma equipe
+          </h3>
+          <Steps
+            items={[
+              <>
+                <strong>Perfis disponíveis.</strong> O sistema já vem com os
+                perfis <strong>Administrator</strong>, <strong>Jurídico</strong>,{" "}
+                <strong>Gabinete</strong>, <strong>Atendimento</strong> e{" "}
+                <strong>Psicossocial</strong>. Para criar um novo perfil, use o
+                painel administrativo do Directus (Configurações → Funções) ou
+                solicite à equipe de TI.
+              </>,
+              <>
+                <strong>Garanta o acesso aos dados.</strong> Todo perfil
+                não-administrador precisa ter a política{" "}
+                <strong>“App Padrão”</strong> vinculada — é ela que permite
+                visualizar e registrar dados no sistema. Os perfis que já vêm de
+                fábrica já estão configurados; um perfil novo precisa receber
+                essa política, senão o usuário entra mas não vê nada.
+              </>,
+              <>
+                <strong>Atribua o usuário ao perfil.</strong> No Directus, em
+                <strong> Usuários</strong>, abra a pessoa, selecione o{" "}
+                <strong>Perfil/Função</strong> desejado e salve. A senha de
+                acesso é a mesma do sistema.
+              </>,
+              <>
+                <strong>Defina os menus.</strong> Em{" "}
+                <strong>Configurações → Acesso &amp; Segurança → Permissões de
+                Menu</strong>, escolha o perfil e marque os módulos liberados (ou{" "}
+                <strong>Acesso total</strong>). Salve.
+              </>,
+              <>
+                <strong>Defina os tipos de demanda.</strong> Em{" "}
+                <strong>Configurações → Acesso &amp; Segurança → Acesso a
+                Demandas</strong>, escolha o perfil e marque os tipos que a
+                equipe pode tratar (ex.: Jurídico → “Jurídica”). Salve.
+              </>,
+            ]}
+          />
+        </div>
+
+        <Callout variant="warn" title="Importante ao criar um perfil novo">
+          Um perfil sem a política <strong>“App Padrão”</strong> deixa o usuário
+          sem acesso aos dados (telas vazias). Sempre vincule essa política aos
+          perfis não-administradores antes de atribuir usuários a eles.
+        </Callout>
+
+        {/* Permissões de menu — detalhe */}
+        <div className="space-y-3">
+          <h3 className="flex items-center gap-2 font-semibold text-foreground">
+            <Lock className="h-4 w-4 text-primary" />
+            Permissões de Menu
+          </h3>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Callout variant="tip" title="Dashboard é fixo">
+              O Dashboard nunca pode ser desativado — é a página inicial de todos.
+            </Callout>
+            <Callout variant="warn" title="Administradores">
+              Perfis administradores têm acesso irrestrito e não podem ser
+              limitados.
+            </Callout>
+            <Callout variant="new" title="Bloqueio por URL">
+              Mesmo digitando o endereço direto, um usuário sem permissão é
+              redirecionado para o Dashboard.
+            </Callout>
+          </div>
+        </div>
+
+        {/* Acesso a demandas — detalhe */}
+        <div className="space-y-3">
+          <h3 className="flex items-center gap-2 font-semibold text-foreground">
+            <ListFilter className="h-4 w-4 text-primary" />
+            Acesso a Demandas
+          </h3>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Restringe, por perfil, quais <strong>tipos de demanda</strong> a
+            equipe vê e pode registrar. Ex.: o perfil <strong>Jurídico</strong>{" "}
+            só enxerga demandas do tipo “Jurídica”. Sem nenhuma restrição
+            cadastrada (ou com “Acesso a todos os tipos” ligado), o perfil vê
+            todos os tipos.
+          </p>
+        </div>
+
         <div>
           <p className="mb-2 text-sm font-semibold text-foreground">
             Exemplos de selos de status que você verá pelo sistema:
           </p>
           <BadgeShowcase />
         </div>
+      </Section>
+
+      {/* 14. Meu Perfil */}
+      <Section
+        id="perfil"
+        number={14}
+        title="Meu Perfil"
+        description="Seus dados, seu histórico de ações e troca de senha."
+        icon={UserCog}
+        iconClass="text-fuchsia-600"
+      >
+        <Badge className="bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25">
+          <Sparkles className="mr-1 h-3 w-3" /> Novidade
+        </Badge>
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          Clique no seu <strong>nome</strong>, no canto superior direito, e
+          escolha <strong>Meu Perfil</strong> para abrir sua página pessoal.
+        </p>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-lg border bg-muted/40 p-4">
+            <p className="mb-1 flex items-center gap-2 text-sm font-semibold text-foreground">
+              <UserCog className="h-4 w-4 text-primary" /> Dados
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Nome, e-mail, perfil de acesso e último acesso.
+            </p>
+          </div>
+          <div className="rounded-lg border bg-muted/40 p-4">
+            <p className="mb-1 flex items-center gap-2 text-sm font-semibold text-foreground">
+              <History className="h-4 w-4 text-primary" /> Atividade
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Histórico das suas operações no sistema (criações, edições,
+              exclusões), igual à Auditoria, porém só as suas.
+            </p>
+          </div>
+          <div className="rounded-lg border bg-muted/40 p-4">
+            <p className="mb-1 flex items-center gap-2 text-sm font-semibold text-foreground">
+              <KeyRound className="h-4 w-4 text-primary" /> Segurança
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Altere sua senha informando a senha atual e a nova.
+            </p>
+          </div>
+        </div>
+        <Callout variant="tip" title="Troca de senha">
+          A senha é a mesma usada para entrar no sistema. Por segurança, é
+          preciso digitar a <strong>senha atual</strong> para confirmar a
+          alteração, e a nova senha deve ter ao menos 8 caracteres.
+        </Callout>
       </Section>
 
       {/* Rodapé */}

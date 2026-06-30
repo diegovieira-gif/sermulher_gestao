@@ -1,6 +1,7 @@
 "use client";
 
-import { User, LogOut } from "lucide-react";
+import { User, LogOut, UserCog } from "lucide-react";
+import Link from "next/link";
 import { logout } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -12,7 +13,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { } from "react";
 
 interface HeaderProps {
   title: string;
@@ -60,6 +60,13 @@ export function Header({ title, userName = "Usuário", userRole }: HeaderProps) 
 
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild className="cursor-pointer">
+                <Link href="/perfil">
+                  <UserCog className="mr-2 h-4 w-4" />
+                  Meu Perfil
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={handleLogout}

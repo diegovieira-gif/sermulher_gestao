@@ -1,5 +1,12 @@
 import { notFound } from "next/navigation";
-import { getAtendimentoDetails, getTramitacoes, getSetores } from "./actions";
+import {
+  getAtendimentoDetails,
+  getTramitacoes,
+  getSetores,
+  getTiposDemanda,
+  getStatusEtapas,
+} from "./actions";
+import { getCurrentDemandAccess } from "@/lib/demanda-permissions";
 import { TramitacoesClient } from "./tramitacoes-client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -148,12 +155,29 @@ export default async function AtendimentoDetailPage({ params }: PageProps) {
   }
 
   // Busca dados em paralelo para performance
-  const [atendimentoResult, tramitacoesResult, setoresResult] =
-    await Promise.all([
-      getAtendimentoDetails(atendimentoId),
-      getTramitacoes(atendimentoId),
-      getSetores(),
-    ]);
+  const [
+    atendimentoResult,
+    tramitacoesResult,
+    setoresResult,
+    tiposDemandaResult,
+    statusEtapasResult,
+    demandAccess,
+  ] = await Promise.all([
+    getAtendimentoDetails(atendimentoId),
+    getTramitacoes(atendimentoId),
+    getSetores(),
+    getTiposDemanda(),
+    getStatusEtapas(),
+    getCurrentDemandAccess(),
+  ]);
+
+  // Tipos de demanda visíveis ao perfil (admin/sem config = todos).
+  const todosTipos =
+    tiposDemandaResult.success && tiposDemandaResult.data ? tiposDemandaResult.data : [];
+  const tiposPermitidos =
+    demandAccess.allowedTipos === null
+      ? todosTipos
+      : todosTipos.filter((t) => demandAccess.allowedTipos!.includes(t.nome));
 
   if (!atendimentoResult.success || !atendimentoResult.data) {
     return notFound();
@@ -401,6 +425,12 @@ export default async function AtendimentoDetailPage({ params }: PageProps) {
             setores={
               setoresResult.success && setoresResult.data
                 ? setoresResult.data
+                : []
+            }
+            tiposDemanda={tiposPermitidos}
+            statusEtapas={
+              statusEtapasResult.success && statusEtapasResult.data
+                ? statusEtapasResult.data
                 : []
             }
           />

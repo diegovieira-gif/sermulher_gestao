@@ -5,6 +5,7 @@ import {
   listRoles,
   getPermissionConfigs,
 } from "@/lib/permissions";
+import { getDemandPermissionConfigs } from "@/lib/demanda-permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +27,9 @@ export default async function ConfiguracoesPage() {
     estadoCivil: any[] = [],
     escolaridade: any[] = [],
     situacaoTrabalho: any[] = [],
-    ubs: any[] = [];
+    ubs: any[] = [],
+    tiposDemanda: any[] = [],
+    statusEtapa: any[] = [];
 
   try {
     // Busca Paralela (Promise.all) para maior performance em produção
@@ -48,6 +51,8 @@ export default async function ConfiguracoesPage() {
       getAuxItems("config_escolaridade"), // 14
       getAuxItems("config_situacao_trabalho"), // 15
       getAuxItems("config_ubs"), // 16
+      getAuxItems("config_tipos_demanda"), // 17
+      getAuxItems("config_status_etapa"), // 18
     ]);
 
     // Helper para extrair dados seguros
@@ -73,6 +78,8 @@ export default async function ConfiguracoesPage() {
     escolaridade = getData(14);
     situacaoTrabalho = getData(15);
     ubs = getData(16);
+    tiposDemanda = getData(17);
+    statusEtapa = getData(18);
   } catch (error) {
     console.error("Erro crítico ao carregar configurações:", error);
   }
@@ -80,9 +87,9 @@ export default async function ConfiguracoesPage() {
   // Permissões de menu (somente administradores podem gerenciar).
   const access = await getCurrentAccess();
   const isAdmin = access.isAdmin;
-  const [roles, permConfigs] = isAdmin
-    ? await Promise.all([listRoles(), getPermissionConfigs()])
-    : [[], []];
+  const [roles, permConfigs, demandConfigs] = isAdmin
+    ? await Promise.all([listRoles(), getPermissionConfigs(), getDemandPermissionConfigs()])
+    : [[], [], []];
 
   return (
     <div className="p-6 space-y-6">
@@ -113,9 +120,12 @@ export default async function ConfiguracoesPage() {
         escolaridade={escolaridade}
         situacaoTrabalho={situacaoTrabalho}
         ubs={ubs}
+        tiposDemanda={tiposDemanda}
+        statusEtapa={statusEtapa}
         isAdmin={isAdmin}
         roles={roles}
         permConfigs={permConfigs}
+        demandConfigs={demandConfigs}
       />
     </div>
   );

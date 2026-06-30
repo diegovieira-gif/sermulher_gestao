@@ -100,9 +100,9 @@ export function SonhosClient({ initialData }: SonhosClientProps) {
   const handlePlayAudio = (audioId: string, sonhoId: number) => {
     if (!audioRef.current) return;
 
-    const baseUrl =
-      process.env.NEXT_PUBLIC_DIRECTUS_URL || "http://192.168.0.118:8055";
-    const audioUrl = `${baseUrl}/files/${audioId}`;
+    // Toca via proxy autenticado (/api/files), que busca o binário em
+    // /assets do Directus usando o token do servidor.
+    const audioUrl = `/api/files/${audioId}`;
 
     console.log("[Audio] Playing WebM:", audioUrl);
 
@@ -134,8 +134,8 @@ export function SonhosClient({ initialData }: SonhosClientProps) {
 
   const handleDownloadAudio = (audioId: string, fileName?: string) => {
     try {
-      // Usar rota API proxy que tem autenticação do servidor
-      const downloadUrl = `/api/files/${audioId}`;
+      // Usar rota API proxy que tem autenticação do servidor (?download força anexo)
+      const downloadUrl = `/api/files/${audioId}?download`;
 
       console.log("[Download] Proxy URL:", downloadUrl);
 

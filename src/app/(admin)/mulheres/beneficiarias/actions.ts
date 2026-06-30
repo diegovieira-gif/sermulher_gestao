@@ -13,7 +13,12 @@ import {
   aggregate,
 } from "@directus/sdk";
 import { cookies } from "next/headers";
-import { beneficiariaSchema, entregaBeneficioSchema } from "./schemas";
+import {
+  beneficiariaSchema,
+  entregaBeneficioSchema,
+  participacaoEventoSchema,
+  inscricaoCursoSchema,
+} from "./schemas";
 
 // URL da API (Fallback seguro para localhost)
 const API_URL = process.env.DIRECTUS_API_URL || "http://192.168.0.118:8055";
@@ -136,18 +141,58 @@ export async function getBeneficiarias(
     filterConditions.push({ recebe_bpc: { _eq: true } });
   }
 
-  if (filters?.bairro) {
-    filterConditions.push({ endereco: { _icontains: filters.bairro } });
-  }
-
+  // Observação: `endereco` é um campo JSON (string) e o Directus não suporta
+  // operadores de texto (_icontains/_contains) nem path nesse tipo. Por isso o
+  // filtro por bairro é aplicado em memória (ver bloco abaixo), não no filtro
+  // server-side.
+  const bairroFiltro = filters?.bairro?.trim();
+  const sortExpr = sortOrder === "desc" ? `-${sortField}` : sortField;
   const filter = filterConditions.length > 0 ? { _and: filterConditions } : {};
 
+  const parse = (item: any) => ({
+    ...item,
+    endereco: parseJsonField(item.endereco),
+    contato: parseJsonField(item.contato),
+  });
+
   try {
+    // Caminho com filtro de bairro: busca o conjunto já reduzido por
+    // busca/booleanos (server-side), filtra por bairro em memória e pagina.
+    if (bairroFiltro) {
+      const norm = (s: unknown) =>
+        String(s ?? "").trim().toLowerCase();
+      const alvo = norm(bairroFiltro);
+
+      const todos = await client.request(
+        readItems("beneficiarias", {
+          // @ts-ignore
+          fields: BENEFICIARIA_FIELDS,
+          sort: [sortExpr],
+          limit: -1,
+          filter,
+        }),
+      );
+
+      const correspondentes = todos
+        .map(parse)
+        .filter((b: any) => norm(b.endereco?.bairro) === alvo);
+
+      const total = correspondentes.length;
+      const pageItems = correspondentes.slice(offset, offset + limit);
+
+      return {
+        success: true,
+        data: pageItems,
+        meta: { total, page, limit, totalPages: Math.ceil(total / limit) || 1 },
+      };
+    }
+
+    // Caminho padrão: paginação e contagem 100% server-side.
     const items = await client.request(
       readItems("beneficiarias", {
         // @ts-ignore
         fields: BENEFICIARIA_FIELDS,
-        sort: [sortOrder === "desc" ? `-${sortField}` : sortField],
+        sort: [sortExpr],
         limit,
         offset,
         filter,
@@ -164,20 +209,14 @@ export async function getBeneficiarias(
     // @ts-ignore
     const total = Number(countResult[0]?.count) || 0;
 
-    const parsedItems = items.map((item: any) => ({
-      ...item,
-      endereco: parseJsonField(item.endereco),
-      contato: parseJsonField(item.contato),
-    }));
-
     return {
       success: true,
-      data: parsedItems,
+      data: items.map(parse),
       meta: {
         total,
         page,
         limit,
-        totalPages: Math.ceil(total / limit),
+        totalPages: Math.ceil(total / limit) || 1,
       },
     };
   } catch (error) {
@@ -454,5 +493,183 @@ export async function findBeneficiariaByCPF(cpf: string) {
   } catch (error: any) {
     console.error("Error fetching findByCPF:", error);
     return { success: false, error: error?.message || "Erro de conexão ao buscar CPF." };
+  }
+}
+
+// --- Participações em Eventos (coleção participacoes_evento) ---
+
+export async function getEventosOptions() {
+  const { client } = await getAuthenticatedClient();
+  try {
+    const eventos = await client.request(
+      readItems("eventos_campanhas", {
+        fields: ["id", "nome"],
+        sort: ["nome"],
+        limit: -1,
+      }),
+    );
+    return { success: true, data: eventos };
+  } catch (error) {
+    return { success: false, error: "Erro ao carregar eventos." };
+  }
+}
+
+export async function getParticipacoesEvento(beneficiariaId: string) {
+  const { client } = await getAuthenticatedClient();
+  try {
+    const historico = await client.request(
+      readItems("participacoes_evento", {
+        filter: { beneficiaria: { _eq: beneficiariaId } },
+        sort: ["-data_participacao"],
+        fields: [
+          "*",
+          // @ts-ignore
+          "evento.id",
+          "evento.nome",
+          "user_created.first_name",
+          "user_created.last_name",
+          "user_created.email",
+        ],
+      }),
+    );
+    return { success: true, data: historico };
+  } catch (error) {
+    return { success: false, error: "Erro ao carregar participações em eventos." };
+  }
+}
+
+export async function registrarParticipacaoEvento(data: unknown) {
+  const { client } = await getAuthenticatedClient();
+  try {
+    const parsedData = participacaoEventoSchema.parse(data);
+
+    const payload = {
+      beneficiaria: parsedData.beneficiaria,
+      evento: parsedData.evento,
+      data_participacao: parsedData.data_participacao,
+      observacao: parsedData.observacao || null,
+    };
+
+    const novaParticipacao = await client.request(
+      createItem("participacoes_evento", payload, {
+        fields: [
+          "id",
+          "data_participacao",
+          "observacao",
+          "evento.id",
+          "evento.nome",
+          "user_created.first_name",
+          "user_created.last_name",
+          "user_created.email",
+        ] as any,
+      }),
+    );
+
+    revalidatePath(`/mulheres/beneficiarias/${payload.beneficiaria}`);
+    return { success: true, data: novaParticipacao, message: "Participação registrada!" };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Erro ao registrar participação em evento." };
+  }
+}
+
+export async function deletarParticipacaoEvento(id: number, beneficiariaId: number) {
+  const { client } = await getAuthenticatedClient();
+  try {
+    await client.request(deleteItem("participacoes_evento", id));
+    revalidatePath(`/mulheres/beneficiarias/${beneficiariaId}`);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: "Erro ao excluir." };
+  }
+}
+
+// --- Inscrições em Cursos (coleção inscricoes_curso) ---
+
+export async function getCursosOptions() {
+  const { client } = await getAuthenticatedClient();
+  try {
+    const cursos = await client.request(
+      readItems("cursos", {
+        fields: ["id", "nome", "titulo"],
+        sort: ["nome"],
+        limit: -1,
+      }),
+    );
+    return { success: true, data: cursos };
+  } catch (error) {
+    return { success: false, error: "Erro ao carregar cursos." };
+  }
+}
+
+export async function getInscricoesCurso(beneficiariaId: string) {
+  const { client } = await getAuthenticatedClient();
+  try {
+    const historico = await client.request(
+      readItems("inscricoes_curso", {
+        filter: { beneficiaria: { _eq: beneficiariaId } },
+        sort: ["-data_inscricao"],
+        fields: [
+          "*",
+          // @ts-ignore
+          "curso.id",
+          "curso.nome",
+          "curso.titulo",
+          "user_created.first_name",
+          "user_created.last_name",
+          "user_created.email",
+        ],
+      }),
+    );
+    return { success: true, data: historico };
+  } catch (error) {
+    return { success: false, error: "Erro ao carregar inscrições em cursos." };
+  }
+}
+
+export async function registrarInscricaoCurso(data: unknown) {
+  const { client } = await getAuthenticatedClient();
+  try {
+    const parsedData = inscricaoCursoSchema.parse(data);
+
+    const payload = {
+      beneficiaria: parsedData.beneficiaria,
+      curso: parsedData.curso,
+      data_inscricao: parsedData.data_inscricao,
+      observacao: parsedData.observacao || null,
+    };
+
+    const novaInscricao = await client.request(
+      createItem("inscricoes_curso", payload, {
+        fields: [
+          "id",
+          "data_inscricao",
+          "observacao",
+          "curso.id",
+          "curso.nome",
+          "curso.titulo",
+          "user_created.first_name",
+          "user_created.last_name",
+          "user_created.email",
+        ] as any,
+      }),
+    );
+
+    revalidatePath(`/mulheres/beneficiarias/${payload.beneficiaria}`);
+    return { success: true, data: novaInscricao, message: "Inscrição em curso registrada!" };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Erro ao registrar inscrição em curso." };
+  }
+}
+
+export async function deletarInscricaoCurso(id: number, beneficiariaId: number) {
+  const { client } = await getAuthenticatedClient();
+  try {
+    await client.request(deleteItem("inscricoes_curso", id));
+    revalidatePath(`/mulheres/beneficiarias/${beneficiariaId}`);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: "Erro ao excluir." };
   }
 }

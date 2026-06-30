@@ -90,6 +90,7 @@ export interface MulheresBeneficiariaDB {
   cpf?: string;
   rg?: string;
   telefone?: string;
+  telefone_validado?: boolean;
   contato: {
     telefone: string;
     email?: string;

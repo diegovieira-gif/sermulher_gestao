@@ -25,6 +25,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { BeneficiariaForm } from "./beneficiaria-form";
+import { BeneficiariasFiltros } from "./beneficiarias-filtros";
 import { deleteBeneficiaria } from "./actions";
 import {
   Select,
@@ -34,8 +35,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import {
   Sheet,
   SheetContent,
@@ -210,18 +209,8 @@ export function BeneficiariasClient({
   const [idsToDelete, setIdsToDelete] = useState<number[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Busca e Exportação
-  const [searchTerm, setSearchTerm] = useState(
-    searchParams.get("q") || ""
-  );
+  // Exportação
   const [isExporting, setIsExporting] = useState(false);
-
-  // Filtros Avançados
-  const [filterMedida, setFilterMedida] = useState(searchParams.get("medidaProtetiva") === "true");
-  const [filterBolsa, setFilterBolsa] = useState(searchParams.get("bolsaFamilia") === "true");
-  const [filterBpc, setFilterBpc] = useState(searchParams.get("bpc") === "true");
-  const [filterBairro, setFilterBairro] = useState(searchParams.get("bairro") || "");
-  const [filtersOpen, setFiltersOpen] = useState(false);
 
   // Loading indicator para transições
   const [isLoadingData, setIsLoadingData] = useState(false);
@@ -237,73 +226,6 @@ export function BeneficiariasClient({
     setIsLoadingData(false);
     setSelectedIds([]);
   }, [initialData]);
-
-  // Debounced search effect
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      const params = new URLSearchParams(searchParams);
-      if (searchTerm) {
-        params.set("q", searchTerm);
-      } else {
-        params.delete("q");
-      }
-      
-      const currentQ = searchParams.get("q") || "";
-      if (searchTerm !== currentQ) {
-        setIsLoadingData(true);
-        params.set("page", "1");
-        router.push(`${pathname}?${params.toString()}`);
-      }
-    }, 500);
-
-    return () => clearTimeout(handler);
-  }, [searchTerm, router, pathname, searchParams]);
-
-  const applyFilters = (newFilters: {
-    medidaProtetiva?: boolean;
-    bolsaFamilia?: boolean;
-    bpc?: boolean;
-    bairro?: string;
-  }) => {
-    setIsLoadingData(true);
-    const params = new URLSearchParams(searchParams);
-    params.set("page", "1");
-
-    const mp = newFilters.hasOwnProperty("medidaProtetiva") ? newFilters.medidaProtetiva : filterMedida;
-    const bf = newFilters.hasOwnProperty("bolsaFamilia") ? newFilters.bolsaFamilia : filterBolsa;
-    const bp = newFilters.hasOwnProperty("bpc") ? newFilters.bpc : filterBpc;
-    const br = newFilters.hasOwnProperty("bairro") ? newFilters.bairro : filterBairro;
-
-    if (mp) params.set("medidaProtetiva", "true");
-    else params.delete("medidaProtetiva");
-
-    if (bf) params.set("bolsaFamilia", "true");
-    else params.delete("bolsaFamilia");
-
-    if (bp) params.set("bpc", "true");
-    else params.delete("bpc");
-
-    if (br) params.set("bairro", br);
-    else params.delete("bairro");
-
-    router.push(`${pathname}?${params.toString()}`);
-  };
-
-  const handleClearFilters = () => {
-    setIsLoadingData(true);
-    setFilterMedida(false);
-    setFilterBolsa(false);
-    setFilterBpc(false);
-    setFilterBairro("");
-    
-    const params = new URLSearchParams(searchParams);
-    params.delete("medidaProtetiva");
-    params.delete("bolsaFamilia");
-    params.delete("bpc");
-    params.delete("bairro");
-    params.set("page", "1");
-    router.push(`${pathname}?${params.toString()}`);
-  };
 
   const currentSortField = searchParams.get("sortField") || "created_at";
   const currentSortOrder = (searchParams.get("sortOrder") as "asc" | "desc") || "desc";
@@ -321,25 +243,6 @@ export function BeneficiariasClient({
       params.set("sortOrder", field === "created_at" ? "desc" : "asc");
     }
     router.push(`${pathname}?${params.toString()}`);
-  };
-
-  const handleSearchChange = (val: string) => {
-    const clean = val.replace(/\D/g, "");
-    if (clean.length > 0 && /^\d/.test(val.trim())) {
-      let masked = clean;
-      if (clean.length > 3) {
-        masked = `${clean.slice(0, 3)}.${clean.slice(3)}`;
-      }
-      if (clean.length > 6) {
-        masked = `${masked.slice(0, 7)}.${clean.slice(6)}`;
-      }
-      if (clean.length > 9) {
-        masked = `${masked.slice(0, 11)}-${clean.slice(9, 11)}`;
-      }
-      setSearchTerm(masked);
-    } else {
-      setSearchTerm(val);
-    }
   };
 
   const filteredData = initialData;
@@ -583,163 +486,14 @@ export function BeneficiariasClient({
         </div>
       </div>
 
-      {/* Barra de Ferramentas com Pesquisa e Botão Filtros */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-xl border border-slate-150 shadow-sm">
-        <div className="relative flex-1 w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <Input
-            placeholder="Buscar por nome ou CPF..."
-            className="pl-10 h-10 w-full bg-slate-50/50 border-slate-200/80 focus-visible:bg-white focus-visible:ring-purple-500/20"
-            value={searchTerm}
-            onChange={(e) => handleSearchChange(e.target.value)}
-          />
-        </div>
-
-        <div className="flex flex-wrap gap-2 w-full md:w-auto items-center">
-          {/* 2. Filtros Avançados Trigger */}
-          <Button
-            variant={filtersOpen ? "default" : "outline"}
-            className={cn(
-              "h-10 px-4 transition-colors font-medium",
-              filtersOpen
-                ? "bg-purple-600 hover:bg-purple-700 text-white"
-                : "text-slate-600 border-slate-200 hover:bg-slate-50"
-            )}
-            onClick={() => setFiltersOpen(!filtersOpen)}
-          >
-            <Filter className="h-4 w-4 mr-2" />
-            Filtros
-            {(filterMedida || filterBolsa || filterBpc || filterBairro) && (
-              <span className="ml-1.5 flex h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-            )}
-          </Button>
-
-          <Button
-            variant="outline"
-            className="text-slate-600 border-slate-200 hover:bg-slate-50 h-10 px-4 font-medium"
-            onClick={handleExport}
-            disabled={isExporting}
-          >
-            {isExporting ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Download className="h-4 w-4 mr-2" />
-            )}
-            Exportar CSV
-          </Button>
-        </div>
-      </div>
-
-      {/* 2. Painel Filtros Avançados */}
-      {filtersOpen && (
-        <div className="bg-slate-50/75 backdrop-blur-sm p-5 rounded-xl border border-slate-100 shadow-sm -mt-4 mb-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-5 animate-in slide-in-from-top-3 duration-300">
-          <div className="space-y-2">
-            <Label htmlFor="filter-bairro" className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Bairro</Label>
-            <Select
-              value={filterBairro || "all_bairros"}
-              onValueChange={(val) => {
-                const actualVal = val === "all_bairros" ? "" : val;
-                setFilterBairro(actualVal);
-                applyFilters({ bairro: actualVal });
-              }}
-            >
-              <SelectTrigger id="filter-bairro" className="h-10 bg-white border-slate-200">
-                <SelectValue placeholder="Todos os bairros" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all_bairros">Todos os bairros</SelectItem>
-                {formOptions?.bairros?.map((b) => (
-                  <SelectItem key={b.id} value={b.nome}>
-                    {b.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="sort-select" className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Ordenação</Label>
-            <Select
-              value={`${currentSortField}_${currentSortOrder}`}
-              onValueChange={(val) => {
-                const [field, order] = val.split("_");
-                setIsLoadingData(true);
-                const params = new URLSearchParams(searchParams);
-                params.set("sortField", field);
-                params.set("sortOrder", order);
-                params.set("page", "1");
-                router.push(`${pathname}?${params.toString()}`);
-              }}
-            >
-              <SelectTrigger id="sort-select" className="h-10 bg-white border-slate-200">
-                <SelectValue placeholder="Ordenar por" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="nome_completo_asc">Nome (A-Z)</SelectItem>
-                <SelectItem value="nome_completo_desc">Nome (Z-A)</SelectItem>
-                <SelectItem value="created_at_desc">Mais recentes primeiro</SelectItem>
-                <SelectItem value="created_at_asc">Mais antigos primeiro</SelectItem>
-                <SelectItem value="data_nascimento_asc">Idade (Maior primeiro)</SelectItem>
-                <SelectItem value="data_nascimento_desc">Idade (Menor primeiro)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex items-center space-x-2 pt-8">
-            <Switch
-              id="filter-medida"
-              checked={filterMedida}
-              onCheckedChange={(checked) => {
-                setFilterMedida(checked);
-                applyFilters({ medidaProtetiva: checked });
-              }}
-            />
-            <Label htmlFor="filter-medida" className="text-sm font-medium text-slate-700 cursor-pointer">
-              Medida Protetiva
-            </Label>
-          </div>
-
-          <div className="flex items-center space-x-2 pt-8">
-            <Switch
-              id="filter-bolsa"
-              checked={filterBolsa}
-              onCheckedChange={(checked) => {
-                setFilterBolsa(checked);
-                applyFilters({ bolsaFamilia: checked });
-              }}
-            />
-            <Label htmlFor="filter-bolsa" className="text-sm font-medium text-slate-700 cursor-pointer">
-              Bolsa Família
-            </Label>
-          </div>
-
-          <div className="flex items-center space-x-2 pt-8 justify-between md:justify-start">
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="filter-bpc"
-                checked={filterBpc}
-                onCheckedChange={(checked) => {
-                  setFilterBpc(checked);
-                  applyFilters({ bpc: checked });
-                }}
-              />
-              <Label htmlFor="filter-bpc" className="text-sm font-medium text-slate-700 cursor-pointer">
-                BPC
-              </Label>
-            </div>
-            {(filterMedida || filterBolsa || filterBpc || filterBairro) && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClearFilters}
-                className="text-xs text-red-500 hover:text-red-600 h-8 px-2.5 rounded-full hover:bg-red-50 ml-auto md:ml-4"
-              >
-                <X className="h-3.5 w-3.5 mr-1" /> Limpar
-              </Button>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Barra de busca e filtros (componente dedicado, estado derivado da URL) */}
+      <BeneficiariasFiltros
+        bairros={formOptions?.bairros || []}
+        isExporting={isExporting}
+        onExport={handleExport}
+        hasData={filteredData.length > 0}
+        onBeforeNavigate={() => setIsLoadingData(true)}
+      />
 
       {/* Tabela de Dados */}
       <div className="rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden relative">

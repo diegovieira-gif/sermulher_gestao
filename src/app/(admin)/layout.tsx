@@ -23,6 +23,7 @@ const pageTitles: Record<string, string> = {
   "/configuracoes": "Configurações",
   "/observatorio": "Observatório",
   "/auditoria": "Auditoria",
+  "/perfil": "Meu Perfil",
 };
 
 export default async function AdminLayout({

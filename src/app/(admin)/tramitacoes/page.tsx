@@ -1,14 +1,15 @@
-import { getKanbanData, getSetoresOptions } from "./actions";
+import { getKanbanData, getSetoresOptions, getStatusEtapasOptions } from "./actions";
 import { KanbanBoard } from "./kanban-board";
 import { AlertCircle } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export default async function TramitacoesPage() {
-  // Busca dados iniciais e lista de setores em paralelo
-  const [kanbanResult, setores] = await Promise.all([
+  // Busca dados iniciais, setores e status de etapa em paralelo
+  const [kanbanResult, setores, statusEtapas] = await Promise.all([
     getKanbanData(),
     getSetoresOptions(),
+    getStatusEtapasOptions(),
   ]);
 
   if (!kanbanResult.success || !kanbanResult.data) {
@@ -36,6 +37,7 @@ export default async function TramitacoesPage() {
         <KanbanBoard
           initialData={kanbanResult.data}
           setores={Array.isArray(setores) ? setores : []}
+          statusEtapas={Array.isArray(statusEtapas) ? (statusEtapas as { id: number; nome: string }[]) : []}
         />
       </div>
     </div>
