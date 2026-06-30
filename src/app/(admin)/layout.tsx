@@ -8,6 +8,8 @@ import { readMe } from "@directus/sdk";
 
 type AdminUser = {
   first_name?: string | null;
+  last_name?: string | null;
+  email?: string | null;
   role?: {
     name?: string | null;
   } | null;
@@ -37,6 +39,7 @@ export default async function AdminLayout({
   let userData = {
     firstName: "Usuário",
     role: userRoleCookie,
+    email: "",
   };
 
   const user = await safeDirectusCall<AdminUser>(async () => {
@@ -44,15 +47,20 @@ export default async function AdminLayout({
 
     return directus.request(
       readMe({
-        fields: ["first_name", "role.name"],
+        fields: ["first_name", "last_name", "email", "role.name"],
       }),
     );
   });
 
   if (user) {
+    const fullName = [user.first_name, user.last_name]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
     userData = {
-      firstName: user.first_name || "Usuário",
+      firstName: fullName || user.first_name || "Usuário",
       role: user.role?.name || userRoleCookie,
+      email: user.email || "",
     };
   }
 
@@ -67,6 +75,7 @@ export default async function AdminLayout({
           pageTitles={pageTitles}
           userName={userData.firstName}
           userRole={userData.role}
+          userEmail={userData.email}
           allowedKeys={access.allowedKeys}
           isAdmin={access.isAdmin}
         >

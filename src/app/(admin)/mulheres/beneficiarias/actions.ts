@@ -37,6 +37,7 @@ const BENEFICIARIA_FIELDS = [
   "ubs_id",
   "quantidade_filhos",
   "telefone",
+  "telefone_validado",
   "email",
   "contato",
   "endereco",

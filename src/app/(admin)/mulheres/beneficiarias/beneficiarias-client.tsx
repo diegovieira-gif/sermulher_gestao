@@ -63,6 +63,7 @@ import {
   ArrowUpDown as LucideArrowUpDown,
   ArrowUp as LucideArrowUp,
   ArrowDown as LucideArrowDown,
+  BadgeCheck as LucideBadgeCheck,
 } from "lucide-react";
 
 // Bypass global Object prototype pollution from n8n-workflows.d.ts (which defines global 'in' property)
@@ -630,7 +631,17 @@ export function BeneficiariasClient({
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col">
-                      <span className="text-slate-800 text-sm font-medium">{maskPhone(b.telefone)}</span>
+                      <span className="flex items-center gap-1 text-slate-800 text-sm font-medium">
+                        {maskPhone(b.telefone)}
+                        {b.telefone_validado && (
+                          <LucideBadgeCheck
+                            className="h-4 w-4 text-emerald-600 shrink-0"
+                            aria-label="Telefone validado"
+                          >
+                            <title>Telefone validado</title>
+                          </LucideBadgeCheck>
+                        )}
+                      </span>
                       {b.email && (
                         <span className="text-xs text-slate-400 font-normal mt-0.5 truncate max-w-[180px]">
                           {b.email}

@@ -10,6 +10,7 @@ interface LayoutClientProps {
   pageTitles: Record<string, string>;
   userName?: string;
   userRole?: string;
+  userEmail?: string;
   allowedKeys?: string[];
   isAdmin?: boolean;
 }
@@ -19,6 +20,7 @@ export function LayoutClient({
   pageTitles,
   userName,
   userRole,
+  userEmail,
   allowedKeys = [],
   isAdmin = false,
 }: LayoutClientProps) {
@@ -41,7 +43,12 @@ export function LayoutClient({
 
   return (
     <>
-      <Header title={title} userName={userName} userRole={userRole} />
+      <Header
+        title={title}
+        userName={userName}
+        userRole={userRole}
+        userEmail={userEmail}
+      />
       <main className="flex-1 overflow-y-auto bg-background p-6">
         {blocked ? (
           <div className="flex h-full items-center justify-center">
