@@ -50,6 +50,36 @@ const BENEFICIARIA_FIELDS = [
   "updated_at",
 ];
 
+// Forma real do registro retornado pelo Directus para os campos de
+// BENEFICIARIA_FIELDS acima. `contato` e `endereco` são campos JSON que podem
+// chegar como string (serializados) ou objeto, e são normalizados via
+// parseJsonField antes de irem para a UI.
+type BeneficiariaRecord = {
+  id: number;
+  nome_completo: string;
+  nome_social?: string | null;
+  cpf?: string | null;
+  data_nascimento?: string | null;
+  raca_cor_id?: number | null;
+  estado_civil_id?: number | null;
+  escolaridade_id?: number | null;
+  situacao_trabalho_id?: number | null;
+  ubs_id?: number | null;
+  quantidade_filhos?: number | null;
+  telefone?: string | null;
+  telefone_validado?: boolean | null;
+  email?: string | null;
+  contato?: string | Record<string, unknown> | null;
+  endereco?: string | Record<string, unknown> | null;
+  numero_cad_unico?: string | null;
+  perfil_socioeconomico?: string | null;
+  recebe_bolsa_familia?: boolean | null;
+  recebe_bpc?: boolean | null;
+  possui_medida_protetiva?: boolean | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
 // --- Helpers Internos ---
 
 function parseJsonField(field: any) {
@@ -271,9 +301,12 @@ export async function getBeneficiariasMetrics() {
 export async function getBeneficiaria(id: number) {
   const { client } = await getAuthenticatedClient();
   try {
-    const item = await client.request(
+    // Cast necessário: a coleção "beneficiarias" não está no schema tipado do
+    // SDK (cliente sem generic), então o retorno é tipado manualmente com a
+    // forma real dos campos solicitados em BENEFICIARIA_FIELDS.
+    const item = (await client.request(
       readItem("beneficiarias", id, { fields: BENEFICIARIA_FIELDS as any }),
-    );
+    )) as BeneficiariaRecord;
     const parsedItem = {
       ...item,
       endereco: parseJsonField(item.endereco),

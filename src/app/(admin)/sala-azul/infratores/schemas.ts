@@ -14,11 +14,13 @@ export const insertInfratorSchema = z.object({
   data_nascimento: z.string().optional().nullable(),
   telefone: z.string().optional(), // Virtual - será salvo dentro de 'contato' (JSON)
   numero_processo: z.string().optional(),
+  // Input tipado como number | string: os selects fornecem string e o zod
+  // converte para number na validação.
   nivel_id: z.coerce
-    .number()
+    .number<number | string>()
     .positive(),
   status_legal_id: z.coerce
-    .number()
+    .number<number | string>()
     .positive(),
   tipos_agressao_ids: z
     .array(z.number())

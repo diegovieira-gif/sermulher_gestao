@@ -1,9 +1,8 @@
 "use server";
 
 import { getDirectusAdmin } from "@/lib/directus";
+import { assertAccess } from "@/lib/permissions";
 import { readItems } from "@directus/sdk";
-
-const directus = getDirectusAdmin();
 
 export type IndicadoresData = {
     identificacao: {
@@ -62,6 +61,9 @@ export async function getIndicadoresCRAM(
     mes: number,
     ano: number,
 ): Promise<{ success: boolean; data?: IndicadoresData; error?: string }> {
+    // Autorização (módulo Relatórios) + cliente admin lazy.
+    await assertAccess("relatorios");
+    const directus = getDirectusAdmin();
     try {
         const startOfMonth = new Date(ano, mes - 1, 1);
         const endOfMonth = new Date(ano, mes, 0); // Last day of month

@@ -285,7 +285,7 @@ test.describe("Módulo Eventos - Agenda", () => {
           )
           .first();
         if (await nomeInput.isVisible()) {
-          await nomeInput.triple_click();
+          await nomeInput.click({ clickCount: 3 });
           await nomeInput.fill(`${testEventoNome} - Editado`);
         }
       });

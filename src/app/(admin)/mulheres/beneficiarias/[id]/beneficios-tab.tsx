@@ -3,7 +3,11 @@
 import { useMemo, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { entregaBeneficioSchema, type EntregaBeneficioFormValues } from "../schemas";
+import {
+  entregaBeneficioSchema,
+  type EntregaBeneficioFormInput,
+  type EntregaBeneficioFormValues,
+} from "../schemas";
 import { registrarEntrega, deletarEntrega } from "../actions";
 import { Gift, Package, Trash2, Loader2, Calendar, User } from "lucide-react";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
@@ -80,7 +84,8 @@ export function BeneficiosTab({
   const [isDeleting, setIsDeleting] = useState<number | null>(null);
   const [historicoState, setHistoricoState] = useState<HistoricoEntrega[]>(historico);
 
-  const form = useForm<EntregaBeneficioFormValues>({
+  // Input = valores do formulário (antes da coerção do zod); Output = valores validados
+  const form = useForm<EntregaBeneficioFormInput, unknown, EntregaBeneficioFormValues>({
     resolver: zodResolver(entregaBeneficioSchema),
     defaultValues: {
       beneficiaria: beneficiariaId,

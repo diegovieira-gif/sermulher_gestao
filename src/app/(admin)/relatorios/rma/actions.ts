@@ -1,9 +1,8 @@
 "use server";
 
 import { getDirectusAdmin } from "@/lib/directus";
+import { assertAccess } from "@/lib/permissions";
 import { readItems } from "@directus/sdk";
-
-const directus = getDirectusAdmin();
 
 /**
  * Tipos de retorno para o RMA
@@ -60,6 +59,9 @@ export async function getRMAStats({
   mes: number;
   ano: number;
 }): Promise<{ success: true; data: RMAStats } | { success: false; error: string }> {
+  // Autorização (módulo Relatórios) + cliente admin lazy.
+  await assertAccess("relatorios");
+  const directus = getDirectusAdmin();
   try {
     const { inicio, fim } = getRangeDatas(mes, ano);
 

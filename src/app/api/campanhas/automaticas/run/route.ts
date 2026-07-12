@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { runDueAutomaticCampaigns } from "@/app/(admin)/marketing/whatsapp/actions";
+import { secureCompare } from "@/lib/secure-compare";
 
 // Rota acionada pelo agendador (cron do n8n) para executar as campanhas
 // automáticas devidas no horário atual.
@@ -15,7 +16,8 @@ function isAuthorized(request: Request): boolean {
     request.headers.get("x-cron-secret") ||
     request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ||
     "";
-  return provided === secret;
+  // Comparação em tempo constante (evita timing attack sobre o segredo).
+  return secureCompare(provided, secret);
 }
 
 async function handle(request: Request) {

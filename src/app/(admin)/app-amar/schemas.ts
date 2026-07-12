@@ -19,10 +19,14 @@ export const categoriaSchema = z.object({
     )
     .optional()
     .or(z.literal("")),
-  ordem: z.coerce.number().optional(),
+  // Input tipado como number | string: o formulário pode fornecer string
+  // (input type="number") e o zod converte para number na validação.
+  ordem: z.coerce.number<number | string>().optional(),
   status: z.enum(["published", "draft"]),
 });
 
+// Input (valores do formulário, antes da coerção) e Output (valores validados)
+export type CategoriaFormInput = z.input<typeof categoriaSchema>;
 export type CategoriaFormValues = z.infer<typeof categoriaSchema>;
 
 // --- SERVIÇO ---
@@ -91,12 +95,13 @@ export const cursoSchema = z.object({
   data: z.string().optional(),
   horario: z.string().optional(),
   local: z.string().optional(),
-  vagas: z.coerce.number().optional(),
+  vagas: z.coerce.number<number | string>().optional(),
   status_curso: z.string().optional(),
   requisitos: z.string().optional(),
   link: z.string().url("Informe uma URL válida").optional().or(z.literal("")),
 });
 
+export type CursoFormInput = z.input<typeof cursoSchema>;
 export type CursoFormValues = z.infer<typeof cursoSchema>;
 
 // --- CONTATO ---
@@ -112,7 +117,7 @@ export type ContatoFormValues = z.infer<typeof contatoSchema>;
 // --- PROJETO ---
 export const projetoSchema = z.object({
   status: z.enum(["published", "draft"]),
-  ordem: z.coerce.number().optional(),
+  ordem: z.coerce.number<number | string>().optional(),
   titulo: z.string().min(1, "O título é obrigatório"),
   descricao: z.string().optional(),
   imagem_capa: z.string().uuid().optional().or(z.literal("")),
@@ -121,4 +126,5 @@ export const projetoSchema = z.object({
   link_imagem: z.string().optional(),
 });
 
+export type ProjetoFormInput = z.input<typeof projetoSchema>;
 export type ProjetoFormValues = z.infer<typeof projetoSchema>;

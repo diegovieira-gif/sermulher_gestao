@@ -1,6 +1,7 @@
 "use server";
 
 import { directus, getDirectusAdmin } from "@/lib/directus";
+import { assertAccess } from "@/lib/permissions";
 import { readItems, createItem, updateItem, deleteItem } from "@directus/sdk";
 import { revalidatePath } from "next/cache";
 
@@ -16,6 +17,7 @@ export type Campanha = {
 
 // Listar apenas campanhas ativas
 export async function getCampanhas() {
+  await assertAccess("configuracoes");
   try {
     const adminDirectus = getDirectusAdmin();
     // @ts-ignore fields are dynamic
@@ -34,6 +36,7 @@ export async function getCampanhas() {
 
 // Criar/Atualizar campanha
 export async function saveCampanha(data: Campanha) {
+  await assertAccess("configuracoes");
   try {
     const { id, ...payload } = data || {};
 
@@ -54,6 +57,7 @@ export async function saveCampanha(data: Campanha) {
 
 // Deletar campanha
 export async function deleteCampanha(id: number) {
+  await assertAccess("configuracoes");
   try {
     await directus.request(deleteItem(COLLECTION, id));
     revalidatePath("/admin/configuracoes");

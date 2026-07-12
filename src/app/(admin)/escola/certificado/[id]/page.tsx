@@ -1,6 +1,4 @@
 import { getDirectusAdmin } from "@/lib/directus";
-
-const directus = getDirectusAdmin();
 import { readItems } from "@directus/sdk";
 import CertificadoClient from "./certificado-client";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -20,6 +18,7 @@ export default async function CertificadoPage({
 }: CertificadoPageProps) {
   const resolvedParams = await params;
   const matriculaId = Number(resolvedParams.id);
+  const directus = getDirectusAdmin();
 
   try {
     // Busca os dados da matrícula com todos os campos relacionados

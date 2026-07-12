@@ -62,7 +62,7 @@ interface SonhosClientProps {
 
 export function SonhosClient({ initialData }: SonhosClientProps) {
   const [isPending, startTransition] = useTransition();
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Sonho | null>(null);
   const [playingAudioId, setPlayingAudioId] = useState<number | null>(null);
@@ -72,7 +72,7 @@ export function SonhosClient({ initialData }: SonhosClientProps) {
     if (!deleteId) return;
 
     startTransition(async () => {
-      const result = await deleteSonho(deleteId);
+      const result = await deleteSonho(String(deleteId));
       if (result.success) {
         toast.success("Sonho excluído com sucesso.");
       } else {
@@ -110,8 +110,8 @@ export function SonhosClient({ initialData }: SonhosClientProps) {
       audioRef.current.pause();
       setPlayingAudioId(null);
     } else {
-      // Define o tipo MIME para WebM (formato do arquivo)
-      audioRef.current.type = "audio/webm";
+      // Observação: <audio> não possui a propriedade `type` (ela pertence ao
+      // elemento <source>); o navegador detecta o formato (WebM) pelo binário.
       audioRef.current.src = audioUrl;
 
       audioRef.current

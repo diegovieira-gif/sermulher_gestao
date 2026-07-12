@@ -3,7 +3,7 @@
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { cursoSchema, CursoFormValues } from "../schemas";
+import { cursoSchema, CursoFormInput, CursoFormValues } from "../schemas";
 import {
   Form,
   FormControl,
@@ -40,7 +40,8 @@ export function CursoForm({
   const [isPending, startTransition] = useTransition();
   const isEditing = !!initialData?.id;
 
-  const form = useForm<CursoFormValues>({
+  // Input = valores do formulário (antes da coerção do zod); Output = valores validados
+  const form = useForm<CursoFormInput, unknown, CursoFormValues>({
     resolver: zodResolver(cursoSchema),
     defaultValues: {
       titulo: initialData?.titulo || "",

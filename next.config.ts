@@ -6,10 +6,6 @@ const nextConfig: NextConfig = {
   // Otimização do Next.js 16
   reactCompiler: true,
 
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-
   // 👇 CORREÇÃO: Liberação do proxy Traefik para as Server Actions 👇
   experimental: {
     serverActions: {
@@ -36,10 +32,6 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "sigma-sermulher.aracaju.se.gov.br",
-      },
-      {
-        protocol: "https",
-        hostname: "**",
       },
     ],
   },

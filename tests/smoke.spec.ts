@@ -60,6 +60,46 @@ test.describe("Smoke — Rotas protegidas redirecionam sem crash", () => {
   }
 });
 
+test.describe("Smoke — Rotas de API exigem autorização (regressão IDOR)", () => {
+  // Guarda contra os itens 1.1/1.2 do PDR de auditoria: os proxies de arquivo
+  // e imagem NUNCA devem servir conteúdo sem uma sessão válida, e o endpoint
+  // de debug foi removido. Sem cookie de sessão, o contexto `request` do
+  // Playwright bate direto na API — o 401 é retornado antes de qualquer
+  // chamada ao Directus, então não depende de banco disponível no CI.
+
+  test("GET /api/files/<uuid> sem sessão → 401 (nunca 200)", async ({
+    request,
+  }) => {
+    const res = await request.get(
+      "/api/files/00000000-0000-0000-0000-000000000000",
+    );
+    expect(res.status()).toBe(401);
+  });
+
+  test("GET /api/whatsapp/imagem/<uuid> sem sessão → 401 (nunca 200)", async ({
+    request,
+  }) => {
+    const res = await request.get(
+      "/api/whatsapp/imagem/00000000-0000-0000-0000-000000000000",
+    );
+    expect(res.status()).toBe(401);
+  });
+
+  test("GET /api/test-directus → removido (404)", async ({ request }) => {
+    const res = await request.get("/api/test-directus");
+    expect(res.status()).toBe(404);
+  });
+
+  test("POST /api/campanhas/automaticas/run sem segredo → bloqueado (401/503)", async ({
+    request,
+  }) => {
+    const res = await request.post("/api/campanhas/automaticas/run");
+    // 401 = segredo inválido/ausente; 503 = CRON_SECRET não configurado no runner.
+    // Em nenhum caso deve executar campanhas (200).
+    expect([401, 503]).toContain(res.status());
+  });
+});
+
 test.describe("Smoke — Recursos estáticos", () => {
   test("Ficheiro de estilos globais carrega (sem 404)", async ({ page }) => {
     // Navega para a app para forçar carregamento dos assets

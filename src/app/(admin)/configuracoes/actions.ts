@@ -1,6 +1,7 @@
 "use server";
 
 import { directus, getDirectusAdmin } from "@/lib/directus";
+import { assertAccess, assertAuthenticated } from "@/lib/permissions";
 import { createItem, deleteItem, readItems, updateItem } from "@directus/sdk";
 import { revalidatePath } from "next/cache";
 
@@ -119,6 +120,9 @@ function getCollectionName(type: string): ConfigCollection {
 }
 
 export async function getAuxItems(type: string) {
+  // Leitura de listas auxiliares (usada por vários módulos em selects):
+  // exige apenas sessão autenticada — o cliente admin fica no servidor.
+  await assertAuthenticated();
   try {
     const collectionName = getCollectionName(type);
     const adminDirectus = getDirectusAdmin();
@@ -141,6 +145,8 @@ export async function saveAuxItem(
   type: string,
   data: { id?: number; nome: string; [key: string]: any },
 ) {
+  // Escrita de configuração → exige acesso ao módulo Configurações.
+  await assertAccess("configuracoes");
   try {
     const collection = getCollectionName(type);
     const { id, ...payload } = data;
@@ -171,6 +177,8 @@ export async function saveAuxItem(
 }
 
 export async function deleteAuxItem(type: string, id: number) {
+  // Escrita de configuração → exige acesso ao módulo Configurações.
+  await assertAccess("configuracoes");
   try {
     const collection = getCollectionName(type);
     await directus.request(deleteItem(collection, id));

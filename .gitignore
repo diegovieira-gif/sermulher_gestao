@@ -34,6 +34,10 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# Relatório de auditoria de segurança — NÃO versionar em repo público
+# (mapeia vulnerabilidades, incluindo pendentes). Mantido apenas localmente.
+AUDITORIA.md
+
 # vercel
 .vercel
 

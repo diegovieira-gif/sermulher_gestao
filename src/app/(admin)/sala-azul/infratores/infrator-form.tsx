@@ -24,7 +24,11 @@ import { Checkbox } from "@/components/ui/checkbox"; // Import do Checkbox
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { saveInfrator } from "./actions";
-import { insertInfratorSchema, type InsertInfrator } from "./schemas";
+import {
+  insertInfratorSchema,
+  type InfratorFormValues,
+  type InsertInfrator,
+} from "./schemas";
 
 interface InfratorFormProps {
   initialData?: any; // Alterado para any para facilitar a leitura do backend
@@ -61,7 +65,8 @@ export function InfratorForm({
     return [];
   };
 
-  const form = useForm<InsertInfrator>({
+  // Input = valores do formulário (antes da coerção do zod); Output = valores validados
+  const form = useForm<InfratorFormValues, unknown, InsertInfrator>({
     resolver: zodResolver(insertInfratorSchema),
     defaultValues: {
       id: initialData?.id,

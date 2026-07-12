@@ -1,7 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { getDirectusClient, getDirectusAdmin, safeDirectusCall } from "@/lib/directus";
+import { assertAccess } from "@/lib/permissions";
+import { secureCompare } from "@/lib/secure-compare";
 import {
   readItems,
   createItem,
@@ -15,6 +18,86 @@ import {
   aggregate,
   uploadFiles,
 } from "@directus/sdk";
+
+// Tipos de retorno das server actions: uniões discriminadas pelo literal
+// `success`, para que os consumidores possam estreitar com `if (result.success)`
+// antes de acessar `data`/`error`.
+type ActionFailure = { success: false; error: string };
+type ActionResult<T> = { success: true; data: T } | ActionFailure;
+type CountResult =
+  | { success: true; count: number }
+  | { success: false; count: number; error: string };
+type ConnectionTestResult =
+  | { success: true; state: string; isConnected: boolean; raw: unknown }
+  | ActionFailure;
+type DispatchResult =
+  | {
+      success: true;
+      successCount: number;
+      failedCount: number;
+      total: number;
+      isBatchN8n?: boolean;
+    }
+  | ActionFailure;
+
+// Shapes dos registros do Directus usados por este módulo (as coleções
+// 'campanhas', 'disparos' e 'configuracoes_site' não fazem parte do schema
+// tipado do SDK, então os campos são declarados aqui conforme o banco).
+type WhatsappConfigData = {
+  id?: number;
+  evolution_api_url?: string | null;
+  evolution_api_token?: string | null;
+  evolution_api_instance?: string | null;
+  n8n_webhook_url?: string | null;
+};
+
+type WhatsappCampaignRecord = {
+  id: string;
+  nome: string;
+  objetivo?: string | null;
+  mensagem: string;
+  imagem?: string | null;
+  status: "draft" | "scheduled" | "running" | "paused" | "completed";
+  data_envio?: string | null;
+  date_created?: string | null;
+  tipo?: "manual" | "automatica";
+  ativa?: boolean;
+  horario?: string | null;
+  dias_semana?: number[] | null;
+  filtro_json?: BeneficiariaFilter | null;
+  ultima_execucao?: string | null;
+};
+
+type EligibleBeneficiaria = {
+  id: string | number;
+  nome_completo: string;
+  nome_social?: string | null;
+  telefone?: string | null;
+  cpf?: string | null;
+};
+
+type FilterOptionItem = { id: number; nome: string };
+type BeneficiariaFilterOptionsData = {
+  racas: FilterOptionItem[];
+  estadosCivis: FilterOptionItem[];
+  escolaridades: FilterOptionItem[];
+  situacoesTrabalho: FilterOptionItem[];
+  bairros: FilterOptionItem[];
+};
+
+type DispatchLogRecord = {
+  id: string | number;
+  status?: string | null;
+  data_envio?: string | null;
+  date_created?: string | null;
+  detalhes_erro?: string | null;
+  campanha_id?: { id?: string; nome?: string | null } | null;
+  beneficiaria_id?: {
+    id?: number;
+    nome_completo?: string | null;
+    telefone?: string | null;
+  } | null;
+};
 
 // Filtro base de elegibilidade: beneficiária com telefone preenchido.
 // Observação: o Directus rejeita `_neq: ""`; usar `_nempty` (cobre nulo e vazio).
@@ -30,8 +113,34 @@ function toPlainObject<T>(value: T): T {
   return JSON.parse(JSON.stringify(value));
 }
 
+/**
+ * Autorização para operações privilegiadas de campanha (token admin):
+ * aceita o segredo do cron (mesmo usado em /api/campanhas/automaticas/run,
+ * comparado em tempo constante) OU um usuário com acesso ao módulo Marketing.
+ */
+async function assertCronOrMarketingAccess(): Promise<void> {
+  const secret = process.env.CRON_SECRET;
+  if (secret) {
+    try {
+      const requestHeaders = await headers();
+      const provided =
+        requestHeaders.get("x-cron-secret") ||
+        requestHeaders.get("authorization")?.replace(/^Bearer\s+/i, "") ||
+        "";
+      if (provided && secureCompare(provided, secret)) {
+        return;
+      }
+    } catch {
+      // Fora de contexto de requisição — cai para a checagem de sessão.
+    }
+  }
+  await assertAccess("marketing");
+}
+
 // 1. WhatsApp Connection Configuration Settings
-export async function getWhatsappConfig() {
+export async function getWhatsappConfig(): Promise<
+  ActionResult<WhatsappConfigData | null>
+> {
   try {
     return await safeDirectusCall(async () => {
       const client = await getDirectusClient({ requireAuth: true });
@@ -78,7 +187,7 @@ export async function saveWhatsappConfig(data: {
   evolution_api_token: string | null;
   evolution_api_instance: string | null;
   n8n_webhook_url: string | null;
-}) {
+}): Promise<ActionResult<WhatsappConfigData>> {
   try {
     return await safeDirectusCall(async () => {
       const client = await getDirectusClient({ requireAuth: true });
@@ -152,7 +261,7 @@ export async function testEvolutionConnection(config: {
   url: string;
   token: string;
   instance?: string;
-}) {
+}): Promise<ConnectionTestResult> {
   try {
     const { url, token } = config;
     if (!url || !token) {
@@ -225,7 +334,9 @@ export async function testEvolutionConnection(config: {
 }
 
 // 3. Campaigns CRUD
-export async function getWhatsappCampaigns() {
+export async function getWhatsappCampaigns(): Promise<
+  ActionResult<WhatsappCampaignRecord[]>
+> {
   try {
     return await safeDirectusCall(async () => {
       const client = await getDirectusClient({ requireAuth: true });
@@ -236,7 +347,8 @@ export async function getWhatsappCampaigns() {
           limit: -1,
         })
       );
-      return { success: true, data: toPlainObject(items) };
+      // Cast: a coleção 'campanhas' não está no schema tipado do SDK.
+      return { success: true, data: toPlainObject(items) as WhatsappCampaignRecord[] };
     });
   } catch (error: any) {
     console.error("Erro em getWhatsappCampaigns:", error);
@@ -261,7 +373,7 @@ export async function saveWhatsappCampaign(data: {
   horario?: string | null; // 'HH:MM'
   dias_semana?: number[] | null; // 0-6 (dom-sáb); vazio = todos os dias
   filtro_json?: BeneficiariaFilter | null;
-}) {
+}): Promise<ActionResult<WhatsappCampaignRecord>> {
   try {
     return await safeDirectusCall(async () => {
       const client = await getDirectusClient({ requireAuth: true });
@@ -280,7 +392,8 @@ export async function saveWhatsappCampaign(data: {
       }
 
       revalidatePath("/marketing/whatsapp");
-      return { success: true, data: toPlainObject(result) };
+      // Cast: a coleção 'campanhas' não está no schema tipado do SDK.
+      return { success: true, data: toPlainObject(result) as WhatsappCampaignRecord };
     });
   } catch (error: any) {
     console.error("Erro em saveWhatsappCampaign:", error);
@@ -293,7 +406,11 @@ export async function saveWhatsappCampaign(data: {
 
 // Sobe uma imagem para o Directus (directus_files) e devolve o UUID do arquivo,
 // para ser anexado a uma campanha. Usa o cliente admin (uploads exigem privilégio).
-export async function uploadCampaignImage(formData: FormData) {
+export async function uploadCampaignImage(
+  formData: FormData,
+): Promise<{ success: true; id: string } | ActionFailure> {
+  // Upload usa o cliente admin → exige acesso ao módulo Marketing.
+  await assertAccess("marketing");
   try {
     const file = formData.get("file");
     if (!(file instanceof File)) {
@@ -322,7 +439,9 @@ export async function uploadCampaignImage(formData: FormData) {
   }
 }
 
-export async function deleteWhatsappCampaign(id: string) {
+export async function deleteWhatsappCampaign(
+  id: string,
+): Promise<{ success: true } | ActionFailure> {
   try {
     return await safeDirectusCall(async () => {
       const client = await getDirectusClient({ requireAuth: true });
@@ -343,7 +462,7 @@ export async function deleteWhatsappCampaign(id: string) {
 
 // 4a. Contagem leve de beneficiárias elegíveis (com telefone) — usada na UI
 // sem precisar trafegar milhares de registros.
-export async function getEligibleBeneficiariasCount() {
+export async function getEligibleBeneficiariasCount(): Promise<CountResult> {
   try {
     return await safeDirectusCall(async () => {
       const client = await getDirectusClient({ requireAuth: true });
@@ -459,7 +578,10 @@ function buildBeneficiariaFilter(f?: BeneficiariaFilter): Record<string, any> {
 }
 
 // 4a-ter. Opções para os selects de filtro (tabelas de configuração).
-export async function getBeneficiariaFilterOptions() {
+export async function getBeneficiariaFilterOptions(): Promise<
+  | { success: true; data: BeneficiariaFilterOptionsData }
+  | { success: false; data: null; error: string }
+> {
   try {
     return await safeDirectusCall(async () => {
       const client = await getDirectusClient({ requireAuth: true });
@@ -483,13 +605,14 @@ export async function getBeneficiariaFilterOptions() {
         ]);
       return {
         success: true,
+        // Cast: as coleções de configuração não estão no schema tipado do SDK.
         data: toPlainObject({
           racas,
           estadosCivis,
           escolaridades,
           situacoesTrabalho,
           bairros,
-        }),
+        }) as BeneficiariaFilterOptionsData,
       };
     });
   } catch (error: any) {
@@ -499,7 +622,9 @@ export async function getBeneficiariaFilterOptions() {
 }
 
 // 4a-quater. Contagem de beneficiárias que atendem ao filtro (preview ao vivo).
-export async function getBeneficiariasCountForFilter(filter?: BeneficiariaFilter) {
+export async function getBeneficiariasCountForFilter(
+  filter?: BeneficiariaFilter,
+): Promise<CountResult> {
   try {
     return await safeDirectusCall(async () => {
       const client = await getDirectusClient({ requireAuth: true });
@@ -525,7 +650,9 @@ export async function getBeneficiariasCountForFilter(filter?: BeneficiariaFilter
 
 // 4b. Busca server-side, limitada a 50 resultados, para seleção manual.
 // Evita carregar a lista completa (milhares) no navegador.
-export async function searchBeneficiarias(query: string) {
+export async function searchBeneficiarias(
+  query: string,
+): Promise<ActionResult<EligibleBeneficiaria[]>> {
   try {
     return await safeDirectusCall(async () => {
       const client = await getDirectusClient({ requireAuth: true });
@@ -565,7 +692,9 @@ export async function searchBeneficiarias(query: string) {
 
 
 // 5. Dispatch History Logs
-export async function getDispatchLogs() {
+export async function getDispatchLogs(): Promise<
+  ActionResult<DispatchLogRecord[]>
+> {
   try {
     return await safeDirectusCall(async () => {
       const client = await getDirectusClient({ requireAuth: true });
@@ -587,7 +716,8 @@ export async function getDispatchLogs() {
           limit: 100, // Show last 100 logs
         })
       );
-      return { success: true, data: toPlainObject(items) };
+      // Cast: a coleção 'disparos' não está no schema tipado do SDK.
+      return { success: true, data: toPlainObject(items) as DispatchLogRecord[] };
     });
   } catch (error: any) {
     console.error("Erro em getDispatchLogs:", error);
@@ -643,10 +773,14 @@ export type DispatchTarget =
   | { mode: "selected"; ids: string[] }
   | { mode: "filtered"; filter: BeneficiariaFilter };
 
+// Cliente REST do Directus, seja o autenticado pelo cookie do usuário
+// (getDirectusClient) ou o administrativo (getDirectusAdmin).
+type DirectusRestClient = Awaited<ReturnType<typeof getDirectusClient>>;
+
 export async function triggerCampaignDispatch(
   campaignId: string,
   target: DispatchTarget
-) {
+): Promise<DispatchResult> {
   const client = await getDirectusClient({ requireAuth: true });
   return dispatchCampaignWithClient(client, campaignId, target);
 }
@@ -656,17 +790,19 @@ export async function triggerCampaignDispatch(
 export async function triggerCampaignDispatchAdmin(
   campaignId: string,
   target: DispatchTarget
-) {
+): Promise<DispatchResult> {
+  // Cliente admin → exige o segredo do cron ou acesso ao módulo Marketing.
+  await assertCronOrMarketingAccess();
   const client = getDirectusAdmin();
   return dispatchCampaignWithClient(client, campaignId, target);
 }
 
 // Núcleo do disparo, independente de como o cliente Directus foi obtido.
 async function dispatchCampaignWithClient(
-  client: any,
+  client: DirectusRestClient,
   campaignId: string,
   target: DispatchTarget
-) {
+): Promise<DispatchResult> {
   try {
     // 1. Fetch campaign message template
     const campaign = await client.request(readItem("campanhas", campaignId));
@@ -725,10 +861,15 @@ async function dispatchCampaignWithClient(
     const config = configResult.success ? configResult.data : null;
 
     // GoWA precisa apenas de URL base + credenciais Basic Auth (usuario:senha).
+    // Observação: quando `useGowa`/`useN8n` são true, os respectivos campos de
+    // config são garantidamente não-nulos — as asserções `!` abaixo refletem isso.
     const useGowa = !!(config?.evolution_api_url && config?.evolution_api_token);
     const useN8n = !!config?.n8n_webhook_url;
 
-    if (!useGowa && !useN8n) {
+    // `!config` cobre o caso de configuração ausente (e permite ao TypeScript
+    // garantir `config` não-nulo daqui em diante); sem config, useGowa/useN8n
+    // já seriam false de qualquer forma.
+    if (!config || (!useGowa && !useN8n)) {
       return {
         success: false,
         error: "Configurações de disparo incompletas. Configure o GoWA ou o Webhook do n8n.",
@@ -780,7 +921,7 @@ async function dispatchCampaignWithClient(
       };
 
       try {
-        const res = await fetch(config.n8n_webhook_url, {
+        const res = await fetch(config.n8n_webhook_url!, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -817,8 +958,8 @@ async function dispatchCampaignWithClient(
     // está desconectado/sem QR pareado.
     if (useGowa) {
       const conn = await testEvolutionConnection({
-        url: config.evolution_api_url,
-        token: config.evolution_api_token,
+        url: config.evolution_api_url!,
+        token: config.evolution_api_token!,
       });
       if (!conn.success || !conn.isConnected) {
         return {
@@ -840,7 +981,7 @@ async function dispatchCampaignWithClient(
     let successCount = 0;
     let failedCount = 0;
 
-    const cleanUrl = config.evolution_api_url?.replace(/\/$/, "");
+    const cleanUrl = (config.evolution_api_url || "").replace(/\/$/, "");
     const sendUrl = `${cleanUrl}/send/message`;
     const sendImageUrl = `${cleanUrl}/send/image`;
 
@@ -915,7 +1056,7 @@ async function dispatchCampaignWithClient(
           // não estiver no WhatsApp, marca como falha sem tentar enviar.
           const resolved = await resolveGowaJid(
             cleanUrl,
-            config.evolution_api_token,
+            config.evolution_api_token!,
             formattedPhone
           );
 
@@ -943,7 +1084,7 @@ async function dispatchCampaignWithClient(
               apiRes = await fetch(sendImageUrl, {
                 method: "POST",
                 headers: {
-                  Authorization: gowaAuthHeader(config.evolution_api_token),
+                  Authorization: gowaAuthHeader(config.evolution_api_token!),
                 },
                 body: form,
               });
@@ -952,7 +1093,7 @@ async function dispatchCampaignWithClient(
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
-                  Authorization: gowaAuthHeader(config.evolution_api_token),
+                  Authorization: gowaAuthHeader(config.evolution_api_token!),
                 },
                 body: JSON.stringify({
                   phone: targetJid,
@@ -980,7 +1121,7 @@ async function dispatchCampaignWithClient(
         // Only n8n configured but doing individual fallback (or similar)
         // We will mock/call n8n for this single recipient
         try {
-          const res = await fetch(config.n8n_webhook_url, {
+          const res = await fetch(config.n8n_webhook_url!, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -1077,6 +1218,8 @@ function nowInScheduleTz(): { dateStr: string; hour: number; weekday: number } {
 }
 
 export async function runDueAutomaticCampaigns() {
+  // Cliente admin → exige o segredo do cron ou acesso ao módulo Marketing.
+  await assertCronOrMarketingAccess();
   try {
     const client = getDirectusAdmin();
     const { dateStr, hour, weekday } = nowInScheduleTz();

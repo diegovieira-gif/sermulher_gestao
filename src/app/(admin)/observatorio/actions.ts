@@ -1,12 +1,14 @@
 
 "use server";
 
-import { directus, getDirectusAdmin } from "@/lib/directus";
+import { getDirectusAdmin } from "@/lib/directus";
+import { assertAccess } from "@/lib/permissions";
 import { readItems, createItem, updateItem, deleteItem } from "@directus/sdk";
 import { revalidatePath } from "next/cache";
 import { ObserCollection } from "./types";
 
 export async function getCollectionData(collection: ObserCollection, search?: string) {
+  await assertAccess("observatorio");
   try {
     const filter: any = {};
     
@@ -48,6 +50,7 @@ export async function getCollectionData(collection: ObserCollection, search?: st
 }
 
 export async function saveItem(collection: ObserCollection, data: any, id?: number) {
+  await assertAccess("observatorio");
   try {
     let result;
     const adminDirectus = getDirectusAdmin();
@@ -65,6 +68,7 @@ export async function saveItem(collection: ObserCollection, data: any, id?: numb
 }
 
 export async function removeItem(collection: ObserCollection, id: number) {
+  await assertAccess("observatorio");
   try {
     const adminDirectus = getDirectusAdmin();
     await adminDirectus.request(deleteItem(collection as any, id));
@@ -77,6 +81,7 @@ export async function removeItem(collection: ObserCollection, id: number) {
 }
 
 export async function getRelationData(collection: string) {
+  await assertAccess("observatorio");
   try {
     const fields = collection === 'obser_periodos' ? ['id', 'nome'] : ['id', 'nome', 'titulo'];
     const adminDirectus = getDirectusAdmin();

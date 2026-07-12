@@ -82,12 +82,17 @@ export type Contato = z.infer<typeof contatoSchema>;
 export type Endereco = z.infer<typeof enderecoSchema>;
 
 export const entregaBeneficioSchema = z.object({
-  beneficiaria: z.coerce.number().int().positive(),
-  beneficio: z.coerce.number().int().positive(),
+  // Input tipado como number | string: o formulário pode fornecer string e o
+  // zod converte para number na validação.
+  beneficiaria: z.coerce.number<number | string>().int().positive(),
+  beneficio: z.coerce.number<number | string>().int().positive(),
   data_entrega: z.string().min(1),
-  quantidade: z.coerce.number().int().positive().default(1),
+  quantidade: z.coerce.number<number | string>().int().positive().default(1),
   observacao: z.string().optional(),
 });
+
+export type EntregaBeneficioFormInput = z.input<typeof entregaBeneficioSchema>;
+export type EntregaBeneficioFormValues = z.infer<typeof entregaBeneficioSchema>;
 
 // Participação em eventos/campanhas (coleção participacoes_evento)
 export const participacaoEventoSchema = z.object({

@@ -1,5 +1,7 @@
 import "server-only";
+import { cache } from "react";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import {
   ALL_MENU_KEYS,
   getAllowedMenuKeys,
@@ -173,32 +175,94 @@ export async function getPermissionConfigForRole(
 
 /**
  * Acesso efetivo do usuário logado: role, se é admin e as chaves de menu
- * permitidas. Fail-open: em caso de erro, libera o menu completo.
+ * permitidas. Fail-open: em caso de erro, libera o menu completo (navegação).
+ *
+ * Memoizado por requisição (React cache) — layout, páginas e actions dentro da
+ * mesma requisição compartilham a mesma consulta.
  */
-export async function getCurrentAccess(): Promise<CurrentAccess> {
-  const fallback: CurrentAccess = {
-    roleId: null,
-    roleName: null,
-    isAdmin: false,
-    allowedKeys: [...ALL_MENU_KEYS],
-  };
-  try {
-    const roleId = await getCurrentUserRoleId();
-    if (!roleId) return fallback;
-
-    const roles = await listRoles();
-    const role = roles.find((r) => r.id === roleId) || null;
-    const isAdmin = role?.isAdmin ?? false;
-
-    const config = isAdmin ? null : await getPermissionConfigForRole(roleId);
-    return {
-      roleId,
-      roleName: role?.name ?? null,
-      isAdmin,
-      allowedKeys: getAllowedMenuKeys(isAdmin, config),
+export const getCurrentAccess = cache(
+  async (): Promise<CurrentAccess> => {
+    const fallback: CurrentAccess = {
+      roleId: null,
+      roleName: null,
+      isAdmin: false,
+      allowedKeys: [...ALL_MENU_KEYS],
     };
-  } catch {
-    return fallback;
+    try {
+      const roleId = await getCurrentUserRoleId();
+      if (!roleId) return fallback;
+
+      const roles = await listRoles();
+      const role = roles.find((r) => r.id === roleId) || null;
+      const isAdmin = role?.isAdmin ?? false;
+
+      const config = isAdmin ? null : await getPermissionConfigForRole(roleId);
+      return {
+        roleId,
+        roleName: role?.name ?? null,
+        isAdmin,
+        allowedKeys: getAllowedMenuKeys(isAdmin, config),
+      };
+    } catch {
+      return fallback;
+    }
+  },
+);
+
+/**
+ * Guarda de autorização de servidor (fail-closed) para Server Actions que
+ * operam com o cliente administrativo (`getDirectusAdmin()`).
+ *
+ * - Sem cookie de sessão → redireciona para o login.
+ * - Sessão presente mas o role não pôde ser resolvido → nega (fail-closed).
+ * - Perfil sem a chave de menu e não-admin → lança erro de acesso negado.
+ *
+ * Retorna o acesso corrente para uso posterior (ex.: `access.isAdmin`).
+ */
+export async function assertAccess(menuKey: string): Promise<CurrentAccess> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("directus_token")?.value;
+  if (!token) {
+    redirect("/login?error=unauthorized");
+  }
+
+  const access = await getCurrentAccess();
+
+  // Fail-closed: cookie presente mas não conseguimos resolver o role
+  // (token expirado/inválido ou Directus indisponível) → nega a operação.
+  if (!access.roleId) {
+    redirect("/login?error=unauthorized");
+  }
+
+  if (access.isAdmin || access.allowedKeys.includes(menuKey)) {
+    return access;
+  }
+
+  throw new Error(
+    `Acesso negado: seu perfil não tem permissão para o módulo "${menuKey}".`,
+  );
+}
+
+/** Exige perfil administrador (admin_access) — fail-closed. */
+export async function assertAdmin(): Promise<CurrentAccess> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("directus_token")?.value;
+  if (!token) {
+    redirect("/login?error=unauthorized");
+  }
+
+  const access = await getCurrentAccess();
+  if (!access.roleId || !access.isAdmin) {
+    throw new Error("Acesso negado: apenas administradores.");
+  }
+  return access;
+}
+
+/** Exige apenas uma sessão autenticada (cookie de sessão presente). */
+export async function assertAuthenticated(): Promise<void> {
+  const cookieStore = await cookies();
+  if (!cookieStore.get("directus_token")?.value) {
+    redirect("/login?error=unauthorized");
   }
 }
 

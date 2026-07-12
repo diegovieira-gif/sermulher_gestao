@@ -1,11 +1,19 @@
 "use server";
 
 import { getDirectusAdmin } from "@/lib/directus";
+import { assertAccess } from "@/lib/permissions";
 import { createItem, deleteItem, readItems, updateItem } from "@directus/sdk";
-
-const directus = getDirectusAdmin();
 import { revalidatePath } from "next/cache";
 import { Evento, insertEventoSchema } from "./schemas";
+
+/**
+ * Autoriza o usuário no módulo "eventos" e devolve o cliente admin (lazy).
+ * Toda action deste arquivo DEVE obter o cliente por aqui.
+ */
+async function getEventosDirectus() {
+  await assertAccess("eventos");
+  return getDirectusAdmin();
+}
 
 // --- Tipos Unificados ---
 export type CalendarEvent = {
@@ -29,6 +37,7 @@ export async function getTiposOptions(): Promise<{
   data?: TipoEventoOption[];
   error?: string;
 }> {
+  const directus = await getEventosDirectus();
   try {
     // Busca os tipos de evento para o select
     const tipos = await directus.request(
@@ -57,6 +66,7 @@ export async function saveEvento(data: Evento & { id?: number }) {
 }
 
 export async function createEvento(data: Evento) {
+  const directus = await getEventosDirectus();
   const validation = insertEventoSchema.safeParse(data);
   if (!validation.success) return { success: false, error: "Dados inválidos" };
 
@@ -71,6 +81,7 @@ export async function createEvento(data: Evento) {
 }
 
 export async function updateEvento(id: number, data: Evento) {
+  const directus = await getEventosDirectus();
   const validation = insertEventoSchema.safeParse(data);
   if (!validation.success) return { success: false, error: "Dados inválidos" };
 
@@ -89,6 +100,7 @@ export async function updateEvento(id: number, data: Evento) {
 }
 
 export async function deleteEvento(id: number) {
+  const directus = await getEventosDirectus();
   try {
     await directus.request(deleteItem("eventos_campanhas", id));
     revalidatePath("/eventos");
@@ -106,6 +118,7 @@ export async function getGlobalEvents(): Promise<{
   data?: CalendarEvent[];
   error?: string;
 }> {
+  const directus = await getEventosDirectus();
   try {
     const globalEvents: CalendarEvent[] = [];
 

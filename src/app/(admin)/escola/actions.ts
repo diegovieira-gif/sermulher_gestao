@@ -1,8 +1,7 @@
 "use server";
 
 import { getDirectusAdmin } from "@/lib/directus";
-
-const directus = getDirectusAdmin();
+import { assertAccess } from "@/lib/permissions";
 import { EscolaAlunoDB, EscolaCursoDB, EscolaTurmaDB } from "@/types/database";
 import { createItem, deleteItem, readItems, updateItem } from "@directus/sdk";
 import { revalidatePath } from "next/cache";
@@ -37,9 +36,19 @@ const cursoSchema = z.object({
 export type CursoPayload = z.infer<typeof cursoSchema>;
 
 /**
+ * Autoriza o usuário no módulo "escola" e devolve o cliente admin (lazy).
+ * Toda action deste arquivo DEVE obter o cliente por aqui.
+ */
+async function getEscolaDirectus() {
+  await assertAccess("escola");
+  return getDirectusAdmin();
+}
+
+/**
  * Busca todos os cursos
  */
 export async function getCursos() {
+  const directus = await getEscolaDirectus();
   try {
     const cursos = await directus.request<
       Array<Partial<EscolaCursoDB> & { area_atuacao?: string; ementa?: string }>
@@ -74,6 +83,7 @@ export async function getCursos() {
  * Salva um curso (cria ou atualiza)
  */
 export async function saveCurso(data: CursoPayload) {
+  const directus = await getEscolaDirectus();
   const parsed = cursoSchema.safeParse(data);
   if (!parsed.success) {
     return { success: false, error: "Dados inválidos. Verifique os campos." };
@@ -101,6 +111,7 @@ export async function saveCurso(data: CursoPayload) {
  * Deleta um curso
  */
 export async function deleteCurso(id: number) {
+  const directus = await getEscolaDirectus();
   try {
     await directus.request(deleteItem("escola_cursos", id));
 
@@ -117,6 +128,7 @@ export async function deleteCurso(id: number) {
  * Opções de Cursos para selects
  */
 export async function getCursosOptions() {
+  const directus = await getEscolaDirectus();
   try {
     const cursos = await directus.request<
       Array<Pick<EscolaCursoDB, "id" | "nome">>
@@ -178,6 +190,7 @@ type BeneficiariaOption = Pick<
  * Busca todas as turmas com o nome do curso relacionado.
  */
 export async function getTurmas() {
+  const directus = await getEscolaDirectus();
   try {
     const turmas = await directus.request<TurmaWithCurso[]>(
       readItems("escola_turmas", {
@@ -200,6 +213,7 @@ export async function getTurmas() {
  * Cria ou atualiza uma turma
  */
 export async function saveTurma(data: TurmaPayload) {
+  const directus = await getEscolaDirectus();
   const parsed = turmaSchema.safeParse(data);
   if (!parsed.success) {
     return { success: false, error: "Dados inválidos. Verifique os campos." };
@@ -227,6 +241,7 @@ export async function saveTurma(data: TurmaPayload) {
  * Deleta uma turma
  */
 export async function deleteTurma(id: number) {
+  const directus = await getEscolaDirectus();
   try {
     await directus.request(deleteItem("escola_turmas", id));
 
@@ -246,6 +261,7 @@ export async function deleteTurma(id: number) {
  * Busca turma por ID com dados do curso relacionado
  */
 export async function getTurmaById(id: number) {
+  const directus = await getEscolaDirectus();
   try {
     const turma = await directus.request<TurmaWithCurso[]>(
       readItems("escola_turmas", {
@@ -301,6 +317,7 @@ const MATRICULA_STATUS_ALLOWED = new Set([
  * Busca matrículas de uma turma com dados da beneficiária
  */
 export async function getMatriculasByTurma(turmaId: number) {
+  const directus = await getEscolaDirectus();
   try {
     const matriculas = await directus.request(
       readItems("escola_matriculas", {
@@ -336,6 +353,7 @@ export async function getMatriculasByTurma(turmaId: number) {
  * Busca todas as beneficiárias para o combobox de matrícula
  */
 export async function getBeneficiariasOptions() {
+  const directus = await getEscolaDirectus();
   try {
     const beneficiarias = await directus.request<
       Array<
@@ -372,6 +390,7 @@ export async function getBeneficiariasOptions() {
  * Verifica se já existe matrícula ativa para evitar duplicação
  */
 export async function saveMatricula(turmaId: number, beneficiariaId: number) {
+  const directus = await getEscolaDirectus();
   try {
     // Verifica se já existe matrícula ativa para essa beneficiaria nessa turma
     const existing = await directus.request(
@@ -429,6 +448,7 @@ export async function saveMatricula(turmaId: number, beneficiariaId: number) {
  * Deleta uma matrícula
  */
 export async function deleteMatricula(id: number) {
+  const directus = await getEscolaDirectus();
   try {
     // Primeiro, busca a matrícula para pegar o turmaId para revalidação
     const matriculas = await directus.request<
@@ -471,6 +491,7 @@ export async function updateMatriculaStatus(
     return { success: false, error: "Status de matrícula inválido." };
   }
 
+  const directus = await getEscolaDirectus();
   try {
     await directus.request(
       updateItem("escola_matriculas", matriculaId, {
@@ -508,6 +529,7 @@ export type PresencaPayload = {
  * Busca registros de frequência de uma turma em uma data específica
  */
 export async function getFrequenciaByData(turmaId: number, data: string) {
+  const directus = await getEscolaDirectus();
   try {
     const frequencias = await directus.request(
       readItems("escola_frequencia", {
@@ -547,6 +569,7 @@ export async function saveFrequencia(
   data: string,
   presencas: PresencaPayload[],
 ) {
+  const directus = await getEscolaDirectus();
   try {
     // 1. Busca registros existentes nesta data/turma
     const existingResult = await getFrequenciaByData(turmaId, data);
@@ -594,6 +617,7 @@ export type MatriculaComPerformance = Matricula & {
  * Retorna: matrículas com aulas_totais, presencas, frequencia_percentual e aprovada
  */
 export async function getTurmaPerformance(turmaId: number) {
+  const directus = await getEscolaDirectus();
   try {
     // 1. Busca todas as matrículas da turma
     const matriculasResult = await getMatriculasByTurma(turmaId);
@@ -659,6 +683,7 @@ export async function getTurmaPerformance(turmaId: number) {
  * Busca todas as matrículas (Global)
  */
 export async function getAllMatriculas() {
+  const directus = await getEscolaDirectus();
   try {
     const matriculas = await directus.request(
       readItems("escola_matriculas", {
@@ -689,6 +714,7 @@ export async function getAllMatriculas() {
  * Busca estatísticas rápidas para o Dashboard da Escola
  */
 export async function getEscolaStats() {
+  const directus = await getEscolaDirectus();
   try {
     const [turmas, matriculas] = await Promise.all([
       directus.request(

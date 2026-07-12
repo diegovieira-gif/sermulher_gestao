@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
 
 export async function GET(
   request: NextRequest,
@@ -6,9 +7,19 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+
+    // Autenticação obrigatória: o arquivo só é servido para quem tem sessão.
+    const cookieStore = await cookies();
+    const userToken = cookieStore.get("directus_token")?.value;
+    if (!userToken) {
+      return NextResponse.json(
+        { error: "Não autenticado" },
+        { status: 401 },
+      );
+    }
+
     const directusUrl =
       process.env.NEXT_PUBLIC_DIRECTUS_URL || "http://192.168.0.118:8055";
-    const directusToken = process.env.DIRECTUS_TOKEN || "";
 
     // O conteúdo binário do arquivo fica em /assets/{id} (NÃO em /files/{id},
     // que devolve apenas os metadados em JSON). O parâmetro ?download faz o
@@ -16,8 +27,10 @@ export async function GET(
     const isDownload = request.nextUrl.searchParams.has("download");
     const assetUrl = `${directusUrl}/assets/${id}${isDownload ? "?download" : ""}`;
 
+    // Busca com o token do PRÓPRIO usuário: o Directus aplica as permissões
+    // do perfil (evita IDOR com privilégio de admin).
     const upstream = await fetch(assetUrl, {
-      headers: { Authorization: `Bearer ${directusToken}` },
+      headers: { Authorization: `Bearer ${userToken}` },
       cache: "no-store",
     });
 

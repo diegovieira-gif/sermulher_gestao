@@ -202,7 +202,9 @@ export function WhatsappClient() {
         getDispatchLogs(),
       ]);
 
-      if (configRes.success && configRes.data) {
+      if (!configRes.success) {
+        if (configRes.error) toast.error(configRes.error);
+      } else if (configRes.data) {
         setConfig({
           id: configRes.data.id,
           evolution_api_url: configRes.data.evolution_api_url || "",
@@ -210,12 +212,11 @@ export function WhatsappClient() {
           evolution_api_instance: configRes.data.evolution_api_instance || "",
           n8n_webhook_url: configRes.data.n8n_webhook_url || "",
         });
-      } else if (configRes.error) {
-        toast.error(configRes.error);
       }
 
       if (campaignsRes.success) {
-        setCampaigns(campaignsRes.data || []);
+        // A action devolve registros genéricos do Directus; o shape esperado é Campaign.
+        setCampaigns((campaignsRes.data || []) as Campaign[]);
       } else if (campaignsRes.error) {
         toast.error(campaignsRes.error);
       }
@@ -405,7 +406,8 @@ export function WhatsappClient() {
       const res = await searchBeneficiarias(searchBeneficiaria);
       if (!active) return;
       if (res.success) {
-        setSearchResults(res.data || []);
+        // A action devolve registros genéricos do Directus; o shape esperado é Beneficiaria.
+        setSearchResults((res.data || []) as Beneficiaria[]);
       } else {
         toast.error(res.error || "Erro ao buscar beneficiárias.");
         setSearchResults([]);

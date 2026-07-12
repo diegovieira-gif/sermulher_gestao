@@ -3,7 +3,7 @@
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { projetoSchema, ProjetoFormValues } from "../schemas";
+import { projetoSchema, ProjetoFormInput, ProjetoFormValues } from "../schemas";
 import {
   Form,
   FormControl,
@@ -40,7 +40,8 @@ export function ProjetoForm({
   const [isPending, startTransition] = useTransition();
   const isEditing = !!initialData?.id;
 
-  const form = useForm<ProjetoFormValues>({
+  // Input = valores do formulário (antes da coerção do zod); Output = valores validados
+  const form = useForm<ProjetoFormInput, unknown, ProjetoFormValues>({
     resolver: zodResolver(projetoSchema),
     defaultValues: {
       status: initialData?.status || "draft",
