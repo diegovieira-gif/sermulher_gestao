@@ -152,12 +152,16 @@ export async function getBeneficiarias(
   const filterConditions: any[] = [];
 
   if (search) {
-    filterConditions.push({
-      _or: [
-        { nome_completo: { _icontains: search } },
-        { cpf: { _contains: search } },
-      ],
-    });
+    // O CPF é armazenado apenas com dígitos (ver replace no create/update),
+    // mas a busca chega mascarada (ex.: "123.456.789-01"). Comparamos o CPF
+    // pela versão sem máscara e só incluímos essa condição quando há dígitos,
+    // para não trazer todos os registros num `_contains: ""`.
+    const searchDigits = search.replace(/\D/g, "");
+    const orConditions: any[] = [{ nome_completo: { _icontains: search } }];
+    if (searchDigits) {
+      orConditions.push({ cpf: { _contains: searchDigits } });
+    }
+    filterConditions.push({ _or: orConditions });
   }
 
   if (filters?.medidaProtetiva) {
@@ -342,11 +346,13 @@ export async function getBeneficiariaFormOptions() {
 
 export async function getBeneficiariasExport(search = "") {
   const { client } = await getAuthenticatedClient();
+  // CPF é armazenado só com dígitos; compara pela versão sem máscara (ver getBeneficiarias).
+  const searchDigits = search.replace(/\D/g, "");
   const filter = search
     ? {
       _or: [
         { nome_completo: { _icontains: search } },
-        { cpf: { _contains: search } },
+        ...(searchDigits ? [{ cpf: { _contains: searchDigits } }] : []),
       ],
     }
     : {};

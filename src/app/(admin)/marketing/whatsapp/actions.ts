@@ -564,14 +564,20 @@ function buildBeneficiariaFilter(f?: BeneficiariaFilter): Record<string, any> {
 
   const q = (f.busca || "").trim();
   if (q) {
-    and.push({
-      _or: [
-        { nome_completo: { _icontains: q } },
-        { nome_social: { _icontains: q } },
-        { telefone: { _contains: q } },
-        { cpf: { _contains: q } },
-      ],
-    });
+    // CPF é armazenado apenas com dígitos; telefone pode estar com ou sem
+    // máscara. Comparamos também pela versão sem máscara para casar ambos os
+    // formatos (busca por "123.456.789-01" e "12345678901" convergem).
+    const qDigits = q.replace(/\D/g, "");
+    const or: any[] = [
+      { nome_completo: { _icontains: q } },
+      { nome_social: { _icontains: q } },
+      { telefone: { _contains: q } },
+    ];
+    if (qDigits) {
+      or.push({ telefone: { _contains: qDigits } });
+      or.push({ cpf: { _contains: qDigits } });
+    }
+    and.push({ _or: or });
   }
 
   return { _and: and };
@@ -660,10 +666,13 @@ export async function searchBeneficiarias(
 
       const filter: any = { ...ELIGIBLE_FILTER };
       if (q) {
+        // Telefone pode estar gravado com ou sem máscara; casa ambos.
+        const qDigits = q.replace(/\D/g, "");
         filter._or = [
           { nome_completo: { _icontains: q } },
           { nome_social: { _icontains: q } },
           { telefone: { _contains: q } },
+          ...(qDigits ? [{ telefone: { _contains: qDigits } }] : []),
         ];
       }
 
