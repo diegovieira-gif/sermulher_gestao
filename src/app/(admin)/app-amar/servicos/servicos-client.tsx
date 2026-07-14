@@ -56,6 +56,9 @@ interface Servico {
     id: string;
     nome: string;
   } | string | null;
+  // Campos de sistema do Directus (vêm via fields: ["*"]).
+  date_created?: string | null;
+  date_updated?: string | null;
 }
 
 interface ServicosClientProps {
@@ -125,6 +128,13 @@ export function ServicosClient({ initialData, categorias }: ServicosClientProps)
     setEditingItem(null);
   };
 
+  // Formata timestamps do Directus (date_created/date_updated) como data pt-BR.
+  const formatData = (value?: string | null) => {
+    if (!value) return "—";
+    const d = new Date(value);
+    return isNaN(d.getTime()) ? "—" : d.toLocaleDateString("pt-BR");
+  };
+
   const statusBadge = (status: string) => {
     switch (status) {
       case "published":
@@ -171,13 +181,15 @@ export function ServicosClient({ initialData, categorias }: ServicosClientProps)
               <TableHead>Slug</TableHead>
               <TableHead>Categoria</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Data Cadastro</TableHead>
+              <TableHead>Data Atualização</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
+                <TableCell colSpan={7} className="h-24 text-center">
                   Nenhum serviço encontrado.
                 </TableCell>
               </TableRow>
@@ -192,6 +204,8 @@ export function ServicosClient({ initialData, categorias }: ServicosClientProps)
                       : "Sem Categoria"}
                   </TableCell>
                   <TableCell>{statusBadge(servico.status)}</TableCell>
+                  <TableCell className="text-muted-foreground whitespace-nowrap">{formatData(servico.date_created)}</TableCell>
+                  <TableCell className="text-muted-foreground whitespace-nowrap">{formatData(servico.date_updated)}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
