@@ -46,15 +46,21 @@ const noCacheFetch = async (url: RequestInfo | URL, init?: RequestInit) => {
     }
   }
 
-  let token = directusToken;
+  // Política de credenciais:
+  // - Em contexto de REQUISIÇÃO, usa exclusivamente o token do usuário
+  //   (cookie `directus_token`). Se o cookie estiver ausente ou vazio, a
+  //   chamada segue SEM Authorization (papel público do Directus). Nunca
+  //   escalar para o token admin aqui — o proxy só verifica a PRESENÇA do
+  //   cookie, então um cookie vazio/forjado não pode ganhar privilégio.
+  // - Fora de contexto de requisição (build estático), `cookies()` lança e
+  //   caímos no token estático do servidor, como antes.
+  let token = "";
   try {
     const cookieStore = await cookies();
-    const userToken = cookieStore.get("directus_token")?.value;
-    if (userToken) {
-      token = userToken;
-    }
+    token = cookieStore.get("directus_token")?.value ?? "";
   } catch {
-    // Pode falhar caso chamado fora de contexto de requisição (ex: build estático)
+    // Fora de contexto de requisição (ex: build estático) → token do servidor.
+    token = directusToken;
   }
 
   const headers = new Headers(init?.headers);

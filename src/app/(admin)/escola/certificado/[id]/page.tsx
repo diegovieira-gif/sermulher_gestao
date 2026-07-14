@@ -1,4 +1,5 @@
 import { getDirectusAdmin } from "@/lib/directus";
+import { assertAccess } from "@/lib/permissions";
 import { readItems } from "@directus/sdk";
 import CertificadoClient from "./certificado-client";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -16,6 +17,11 @@ export const dynamic = "force-dynamic";
 export default async function CertificadoPage({
   params,
 }: CertificadoPageProps) {
+  // A página lê a matrícula (nome/CPF da aluna) com o token ADMIN. Sem esta
+  // guarda, qualquer sessão poderia enumerar ids de matrícula e ver dados de
+  // outras alunas (IDOR). Exige acesso ao módulo "escola".
+  await assertAccess("escola");
+
   const resolvedParams = await params;
   const matriculaId = Number(resolvedParams.id);
   const directus = getDirectusAdmin();

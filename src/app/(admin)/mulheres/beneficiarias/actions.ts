@@ -416,6 +416,15 @@ export async function saveBeneficiaria(input: any) {
 
     if (payload.cpf) payload.cpf = payload.cpf.replace(/\D/g, "");
 
+    // Normaliza o TELEFONE para apenas dígitos, seguindo o mesmo precedente do
+    // CPF. Sem isto, o auto-preenchimento grava só dígitos
+    // (beneficiaria-form.tsx) enquanto a digitação manual grava com máscara,
+    // gerando dois formatos na base — o que quebra buscas por `_contains` e
+    // obriga a comparar as duas variantes. Gravar sempre só-dígitos deixa a
+    // coluna consistente (o disparo do WhatsApp já limpa os dígitos de qualquer
+    // forma, então o comportamento de envio é preservado).
+    if (payload.telefone) payload.telefone = payload.telefone.replace(/\D/g, "");
+
     const id = payload.id;
     const payloadToSend = { ...payload };
     delete payloadToSend.id;

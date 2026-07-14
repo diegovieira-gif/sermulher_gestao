@@ -4,8 +4,10 @@ import type { NextRequest } from "next/server";
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // CORREÇÃO: Verificar o cookie 'directus_token' que é gravado no login
-  const sessionToken = request.cookies.get("directus_token");
+  // CORREÇÃO: Verificar o cookie 'directus_token' que é gravado no login.
+  // Um cookie presente mas VAZIO conta como "sem sessão" (um `directus_token=`
+  // forjado não deve passar pela barreira de navegação).
+  const sessionToken = request.cookies.get("directus_token")?.value || null;
 
   // Rotas públicas (que não precisam de login)
   const isPublicRoute = pathname === "/login";

@@ -12,7 +12,6 @@ import {
   updateItem,
   deleteItem,
   readItem,
-  readMe,
   readSingleton,
   updateSingleton,
   aggregate,
@@ -144,17 +143,6 @@ export async function getWhatsappConfig(): Promise<
   try {
     return await safeDirectusCall(async () => {
       const client = await getDirectusClient({ requireAuth: true });
-
-      try {
-        const me = await client.request(
-          readMe({
-            fields: ["id", "email", "first_name", "last_name", "role.name", "role.id", "role.admin_access"],
-          })
-        );
-        console.log("DEBUG getWhatsappConfig - Logged in user:", JSON.stringify(me, null, 2));
-      } catch (meError: any) {
-        console.log("DEBUG getWhatsappConfig - Failed to fetch user profile:", meError?.message);
-      }
 
       const configItem = await client.request(
         readSingleton("configuracoes_site", {

@@ -1,6 +1,6 @@
 "use server";
 
-import { getDirectusAdmin } from "@/lib/directus";
+import { assertAccess } from "@/lib/permissions";
 
 export type AuditLog = {
   id: number;
@@ -35,6 +35,10 @@ export async function getAuditLogs(params: {
   page?: number;
   limit?: number;
 } = {}) {
+  // Os logs de atividade/revisões são lidos com o token ADMIN (a coleção
+  // directus_activity não é exposta a perfis comuns), então a autorização
+  // precisa acontecer aqui, no nível da aplicação.
+  await assertAccess("auditoria");
   try {
     const { search, collection, action, user, page = 1, limit = 20 } = params;
     const directusUrl =
@@ -130,6 +134,9 @@ export async function getAuditLogs(params: {
 }
 
 export async function getRevisionDetails(activityId: number) {
+  // Revisões contêm snapshots completos dos registros (dados sensíveis) e são
+  // lidas com o token ADMIN → autorização obrigatória no nível da aplicação.
+  await assertAccess("auditoria");
   try {
     const directusUrl =
       process.env.NEXT_PUBLIC_DIRECTUS_URL ||
@@ -173,6 +180,9 @@ export async function getRevisionDetails(activityId: number) {
 }
 
 export async function getCollectionsList() {
+  // Lista de coleções da instância (reconhecimento de infraestrutura) lida com
+  // o token ADMIN → autorização obrigatória no nível da aplicação.
+  await assertAccess("auditoria");
   try {
     const directusUrl =
       process.env.NEXT_PUBLIC_DIRECTUS_URL ||
