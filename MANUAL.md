@@ -44,7 +44,39 @@ Na ficha da beneficiária, as abas **Eventos**, **Cursos** e **Benefícios** reg
 
 ---
 
-## 3. Escola (Cursos e Oficinas)
+## 3. CRAM (Instrumental de Atendimento)
+
+Centro de Referência de Atendimento à Mulher em Situação de Violência. Este módulo reproduz o **Instrumental de Atendimento** em papel — o formulário longo do acolhimento. Ele é separado do cadastro de beneficiárias: lá ficam os dados pessoais, aqui fica a história do atendimento.
+
+### Registrar um atendimento
+
+1. Acesse **CRAM** > **Novo Atendimento**.
+2. Busque a **assistida** pelo nome ou CPF (ela precisa estar cadastrada em Gestão de Mulheres).
+3. Informe data e turno e percorra as quatro abas.
+4. Clique em **Registrar atendimento**.
+
+Só **assistida** e **data** são obrigatórias — deixe o status em *Em preenchimento* e complete nos próximos encontros.
+
+### As quatro abas
+
+- **Atendimento:** como chegou ao serviço (espontânea ou encaminhada), medida protetiva, serviço buscado, RG e Cartão SUS.
+- **I · Socioassistencial:** imóvel e saneamento, deficiência, saúde (tabagismo, drogas, álcool), renda e benefícios, **composição domiciliar**, endereço alternativo, serviços que frequenta, caracterização da violência e identificação do autor.
+- **II · Jurídico:** necessidade de orientação jurídica, Boletim de Ocorrência (inclusive se feito por nós durante o atendimento) e órgão de encaminhamento.
+- **III · Psicológico:** as seis perguntas padronizadas de risco e o resumo da psicóloga.
+
+### Nível de risco
+
+A lista exibe um selo por atendimento, contando as respostas **"Sim"** entre as seis perguntas da aba Psicológico: **Alto** (4+), **Médio** (2–3), **Baixo** (1) e **Sem sinais**. É um apoio para priorizar a fila de atenção — não substitui a avaliação técnica nem define conduta.
+
+### Plano Individual de Atendimento (PIA)
+
+Dentro de um atendimento, a aba **Plano Individual (PIA)** registra o histórico da demanda, as **pactuações com a usuária** (demanda identificada, serviço ofertado, ação realizada) e as **formas de participação** da assistida. A **evolução do acompanhamento** funciona como um diário, com data, descrição e técnico responsável em ordem cronológica. Salve o plano uma primeira vez para liberar o registro de evoluções.
+
+> **Acesso:** o CRAM aparece apenas para os perfis liberados em Configurações → Permissões de Menu. Perfis com acesso restrito não o recebem automaticamente.
+
+---
+
+## 4. Escola (Cursos e Oficinas)
 
 Gestão da autonomia financeira através de qualificação profissional.
 
@@ -63,7 +95,7 @@ Gestão da autonomia financeira através de qualificação profissional.
 
 ---
 
-## 4. Sala Azul (Grupos Reflexivos)
+## 5. Sala Azul (Grupos Reflexivos)
 
 Acompanhamento de homens autores de violência (Lei Maria da Penha).
 
@@ -81,7 +113,7 @@ Acompanhamento de homens autores de violência (Lei Maria da Penha).
 
 ---
 
-## 5. Agenda Institucional (Eventos)
+## 6. Agenda Institucional (Eventos)
 
 Calendário unificado da Secretaria.
 
@@ -94,7 +126,7 @@ Calendário unificado da Secretaria.
 
 ---
 
-## 6. Marketing e Comunicação
+## 7. Marketing e Comunicação
 
 Gestão de campanhas de conscientização e métricas sociais.
 
@@ -104,18 +136,18 @@ Gestão de campanhas de conscientização e métricas sociais.
 
 ---
 
-## 7. Configurações
+## 8. Configurações
 
 Área restrita à gestão para padronizar o sistema. Acessível pelo botão **"Configurações"** no rodapé do menu lateral.
 
 - **Tabelas Auxiliares:** Cadastre novos **Tipos de Evento**, **Bairros**, **Origens de Encaminhamento**, **Tipos de Violência**, etc.
 - **Tramitações:** os submenus **Tipos de Tramitação** (tipos de demanda) e **Status de Etapa** definem as opções dos formulários de tramitação e as colunas do Kanban.
-- **Acesso & Segurança (admin):** **Permissões de Menu** e **Acesso a Demandas** controlam o que cada perfil enxerga (ver seção 9).
+- **Acesso & Segurança (admin):** **Permissões de Menu** e **Acesso a Demandas** controlam o que cada perfil enxerga (ver seção 10).
 - **Importância:** Qualquer alteração aqui reflete imediatamente nas opções disponíveis nos formulários de cadastro de todo o sistema.
 
 ---
 
-## 8. Meu Perfil
+## 9. Meu Perfil
 
 Clique no seu **nome** (canto superior direito) e escolha **Meu Perfil**:
 
@@ -125,7 +157,7 @@ Clique no seu **nome** (canto superior direito) e escolha **Meu Perfil**:
 
 ---
 
-## 9. Controle de Acesso (Perfis) — Administradores
+## 10. Controle de Acesso (Perfis) — Administradores
 
 O acesso é organizado por **perfil** (o "grupo" do usuário). Cada usuário pertence a um perfil, e o que ele vê depende de duas camadas configuráveis no app.
 

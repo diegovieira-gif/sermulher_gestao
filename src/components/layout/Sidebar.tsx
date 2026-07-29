@@ -19,6 +19,7 @@ import {
   LayoutGrid,
   Briefcase,
   Activity,
+  ClipboardList,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { logout } from "@/app/actions/auth";
@@ -91,6 +92,16 @@ const MENU_ITEMS: MenuItemConfig[] = [
       { label: "Indicadores", href: "/mulheres" },
       { label: "Beneficiárias", href: "/mulheres/beneficiarias" },
       { label: "Atendimentos", href: "/mulheres/atendimentos" },
+    ],
+  },
+  {
+    key: "cram",
+    label: "CRAM",
+    href: "/cram",
+    icon: ClipboardList,
+    items: [
+      { label: "Instrumentais de Atendimento", href: "/cram" },
+      { label: "Novo Atendimento", href: "/cram/novo" },
     ],
   },
   {

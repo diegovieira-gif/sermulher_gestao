@@ -20,6 +20,7 @@ const pageTitles: Record<string, string> = {
   "/beneficiarias": "Beneficiárias",
   "/atendimentos": "Atendimentos",
   "/mulheres": "Módulo Mulheres",
+  "/cram": "CRAM — Instrumental de Atendimento",
   "/sala-azul": "Sala Azul",
   "/eventos": "Eventos e Campanhas",
   "/configuracoes": "Configurações",

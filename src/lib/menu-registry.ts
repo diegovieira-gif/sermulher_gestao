@@ -31,6 +31,7 @@ export const MENU_REGISTRY: MenuMeta[] = [
   { key: "eventos", label: "Agenda Institucional", href: "/eventos", group: "main" },
   { key: "marketing", label: "Marketing e Comunicação", href: "/marketing", group: "main" },
   { key: "mulheres", label: "Gestão de Mulheres", href: "/mulheres", group: "main" },
+  { key: "cram", label: "CRAM", href: "/cram", group: "main" },
   { key: "escola", label: "Escola da Mulher", href: "/escola", group: "main" },
   { key: "sala-azul", label: "Sala Azul", href: "/sala-azul", group: "main" },
   { key: "relatorios", label: "Relatórios", href: "/relatorios", group: "main" },

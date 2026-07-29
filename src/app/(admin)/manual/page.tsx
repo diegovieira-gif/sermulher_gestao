@@ -108,6 +108,7 @@ function SidebarMap() {
     { label: "Agenda Institucional", icon: Calendar },
     { label: "Marketing e Comunicação", icon: Megaphone },
     { label: "Gestão de Mulheres", icon: HeartHandshake },
+    { label: "CRAM", icon: ClipboardList },
     { label: "Escola da Mulher", icon: GraduationCap },
     { label: "Sala Azul", icon: ShieldAlert },
     { label: "Relatórios", icon: FileText },
@@ -284,6 +285,7 @@ const TOC: { id: string; label: string; icon: LucideIcon }[] = [
   { id: "primeiros-passos", label: "Primeiros Passos", icon: Compass },
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "mulheres", label: "Gestão de Mulheres", icon: HeartHandshake },
+  { id: "cram", label: "CRAM", icon: ClipboardList },
   { id: "demandas", label: "Gestão de Demandas", icon: GitPullRequest },
   { id: "agenda", label: "Agenda Institucional", icon: Calendar },
   { id: "escola", label: "Escola da Mulher", icon: GraduationCap },
@@ -600,10 +602,219 @@ export default function ManualPage() {
         </Accordion>
       </Section>
 
-      {/* 4. Gestão de Demandas */}
+      {/* 4. CRAM */}
+      <Section
+        id="cram"
+        number={4}
+        title="CRAM — Instrumental de Atendimento"
+        description="Centro de Referência de Atendimento à Mulher em Situação de Violência: o formulário completo de acolhimento e o Plano Individual."
+        icon={ClipboardList}
+        iconClass="text-rose-600"
+      >
+        <Callout variant="new" title="Para que serve este módulo">
+          O <strong>CRAM</strong> reproduz no sistema o{" "}
+          <strong>Instrumental de Atendimento</strong> em papel — o formulário
+          longo preenchido no acolhimento, com o contexto socioassistencial,
+          jurídico e psicológico da assistida. Ele é <em>separado</em> do cadastro
+          de beneficiárias: lá ficam os dados pessoais, aqui fica a história do
+          atendimento.
+        </Callout>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="rounded-lg border bg-muted/40 p-4 text-center">
+            <ClipboardList className="mx-auto mb-2 h-6 w-6 text-primary" />
+            <p className="text-sm font-semibold text-foreground">Instrumental</p>
+            <p className="text-xs text-muted-foreground">4 partes do formulário</p>
+          </div>
+          <div className="rounded-lg border bg-muted/40 p-4 text-center">
+            <ShieldAlert className="mx-auto mb-2 h-6 w-6 text-primary" />
+            <p className="text-sm font-semibold text-foreground">Risco</p>
+            <p className="text-xs text-muted-foreground">Calculado automaticamente</p>
+          </div>
+          <div className="rounded-lg border bg-muted/40 p-4 text-center">
+            <History className="mx-auto mb-2 h-6 w-6 text-primary" />
+            <p className="text-sm font-semibold text-foreground">PIA</p>
+            <p className="text-xs text-muted-foreground">Plano e evolução</p>
+          </div>
+        </div>
+
+        <Accordion type="single" collapsible className="w-full">
+          <AccordionItem value="c1">
+            <AccordionTrigger>Registrar um novo atendimento</AccordionTrigger>
+            <AccordionContent className="space-y-3">
+              <Steps
+                items={[
+                  <>
+                    Acesse <strong>CRAM → Novo Atendimento</strong>.
+                  </>,
+                  <>
+                    Busque a <strong>assistida</strong> pelo nome ou CPF. Ela
+                    precisa já estar cadastrada em{" "}
+                    <a
+                      href="#mulheres"
+                      className="font-medium text-primary underline"
+                    >
+                      Gestão de Mulheres
+                    </a>
+                    .
+                  </>,
+                  <>
+                    Informe <strong>data</strong> e <strong>turno</strong>, e
+                    percorra as quatro abas preenchendo o que a assistida
+                    relatar.
+                  </>,
+                  <>
+                    Clique em <strong>Registrar atendimento</strong>. Você pode
+                    voltar e completar depois — deixe o status em{" "}
+                    <em>Em preenchimento</em> até concluir.
+                  </>,
+                ]}
+              />
+              <Callout variant="tip" title="Não precisa preencher tudo de uma vez">
+                Só <strong>assistida</strong> e <strong>data</strong> são
+                obrigatórias. O acolhimento raramente cobre o formulário inteiro
+                no primeiro encontro — salve o que tem e complete nos próximos.
+              </Callout>
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="c2">
+            <AccordionTrigger>As quatro abas do formulário</AccordionTrigger>
+            <AccordionContent className="space-y-3 text-sm text-muted-foreground">
+              <p>
+                <strong className="text-foreground">Atendimento</strong> — como a
+                assistida chegou ao serviço (espontânea ou encaminhada, e por
+                qual instituição), se possui medida protetiva, qual serviço
+                buscou, e os documentos que não ficam no prontuário:{" "}
+                <strong>RG</strong> e <strong>Cartão SUS</strong>.
+              </p>
+              <p>
+                <strong className="text-foreground">I · Socioassistencial</strong>{" "}
+                — situação do imóvel e saneamento, deficiência, saúde (problemas,
+                tabagismo, drogas, álcool), escolaridade e renda, benefícios
+                recebidos, a <strong>composição domiciliar</strong>, endereço
+                alternativo, serviços que frequenta, a caracterização da
+                violência e a identificação do autor.
+              </p>
+              <p>
+                <strong className="text-foreground">II · Jurídico</strong> — qual
+                orientação jurídica a assistida precisa, situação do Boletim de
+                Ocorrência (inclusive se foi feito por nós durante o atendimento)
+                e para qual órgão ela foi encaminhada.
+              </p>
+              <p>
+                <strong className="text-foreground">III · Psicológico</strong> —
+                as seis perguntas padronizadas de avaliação de risco e o{" "}
+                <strong>resumo da psicóloga</strong>.
+              </p>
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="c3">
+            <AccordionTrigger>Composição domiciliar</AccordionTrigger>
+            <AccordionContent className="space-y-2 text-sm text-muted-foreground">
+              <p>
+                Na aba <strong>I · Socioassistencial</strong>, o botão{" "}
+                <strong>Adicionar membro</strong> cria uma linha na tabela com
+                nome, parentesco, idade, escolaridade, ocupação/renda e
+                benefício. Adicione uma linha por pessoa que mora com a
+                assistida.
+              </p>
+              <p>
+                As linhas são salvas junto com o instrumental — não há botão de
+                salvar separado para a tabela.
+              </p>
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="c4">
+            <AccordionTrigger>
+              Como o nível de risco é calculado{" "}
+              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25">
+                Novo
+              </Badge>
+            </AccordionTrigger>
+            <AccordionContent className="space-y-3 text-sm text-muted-foreground">
+              <p>
+                A lista do CRAM mostra um selo de risco para cada atendimento. Ele
+                conta quantas das <strong>seis perguntas</strong> da aba
+                Psicológico foram respondidas com <strong>“Sim”</strong>:
+              </p>
+              <div className="grid gap-2 sm:grid-cols-4">
+                <div className="rounded-md border border-red-200 bg-red-50 p-2 text-center">
+                  <p className="text-xs font-semibold text-red-800">Alto</p>
+                  <p className="text-xs text-red-700">4 ou mais</p>
+                </div>
+                <div className="rounded-md border border-amber-200 bg-amber-50 p-2 text-center">
+                  <p className="text-xs font-semibold text-amber-800">Médio</p>
+                  <p className="text-xs text-amber-700">2 ou 3</p>
+                </div>
+                <div className="rounded-md border border-yellow-200 bg-yellow-50 p-2 text-center">
+                  <p className="text-xs font-semibold text-yellow-800">Baixo</p>
+                  <p className="text-xs text-yellow-700">1</p>
+                </div>
+                <div className="rounded-md border bg-muted/40 p-2 text-center">
+                  <p className="text-xs font-semibold text-foreground">
+                    Sem sinais
+                  </p>
+                  <p className="text-xs text-muted-foreground">nenhuma</p>
+                </div>
+              </div>
+              <Callout variant="warn" title="É um apoio, não um diagnóstico">
+                O selo serve para <strong>ordenar a fila de atenção</strong> da
+                equipe. Ele não substitui a avaliação técnica da psicóloga nem
+                define conduta — um caso marcado como “Baixo” pode ser grave.
+              </Callout>
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="c5">
+            <AccordionTrigger>
+              Plano Individual de Atendimento (PIA)
+            </AccordionTrigger>
+            <AccordionContent className="space-y-2 text-sm text-muted-foreground">
+              <p>
+                Abra um atendimento e vá à aba{" "}
+                <strong>Plano Individual (PIA)</strong>. Ali você registra o{" "}
+                <strong>histórico da demanda</strong>, as{" "}
+                <strong>pactuações com a usuária</strong> (o que foi identificado,
+                o que foi ofertado, o que foi feito) e as{" "}
+                <strong>formas de participação</strong> — se a assistida atende às
+                convocações, comparece às rodas terapêuticas e aos atendimentos
+                psicológicos.
+              </p>
+              <p className="flex items-center gap-2">
+                <History className="h-4 w-4 text-primary" />
+                A <strong>evolução do acompanhamento</strong> funciona como um
+                diário: cada registro tem data, descrição e técnico responsável, e
+                fica na ordem cronológica.
+              </p>
+              <Callout variant="tip" title="Salve o plano antes de evoluir">
+                O botão de registrar evolução só é liberado depois que o plano for
+                salvo pela primeira vez.
+              </Callout>
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="c6">
+            <AccordionTrigger>Quem enxerga o módulo</AccordionTrigger>
+            <AccordionContent className="text-sm text-muted-foreground">
+              O CRAM é um módulo como os outros: aparece apenas para os perfis
+              liberados em{" "}
+              <a href="#permissoes" className="font-medium text-primary underline">
+                Configurações → Permissões de Menu
+              </a>
+              . Perfis que já tinham acesso restrito <strong>não</strong> recebem
+              o CRAM automaticamente — um administrador precisa marcá-lo.
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </Section>
+
+      {/* 5. Gestão de Demandas */}
       <Section
         id="demandas"
-        number={4}
+        number={5}
         title="Gestão de Demandas"
         description="Quadro Kanban para acompanhar pendências entre setores."
         icon={GitPullRequest}
@@ -632,10 +843,10 @@ export default function ManualPage() {
         </Callout>
       </Section>
 
-      {/* 5. Agenda Institucional */}
+      {/* 6. Agenda Institucional */}
       <Section
         id="agenda"
-        number={5}
+        number={6}
         title="Agenda Institucional"
         description="Calendário unificado de eventos, aulas e sessões."
         icon={Calendar}
@@ -666,10 +877,10 @@ export default function ManualPage() {
         </div>
       </Section>
 
-      {/* 6. Escola da Mulher */}
+      {/* 7. Escola da Mulher */}
       <Section
         id="escola"
-        number={6}
+        number={7}
         title="Escola da Mulher"
         description="Cursos profissionalizantes, turmas, matrículas e certificados."
         icon={GraduationCap}
@@ -700,10 +911,10 @@ export default function ManualPage() {
         </Accordion>
       </Section>
 
-      {/* 7. Sala Azul */}
+      {/* 8. Sala Azul */}
       <Section
         id="sala-azul"
-        number={7}
+        number={8}
         title="Sala Azul"
         description="Acompanhamento de autores de violência e ciclos reflexivos."
         icon={ShieldAlert}
@@ -730,10 +941,10 @@ export default function ManualPage() {
         </Accordion>
       </Section>
 
-      {/* 8. Marketing */}
+      {/* 9. Marketing */}
       <Section
         id="marketing"
-        number={8}
+        number={9}
         title="Marketing e Comunicação"
         description="Campanhas de conscientização e disparos por WhatsApp."
         icon={Megaphone}
@@ -760,10 +971,10 @@ export default function ManualPage() {
         </div>
       </Section>
 
-      {/* 9. Observatório */}
+      {/* 10. Observatório */}
       <Section
         id="observatorio"
-        number={9}
+        number={10}
         title="Observatório"
         description="Painéis analíticos consolidados (acesso restrito)."
         icon={LayoutDashboard}
@@ -780,10 +991,10 @@ export default function ManualPage() {
         </Callout>
       </Section>
 
-      {/* 10. App Amar */}
+      {/* 11. App Amar */}
       <Section
         id="app-amar"
-        number={10}
+        number={11}
         title="App Amar"
         description="Gestão de conteúdo e relacionamento do aplicativo e do site."
         icon={Smartphone}
@@ -816,10 +1027,10 @@ export default function ManualPage() {
         </Callout>
       </Section>
 
-      {/* 11. Relatórios */}
+      {/* 12. Relatórios */}
       <Section
         id="relatorios"
-        number={11}
+        number={12}
         title="Relatórios"
         description="Indicadores gerais e relatórios oficiais do SUAS."
         icon={FileText}
@@ -857,10 +1068,10 @@ export default function ManualPage() {
         </Accordion>
       </Section>
 
-      {/* 12. Configurações */}
+      {/* 13. Configurações */}
       <Section
         id="configuracoes"
-        number={12}
+        number={13}
         title="Configurações"
         description="Tabelas auxiliares, campanhas, site e segurança."
         icon={Settings}
@@ -897,10 +1108,10 @@ export default function ManualPage() {
         </Callout>
       </Section>
 
-      {/* 13. Controle de Acesso */}
+      {/* 14. Controle de Acesso */}
       <Section
         id="permissoes"
-        number={13}
+        number={14}
         title="Controle de Acesso (Perfis)"
         description="Como organizar perfis e definir o que cada equipe acessa."
         icon={Lock}
@@ -1029,10 +1240,10 @@ export default function ManualPage() {
         </div>
       </Section>
 
-      {/* 14. Meu Perfil */}
+      {/* 15. Meu Perfil */}
       <Section
         id="perfil"
-        number={14}
+        number={15}
         title="Meu Perfil"
         description="Seus dados, seu histórico de ações e troca de senha."
         icon={UserCog}
