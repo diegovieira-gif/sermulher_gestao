@@ -11,12 +11,14 @@ import { test, expect } from "@playwright/test";
 
 // Rotas protegidas devem redirecionar para /login — nunca retornar 500
 const PROTECTED_ROUTES = [
-  { path: "/admin/dashboard", label: "Dashboard" },
-  { path: "/admin/sala-azul", label: "Sala Azul" },
-  { path: "/admin/escola", label: "Escola" },
-  { path: "/admin/mulheres/beneficiarias", label: "Mulheres / Beneficiárias" },
-  { path: "/admin/eventos", label: "Eventos" },
-  { path: "/admin/marketing", label: "Marketing" },
+  { path: "/dashboard", label: "Dashboard" },
+  { path: "/sala-azul", label: "Sala Azul" },
+  { path: "/escola", label: "Escola" },
+  { path: "/mulheres/beneficiarias", label: "Mulheres / Beneficiárias" },
+  { path: "/eventos", label: "Eventos" },
+  { path: "/marketing", label: "Marketing" },
+  { path: "/cram", label: "CRAM" },
+  { path: "/tramitacoes", label: "Gestão de Demandas" },
 ];
 
 test.describe("Smoke — Página de Login", () => {
@@ -39,6 +41,12 @@ test.describe("Smoke — Página de Login", () => {
 });
 
 test.describe("Smoke — Rotas protegidas redirecionam sem crash", () => {
+  // Contra `next dev`, cada rota é compilada sob demanda no primeiro acesso;
+  // com vários workers em paralelo isso passa dos 30s padrão e o teste falha
+  // por tempo, não por defeito. No CI a suíte roda sobre o build pronto e
+  // nunca chega perto deste limite.
+  test.setTimeout(90_000);
+
   for (const route of PROTECTED_ROUTES) {
     test(`GET ${route.path} → redireciona para /login (${route.label})`, async ({
       page,
@@ -118,9 +126,12 @@ test.describe("Smoke — Recursos estáticos", () => {
     await page.reload();
     await page.waitForLoadState("networkidle");
 
-    // Nenhum asset estático (JS/CSS) deve ter falhado
-    const staticFailures = failedRequests.filter((url) =>
-      /\.(js|css|woff2?)(\?|$)/.test(url),
+    // Nenhum asset estático (JS/CSS) deve ter falhado.
+    // `/__nextjs*` são endpoints internos do servidor de desenvolvimento (por
+    // exemplo o proxy de fontes); não existem no build de produção — que é
+    // como o CI roda — então falhar por causa deles seria ruído de ambiente.
+    const staticFailures = failedRequests.filter(
+      (url) => /\.(js|css|woff2?)(\?|$)/.test(url) && !url.includes("/__nextjs"),
     );
     expect(staticFailures).toHaveLength(0);
   });

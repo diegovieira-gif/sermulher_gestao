@@ -7,7 +7,7 @@ test.describe("Módulo Eventos - Agenda", () => {
 
   test.beforeEach(async ({ page }) => {
     // Autentica antes de cada teste
-    await page.goto("/admin/eventos");
+    await page.goto("/eventos");
   });
 
   test.describe("Fluxo de Eventos", () => {

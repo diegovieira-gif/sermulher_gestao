@@ -18,7 +18,7 @@ import { test, expect } from "@playwright/test";
 
 test.describe("Smoke — Observatório", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/admin/observatorio");
+    await page.goto("/observatorio");
     await page.waitForLoadState("networkidle");
   });
 

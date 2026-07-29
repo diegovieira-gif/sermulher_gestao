@@ -9,7 +9,7 @@ import { test, expect } from "@playwright/test";
 
 test.describe("Smoke — Dashboard", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/admin/dashboard");
+    await page.goto("/dashboard");
     // Aguarda o conteúdo principal hidratar
     await page.waitForLoadState("networkidle");
   });
@@ -59,8 +59,15 @@ test.describe("Smoke — Dashboard", () => {
     page,
   }) => {
     // O dashboard tem botões/links do tipo "Ver todas" ou links de acesso rápido
-    const quickLinks = page.locator('a[href*="/admin/"]');
-    const count = await quickLinks.count();
-    expect(count).toBeGreaterThanOrEqual(1);
+    const quickLinks = page.locator('a[href^="/"]');
+    expect(await quickLinks.count()).toBeGreaterThanOrEqual(1);
+
+    // Regressão: `(admin)` é um route group do App Router e NÃO vira segmento
+    // de URL. Um href para /admin/... aponta para uma rota que não existe —
+    // era exatamente o erro que invalidava esta suíte inteira.
+    const hrefs = await quickLinks.evaluateAll((links) =>
+      links.map((link) => link.getAttribute("href") ?? ""),
+    );
+    expect(hrefs.filter((href) => href.startsWith("/admin"))).toEqual([]);
   });
 });

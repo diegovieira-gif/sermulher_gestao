@@ -15,7 +15,7 @@ import { test, expect } from "@playwright/test";
 
 test.describe("Smoke — Tramitações / Kanban", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/admin/tramitacoes");
+    await page.goto("/tramitacoes");
     await page.waitForLoadState("networkidle");
   });
 

@@ -51,13 +51,13 @@ test.describe("Módulo Sala Azul - Ciclos e Infratores", () => {
 
   test.beforeEach(async ({ page }) => {
     // Aguarda a página de sala azul
-    await page.goto("/admin/sala-azul");
+    await page.goto("/sala-azul");
   });
 
   test.describe("Fluxo de Infratores", () => {
     test("CREATE - Cadastrar novo infrator", async ({ page }) => {
       await test.step("Navegar para página de infratores", async () => {
-        await page.goto("/admin/sala-azul/infratores");
+        await page.goto("/sala-azul/infratores");
         await expect(page).toHaveURL(/.*infratores/);
       });
 
@@ -149,7 +149,7 @@ test.describe("Módulo Sala Azul - Ciclos e Infratores", () => {
 
     test("READ - Verificar infrator na lista", async ({ page }) => {
       await test.step("Navegar para infratores", async () => {
-        await page.goto("/admin/sala-azul/infratores");
+        await page.goto("/sala-azul/infratores");
       });
 
       await test.step("Criar infrator para verificação", async () => {
@@ -212,7 +212,7 @@ test.describe("Módulo Sala Azul - Ciclos e Infratores", () => {
 
     test("DELETE - Remover infrator", async ({ page }) => {
       await test.step("Navegar para infratores", async () => {
-        await page.goto("/admin/sala-azul/infratores");
+        await page.goto("/sala-azul/infratores");
       });
 
       await test.step("Criar infrator para exclusão", async () => {
@@ -308,7 +308,7 @@ test.describe("Módulo Sala Azul - Ciclos e Infratores", () => {
   test.describe("Fluxo de Ciclos Reflexivos", () => {
     test("CREATE - Criar novo ciclo reflexivo", async ({ page }) => {
       await test.step("Navegar para página de ciclos", async () => {
-        await page.goto("/admin/sala-azul/ciclos");
+        await page.goto("/sala-azul/ciclos");
         await expect(page).toHaveURL(/.*ciclos/);
       });
 
@@ -391,7 +391,7 @@ test.describe("Módulo Sala Azul - Ciclos e Infratores", () => {
       let infratorNomeForParticipacao: string = "";
 
       await test.step("Criar infrator pré-requisito", async () => {
-        await page.goto("/admin/sala-azul/infratores");
+        await page.goto("/sala-azul/infratores");
 
         infratorNomeForParticipacao = generateRandomName();
         const infratorCPF = generateValidCPF();
@@ -445,7 +445,7 @@ test.describe("Módulo Sala Azul - Ciclos e Infratores", () => {
       });
 
       await test.step("Criar ciclo reflexivo", async () => {
-        await page.goto("/admin/sala-azul/ciclos");
+        await page.goto("/sala-azul/ciclos");
 
         const timestamp = Date.now();
         testCicloNome = `Ciclo com Participante ${timestamp}`;
@@ -543,7 +543,7 @@ test.describe("Módulo Sala Azul - Ciclos e Infratores", () => {
 
     test("DELETE - Remover ciclo criado", async ({ page }) => {
       await test.step("Navegar para ciclos", async () => {
-        await page.goto("/admin/sala-azul/ciclos");
+        await page.goto("/sala-azul/ciclos");
       });
 
       await test.step("Criar ciclo para exclusão", async () => {

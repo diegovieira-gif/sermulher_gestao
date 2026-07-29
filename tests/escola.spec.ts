@@ -6,13 +6,13 @@ test.describe("Módulo Escola - Cursos e Turmas", () => {
 
   test.beforeEach(async ({ page }) => {
     // Autentica antes de cada teste
-    await page.goto("/admin/escola");
+    await page.goto("/escola");
   });
 
   test.describe("Fluxo de Cursos", () => {
     test("CREATE - Criar novo curso", async ({ page }) => {
       await test.step("Navegar para página de cursos", async () => {
-        await page.goto("/admin/escola/cursos");
+        await page.goto("/escola/cursos");
         await expect(page).toHaveURL(/.*cursos/);
       });
 
@@ -82,7 +82,7 @@ test.describe("Módulo Escola - Cursos e Turmas", () => {
 
     test("READ - Verificar curso na lista", async ({ page }) => {
       await test.step("Navegar para cursos", async () => {
-        await page.goto("/admin/escola/cursos");
+        await page.goto("/escola/cursos");
         await expect(page).toHaveURL(/.*cursos/);
       });
 
@@ -116,7 +116,7 @@ test.describe("Módulo Escola - Cursos e Turmas", () => {
 
     test("DELETE - Remover curso criado", async ({ page }) => {
       await test.step("Navegar para cursos", async () => {
-        await page.goto("/admin/escola/cursos");
+        await page.goto("/escola/cursos");
       });
 
       await test.step("Criar curso para exclusão", async () => {
@@ -181,7 +181,7 @@ test.describe("Módulo Escola - Cursos e Turmas", () => {
       page,
     }) => {
       await test.step("Navegar para página de turmas", async () => {
-        await page.goto("/admin/escola/turmas");
+        await page.goto("/escola/turmas");
         await expect(page).toHaveURL(/.*turmas/);
       });
 
@@ -265,10 +265,8 @@ test.describe("Módulo Escola - Cursos e Turmas", () => {
     test("CREATE com pré-requisito - Criar curso e depois turma", async ({
       page,
     }) => {
-      let cursoId: string | null = null;
-
       await test.step("Criar curso pré-requisito", async () => {
-        await page.goto("/admin/escola/cursos");
+        await page.goto("/escola/cursos");
 
         const timestamp = Date.now();
         const curseName = `Curso PreReq ${timestamp}`;
@@ -292,7 +290,7 @@ test.describe("Módulo Escola - Cursos e Turmas", () => {
       });
 
       await test.step("Criar turma vinculada", async () => {
-        await page.goto("/admin/escola/turmas");
+        await page.goto("/escola/turmas");
 
         const timestamp = Date.now();
         testTurmaNome = `Turma PreReq ${timestamp}`;

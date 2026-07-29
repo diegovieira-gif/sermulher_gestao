@@ -14,7 +14,7 @@ import { test, expect } from "@playwright/test";
 
 test.describe("Smoke — App Amar / Índice", () => {
   test("Página índice carrega e exibe cards de navegação", async ({ page }) => {
-    await page.goto("/admin/app-amar");
+    await page.goto("/app-amar");
     await page.waitForLoadState("networkidle");
 
     await expect(page).toHaveURL(/app-amar/);
@@ -32,7 +32,7 @@ test.describe("Smoke — App Amar / Índice", () => {
 
 test.describe("Smoke — App Amar / Campanhas", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/admin/app-amar/campanhas");
+    await page.goto("/app-amar/campanhas");
     await page.waitForLoadState("networkidle");
   });
 
@@ -71,7 +71,7 @@ test.describe("Smoke — App Amar / Campanhas", () => {
 
 test.describe("Smoke — App Amar / Serviços", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/admin/app-amar/servicos");
+    await page.goto("/app-amar/servicos");
     await page.waitForLoadState("networkidle");
   });
 
@@ -106,7 +106,7 @@ test.describe("Smoke — App Amar / Serviços", () => {
 
 test.describe("Smoke — App Amar / Categorias", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/admin/app-amar/categorias");
+    await page.goto("/app-amar/categorias");
     await page.waitForLoadState("networkidle");
   });
 
@@ -142,7 +142,7 @@ test.describe("Smoke — App Amar / Categorias", () => {
 
 test.describe("Smoke — App Amar / Sonhos", () => {
   test("Página carrega sem crash", async ({ page }) => {
-    await page.goto("/admin/app-amar/sonhos");
+    await page.goto("/app-amar/sonhos");
     await page.waitForLoadState("networkidle");
 
     await expect(page).toHaveURL(/sonhos/);
@@ -159,7 +159,7 @@ test.describe("Smoke — App Amar / Sonhos", () => {
 
 test.describe("Smoke — App Amar / Contatos", () => {
   test("Página carrega sem crash", async ({ page }) => {
-    await page.goto("/admin/app-amar/contatos");
+    await page.goto("/app-amar/contatos");
     await page.waitForLoadState("networkidle");
 
     await expect(page).toHaveURL(/contatos/);
@@ -172,7 +172,7 @@ test.describe("Smoke — App Amar / Contatos", () => {
 
 test.describe("Smoke — App Amar / Projetos", () => {
   test("Página carrega sem crash", async ({ page }) => {
-    await page.goto("/admin/app-amar/projetos");
+    await page.goto("/app-amar/projetos");
     await page.waitForLoadState("networkidle");
 
     await expect(page).toHaveURL(/projetos/);

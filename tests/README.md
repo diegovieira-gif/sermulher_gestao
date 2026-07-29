@@ -57,43 +57,69 @@ npx playwright test && npx playwright show-report
 
 - ✅ Servidor em `http://localhost:3000`
 - ✅ Banco de dados Directus acessível
-- ✅ Autenticação configurada em `tests/auth.setup.ts`
 - ✅ Browsers instalados: `npx playwright install`
+- ✅ **Credenciais no ambiente** (ver abaixo)
+
+### Credenciais
+
+`tests/auth.setup.ts` lê `TEST_USER_EMAIL` e `TEST_USER_PASSWORD` **do ambiente**,
+sem valor padrão. Sem elas, o setup falha com instrução — de propósito: até
+2026-07 havia uma credencial real commitada como fallback neste arquivo.
+
+```bash
+export TEST_USER_EMAIL="conta-de-teste@exemplo.gov.br"
+export TEST_USER_PASSWORD="..."
+npx playwright test
+```
+
+Use uma **conta de teste dedicada**, nunca a credencial pessoal de um servidor.
+No CI, cadastre as duas como secrets do repositório.
+
+> O projeto `smoke` não depende de autenticação e roda sem essas variáveis — é
+> por isso que o pipeline atual (`--project=smoke`) continua verde sem elas.
+
+### Rotas: `(admin)` não é segmento de URL
+
+`src/app/(admin)/` é um **route group** do App Router — ele agrupa arquivos sem
+aparecer na URL. As rotas reais são `/dashboard`, `/escola`, `/sala-azul`, e
+**não** `/admin/dashboard`. Como o proxy redireciona qualquer rota sem sessão
+para `/login`, testes apontando para `/admin/...` passavam sem testar nada.
+`tests/rotas.spec.ts` guarda contra essa regressão.
 
 ## Cenários por Módulo
 
-### Beneficiárias (/admin/mulheres/beneficiarias)
+### Beneficiárias (/mulheres/beneficiarias)
 
 - ✅ Criar com campos obrigatórios (nome_completo)
 - ✅ Filtrar por nome
 - ✅ Editar telefone/endereço
 - ✅ Deletar e verificar remoção
 
-### Escola - Cursos (/admin/escola/cursos)
+### Escola - Cursos (/escola/cursos)
 
 - ✅ Criar curso com área e carga horária
 - ✅ Verificar na lista
 - ✅ Deletar curso
 
-### Escola - Turmas (/admin/escola/turmas)
+### Escola - Turmas (/escola/turmas)
 
 - ✅ Criar turma com curso existente
 - ✅ Criar turma com pré-requisito (curso criado antes)
 - ✅ Verificar vínculo com curso real
 
-### Sala Azul - Infratores (/admin/sala-azul/infratores)
+### Sala Azul - Infratores (/sala-azul/infratores)
 
 - ✅ Cadastrar infrator com CPF válido
 - ✅ Selecionar nível, status legal, tipos agressão
 - ✅ Encontrar e deletar na lista
 
-### Sala Azul - Ciclos (/admin/sala-azul/ciclos)
+### Sala Azul - Ciclos (/sala-azul/ciclos)
 
 - ✅ Criar ciclo reflexivo com datas
 - ✅ Adicionar infrator como participante (se interface permitir)
 - ✅ Deletar ciclo
 
-### Eventos (/admin/eventos)
+### Eventos (/eventos)
 
 - ✅ Criar evento para data de amanhã
 - ✅ Verificar em calendário/lista
