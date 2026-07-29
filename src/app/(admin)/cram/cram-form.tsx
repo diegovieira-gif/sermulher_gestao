@@ -61,6 +61,25 @@ import { Textarea } from "@/components/ui/textarea";
 
 // --- Blocos reutilizáveis ---------------------------------------------------
 
+/**
+ * Rótulo e texto de apoio para blocos que NÃO são um campo único (grupos de
+ * checkbox, seções inteiras).
+ *
+ * `FormLabel`/`FormDescription` do shadcn chamam `useFormField` e explodem com
+ * "useFormField should be used within <FormField>" quando usados fora de um
+ * campo. Aqui não há campo ao qual se associar — então são elementos simples,
+ * com as mesmas classes visuais dos originais.
+ */
+function RotuloGrupo({ children }: { children: ReactNode }) {
+  return (
+    <p className="mb-2 block text-sm font-medium leading-none">{children}</p>
+  );
+}
+
+function TextoApoio({ children }: { children: ReactNode }) {
+  return <p className="text-[0.8rem] text-muted-foreground">{children}</p>;
+}
+
 function Secao({ titulo, children }: { titulo: string; children: ReactNode }) {
   return (
     <Card>
@@ -481,10 +500,10 @@ export function CramForm({
             </Secao>
 
             <Secao titulo="Documentação pessoal complementar">
-              <FormDescription>
+              <TextoApoio>
                 CPF e CadÚnico ficam no prontuário da assistida. Aqui registramos apenas o
                 que o instrumental pede a mais.
-              </FormDescription>
+              </TextoApoio>
               <div className="grid gap-4 md:grid-cols-2">
                 <CampoTextoSimples control={form.control} name="rg" label="RG" />
                 <CampoTextoSimples
@@ -513,7 +532,7 @@ export function CramForm({
                 />
               </div>
               <div>
-                <FormLabel className="mb-2 block">Possui saneamento básico?</FormLabel>
+                <RotuloGrupo>Possui saneamento básico?</RotuloGrupo>
                 <GrupoCheckbox
                   control={form.control}
                   name="saneamento"
@@ -667,9 +686,7 @@ export function CramForm({
               </div>
 
               <div>
-                <FormLabel className="mb-2 block">
-                  Qual a maior necessidade socioassistencial?
-                </FormLabel>
+                <RotuloGrupo>Qual a maior necessidade socioassistencial?</RotuloGrupo>
                 <GrupoCheckbox
                   control={form.control}
                   name="necessidades_socioassistenciais"

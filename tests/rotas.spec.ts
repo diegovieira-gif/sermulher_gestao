@@ -77,6 +77,15 @@ test.describe("Rotas do menu resolvem autenticado", () => {
       await expect(
         page.getByText("This page could not be found"),
       ).not.toBeVisible();
+
+      // O error boundary de `(admin)/error.tsx` captura erros de render no
+      // cliente e responde com HTTP 200 — as asserções acima passariam batidas.
+      // Foi exatamente assim que um `FormLabel` fora de `<FormField>` chegou a
+      // /cram/novo sem ser detectado por tsc, lint nem build.
+      await expect(
+        page.getByText("Ops! Algo deu errado"),
+        `${rota} caiu no error boundary da aplicação`,
+      ).not.toBeVisible();
     });
   }
 });
