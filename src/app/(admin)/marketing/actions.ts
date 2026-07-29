@@ -88,7 +88,7 @@ export async function saveMarketingItem(data: any) {
       await directus.request(createItem(COLLECTION, payload));
     }
 
-    revalidatePath("/admin/marketing");
+    revalidatePath("/marketing");
     return { success: true, message: "Salvo com sucesso!" };
   } catch (error: any) {
     console.error(
@@ -108,7 +108,7 @@ export async function saveMarketingItem(data: any) {
 export async function deleteMarketingItem(id: number) {
   try {
     await directus.request(deleteItem(COLLECTION, id));
-    revalidatePath("/admin/marketing");
+    revalidatePath("/marketing");
     return { success: true, message: "Item removido!" };
   } catch (error) {
     console.error("Erro ao deletar:", error);

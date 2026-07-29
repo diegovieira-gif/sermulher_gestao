@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getTurmaById, getMatriculasByTurma, getBeneficiariasOptions, getTurmaPerformance } from "../../actions";
 import { TurmaDetalhesClient } from "./turma-detalhes-client";
 
@@ -23,7 +24,10 @@ export default async function TurmaDetalhesPage({ params }: TurmaDetalhesPagePro
     return (
       <div className="p-6">
         <div className="bg-destructive/10 text-destructive px-4 py-3 rounded">
-          Turma não encontrada. <a href="/admin/escola/turmas" className="underline">Voltar</a>
+          Turma não encontrada.{" "}
+          <Link href="/escola/turmas" className="underline">
+            Voltar
+          </Link>
         </div>
       </div>
     );

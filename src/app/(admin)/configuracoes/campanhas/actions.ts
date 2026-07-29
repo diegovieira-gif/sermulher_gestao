@@ -46,8 +46,8 @@ export async function saveCampanha(data: Campanha) {
       await directus.request(createItem(COLLECTION, payload));
     }
 
-    revalidatePath("/admin/configuracoes");
-    revalidatePath("/admin/marketing");
+    revalidatePath("/configuracoes");
+    revalidatePath("/marketing");
     return { success: true };
   } catch (error) {
     console.error("Erro ao salvar campanha:", error);
@@ -60,8 +60,8 @@ export async function deleteCampanha(id: number) {
   await assertAccess("configuracoes");
   try {
     await directus.request(deleteItem(COLLECTION, id));
-    revalidatePath("/admin/configuracoes");
-    revalidatePath("/admin/marketing");
+    revalidatePath("/configuracoes");
+    revalidatePath("/marketing");
     return { success: true };
   } catch (error) {
     console.error("Erro ao excluir campanha:", error);
