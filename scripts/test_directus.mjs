@@ -11,6 +11,18 @@ if (fs.existsSync(".env.local")) {
 
 const API_URL = process.env.DIRECTUS_API_URL || "http://192.168.0.118:8055";
 
+// Credenciais vêm do ambiente — nunca literais no código. Use uma conta de
+// teste dedicada, não a credencial pessoal de um servidor.
+const EMAIL = process.env.TEST_USER_EMAIL;
+const PASSWORD = process.env.TEST_USER_PASSWORD;
+
+if (!EMAIL || !PASSWORD) {
+  console.error(
+    "❌ Defina TEST_USER_EMAIL e TEST_USER_PASSWORD no ambiente (ou no .env.local).",
+  );
+  process.exit(1);
+}
+
 async function main() {
   try {
     // 1. Login to get a token
@@ -20,8 +32,8 @@ async function main() {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        email: "diego.vieira@aracaju.se.gov.br",
-        password: "Irland@2023"
+        email: EMAIL,
+        password: PASSWORD
       })
     });
     if (!loginRes.ok) {
