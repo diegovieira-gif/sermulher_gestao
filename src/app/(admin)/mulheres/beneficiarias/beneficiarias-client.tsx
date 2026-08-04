@@ -595,7 +595,17 @@ export function BeneficiariasClient({
                         {getInitials(b.nome_completo)}
                       </div>
                       <div className="flex flex-col">
-                        <span className="font-semibold text-slate-900 leading-none">{b.nome_completo}</span>
+                        {/* O nome leva à ficha completa (abas Dados, Benefícios,
+                            Eventos e Cursos). Antes o único caminho era o painel
+                            de resumo → "Ver Ficha Completa", dois cliques abaixo
+                            de um botão que aparentava ser só de visualização. */}
+                        <Link
+                          href={`/mulheres/beneficiarias/${b.id}`}
+                          className="font-semibold text-slate-900 leading-none hover:text-purple-700 hover:underline"
+                          title="Abrir ficha completa"
+                        >
+                          {b.nome_completo}
+                        </Link>
                         {isValidNomeSocial(b.nome_social) && (
                           <span className="text-xs text-slate-500 mt-1 italic">
                             Nome social: {b.nome_social}
@@ -717,6 +727,20 @@ export function BeneficiariasClient({
                         onClick={() => setPreviewBeneficiaria(b)}
                       >
                         <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        asChild
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-full"
+                        title="Ficha completa (benefícios, eventos e cursos)"
+                      >
+                        <Link href={`/mulheres/beneficiarias/${b.id}`}>
+                          <FileText className="h-4 w-4" />
+                          <span className="sr-only">
+                            Ficha completa de {b.nome_completo}
+                          </span>
+                        </Link>
                       </Button>
                       <Button
                         variant="ghost"
