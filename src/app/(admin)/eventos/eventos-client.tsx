@@ -29,8 +29,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { EventoForm } from "./evento-form";
+import { ParticipantesDialog } from "./participantes-dialog";
 import { deleteEvento } from "./actions";
-import { Plus, Edit, Trash2, Calendar, Repeat, Eye } from "lucide-react";
+import { Plus, Edit, Trash2, Calendar, Repeat, Eye, Users } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -143,6 +144,11 @@ export function EventosClient({
   // Visualização de detalhes
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [selectedViewEvento, setSelectedViewEvento] = useState<any | null>(null);
+  // Evento cujo quadro de participantes está aberto (null = fechado).
+  const [eventoParticipantes, setEventoParticipantes] = useState<{
+    id: number;
+    nome: string;
+  } | null>(null);
 
   const handleNew = () => {
     setSelectedEvento(null);
@@ -380,6 +386,22 @@ export function EventosClient({
                         <Button
                           variant="ghost"
                           size="icon"
+                          title="Participantes"
+                          onClick={() =>
+                            setEventoParticipantes({
+                              id: evento.id,
+                              nome: evento.nome,
+                            })
+                          }
+                        >
+                          <Users className="h-4 w-4 text-emerald-600" />
+                          <span className="sr-only">
+                            Ver participantes de {evento.nome}
+                          </span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => handleEdit(evento)}
                         >
                           <Edit className="h-4 w-4" />
@@ -400,6 +422,12 @@ export function EventosClient({
           </TableBody>
         </Table>
       </div>
+
+      <ParticipantesDialog
+        evento={eventoParticipantes}
+        open={eventoParticipantes !== null}
+        onOpenChange={(aberto) => !aberto && setEventoParticipantes(null)}
+      />
 
       <EventoForm
         open={formOpen}

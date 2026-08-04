@@ -1,10 +1,11 @@
 "use server";
 
-import { getDirectusAdmin } from "@/lib/directus";
+import { getDirectusAdmin, getDirectusClient } from "@/lib/directus";
 import { assertAccess } from "@/lib/permissions";
 import { createItem, deleteItem, readItems, updateItem } from "@directus/sdk";
 import { revalidatePath } from "next/cache";
 import { Evento, insertEventoSchema } from "./schemas";
+import { participacaoEventoSchema } from "../mulheres/beneficiarias/schemas";
 
 /**
  * Autoriza o usuário no módulo "eventos" e devolve o cliente admin (lazy).
@@ -246,5 +247,155 @@ export async function getGlobalEvents(): Promise<{
   } catch (error) {
     console.error("Erro crítico no calendário:", error);
     return { success: false, error: "Falha ao carregar calendário" };
+  }
+}
+
+// --- Participantes por evento (coleção participacoes_evento) ----------------
+//
+// É o outro lado da vinculação já existente na ficha da beneficiária
+// (mulheres/beneficiarias/[id] → aba Eventos). A mesma coleção, lida a partir
+// do evento em vez da pessoa.
+//
+// Diferente do restante deste arquivo, estas actions usam o token DO USUÁRIO e
+// não `getDirectusAdmin()`. A lista expõe nomes e CPFs de mulheres em situação
+// de violência: manter o token do usuário preserva as permissões do Directus
+// como segunda barreira, em vez de depender só do gate de menu da aplicação.
+
+export type ParticipanteEvento = {
+  id: number;
+  data_participacao: string | null;
+  observacao?: string | null;
+  beneficiaria?: {
+    id: number;
+    nome_completo?: string | null;
+    cpf?: string | null;
+    telefone?: string | null;
+  } | null;
+};
+
+export type BeneficiariaParaEvento = {
+  id: number;
+  nome_completo: string;
+  cpf?: string | null;
+};
+
+export async function getParticipantesEvento(eventoId: number) {
+  await assertAccess("eventos");
+  try {
+    const directus = await getDirectusClient({ requireAuth: true });
+    const participantes = await directus.request(
+      readItems("participacoes_evento", {
+        filter: { evento: { _eq: eventoId } },
+        sort: ["-data_participacao"],
+        fields: [
+          "id",
+          "data_participacao",
+          "observacao",
+          "beneficiaria.id",
+          "beneficiaria.nome_completo",
+          "beneficiaria.cpf",
+          "beneficiaria.telefone",
+        ],
+        limit: -1,
+      }),
+    );
+    return {
+      success: true,
+      data: participantes as unknown as ParticipanteEvento[],
+    };
+  } catch (error) {
+    console.error("Erro ao buscar participantes do evento:", error);
+    return { success: false, error: "Falha ao carregar os participantes." };
+  }
+}
+
+export async function getBeneficiariasParaEvento() {
+  await assertAccess("eventos");
+  try {
+    const directus = await getDirectusClient({ requireAuth: true });
+    const beneficiarias = await directus.request(
+      readItems("beneficiarias", {
+        fields: ["id", "nome_completo", "cpf"],
+        sort: ["nome_completo"],
+        limit: -1,
+      }),
+    );
+    return {
+      success: true,
+      data: beneficiarias as unknown as BeneficiariaParaEvento[],
+    };
+  } catch (error) {
+    console.error("Erro ao carregar beneficiárias:", error);
+    return { success: false, data: [] as BeneficiariaParaEvento[] };
+  }
+}
+
+export async function registrarParticipanteEvento(input: {
+  evento: number;
+  beneficiaria: number;
+  data_participacao: string;
+  observacao?: string;
+}) {
+  await assertAccess("eventos");
+
+  const validacao = participacaoEventoSchema.safeParse(input);
+  if (!validacao.success) {
+    const primeiro = validacao.error.issues[0];
+    return { success: false, error: primeiro?.message || "Dados inválidos." };
+  }
+  const dados = validacao.data;
+
+  try {
+    const directus = await getDirectusClient({ requireAuth: true });
+
+    // Impede registrar a mesma beneficiária duas vezes no mesmo evento — a
+    // coleção não tem restrição de unicidade e, pelo lado do evento, repetir
+    // é fácil demais.
+    const jaExiste = (await directus.request(
+      readItems("participacoes_evento", {
+        filter: {
+          evento: { _eq: dados.evento },
+          beneficiaria: { _eq: dados.beneficiaria },
+        },
+        fields: ["id"],
+        limit: 1,
+      }),
+    )) as Array<{ id: number }>;
+
+    if (jaExiste.length > 0) {
+      return {
+        success: false,
+        error: "Esta beneficiária já está registrada neste evento.",
+      };
+    }
+
+    await directus.request(
+      createItem("participacoes_evento", {
+        evento: dados.evento,
+        beneficiaria: dados.beneficiaria,
+        data_participacao: dados.data_participacao,
+        observacao: dados.observacao || null,
+      }),
+    );
+
+    revalidatePath("/eventos");
+    revalidatePath(`/mulheres/beneficiarias/${dados.beneficiaria}`);
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao registrar participante:", error);
+    return { success: false, error: "Erro ao registrar a participação." };
+  }
+}
+
+export async function removerParticipanteEvento(id: number) {
+  await assertAccess("eventos");
+  try {
+    const directus = await getDirectusClient({ requireAuth: true });
+    await directus.request(deleteItem("participacoes_evento", id));
+    revalidatePath("/eventos");
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao remover participante:", error);
+    return { success: false, error: "Erro ao remover a participação." };
   }
 }
