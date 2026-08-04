@@ -19,15 +19,30 @@ import { getAuxItems } from "../../../configuracoes/actions";
 
 interface PageProps {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }
 
-export default async function BeneficiariaDetalhePage({ params }: PageProps) {
-  const { id } = await params;
+/** Abas que aceitam link direto via `?tab=`. */
+const ABAS_VALIDAS = ["dados", "beneficios", "eventos", "cursos"] as const;
+
+export default async function BeneficiariaDetalhePage({
+  params,
+  searchParams,
+}: PageProps) {
+  const [{ id }, query] = await Promise.all([params, searchParams]);
   const beneficiariaId = Number(id);
 
   if (Number.isNaN(beneficiariaId)) {
     return notFound();
   }
+
+  // Permite abrir a ficha já na aba desejada (ex.: vindo da lista, direto para
+  // Eventos). Valor desconhecido cai em "dados" em vez de quebrar a página.
+  const abaInicial = ABAS_VALIDAS.includes(
+    query?.tab as (typeof ABAS_VALIDAS)[number],
+  )
+    ? (query.tab as string)
+    : "dados";
 
   const [
     beneficiariaResult,
@@ -94,7 +109,7 @@ export default async function BeneficiariaDetalhePage({ params }: PageProps) {
         ) : null}
       </header>
 
-      <Tabs defaultValue="dados" className="space-y-4">
+      <Tabs defaultValue={abaInicial} className="space-y-4">
         <TabsList>
           <TabsTrigger value="dados">Dados</TabsTrigger>
           <TabsTrigger value="beneficios">Benefícios</TabsTrigger>

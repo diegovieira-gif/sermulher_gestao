@@ -64,7 +64,17 @@ import {
   ArrowUp as LucideArrowUp,
   ArrowDown as LucideArrowDown,
   BadgeCheck as LucideBadgeCheck,
+  Link2 as LucideLink2,
+  GraduationCap as LucideGraduationCap,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // Bypass global Object prototype pollution from n8n-workflows.d.ts (which defines global 'in' property)
 const Plus = LucidePlus as React.ComponentType<any>;
@@ -87,6 +97,12 @@ const FileText = LucideFileText as React.ComponentType<any>;
 const ArrowUpDown = LucideArrowUpDown as React.ComponentType<any>;
 const ArrowUp = LucideArrowUp as React.ComponentType<any>;
 const ArrowDown = LucideArrowDown as React.ComponentType<any>;
+// Mesmo contorno da poluição de tipos global (ver acima), mas sem `any`: os
+// ícones só recebem `className` aqui, então tipar o necessário basta e não
+// aumenta a dívida de lint do arquivo.
+type IconeSimples = React.ComponentType<{ className?: string }>;
+const Link2 = LucideLink2 as IconeSimples;
+const GraduationCap = LucideGraduationCap as IconeSimples;
 
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { toast } from "sonner";
@@ -733,7 +749,7 @@ export function BeneficiariasClient({
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-full"
-                        title="Ficha completa (benefícios, eventos e cursos)"
+                        title="Ficha completa"
                       >
                         <Link href={`/mulheres/beneficiarias/${b.id}`}>
                           <FileText className="h-4 w-4" />
@@ -742,6 +758,52 @@ export function BeneficiariasClient({
                           </span>
                         </Link>
                       </Button>
+
+                      {/* Atalho direto para cada aba de vínculo. Um único menu
+                          em vez de três ícones — a linha já tem quatro ações. */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded-full"
+                            title="Vínculos: benefícios, eventos e cursos"
+                          >
+                            <Link2 className="h-4 w-4" />
+                            <span className="sr-only">
+                              Vínculos de {b.nome_completo}
+                            </span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuLabel>Vínculos</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem asChild>
+                            <Link
+                              href={`/mulheres/beneficiarias/${b.id}?tab=beneficios`}
+                            >
+                              <Gift className="mr-2 h-4 w-4" />
+                              Benefícios
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link
+                              href={`/mulheres/beneficiarias/${b.id}?tab=eventos`}
+                            >
+                              <Calendar className="mr-2 h-4 w-4" />
+                              Eventos
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link
+                              href={`/mulheres/beneficiarias/${b.id}?tab=cursos`}
+                            >
+                              <GraduationCap className="mr-2 h-4 w-4" />
+                              Cursos
+                            </Link>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                       <Button
                         variant="ghost"
                         size="icon"
