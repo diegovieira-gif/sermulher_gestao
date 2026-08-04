@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { UserPlus, FileText } from "lucide-react";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 export default async function MulheresPage() {
   const statsResult = await getMulheresDashboardStats();
 

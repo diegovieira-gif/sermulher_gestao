@@ -8,6 +8,8 @@ export const metadata = {
   title: "Sonhos - App Amar",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function SonhosPage() {
   const sonhos = await getSonhos();
 

@@ -8,6 +8,8 @@ export const metadata = {
   title: "Cursos - App Amar",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function CursosPage() {
   const cursos = await getCursos();
 

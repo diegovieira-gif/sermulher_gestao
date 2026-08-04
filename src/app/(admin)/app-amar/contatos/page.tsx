@@ -8,6 +8,8 @@ export const metadata = {
   title: "Contatos - App Amar",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function ContatosPage() {
   const contatos = await getContatos();
 

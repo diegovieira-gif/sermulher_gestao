@@ -5,6 +5,8 @@ export const metadata = {
   title: "Campanhas - App Amar",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function CampanhasPage() {
   const campanhas = await getCampanhas();
 

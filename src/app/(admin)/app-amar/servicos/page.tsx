@@ -5,6 +5,8 @@ export const metadata = {
   title: "Vínculo de Serviços - App Amar",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function ServicosPage() {
   const [servicos, categorias] = await Promise.all([
     getServicos(),
