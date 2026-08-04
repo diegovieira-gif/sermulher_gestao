@@ -45,7 +45,19 @@ async function api(path, options = {}) {
 }
 
 const POLICY_NAME = "App Padrão";
-const ROLE_NAMES = ["Jurídico", "Gabinete", "Atendimento", "Psicossocial"];
+// Perfis não-admin que devem receber a policy.
+//
+// ATENÇÃO: esta lista é a fonte de verdade e precisa ser atualizada a cada
+// perfil novo criado no Directus. Um perfil ausente daqui fica SEM policy —
+// o usuário entra, mas não lê dado nenhum e as telas vêm vazias. Foi o que
+// aconteceu com o CRAM, criado depois da última execução deste script.
+const ROLE_NAMES = [
+  "Jurídico",
+  "Gabinete",
+  "Atendimento",
+  "Psicossocial",
+  "CRAM",
+];
 const READONLY_COLLECTIONS = new Set(["config_permissoes_menu", "config_permissoes_demanda"]);
 // Campos que o usuário pode editar do próprio cadastro (exclui role/policies/status).
 const SELF_USER_FIELDS = [

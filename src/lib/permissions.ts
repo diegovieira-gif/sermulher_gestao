@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
   ALL_MENU_KEYS,
+  ALWAYS_ON_KEYS,
   getAllowedMenuKeys,
 } from "@/lib/menu-registry";
 
@@ -70,12 +71,58 @@ async function adminFetch<T = unknown>(
   return (json?.data ?? json) as T;
 }
 
+interface SessionClaims {
+  roleId: string | null;
+  /** `admin_access` do token — presente apenas em JWTs do Directus. */
+  isAdmin: boolean | null;
+}
+
+/**
+ * Extrai `role` e `admin_access` do próprio token de sessão.
+ *
+ * O access token emitido pelo login do Directus é um JWT cujo payload já traz
+ * `role`, `admin_access` e `app_access`. Ler dali tem duas vantagens sobre o
+ * `GET /users/me?fields=role`:
+ *
+ * 1. Não depende de permissão de leitura: um perfil sem policy vinculada
+ *    (ex.: perfil recém-criado sem a "App Padrão") não expõe o campo `role`
+ *    no /users/me — o role vinha `null`, o fallback fail-open disparava e o
+ *    usuário via o MENU COMPLETO justamente por ter menos permissão.
+ * 2. `admin_access` vem do próprio Directus, sem a heurística de nome
+ *    ("Administrator") nem as consultas a /access e /policies.
+ *
+ * A assinatura NÃO é verificada aqui — nem precisa: o cookie é httpOnly e
+ * escrito apenas pelo nosso login, o gate de menu é UX, e toda leitura/escrita
+ * de dados continua passando pelo Directus, que valida o token de verdade.
+ */
+function decodeSessionClaims(token: string): SessionClaims | null {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return null; // não é JWT (ex.: token estático)
+    const payload = JSON.parse(
+      Buffer.from(parts[1], "base64url").toString("utf8"),
+    ) as { role?: unknown; admin_access?: unknown };
+    const roleId = typeof payload.role === "string" ? payload.role : null;
+    const isAdmin =
+      typeof payload.admin_access === "boolean" ? payload.admin_access : null;
+    return { roleId, isAdmin };
+  } catch {
+    return null;
+  }
+}
+
 /** Lê o role (uuid) do usuário logado usando o cookie de sessão. */
 async function getCurrentUserRoleId(): Promise<string | null> {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("directus_token")?.value;
     if (!token) return null;
+
+    // Caminho principal: o role está no próprio JWT.
+    const claims = decodeSessionClaims(token);
+    if (claims?.roleId) return claims.roleId;
+
+    // Fallback (token não-JWT): consulta o Directus com o token do usuário.
     const res = await fetch(`${BASE_URL}/users/me?fields=id,role`, {
       cache: "no-store",
       headers: { Authorization: `Bearer ${token}` },
@@ -175,36 +222,70 @@ export async function getPermissionConfigForRole(
 
 /**
  * Acesso efetivo do usuário logado: role, se é admin e as chaves de menu
- * permitidas. Fail-open: em caso de erro, libera o menu completo (navegação).
+ * permitidas.
+ *
+ * Política de falha:
+ * - Sem cookie de sessão → menu completo (o proxy já barrou a navegação; este
+ *   caso só existe em render fora de sessão, ex.: build).
+ * - COM sessão mas role não resolvido → fail-closed: apenas os itens
+ *   `alwaysOn`. Antes era fail-open (menu completo), e um perfil sem policy
+ *   no Directus — que não conseguia nem ler o próprio `role` — acabava vendo
+ *   o menu inteiro justamente por ter MENOS permissão.
+ * - Role resolvido e sem linha de configuração → menu completo (default
+ *   documentado: perfil ainda não configurado não é perfil restrito).
  *
  * Memoizado por requisição (React cache) — layout, páginas e actions dentro da
  * mesma requisição compartilham a mesma consulta.
  */
 export const getCurrentAccess = cache(
   async (): Promise<CurrentAccess> => {
-    const fallback: CurrentAccess = {
+    const semSessao: CurrentAccess = {
       roleId: null,
       roleName: null,
       isAdmin: false,
       allowedKeys: [...ALL_MENU_KEYS],
     };
-    try {
-      const roleId = await getCurrentUserRoleId();
-      if (!roleId) return fallback;
+    // Fail-closed: há sessão, mas não dá para saber quem é.
+    const sessaoSemRole: CurrentAccess = {
+      roleId: null,
+      roleName: null,
+      isAdmin: false,
+      allowedKeys: [...ALWAYS_ON_KEYS],
+    };
 
+    let temSessao = false;
+    try {
+      const cookieStore = await cookies();
+      const token = cookieStore.get("directus_token")?.value ?? "";
+      temSessao = token !== "";
+
+      if (!temSessao) return semSessao;
+
+      // `admin_access` direto do JWT — dispensa heurística de nome de perfil
+      // e as consultas a /access e /policies para o usuário corrente.
+      const claims = decodeSessionClaims(token);
+
+      const roleId = claims?.roleId ?? (await getCurrentUserRoleId());
+      if (!roleId) return sessaoSemRole;
+
+      let isAdmin = claims?.isAdmin ?? null;
+      let roleName: string | null = null;
+
+      // Nome do perfil (e admin, se o token não trouxe) via cadastro de roles.
       const roles = await listRoles();
       const role = roles.find((r) => r.id === roleId) || null;
-      const isAdmin = role?.isAdmin ?? false;
+      roleName = role?.name ?? null;
+      if (isAdmin === null) isAdmin = role?.isAdmin ?? false;
 
       const config = isAdmin ? null : await getPermissionConfigForRole(roleId);
       return {
         roleId,
-        roleName: role?.name ?? null,
+        roleName,
         isAdmin,
         allowedKeys: getAllowedMenuKeys(isAdmin, config),
       };
     } catch {
-      return fallback;
+      return temSessao ? sessaoSemRole : semSessao;
     }
   },
 );
