@@ -35,7 +35,13 @@ Módulo destinado ao acolhimento e registro de atendimentos psicossociais e jur�
 
 ### Eventos, Cursos e Benefícios da beneficiária
 
+**Como chegar à ficha completa:** na lista de beneficiárias, clique no **nome** dela — ou no botão de **ficha** (ícone de documento) na linha. O botão de lápis abre apenas o formulário de dados cadastrais, sem as abas.
+
+**Atalho para uma aba:** o botão de **vínculos** (ícone de elo, em verde-azulado) abre um menu com Benefícios, Eventos e Cursos, levando à aba escolhida já aberta. O endereço da aba é fixo, então dá para salvar ou compartilhar o link.
+
 Na ficha da beneficiária, as abas **Eventos**, **Cursos** e **Benefícios** registram a participação dela em eventos/campanhas e cursos, além das entregas de benefícios. Clique em **Registrar**, escolha o item, informe a data e uma observação opcional.
+
+Pelo lado do evento existe a visão inversa — a lista de quem participou. Veja a seção **Agenda Institucional**.
 
 ### Busca, filtros e telefone validado
 
@@ -123,6 +129,18 @@ Calendário unificado da Secretaria.
   - Eventos e Campanhas (Roxo).
 - **Novo Evento:** Clique no botão **"+ Novo Evento"** para agendar palestras, reuniões ou ações comunitárias.
 - **Listagem:** Use a aba "Lista de Eventos" para ver e gerenciar todos os agendamentos em formato de tabela.
+
+### Participantes de um evento
+
+1. Na aba **Lista de Eventos**, localize o evento.
+2. Clique no botão **Participantes** (ícone de pessoas) na linha.
+3. O quadro mostra o total e a lista de participantes; clique no nome de uma delas para abrir sua ficha.
+
+Para **registrar** uma participação, use a busca por nome ou CPF dentro do quadro, informe a data e confirme. Para remover, use o ícone de lixeira ao lado do nome — isso apaga apenas a participação, nunca o cadastro da beneficiária.
+
+> **Dois caminhos, o mesmo registro.** A participação também pode ser lançada pela ficha da beneficiária, na aba **Eventos**. Use o que for mais prático: pela pessoa quando estiver atendendo, pelo evento quando for lançar a lista de presença de uma ação inteira.
+
+> **Não é possível repetir.** O sistema recusa registrar a mesma beneficiária duas vezes no mesmo evento; quem já está na lista não aparece nas sugestões de busca.
 
 ---
 

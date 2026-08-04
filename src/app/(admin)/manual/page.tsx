@@ -566,6 +566,18 @@ export default function ManualPage() {
               </Badge>
             </AccordionTrigger>
             <AccordionContent className="space-y-2 text-sm text-muted-foreground">
+              <Callout variant="tip" title="Como chegar à ficha completa">
+                Na lista de beneficiárias, clique no <strong>nome</strong> dela —
+                ou no botão de <strong>ficha</strong> (ícone de documento) na
+                linha. É lá que ficam as abas abaixo. O botão de lápis abre
+                apenas o formulário de dados cadastrais.
+              </Callout>
+              <p>
+                Para ir <strong>direto a uma aba</strong>, use o botão de{" "}
+                <strong>vínculos</strong> (ícone de elo, em verde-azulado) na
+                linha da beneficiária: ele abre um menu com Benefícios, Eventos e
+                Cursos, e leva à aba escolhida já aberta.
+              </p>
               <p>
                 Na ficha da beneficiária, as abas <strong>Eventos</strong> e{" "}
                 <strong>Cursos</strong> registram de quais eventos/campanhas e
@@ -575,6 +587,14 @@ export default function ManualPage() {
               <p>
                 A aba <strong>Benefícios</strong> continua registrando as entregas
                 de benefícios da mesma forma.
+              </p>
+              <p>
+                Pelo lado do evento existe a visão inversa — a lista de quem
+                participou. Veja{" "}
+                <a href="#agenda" className="font-medium text-primary underline">
+                  Agenda Institucional
+                </a>
+                .
               </p>
             </AccordionContent>
           </AccordionItem>
@@ -875,6 +895,51 @@ export default function ManualPage() {
             </p>
           </div>
         </div>
+
+        <Accordion type="single" collapsible className="w-full">
+          <AccordionItem value="a1">
+            <AccordionTrigger>
+              Ver quem participou de um evento{" "}
+              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25">
+                Novo
+              </Badge>
+            </AccordionTrigger>
+            <AccordionContent className="space-y-3">
+              <Steps
+                items={[
+                  <>
+                    Na aba <strong>Lista de Eventos</strong>, localize o evento.
+                  </>,
+                  <>
+                    Clique no botão <strong>Participantes</strong> (ícone de
+                    pessoas) na linha do evento.
+                  </>,
+                  <>
+                    O quadro mostra o total e a lista de participantes. Clique
+                    no nome de uma delas para abrir sua ficha.
+                  </>,
+                ]}
+              />
+              <p className="text-sm text-muted-foreground">
+                Para <strong>registrar</strong> uma participação, use a busca por
+                nome ou CPF dentro do quadro, informe a data e confirme. Para
+                remover, use o ícone de lixeira ao lado do nome.
+              </p>
+              <Callout variant="tip" title="Dois caminhos, o mesmo registro">
+                A participação também pode ser lançada pela ficha da
+                beneficiária, na aba <strong>Eventos</strong>. É o mesmo dado —
+                registrar de um lado aparece no outro. Use o que for mais prático:
+                pela pessoa quando estiver atendendo, pelo evento quando for
+                lançar a lista de presença de uma ação inteira.
+              </Callout>
+              <Callout variant="warn" title="Não é possível repetir">
+                O sistema recusa registrar a mesma beneficiária duas vezes no
+                mesmo evento. Quem já está na lista não aparece nas sugestões de
+                busca.
+              </Callout>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </Section>
 
       {/* 7. Escola da Mulher */}
