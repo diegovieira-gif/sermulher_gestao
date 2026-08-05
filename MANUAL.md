@@ -13,6 +13,10 @@ Ao entrar no sistema, você verá o **Painel de Controle** com indicadores em te
 - **Eventos:** Agenda dos próximos 7 dias.
 - **Pendências:** Casos que aguardam triagem ou ação imediata.
 
+### Mudar o período de referência
+
+No topo do painel há um seletor de **mês/ano**. Os indicadores mensais (atendimentos, encaminhamentos, benefícios e o gráfico) passam a refletir o período escolhido — útil para responder "como foi em junho?". Os totais acumulados (beneficiárias cadastradas, turmas ativas etc.) não mudam, pois não são mensais. O padrão é sempre o mês corrente.
+
 ---
 
 ## 2. Gestão de Mulheres (Prontuário)
@@ -44,6 +48,19 @@ Na ficha da beneficiária, as abas **Eventos**, **Cursos** e **Benefícios** reg
 Ao escolher um evento, a **data é sugerida automaticamente**: se hoje está dentro do período do evento, hoje; caso contrário, a data de início dele. O período aparece abaixo do campo, e um aviso surge se a data informada ficar fora dele — é apenas um alerta, não um bloqueio, já que registrar depois pode ser legítimo.
 
 Pelo lado do evento existe a visão inversa — a lista de quem participou. Veja a seção **Agenda Institucional**.
+
+### Linha do Tempo
+
+A aba **Linha do Tempo** da ficha reúne, em ordem cronológica, **tudo o que aconteceu com a beneficiária**: atendimentos abertos, instrumentais do CRAM, benefícios entregues, eventos e cursos. É o resumo do caso para consultar antes de um atendimento — cada item com tela própria (atendimento, CRAM) é clicável e abre o registro completo.
+
+### Rascunho automático (não perca o preenchimento)
+
+Os formulários grandes — **beneficiária**, **atendimento** e **Instrumental CRAM** — salvam automaticamente um **rascunho no computador** enquanto você digita. Se a sessão expirar, a aba fechar sem querer ou faltar energia:
+
+1. Reabra o mesmo formulário.
+2. Uma faixa amarela oferece **Recuperar** (volta tudo como estava) ou **Descartar**.
+
+O rascunho é apagado quando o registro é salvo com sucesso e expira sozinho após 24 horas. O navegador também passa a **avisar antes de fechar** a aba quando há alterações não salvas. Se um campo obrigatório de outra aba impedir o salvamento, um aviso indica **em qual aba** está a pendência.
 
 ### Completude da ficha
 
@@ -186,18 +203,32 @@ Gestão de campanhas de conscientização e métricas sociais.
 
 ---
 
-## 8. Configurações
+## 8. Relatórios (RMA e Indicadores)
+
+No menu **Relatórios** ficam os documentos oficiais mensais:
+
+- **RMA (SUAS):** o Relatório Mensal de Atendimentos — movimento do mês, detalhamento por setor e tipos de violência dos novos casos.
+- **Indicadores:** painel mensal com identificação, ações, comunicação e perfil demográfico.
+
+Ambos têm filtro de **mês/ano** e duas saídas:
+
+- **Imprimir Relatório:** gera o documento formatado (use "Salvar como PDF" na janela de impressão do navegador para arquivar).
+- **Exportar CSV:** baixa os mesmos números em planilha (abre no Excel com acentos corretos), com o nome já padronizado — ex.: `RMA-2026-08.csv`. Elimina a re-digitação ao consolidar dados ou enviar à rede SUAS.
+
+---
+
+## 9. Configurações
 
 Área restrita à gestão para padronizar o sistema. Acessível pelo botão **"Configurações"** no rodapé do menu lateral.
 
 - **Tabelas Auxiliares:** Cadastre novos **Tipos de Evento**, **Bairros**, **Origens de Encaminhamento**, **Tipos de Violência**, etc.
 - **Tramitações:** os submenus **Tipos de Tramitação** (tipos de demanda) e **Status de Etapa** definem as opções dos formulários de tramitação e as colunas do Kanban.
-- **Acesso & Segurança (admin):** **Permissões de Menu** e **Acesso a Demandas** controlam o que cada perfil enxerga (ver seção 10).
+- **Acesso & Segurança (admin):** **Permissões de Menu** e **Acesso a Demandas** controlam o que cada perfil enxerga (ver seção 11).
 - **Importância:** Qualquer alteração aqui reflete imediatamente nas opções disponíveis nos formulários de cadastro de todo o sistema.
 
 ---
 
-## 9. Meu Perfil
+## 10. Meu Perfil
 
 Clique no seu **nome** (canto superior direito) e escolha **Meu Perfil**:
 
@@ -207,7 +238,7 @@ Clique no seu **nome** (canto superior direito) e escolha **Meu Perfil**:
 
 ---
 
-## 10. Controle de Acesso (Perfis) — Administradores
+## 11. Controle de Acesso (Perfis) — Administradores
 
 O acesso é organizado por **perfil** (o "grupo" do usuário). Cada usuário pertence a um perfil, e o que ele vê depende de duas camadas configuráveis no app.
 
@@ -220,6 +251,12 @@ O acesso é organizado por **perfil** (o "grupo" do usuário). Cada usuário per
 5. **Acesso a Demandas:** em **Configurações → Acesso & Segurança → Acesso a Demandas**, marque os tipos de demanda que o perfil pode tratar (ex.: Jurídico → "Jurídica"). Salve.
 
 > **Atenção:** um perfil sem a política "App Padrão" deixa o usuário com telas vazias. Vincule-a sempre aos perfis não-administradores. O Dashboard nunca é bloqueável e administradores têm acesso irrestrito.
+
+### O que acontece sem permissão
+
+Quem tenta acessar um módulo fora do seu perfil — por link direto ou URL — vê a página **"Acesso não permitido"**, com o nome do módulo e a orientação de solicitar a liberação à administração. O bloqueio também vale **no servidor**: mesmo chamadas diretas às operações de um módulo não permitido são negadas, não apenas o menu escondido.
+
+Por segurança, o **login** também limita tentativas: após 5 senhas erradas seguidas (por usuário ou por computador), é preciso aguardar alguns minutos antes de tentar de novo.
 
 ---
 

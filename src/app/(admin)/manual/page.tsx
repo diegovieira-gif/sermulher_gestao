@@ -467,6 +467,21 @@ export default function ManualPage() {
               acesso imediato às rotinas mais usadas.
             </AccordionContent>
           </AccordionItem>
+          <AccordionItem value="d3">
+            <AccordionTrigger>
+              Mudar o período de referência{" "}
+              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25">
+                Novo
+              </Badge>
+            </AccordionTrigger>
+            <AccordionContent className="text-sm text-muted-foreground">
+              O seletor de <strong>mês/ano</strong> no topo muda o período dos
+              indicadores mensais e do gráfico — útil para responder &quot;como
+              foi em junho?&quot;. Totais acumulados (beneficiárias cadastradas,
+              turmas ativas) não mudam, pois não são mensais. O padrão é o mês
+              corrente.
+            </AccordionContent>
+          </AccordionItem>
         </Accordion>
       </Section>
 
@@ -574,6 +589,52 @@ export default function ManualPage() {
                 diferente de um telefone ausente, por isso o aviso aparece
                 separado do percentual.
               </Callout>
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="m8">
+            <AccordionTrigger>
+              Linha do Tempo{" "}
+              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25">
+                Novo
+              </Badge>
+            </AccordionTrigger>
+            <AccordionContent className="space-y-2 text-sm text-muted-foreground">
+              <p>
+                A aba <strong>Linha do Tempo</strong> da ficha reúne, em ordem
+                cronológica, tudo o que aconteceu com a beneficiária:
+                atendimentos, instrumentais do CRAM, benefícios entregues,
+                eventos e cursos.
+              </p>
+              <p>
+                É o resumo do caso para consultar <strong>antes de um
+                atendimento</strong>. Itens com tela própria (atendimento, CRAM)
+                são clicáveis e abrem o registro completo.
+              </p>
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="m9">
+            <AccordionTrigger>
+              Rascunho automático{" "}
+              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25">
+                Novo
+              </Badge>
+            </AccordionTrigger>
+            <AccordionContent className="space-y-2 text-sm text-muted-foreground">
+              <p>
+                Os formulários grandes — <strong>beneficiária</strong>,{" "}
+                <strong>atendimento</strong> e <strong>Instrumental CRAM</strong>{" "}
+                — salvam um rascunho no computador enquanto você digita. Se a
+                sessão expirar ou a aba fechar sem querer, reabra o formulário:
+                uma faixa amarela oferece <strong>Recuperar</strong> ou{" "}
+                <strong>Descartar</strong>.
+              </p>
+              <p>
+                O rascunho é apagado ao salvar com sucesso e expira em 24 horas.
+                O navegador também avisa antes de fechar a aba com alterações
+                não salvas — e, se um campo obrigatório de outra aba impedir o
+                salvamento, um aviso indica <strong>em qual aba</strong> está a
+                pendência.
+              </p>
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="m3">
@@ -1217,6 +1278,22 @@ export default function ManualPage() {
               />
             </AccordionContent>
           </AccordionItem>
+          <AccordionItem value="r3">
+            <AccordionTrigger>
+              Exportar CSV{" "}
+              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25">
+                Novo
+              </Badge>
+            </AccordionTrigger>
+            <AccordionContent className="text-sm text-muted-foreground">
+              Tanto o <strong>RMA</strong> quanto os{" "}
+              <strong>Indicadores</strong> têm o botão{" "}
+              <strong>Exportar CSV</strong>: baixa os mesmos números em planilha
+              (abre no Excel com os acentos corretos), com nome padronizado —
+              ex.: <code>RMA-2026-08.csv</code>. Elimina a re-digitação ao
+              consolidar dados ou enviar à rede SUAS.
+            </AccordionContent>
+          </AccordionItem>
         </Accordion>
       </Section>
 
@@ -1363,8 +1440,10 @@ export default function ManualPage() {
               limitados.
             </Callout>
             <Callout variant="new" title="Bloqueio por URL">
-              Mesmo digitando o endereço direto, um usuário sem permissão é
-              redirecionado para o Dashboard.
+              Quem acessa um endereço fora do seu perfil vê a página{" "}
+              <strong>&quot;Acesso não permitido&quot;</strong>, com o nome do
+              módulo bloqueado. O bloqueio também vale no servidor — as
+              operações do módulo são negadas, não apenas o menu escondido.
             </Callout>
           </div>
         </div>
