@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { todayLocalISO } from "@/lib/utils";
 import { Loader2, Info } from "lucide-react";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 
@@ -49,15 +50,23 @@ interface EventoFormProps {
   onSuccess?: () => void;
 }
 
-// Função auxiliar para formatar a data recebida no formato YYYY-MM-DDTHH:mm
-function formatarParaDatetimeLocal(data: string | Date | undefined | null): string {
+/**
+ * Valor para `<input type="date">`, no formato AAAA-MM-DD.
+ *
+ * As colunas data_inicio/data_fim são do tipo `date` no banco — sem hora. O
+ * formulário usava `datetime-local` e convertia para ISO na gravação: a hora
+ * era descartada pelo Postgres, dando a impressão de que a edição não salvava.
+ * E a leitura de volta, via `new Date("2026-03-20")`, era interpretada como
+ * meia-noite UTC e exibida como 21:00 do dia anterior no fuso local.
+ *
+ * Aqui a string é usada como está, sem passar por Date — que é justamente o que
+ * introduzia o deslocamento.
+ */
+function formatarParaDateInput(data: string | Date | undefined | null): string {
   if (!data) return "";
+  if (typeof data === "string") return data.slice(0, 10);
   try {
-    const date = new Date(data);
-    if (isNaN(date.getTime())) return "";
-    const offset = date.getTimezoneOffset();
-    const localDate = new Date(date.getTime() - offset * 60 * 1000);
-    return localDate.toISOString().slice(0, 16);
+    return todayLocalISO(data);
   } catch {
     return "";
   }
@@ -97,8 +106,8 @@ export function EventoForm({
         form.reset({
           nome: evento.nome || "",
           tipo_id: resolvedTipoId || undefined,
-          data_inicio: formatarParaDatetimeLocal(evento.data_inicio),
-          data_fim: formatarParaDatetimeLocal(evento.data_fim),
+          data_inicio: formatarParaDateInput(evento.data_inicio),
+          data_fim: formatarParaDateInput(evento.data_fim),
           descricao: evento.descricao || "",
           tipo: evento.tipo || undefined,
           recorrencia: evento.recorrencia || "nao_recorrente",
@@ -125,8 +134,10 @@ export function EventoForm({
       const payload = {
         ...data,
         tipo_id: Number(data.tipo_id),
-        data_inicio: new Date(data.data_inicio).toISOString(),
-        data_fim: new Date(data.data_fim).toISOString(),
+        // Enviadas como AAAA-MM-DD, que é exatamente o que a coluna `date`
+        // armazena. Converter para ISO só fazia o Postgres truncar a hora.
+        data_inicio: data.data_inicio.slice(0, 10),
+        data_fim: data.data_fim.slice(0, 10),
         id: evento?.id, // Passa ID se for edição
       };
 
@@ -212,7 +223,7 @@ export function EventoForm({
                   <FormItem>
                     <FormLabel>Início</FormLabel>
                     <FormControl>
-                      <Input type="datetime-local" {...field} />
+                      <Input type="date" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -226,7 +237,7 @@ export function EventoForm({
                   <FormItem>
                     <FormLabel>Fim (Término)</FormLabel>
                     <FormControl>
-                      <Input type="datetime-local" {...field} />
+                      <Input type="date" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

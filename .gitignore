@@ -52,3 +52,8 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# Dumps do banco — contêm dados pessoais de beneficiárias e nunca devem ser versionados
+/backups/
+*.dump
+*.dump.parcial

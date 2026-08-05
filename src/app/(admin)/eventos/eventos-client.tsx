@@ -40,6 +40,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { todayLocalISO } from "@/lib/utils";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { tipoEventoEnum } from "./schemas";
 import type { Evento } from "./schemas";
@@ -53,40 +54,56 @@ interface EventosClientProps {
 
 type StatusEvento = "Encerrado" | "Em Andamento" | "Breve";
 
-// Função para calcular o status do evento
+/**
+ * Situação do evento a partir das datas.
+ *
+ * Comparação por string em AAAA-MM-DD, que é ordenável e exata. Usar
+ * `new Date("2026-03-20")` trazia o mesmo deslocamento de fuso das outras
+ * colunas: a data virava meia-noite UTC e, em UTC-3, o `setHours(0,0,0,0)`
+ * seguinte a jogava para o dia ANTERIOR — um evento aparecia "Em Andamento"
+ * um dia antes de começar.
+ */
 function calcularStatus(dataInicio: string, dataFim: string): StatusEvento {
-  const hoje = new Date();
-  hoje.setHours(0, 0, 0, 0);
+  const hoje = todayLocalISO();
+  const inicio = String(dataInicio || "").slice(0, 10);
+  const fim = String(dataFim || "").slice(0, 10) || inicio;
 
-  const inicio = new Date(dataInicio);
-  inicio.setHours(0, 0, 0, 0);
+  if (!inicio) return "Breve";
 
-  const fim = new Date(dataFim);
-  fim.setHours(0, 0, 0, 0);
-
-  if (hoje > fim) {
-    return "Encerrado";
-  } else if (hoje >= inicio && hoje <= fim) {
-    return "Em Andamento";
-  } else {
-    return "Breve";
-  }
+  if (hoje > fim) return "Encerrado";
+  if (hoje >= inicio) return "Em Andamento";
+  return "Breve";
 }
 
-// Função para formatar data no formato dd/MM/yyyy
-function formatarData(data: string): string {
-  try {
-    const date = new Date(data);
-    return new Intl.DateTimeFormat("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(date);
-  } catch {
-    return data;
-  }
+/**
+ * Formata uma data para dd/MM/aaaa.
+ *
+ * Sem `new Date` de propósito: as colunas são do tipo `date` (sem hora), e
+ * `new Date("2026-03-20")` é lido como meia-noite UTC — exibido no fuso local
+ * virava "19/03/2026 21:00". Recortar a string evita o deslocamento, e a hora
+ * some porque nunca existiu no banco.
+ */
+function formatarData(data: string | null | undefined): string {
+  if (!data) return "";
+  const [ano, mes, dia] = String(data).slice(0, 10).split("-");
+  return dia && mes && ano ? `${dia}/${mes}/${ano}` : String(data);
+}
+
+/**
+ * Período do evento em uma única célula.
+ *
+ * Quando início e fim caem no mesmo dia — a maioria dos casos — mostra só uma
+ * data, em vez de repetir "20/03/2026 a 20/03/2026".
+ */
+function formatarPeriodo(
+  inicio: string | null | undefined,
+  fim: string | null | undefined,
+): string {
+  const i = formatarData(inicio);
+  const f = formatarData(fim);
+  if (!i) return f || "-";
+  if (!f || f === i) return i;
+  return `${i} a ${f}`;
 }
 
 // Função para obter a variante do badge baseado no status
@@ -281,8 +298,8 @@ export function EventosClient({
                 <InfoTooltip text="Nome ou título identificador do evento." />
               </TableHead>
               <TableHead>
-                Data
-                <InfoTooltip text="Data de início do evento." />
+                Período
+                <InfoTooltip text="Datas de início e término do evento. Quando começa e termina no mesmo dia, aparece uma só data." />
               </TableHead>
               <TableHead>
                 Tipo de Evento
@@ -315,7 +332,10 @@ export function EventosClient({
                   evento.data_inicio,
                   evento.data_fim,
                 );
-                const dataFormatada = formatarData(evento.data_inicio);
+                const dataFormatada = formatarPeriodo(
+                  evento.data_inicio,
+                  evento.data_fim,
+                );
 
                 // Acessa tipo_id - pode vir como objeto expandido ou apenas ID
                 const tipoObj =

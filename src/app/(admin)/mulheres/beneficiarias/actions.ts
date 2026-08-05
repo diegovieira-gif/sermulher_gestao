@@ -622,7 +622,9 @@ export async function getEventosOptions() {
   try {
     const eventos = await client.request(
       readItems("eventos_campanhas", {
-        fields: ["id", "nome"],
+        // As datas vêm junto para o formulário poder sugerir uma data de
+        // participação coerente com o período do evento.
+        fields: ["id", "nome", "data_inicio", "data_fim"],
         sort: ["nome"],
         limit: -1,
       }),

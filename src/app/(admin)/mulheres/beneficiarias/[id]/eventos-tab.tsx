@@ -9,7 +9,7 @@ import {
   type ParticipacaoEventoFormValues,
 } from "../schemas";
 import { registrarParticipacaoEvento, deletarParticipacaoEvento } from "../actions";
-import { CalendarDays, Plus, Trash2, Loader2, Calendar, User } from "lucide-react";
+import { CalendarDays, Plus, Trash2, Loader2, Calendar, User, AlertTriangle } from "lucide-react";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { toast } from "sonner";
 import {
@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   Form,
+  FormDescription,
   FormControl,
   FormField,
   FormItem,
@@ -75,7 +76,43 @@ export type HistoricoParticipacaoEvento = {
 export type EventoOption = {
   id: number;
   nome: string;
+  data_inicio?: string | null;
+  data_fim?: string | null;
 };
+
+/** Só a parte AAAA-MM-DD, ignorando hora e fuso. */
+const soData = (valor?: string | null): string =>
+  typeof valor === "string" && valor.length >= 10 ? valor.slice(0, 10) : "";
+
+/**
+ * Data sugerida ao escolher um evento.
+ *
+ * Se hoje está dentro do período do evento, hoje é a resposta mais provável
+ * (registro feito durante a ação). Fora dele, o início do evento é o palpite
+ * razoável — melhor que "hoje", que ficaria fora do período.
+ */
+export function dataSugeridaParaEvento(
+  evento: EventoOption | undefined,
+  hoje: string,
+): string {
+  const inicio = soData(evento?.data_inicio);
+  const fim = soData(evento?.data_fim) || inicio;
+  if (!inicio) return hoje;
+  // Comparação lexicográfica funciona em AAAA-MM-DD.
+  if (hoje >= inicio && hoje <= fim) return hoje;
+  return inicio;
+}
+
+/** A data informada está fora do período do evento? */
+export function foraDoPeriodo(
+  evento: EventoOption | undefined,
+  data: string,
+): boolean {
+  const inicio = soData(evento?.data_inicio);
+  const fim = soData(evento?.data_fim) || inicio;
+  if (!inicio || !data) return false;
+  return data < inicio || data > fim;
+}
 
 interface EventosTabProps {
   beneficiariaId: number;
@@ -110,6 +147,14 @@ export function EventosTab({
   const eventoOptionsSorted = useMemo(
     () => [...eventosOptions].sort((a, b) => (a.nome || "").localeCompare(b.nome || "")),
     [eventosOptions],
+  );
+
+  // Evento escolhido no formulário, para sugerir a data e avisar quando ela
+  // cair fora do período em que o evento aconteceu.
+  const eventoIdSelecionado = form.watch("evento");
+  const eventoSelecionado = useMemo(
+    () => eventosOptions.find((e) => e.id === Number(eventoIdSelecionado)),
+    [eventosOptions, eventoIdSelecionado],
   );
 
   const handleSubmit = (values: ParticipacaoEventoFormValues) => {
@@ -195,7 +240,19 @@ export function EventosTab({
                       <FormControl>
                         <Select
                           value={field.value ? String(field.value) : undefined}
-                          onValueChange={(value) => field.onChange(Number(value))}
+                          onValueChange={(value) => {
+                            const id = Number(value);
+                            field.onChange(id);
+                            // Sugere uma data coerente com o período do evento.
+                            // Sem isto o campo ficava em "hoje", frequentemente
+                            // fora do período em que o evento aconteceu.
+                            const evento = eventosOptions.find((e) => e.id === id);
+                            form.setValue(
+                              "data_participacao",
+                              dataSugeridaParaEvento(evento, todayLocalISO()),
+                              { shouldValidate: true },
+                            );
+                          }}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Selecione o evento" />
@@ -226,6 +283,27 @@ export function EventosTab({
                           <Input type="date" className="pl-10" {...field} />
                         </div>
                       </FormControl>
+                      {eventoSelecionado?.data_inicio && (
+                        <FormDescription>
+                          Período do evento:{" "}
+                          {formatDateDisplay(eventoSelecionado.data_inicio)}
+                          {eventoSelecionado.data_fim &&
+                          eventoSelecionado.data_fim.slice(0, 10) !==
+                            eventoSelecionado.data_inicio.slice(0, 10)
+                            ? ` a ${formatDateDisplay(eventoSelecionado.data_fim)}`
+                            : ""}
+                        </FormDescription>
+                      )}
+                      {/* Aviso, não bloqueio: registrar fora do período pode ser
+                          legítimo (reposição, atendimento posterior). Quem sabe
+                          é a técnica — o sistema só sinaliza o provável engano. */}
+                      {foraDoPeriodo(eventoSelecionado, field.value || "") && (
+                        <p className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800">
+                          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                          Esta data está fora do período do evento. Confirme se
+                          está correta.
+                        </p>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
