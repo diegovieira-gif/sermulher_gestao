@@ -57,3 +57,7 @@ node_modules/
 /backups/
 *.dump
 *.dump.parcial
+
+# Áudio e vídeo gerados pelo pipeline de aulas — artefatos, não fonte
+docs/aulas/audio/
+docs/aulas/video/

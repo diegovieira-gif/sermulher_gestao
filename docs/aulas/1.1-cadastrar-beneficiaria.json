@@ -1,0 +1,90 @@
+{
+  "id": "1.1",
+  "modulo": "1 — Beneficiárias, o coração do sistema",
+  "titulo": "Cadastrar uma beneficiária",
+  "publico": "Todas as profissionais que atendem",
+  "pre_requisitos": ["0.2"],
+  "objetivo": "Ao final, a participante cadastra uma beneficiária no sistema e entende por que o cadastro pode começar incompleto.",
+  "tarefa_final": "Cadastre uma beneficiária fictícia informando nome completo e CPF. Confira que ela aparece na listagem.",
+  "duracao_alvo_seg": 300,
+
+  "voz": {
+    "modelo": "gpt-4o-mini-tts",
+    "voz": "nova",
+    "velocidade": 1.0,
+    "instrucao": "Tom instrutivo, acolhedor e pausado. Português do Brasil. Trata-se de treinamento para servidoras públicas que atendem mulheres em situação de violência — evite entusiasmo publicitário."
+  },
+
+  "dados_demo": {
+    "aviso": "Nomes e documentos fictícios. NUNCA gravar com dados reais.",
+    "nome": "Joana Ribeiro da Silva",
+    "cpf": "52998224725"
+  },
+
+  "cenas": [
+    {
+      "id": "c01",
+      "narracao": "Neste vídeo você vai cadastrar uma beneficiária no SIGMA. É o cadastro mais importante do sistema: tudo o que a Secretaria registra sobre uma mulher — atendimentos, cursos, participação em eventos — se conecta a ele.",
+      "acao": { "tipo": "navegar", "url": "/dashboard" }
+    },
+    {
+      "id": "c02",
+      "narracao": "No menu lateral, abra Gestão de Mulheres e clique em Beneficiárias.",
+      "acao": { "tipo": "clicar", "seletor": "text=Gestão de Mulheres" }
+    },
+    {
+      "id": "c03",
+      "narracao": "Esta é a listagem. Aqui ficam todas as mulheres já cadastradas, e é por ela que você vai passar sempre que precisar encontrar alguém.",
+      "acao": { "tipo": "clicar", "seletor": "a[href='/mulheres/beneficiarias']" }
+    },
+    {
+      "id": "c04",
+      "narracao": "Para incluir uma nova, use o botão Nova Beneficiária, no topo à direita.",
+      "acao": { "tipo": "destacar", "seletor": "button:has-text('Nova Beneficiária')" }
+    },
+    {
+      "id": "c05",
+      "narracao": "O formulário abre em três abas: Dados Pessoais, Endereço e Contato, e Dados Sociais. Não se preocupe em preencher tudo agora.",
+      "acao": { "tipo": "clicar", "seletor": "button:has-text('Nova Beneficiária')" }
+    },
+    {
+      "id": "c06",
+      "narracao": "Só o Nome Completo é obrigatório. Isso é proposital: no acolhimento, quase nunca há tempo ou clima para levantar todos os dados. Cadastre com o que você tem e complete depois.",
+      "acao": { "tipo": "destacar", "seletor": "input[name='nome_completo']" }
+    },
+    {
+      "id": "c07",
+      "narracao": "Vou usar um nome fictício, Joana Ribeiro da Silva. Nos seus atendimentos, use sempre o nome real da assistida.",
+      "acao": {
+        "tipo": "digitar",
+        "seletor": "input[name='nome_completo']",
+        "texto": "Joana Ribeiro da Silva"
+      }
+    },
+    {
+      "id": "c08",
+      "narracao": "Agora o CPF. Ele não é obrigatório, mas é o campo que evita o problema mais caro do sistema: a mesma mulher cadastrada duas vezes, com o histórico dela partido ao meio.",
+      "acao": { "tipo": "digitar", "seletor": "input[name='cpf']", "texto": "52998224725" }
+    },
+    {
+      "id": "c09",
+      "narracao": "Ao informar o CPF, o sistema verifica sozinho se já existe alguém com aquele número. Se existir, ele avisa antes de você criar a duplicata.",
+      "acao": { "tipo": "esperar", "ms": 2500 }
+    },
+    {
+      "id": "c10",
+      "narracao": "Com o nome preenchido, já dá para salvar. Clique em Cadastrar.",
+      "acao": { "tipo": "clicar", "seletor": "button[type='submit']:has-text('Cadastrar')" }
+    },
+    {
+      "id": "c11",
+      "narracao": "Repare no que aparece: o sistema mostra o quanto a ficha está completa e lista o que falta. Não é cobrança — é um lembrete do que ainda pode ser levantado nos próximos encontros. O próximo vídeo explica esse resumo em detalhe.",
+      "acao": { "tipo": "esperar", "ms": 3000 }
+    },
+    {
+      "id": "c12",
+      "narracao": "Feche o aviso e veja: Joana já está na listagem. Agora é sua vez. Cadastre uma beneficiária fictícia com nome e CPF, e confirme que ela aparece na lista.",
+      "acao": { "tipo": "clicar", "seletor": "button:has-text('Fechar')" }
+    }
+  ]
+}
