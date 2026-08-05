@@ -41,6 +41,8 @@ Módulo destinado ao acolhimento e registro de atendimentos psicossociais e jur�
 
 Na ficha da beneficiária, as abas **Eventos**, **Cursos** e **Benefícios** registram a participação dela em eventos/campanhas e cursos, além das entregas de benefícios. Clique em **Registrar**, escolha o item, informe a data e uma observação opcional.
 
+Ao escolher um evento, a **data é sugerida automaticamente**: se hoje está dentro do período do evento, hoje; caso contrário, a data de início dele. O período aparece abaixo do campo, e um aviso surge se a data informada ficar fora dele — é apenas um alerta, não um bloqueio, já que registrar depois pode ser legítimo.
+
 Pelo lado do evento existe a visão inversa — a lista de quem participou. Veja a seção **Agenda Institucional**.
 
 ### Completude da ficha
@@ -145,6 +147,20 @@ Calendário unificado da Secretaria.
   - Eventos e Campanhas (Roxo).
 - **Novo Evento:** Clique no botão **"+ Novo Evento"** para agendar palestras, reuniões ou ações comunitárias.
 - **Listagem:** Use a aba "Lista de Eventos" para ver e gerenciar todos os agendamentos em formato de tabela.
+
+### Data e horário do evento
+
+Os campos **Início** e **Fim** aceitam data **e hora**. Informe o horário real da ação — é ele que aparece no calendário e na listagem.
+
+A coluna **Período** resume as duas datas:
+
+| Situação | Como aparece |
+|---|---|
+| Mesmo dia, com horário | `20/03/2026 12:00 às 14:00` |
+| Mesmo dia, sem horário | `20/03/2026` |
+| Vários dias | `10/01/2026 09:00 a 15/01/2026 18:00` |
+
+Quando o horário é meia-noite, ele é omitido — o sistema entende como "horário não informado". Eventos cadastrados antes desta versão ficaram assim; basta editá-los para informar a hora.
 
 ### Participantes de um evento
 

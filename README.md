@@ -135,6 +135,70 @@ npm run test:e2e:ui
 
 ---
 
+## 🚢 Deploy
+
+> [!IMPORTANT]
+> `git push` **não** atualiza o ambiente de produção. O repositório não tem
+> automação de deploy — o único workflow (`test-runner.yml`) roda apenas
+> typecheck e smoke tests. Sem o passo abaixo, o código fica no GitHub e o
+> servidor continua servindo a versão anterior.
+
+A publicação é feita pelo **Coolify**, manualmente ou via API:
+
+```bash
+# Variáveis em .env.local (fora do Git):
+#   COOLIFY_API_URL, COOLIFY_TOKEN, COOLIFY_APP_UUID
+curl -H "Authorization: Bearer $COOLIFY_TOKEN" \
+  "$COOLIFY_API_URL/api/v1/deploy?uuid=$COOLIFY_APP_UUID"
+```
+
+A resposta traz um `deployment_uuid` para acompanhar o andamento:
+
+```bash
+curl -H "Authorization: Bearer $COOLIFY_TOKEN" \
+  "$COOLIFY_API_URL/api/v1/deployments/<deployment_uuid>"
+```
+
+O status passa por `queued` → `in_progress` → `finished`. Um deploy completo
+leva poucos minutos.
+
+---
+
+## 💾 Backup do banco
+
+A exportação CSV das beneficiárias **não é backup**: cobre uma coleção entre
+mais de sessenta. Atendimentos, CRAM, tramitações, participações e os vínculos
+entre eles só voltam com um dump do PostgreSQL.
+
+Os scripts rodam **no host do Docker**, não neste repositório. Descobrem o
+contêiner do Postgres e leem as credenciais do ambiente dele — não há senha
+escrita em arquivo.
+
+```bash
+# Verifica o ambiente sem gerar nada
+./scripts/backup-directus-db.sh --verificar
+
+# Gera o backup (valida tamanho e legibilidade antes de aceitar o arquivo)
+BACKUP_DIR=/var/backups/sigma ./scripts/backup-directus-db.sh
+
+# Diário às 2h — crontab -e
+0 2 * * * BACKUP_DIR=/var/backups/sigma /caminho/backup-directus-db.sh >> /var/log/sigma-backup.log 2>&1
+```
+
+Restauração — por padrão em um banco separado, sem tocar no de produção:
+
+```bash
+./scripts/restore-directus-db.sh /var/backups/sigma/sigma_*.dump
+```
+
+> [!WARNING]
+> Backup que nunca foi restaurado não é backup, é esperança. Rode a restauração
+> ao menos uma vez antes de precisar dela. Os dumps contêm dados pessoais de
+> mulheres em situação de violência: o diretório é criado com permissão `700` e
+> os arquivos com `600`, e `*.dump` está no `.gitignore`.
+
+---
+
 ## 🤝 Suporte & Desenvolvimento
 
 Plataforma desenvolvida para a **Secretaria Municipal do Respeito às Políticas para as Mulheres** (Aracaju/SE). Em caso de inconsistências ou necessidade de novos recursos, contate o administrador do sistema ou o responsável técnico.

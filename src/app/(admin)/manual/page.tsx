@@ -626,6 +626,12 @@ export default function ManualPage() {
                 escolha o item, informe a data e uma observação opcional.
               </p>
               <p>
+                Ao escolher um evento, a <strong>data é sugerida</strong>: se
+                hoje está dentro do período dele, hoje; senão, a data de início.
+                Um aviso aparece se a data ficar fora do período — alerta, não
+                bloqueio, já que registrar depois pode ser legítimo.
+              </p>
+              <p>
                 A aba <strong>Benefícios</strong> continua registrando as entregas
                 de benefícios da mesma forma.
               </p>
@@ -938,6 +944,46 @@ export default function ManualPage() {
         </div>
 
         <Accordion type="single" collapsible className="w-full">
+          <AccordionItem value="a0">
+            <AccordionTrigger>
+              Data e horário do evento{" "}
+              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25">
+                Novo
+              </Badge>
+            </AccordionTrigger>
+            <AccordionContent className="space-y-3 text-sm text-muted-foreground">
+              <p>
+                Os campos <strong>Início</strong> e <strong>Fim</strong> aceitam
+                data <strong>e hora</strong>. Informe o horário real da ação — é
+                ele que aparece no calendário e na listagem.
+              </p>
+              <p>A coluna <strong>Período</strong> resume as duas datas:</p>
+              <ul className="space-y-1">
+                <li>
+                  Mesmo dia, com horário →{" "}
+                  <code className="rounded bg-muted px-1">
+                    20/03/2026 12:00 às 14:00
+                  </code>
+                </li>
+                <li>
+                  Mesmo dia, sem horário →{" "}
+                  <code className="rounded bg-muted px-1">20/03/2026</code>
+                </li>
+                <li>
+                  Vários dias →{" "}
+                  <code className="rounded bg-muted px-1">
+                    10/01/2026 09:00 a 15/01/2026 18:00
+                  </code>
+                </li>
+              </ul>
+              <Callout variant="tip" title="Eventos antigos sem horário">
+                Quando o horário é meia-noite, o sistema o omite e entende como
+                &quot;não informado&quot;. Eventos cadastrados antes desta versão
+                ficaram assim — basta editá-los para informar a hora.
+              </Callout>
+            </AccordionContent>
+          </AccordionItem>
+
           <AccordionItem value="a1">
             <AccordionTrigger>
               Ver quem participou de um evento{" "}
