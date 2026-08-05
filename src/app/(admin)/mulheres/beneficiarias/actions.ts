@@ -19,6 +19,7 @@ import {
   participacaoEventoSchema,
   inscricaoCursoSchema,
 } from "./schemas";
+import { calcularCompletude } from "./completude";
 
 // URL da API (Fallback seguro para localhost)
 const API_URL = process.env.DIRECTUS_API_URL || "http://192.168.0.118:8055";
@@ -344,11 +345,22 @@ export async function getBeneficiariaFormOptions() {
   }
 }
 
-export async function getBeneficiariasExport(search = "") {
+/**
+ * Registros para exportação CSV.
+ *
+ * Traz TODOS os campos gravados, não o subconjunto que a tela mostra: o arquivo
+ * precisa servir para conferência e reposição de dados. As chaves estrangeiras
+ * vêm expandidas para que o CSV tenha id e nome de cada uma.
+ *
+ * @param search  Mesmo filtro da listagem (nome ou CPF).
+ * @param ids     Quando informado, exporta apenas estes registros.
+ */
+export async function getBeneficiariasExport(search = "", ids?: number[]) {
   const { client } = await getAuthenticatedClient();
   // CPF é armazenado só com dígitos; compara pela versão sem máscara (ver getBeneficiarias).
   const searchDigits = search.replace(/\D/g, "");
-  const filter = search
+
+  const filtroBusca = search
     ? {
       _or: [
         { nome_completo: { _icontains: search } },
@@ -357,22 +369,59 @@ export async function getBeneficiariasExport(search = "") {
     }
     : {};
 
-  try {
-    const items = await client.request(
+  const filter =
+    ids && ids.length > 0 ? { id: { _in: ids } } : filtroBusca;
+
+  // `*` cobre as colunas simples; os M2O precisam ser pedidos campo a campo
+  // para virem com o nome junto do id.
+  const camposExpandidos = [
+    "*",
+    "raca_cor_id.id",
+    "raca_cor_id.nome",
+    "estado_civil_id.id",
+    "estado_civil_id.nome",
+    "escolaridade_id.id",
+    "escolaridade_id.nome",
+    "situacao_trabalho_id.id",
+    "situacao_trabalho_id.nome",
+    "ubs_id.id",
+    "ubs_id.nome",
+  ];
+
+  async function buscar(fields: string[]) {
+    return client.request(
       readItems("beneficiarias", {
         // @ts-ignore
-        fields: ["nome_completo", "cpf", "telefone", "data_nascimento", "endereco"],
+        fields,
         sort: ["nome_completo"],
         limit: -1,
         filter,
       }),
     );
+  }
+
+  try {
+    let items: any[];
+    try {
+      items = (await buscar(camposExpandidos)) as any[];
+    } catch {
+      // Se alguma tabela auxiliar não tiver `nome`, a expansão falha inteira.
+      // Melhor exportar com os ids crus do que não exportar nada — as colunas
+      // de nome saem vazias e o arquivo continua servindo para reposição.
+      console.warn(
+        "Exportação: expansão de chaves estrangeiras falhou; exportando ids crus.",
+      );
+      items = (await buscar(["*"])) as any[];
+    }
+
     const parsedItems = items.map((item: any) => ({
       ...item,
       endereco: parseJsonField(item.endereco),
+      contato: parseJsonField(item.contato),
     }));
     return { success: true, data: parsedItems };
   } catch (error) {
+    console.error("Erro ao exportar beneficiárias:", error);
     return { success: false, error: "Erro ao exportar." };
   }
 }
@@ -432,14 +481,35 @@ export async function saveBeneficiaria(input: any) {
     const { client, token } = await getAuthenticatedClient();
     if (!token) throw new Error("Usuário não autenticado.");
 
+    let salvo: unknown;
     if (id) {
-      await client.request(updateItem("beneficiarias", id, payloadToSend));
+      salvo = await client.request(updateItem("beneficiarias", id, payloadToSend));
     } else {
-      await client.request(createItem("beneficiarias", payloadToSend));
+      salvo = await client.request(createItem("beneficiarias", payloadToSend));
     }
 
     revalidatePath("/mulheres/beneficiarias");
-    return { success: true, message: id ? "Cadastro atualizado!" : "Cadastro realizado!" };
+
+    // Completude calculada sobre o que o Directus devolveu, não sobre o que
+    // enviamos: o retorno reflete o que de fato ficou gravado.
+    const completude = calcularCompletude(salvo ?? payload);
+
+    // O id do registro gravado precisa voltar ao formulário. Sem ele, continuar
+    // preenchendo depois de um cadastro NOVO geraria um segundo registro em vez
+    // de atualizar o primeiro.
+    const idSalvo =
+      salvo && typeof salvo === "object" && "id" in salvo
+        ? Number((salvo as { id: unknown }).id)
+        : id;
+
+    return {
+      success: true,
+      message: id ? "Cadastro atualizado!" : "Cadastro realizado!",
+      id: Number.isFinite(idSalvo) ? idSalvo : undefined,
+      nome: payload.nome_completo,
+      novoCadastro: !id,
+      completude,
+    };
   } catch (error: any) {
     console.error("❌ ERRO NO SAVE:", error);
     if (error.issues) {

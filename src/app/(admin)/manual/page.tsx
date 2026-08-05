@@ -530,9 +530,50 @@ export default function ManualPage() {
               </p>
               <p className="flex items-center gap-2">
                 <Download className="h-4 w-4 text-primary" />
-                O botão <strong>Exportar CSV</strong> baixa a lista atual (já
-                filtrada) em arquivo compatível com Excel.
+                O botão <strong>Exportar CSV</strong> baixa a lista atual
+                (respeitando a busca) com <strong>todos os campos gravados</strong>
+                : identificação, contato, endereço, dados sociais, marcadores e
+                quem criou ou alterou o registro. Marcando linhas na caixa de
+                seleção, a exportação cobre apenas as selecionadas.
               </p>
+              <Callout variant="warn" title="Exportar não é fazer backup">
+                O arquivo cobre apenas as beneficiárias. Atendimentos, CRAM,
+                tramitações e os vínculos entre eles não estão nele — para isso é
+                preciso backup do banco de dados.
+              </Callout>
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="m7">
+            <AccordionTrigger>
+              Completude da ficha{" "}
+              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25">
+                Novo
+              </Badge>
+            </AccordionTrigger>
+            <AccordionContent className="space-y-2 text-sm text-muted-foreground">
+              <p>
+                Ao salvar um cadastro, o sistema mostra o quanto a ficha está
+                <strong> completa</strong> e lista o que falta, do mais
+                importante para o menos.
+              </p>
+              <p>
+                Os campos têm pesos diferentes:{" "}
+                <strong>telefone e bairro</strong> pesam mais porque sem eles a
+                beneficiária fica fora das campanhas;{" "}
+                <strong>raça/cor e escolaridade</strong> alimentam os relatórios
+                oficiais.
+              </p>
+              <p>
+                <strong>Completar agora</strong> devolve o foco aos campos sem
+                sair da ficha — o registro já foi salvo, e continuar preenchendo
+                atualiza o mesmo cadastro.
+              </p>
+              <Callout variant="tip" title="Telefone validado conta à parte">
+                Um telefone preenchido mas não confirmado com a beneficiária é
+                diferente de um telefone ausente, por isso o aviso aparece
+                separado do percentual.
+              </Callout>
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="m3">

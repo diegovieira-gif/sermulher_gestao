@@ -43,6 +43,22 @@ Na ficha da beneficiária, as abas **Eventos**, **Cursos** e **Benefícios** reg
 
 Pelo lado do evento existe a visão inversa — a lista de quem participou. Veja a seção **Agenda Institucional**.
 
+### Completude da ficha
+
+Ao salvar um cadastro, o sistema mostra o quanto a ficha está **completa** e lista o que falta, do mais importante para o menos. Os campos têm pesos diferentes: telefone e bairro pesam mais porque sem eles a beneficiária fica fora das campanhas; raça/cor e escolaridade alimentam os relatórios oficiais.
+
+Use **Completar agora** para voltar aos campos sem sair da ficha — o registro já foi salvo, e continuar preenchendo atualiza o mesmo cadastro.
+
+O aviso de **telefone não validado** aparece à parte: um telefone preenchido mas não confirmado com a beneficiária é diferente de um telefone ausente.
+
+### Exportar para CSV
+
+O botão **Exportar CSV** baixa a lista atual (respeitando a busca) com **todos os campos gravados** — identificação, contato, endereço, dados sociais, marcadores e quem criou/alterou o registro. Selecionando linhas com a caixa de seleção, a exportação cobre apenas as selecionadas.
+
+O arquivo abre no Excel com os acentos corretos. Os valores saem como estão gravados, sem tradução, para que o arquivo sirva de conferência e reposição de dados.
+
+> **Não substitui backup.** O arquivo cobre apenas as beneficiárias. Atendimentos, CRAM, tramitações e os vínculos entre eles não estão nele — para isso é preciso backup do banco.
+
 ### Busca, filtros e telefone validado
 
 - Use os **Filtros** para refinar a lista por **bairro**, ordenação e marcadores (Medida Protetiva, Bolsa Família, BPC); os filtros ativos aparecem como etiquetas removíveis.

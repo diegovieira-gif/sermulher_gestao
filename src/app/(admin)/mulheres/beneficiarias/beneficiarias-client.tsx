@@ -26,7 +26,8 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { BeneficiariaForm } from "./beneficiaria-form";
 import { BeneficiariasFiltros } from "./beneficiarias-filtros";
-import { deleteBeneficiaria } from "./actions";
+import { deleteBeneficiaria, getBeneficiariasExport } from "./actions";
+import { montarCsv, nomeArquivoCsv } from "./exportacao";
 import {
   Select,
   SelectContent,
@@ -275,59 +276,67 @@ export function BeneficiariasClient({
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  const handleExport = () => {
+  /**
+   * Exportação CSV.
+   *
+   * Busca os dados no servidor em vez de usar a lista em memória: a listagem
+   * é paginada e traz um subconjunto dos campos, enquanto o arquivo precisa
+   * conter TODOS os registros do filtro atual com TODOS os campos gravados.
+   *
+   * @param ids  Quando informado, exporta apenas os selecionados.
+   */
+  const exportarCsv = async (ids?: number[]) => {
     setIsExporting(true);
     try {
-      if (filteredData.length > 0) {
-        const headers = [
-          "Nome Completo",
-          "CPF",
-          "Telefone",
-          "Data Nascimento",
-          "Bairro",
-          "Cidade",
-        ];
-        const rows = filteredData.map((b: any) => [
-          b.nome_completo,
-          b.cpf || "",
-          b.telefone || "",
-          b.data_nascimento || "",
-          b.endereco?.bairro || "",
-          b.endereco?.cidade || "",
-        ]);
+      const termoBusca = searchParams.get("search") || "";
+      const resultado = await getBeneficiariasExport(termoBusca, ids);
 
-        const csvContent = [
-          headers.join(","),
-          ...rows.map((r: any[]) =>
-            r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","),
-          ),
-        ].join("\n");
-
-        const blob = new Blob([csvContent], {
-          type: "text/csv;charset=utf-8;",
-        });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.setAttribute("href", url);
-        link.setAttribute(
-          "download",
-          `beneficiarias_${new Date().toISOString().slice(0, 10)}.csv`,
-        );
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        toast.success("Download do relatório completo iniciado!");
+      if (!resultado.success || !resultado.data) {
+        toast.error(resultado.error || "Erro ao exportar dados.");
+        return;
       }
-    } catch (error) {
+
+      const registros = resultado.data as unknown[];
+      if (registros.length === 0) {
+        toast.info("Nenhum registro para exportar.");
+        return;
+      }
+
+      const csv = montarCsv(registros);
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute(
+        "download",
+        nomeArquivoCsv(ids ? "beneficiarias_selecionadas" : "beneficiarias"),
+      );
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      // Sem isto o blob fica retido em memória enquanto a aba estiver aberta.
+      URL.revokeObjectURL(url);
+
+      toast.success(
+        `Exportação de ${registros.length} ${registros.length === 1 ? "registro" : "registros"} iniciada!`,
+      );
+    } catch {
       toast.error("Erro ao exportar dados.");
     } finally {
       setIsExporting(false);
     }
   };
 
+  const handleExport = () => exportarCsv();
+
+  const handleExportSelected = () => {
+    if (selectedIds.length === 0) return;
+    return exportarCsv(selectedIds);
+  };
+
   const toggleSelectRow = (id: number) => {
     setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
     );
   };
 
@@ -336,57 +345,6 @@ export function BeneficiariasClient({
       setSelectedIds([]);
     } else {
       setSelectedIds(filteredData.map((b) => b.id));
-    }
-  };
-
-  const handleExportSelected = () => {
-    const dataToExport = filteredData.filter((b) => selectedIds.includes(b.id));
-    if (dataToExport.length === 0) return;
-    
-    setIsExporting(true);
-    try {
-      const headers = [
-        "Nome Completo",
-        "CPF",
-        "Telefone",
-        "Data Nascimento",
-        "Bairro",
-        "Cidade",
-      ];
-      const rows = dataToExport.map((b: any) => [
-        b.nome_completo,
-        b.cpf || "",
-        b.telefone || "",
-        b.data_nascimento || "",
-        b.endereco?.bairro || "",
-        b.endereco?.cidade || "",
-      ]);
-
-      const csvContent = [
-        headers.join(","),
-        ...rows.map((r: any[]) =>
-          r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","),
-        ),
-      ].join("\n");
-
-      const blob = new Blob([csvContent], {
-        type: "text/csv;charset=utf-8;",
-      });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.setAttribute("href", url);
-      link.setAttribute(
-        "download",
-        `beneficiarias_selecionadas_${new Date().toISOString().slice(0, 10)}.csv`,
-      );
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      toast.success("Exportação de registros selecionados iniciada!");
-    } catch (e) {
-      toast.error("Erro ao exportar registros selecionados.");
-    } finally {
-      setIsExporting(false);
     }
   };
 
