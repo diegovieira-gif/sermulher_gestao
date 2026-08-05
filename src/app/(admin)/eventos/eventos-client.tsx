@@ -76,24 +76,37 @@ function calcularStatus(dataInicio: string, dataFim: string): StatusEvento {
 }
 
 /**
- * Formata uma data para dd/MM/aaaa.
+ * Formata uma data para dd/MM/aaaa, acrescentando a hora quando houver.
  *
- * Sem `new Date` de propósito: as colunas são do tipo `date` (sem hora), e
- * `new Date("2026-03-20")` é lido como meia-noite UTC — exibido no fuso local
- * virava "19/03/2026 21:00". Recortar a string evita o deslocamento, e a hora
- * some porque nunca existiu no banco.
+ * Sem `new Date` de propósito. As colunas são `dateTime` (timestamp SEM fuso):
+ * o valor guardado é a hora local do evento. Passar por `Date` reintroduziria
+ * o deslocamento que fazia "2026-03-20" aparecer como 19/03 às 21:00.
+ *
+ * Meia-noite é tratada como "sem horário informado" e omitida — a maioria dos
+ * eventos antigos ficou em 00:00 na migração, e exibir "00:00" em todos eles
+ * seria ruído.
  */
 function formatarData(data: string | null | undefined): string {
   if (!data) return "";
-  const [ano, mes, dia] = String(data).slice(0, 10).split("-");
-  return dia && mes && ano ? `${dia}/${mes}/${ano}` : String(data);
+  const texto = String(data);
+  const [ano, mes, dia] = texto.slice(0, 10).split("-");
+  if (!dia || !mes || !ano) return texto;
+
+  const dataFormatada = `${dia}/${mes}/${ano}`;
+  const hora = texto.slice(11, 16);
+  return hora && hora !== "00:00" ? `${dataFormatada} ${hora}` : dataFormatada;
+}
+
+/** Só a parte da data, para comparar dias sem considerar horário. */
+function soDia(data: string | null | undefined): string {
+  return String(data ?? "").slice(0, 10);
 }
 
 /**
  * Período do evento em uma única célula.
  *
- * Quando início e fim caem no mesmo dia — a maioria dos casos — mostra só uma
- * data, em vez de repetir "20/03/2026 a 20/03/2026".
+ * No mesmo dia, evita repetir a data: mostra "20/03/2026 12:00 às 14:00" em
+ * vez de "20/03/2026 12:00 a 20/03/2026 14:00".
  */
 function formatarPeriodo(
   inicio: string | null | undefined,
@@ -101,8 +114,15 @@ function formatarPeriodo(
 ): string {
   const i = formatarData(inicio);
   const f = formatarData(fim);
+
   if (!i) return f || "-";
   if (!f || f === i) return i;
+
+  if (soDia(inicio) === soDia(fim)) {
+    const horaFim = String(fim).slice(11, 16);
+    return horaFim && horaFim !== "00:00" ? `${i} às ${horaFim}` : i;
+  }
+
   return `${i} a ${f}`;
 }
 
