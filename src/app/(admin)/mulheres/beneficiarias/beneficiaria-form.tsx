@@ -10,6 +10,8 @@ import {
   type BeneficiariaFormValues,
 } from "./schemas";
 import { saveBeneficiaria, findBeneficiariaByCPF } from "./actions";
+import { CompletudeDialog } from "./completude-dialog";
+import type { ResumoCompletude } from "./completude";
 import { BAIRROS_ARACAJU } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
@@ -71,6 +73,20 @@ export function BeneficiariaForm({
 }: BeneficiariaFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  /** Resumo de completude exibido após salvar. `null` = modal fechado. */
+  const [resumoCompletude, setResumoCompletude] = useState<{
+    nome: string;
+    novoCadastro: boolean;
+    resumo: ResumoCompletude;
+  } | null>(null);
+
+  /** Fecha o aviso e encerra a edição. */
+  const encerrarAposCompletude = () => {
+    setResumoCompletude(null);
+    onOpenChange(false);
+    form.reset();
+  };
   const [isSearchingCPF, setIsSearchingCPF] = useState(false);
   const [lastSearchedCpf, setLastSearchedCpf] = useState("");
   const [isSearchingCEP, setIsSearchingCEP] = useState(false);
@@ -303,10 +319,31 @@ export function BeneficiariaForm({
       const result = await saveBeneficiaria(data);
 
       if (result.success) {
-        toast.success(result.message);
         router.refresh();
-        onOpenChange(false);
-        form.reset();
+
+        // Em vez do toast, o resumo de completude: mostra o quanto a ficha está
+        // preenchida e o que falta, ordenado por peso. Se a action não devolver
+        // o resumo, cai no toast de antes.
+        if (result.completude) {
+          // Fixa no formulário o id do que acabou de ser gravado. Sem isto,
+          // continuar preenchendo após um cadastro NOVO criaria um segundo
+          // registro em vez de atualizar o primeiro.
+          if (result.id) {
+            form.setValue("id", result.id);
+          }
+
+          // O formulário permanece aberto por trás: "Completar agora" apenas
+          // fecha este aviso e devolve o foco aos campos, com os dados no lugar.
+          setResumoCompletude({
+            nome: result.nome || "Beneficiária",
+            novoCadastro: Boolean(result.novoCadastro),
+            resumo: result.completude,
+          });
+        } else {
+          toast.success(result.message);
+          onOpenChange(false);
+          form.reset();
+        }
       } else {
         toast.error(result.error);
       }
@@ -912,6 +949,21 @@ export function BeneficiariaForm({
           </form>
         </Form>
       </DialogContent>
+
+      {resumoCompletude && (
+        <CompletudeDialog
+          open
+          onOpenChange={(aberto) => {
+            if (!aberto) encerrarAposCompletude();
+          }}
+          nome={resumoCompletude.nome}
+          novoCadastro={resumoCompletude.novoCadastro}
+          resumo={resumoCompletude.resumo}
+          // Fecha só o aviso: o formulário segue aberto, com os dados e já com
+          // o id do registro gravado.
+          onCompletarAgora={() => setResumoCompletude(null)}
+        />
+      )}
     </Dialog>
   );
 }
