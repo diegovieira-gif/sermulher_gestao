@@ -13,6 +13,11 @@ import { CalendarDays, Plus, Trash2, Loader2, Calendar, User } from "lucide-reac
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { toast } from "sonner";
 import {
+  formatDateDisplay,
+  nomeDeQuemRegistrou,
+  todayLocalISO,
+} from "@/lib/utils";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -97,7 +102,7 @@ export function EventosTab({
     defaultValues: {
       beneficiaria: beneficiariaId,
       evento: undefined,
-      data_participacao: new Date().toISOString().slice(0, 10),
+      data_participacao: todayLocalISO(),
       observacao: "",
     },
   });
@@ -123,7 +128,7 @@ export function EventosTab({
       form.reset({
         beneficiaria: beneficiariaId,
         evento: undefined,
-        data_participacao: new Date().toISOString().slice(0, 10),
+        data_participacao: todayLocalISO(),
         observacao: "",
       });
       setIsOpen(false);
@@ -289,7 +294,7 @@ export function EventosTab({
                 <TableRow key={participacao.id}>
                   <TableCell>
                     {participacao.data_participacao
-                      ? new Date(participacao.data_participacao).toLocaleDateString("pt-BR")
+                      ? formatDateDisplay(participacao.data_participacao)
                       : "-"}
                   </TableCell>
                   <TableCell className="font-medium">
@@ -300,9 +305,7 @@ export function EventosTab({
                   </TableCell>
                   <TableCell className="flex items-center gap-2">
                     <User className="h-4 w-4 text-muted-foreground" />
-                    {participacao.user_created
-                      ? `${participacao.user_created.first_name || ""} ${participacao.user_created.last_name || ""}`.trim() || participacao.user_created.email || "Usuário do Sistema"
-                      : "Sistema / Importação"}
+                    {nomeDeQuemRegistrou(participacao.user_created)}
                   </TableCell>
                   <TableCell className="text-right">
                     {canDelete ? (

@@ -13,6 +13,11 @@ import { GraduationCap, Plus, Trash2, Loader2, Calendar, User } from "lucide-rea
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { toast } from "sonner";
 import {
+  formatDateDisplay,
+  nomeDeQuemRegistrou,
+  todayLocalISO,
+} from "@/lib/utils";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -102,7 +107,7 @@ export function CursosTab({
     defaultValues: {
       beneficiaria: beneficiariaId,
       curso: undefined,
-      data_inscricao: new Date().toISOString().slice(0, 10),
+      data_inscricao: todayLocalISO(),
       observacao: "",
     },
   });
@@ -128,7 +133,7 @@ export function CursosTab({
       form.reset({
         beneficiaria: beneficiariaId,
         curso: undefined,
-        data_inscricao: new Date().toISOString().slice(0, 10),
+        data_inscricao: todayLocalISO(),
         observacao: "",
       });
       setIsOpen(false);
@@ -294,7 +299,7 @@ export function CursosTab({
                 <TableRow key={inscricao.id}>
                   <TableCell>
                     {inscricao.data_inscricao
-                      ? new Date(inscricao.data_inscricao).toLocaleDateString("pt-BR")
+                      ? formatDateDisplay(inscricao.data_inscricao)
                       : "-"}
                   </TableCell>
                   <TableCell className="font-medium">{cursoLabel(inscricao.curso)}</TableCell>
@@ -303,9 +308,7 @@ export function CursosTab({
                   </TableCell>
                   <TableCell className="flex items-center gap-2">
                     <User className="h-4 w-4 text-muted-foreground" />
-                    {inscricao.user_created
-                      ? `${inscricao.user_created.first_name || ""} ${inscricao.user_created.last_name || ""}`.trim() || inscricao.user_created.email || "Usuário do Sistema"
-                      : "Sistema / Importação"}
+                    {nomeDeQuemRegistrou(inscricao.user_created)}
                   </TableCell>
                   <TableCell className="text-right">
                     {canDelete ? (
