@@ -24,8 +24,32 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useTransition } from "react";
 import type { DashboardStats } from "./actions";
+
+const MESES_LABEL = [
+  "Janeiro",
+  "Fevereiro",
+  "Março",
+  "Abril",
+  "Maio",
+  "Junho",
+  "Julho",
+  "Agosto",
+  "Setembro",
+  "Outubro",
+  "Novembro",
+  "Dezembro",
+];
 import {
   BarChart,
   Bar,
@@ -39,6 +63,9 @@ import {
 interface OverviewClientProps {
   stats: DashboardStats;
   userName?: string;
+  /** Mês/ano de referência dos indicadores mensais (default: mês corrente). */
+  mesReferencia?: number;
+  anoReferencia?: number;
 }
 
 const COLORS = {
@@ -138,7 +165,28 @@ function KpiGroup({ title, items }: { title: string; items: KpiDef[] }) {
 export function OverviewClient({
   stats,
   userName = "Gestão",
+  mesReferencia,
+  anoReferencia,
 }: OverviewClientProps) {
+  const router = useRouter();
+  const [mudandoPeriodo, startPeriodo] = useTransition();
+
+  const agora = new Date();
+  const mesSel = mesReferencia ?? agora.getMonth() + 1;
+  const anoSel = anoReferencia ?? agora.getFullYear();
+  const anosDisponiveis = Array.from(
+    { length: 5 },
+    (_, i) => agora.getFullYear() - i,
+  );
+
+  const mudarPeriodo = (mes: number, ano: number) => {
+    startPeriodo(() => {
+      const ehCorrente =
+        mes === agora.getMonth() + 1 && ano === agora.getFullYear();
+      router.push(ehCorrente ? "/dashboard" : `/dashboard?mes=${mes}&ano=${ano}`);
+    });
+  };
+
   if (!stats) {
     return (
       <div className="flex items-center justify-center h-96 text-muted-foreground bg-gray-50 rounded-lg border border-dashed">
@@ -169,7 +217,7 @@ export function OverviewClient({
         {
           label: "Atendimentos (Mês)",
           value: ind.atendimentosMes,
-          hint: "registrados neste mês",
+          hint: `em ${MESES_LABEL[mesSel - 1]}/${anoSel}`,
           icon: Activity,
           tone: "fuchsia",
           href: "/mulheres/atendimentos",
@@ -323,13 +371,54 @@ export function OverviewClient({
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Cabeçalho */}
-      <div className="flex flex-col gap-1 mb-4">
-        <h1 className="text-3xl font-bold text-foreground tracking-tight">
-          Olá, {userName}!
-        </h1>
-        <p className="text-sm text-muted-foreground capitalize font-medium">
-          {dataAtual}
-        </p>
+      <div className="mb-4 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">
+            Olá, {userName}!
+          </h1>
+          <p className="text-sm text-muted-foreground capitalize font-medium">
+            {dataAtual}
+          </p>
+        </div>
+
+        {/* Seletor do período de referência dos indicadores mensais */}
+        <div
+          className={`flex items-center gap-2 ${mudandoPeriodo ? "opacity-60" : ""}`}
+        >
+          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Referência
+          </span>
+          <Select
+            value={String(mesSel)}
+            onValueChange={(v) => mudarPeriodo(Number(v), anoSel)}
+          >
+            <SelectTrigger className="h-9 w-[140px] bg-card">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {MESES_LABEL.map((label, i) => (
+                <SelectItem key={label} value={String(i + 1)}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={String(anoSel)}
+            onValueChange={(v) => mudarPeriodo(mesSel, Number(v))}
+          >
+            <SelectTrigger className="h-9 w-[100px] bg-card">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {anosDisponiveis.map((a) => (
+                <SelectItem key={a} value={String(a)}>
+                  {a}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Indicadores agrupados */}

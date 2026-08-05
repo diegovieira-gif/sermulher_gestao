@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import {
   Printer,
   Filter,
+  Download,
 } from "lucide-react";
+import { baixarCsv } from "@/lib/csv";
 import {
   Card,
   CardContent,
@@ -61,6 +63,33 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
     window.print();
   };
 
+  /**
+   * CSV com as mesmas seções do documento impresso — o RMA é entregue todo
+   * mês, e o arquivo dispensa o retrabalho de re-digitar em planilha.
+   */
+  const handleExportarCsv = () => {
+    const mesLabel = MESES.find((m) => m.value === mes)?.label ?? mes;
+    const linhas: (string | number)[][] = [
+      ["RELATÓRIO MENSAL DE ATENDIMENTOS - RMA (SUAS)"],
+      ["Referência", `${mesLabel}/${ano}`],
+      [],
+      ["1. MOVIMENTO MENSAL"],
+      ["Descrição", "Quantidade"],
+      ["Novos casos (primeiro acolhimento no mês)", dados.volume.novos_casos],
+      ["Atendimentos técnicos realizados", dados.volume.atendimentos_tecnicos],
+      ["Total de atividades", dados.volume.total_movimento],
+      [],
+      ["2. DETALHAMENTO DOS ATENDIMENTOS TÉCNICOS"],
+      ["Setor / Equipe técnica", "Atendimentos"],
+      ...dados.setores.map((s) => [s.nome, s.quantidade] as (string | number)[]),
+      [],
+      ["3. TIPOS DE VIOLÊNCIA IDENTIFICADOS (NOVOS CASOS)"],
+      ["Tipologia", "Ocorrências"],
+      ...dados.violencia.map((v) => [v.tipo, v.quantidade] as (string | number)[]),
+    ];
+    baixarCsv(`RMA-${ano}-${String(mes).padStart(2, "0")}.csv`, linhas);
+  };
+
   const anosDisponiveis = Array.from(
     { length: 5 },
     (_, i) => new Date().getFullYear() - i,
@@ -107,6 +136,10 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={handleExportarCsv} className="gap-2">
+            <Download className="h-4 w-4" />
+            Exportar CSV
+          </Button>
           <Button variant="outline" onClick={handleImprimir} className="gap-2">
             <Printer className="h-4 w-4" />
             Imprimir Relatório

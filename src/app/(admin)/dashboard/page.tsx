@@ -7,9 +7,18 @@ import { readMe } from "@directus/sdk";
 
 export const dynamic = "force-dynamic";
 
-export default async function DashboardPage() {
-  // 1. Busca estatísticas do dashboard
-  const statsResult = await getDashboardStats();
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ mes?: string; ano?: string }>;
+}) {
+  const sp = await searchParams;
+  const agora = new Date();
+  const mes = Number(sp.mes) || agora.getMonth() + 1;
+  const ano = Number(sp.ano) || agora.getFullYear();
+
+  // 1. Busca estatísticas do dashboard (período selecionado ou mês corrente)
+  const statsResult = await getDashboardStats({ mes, ano });
 
   // 2. Busca dados do usuário autenticado via Directus
   let userName = "Gestão";
@@ -40,7 +49,12 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex-1 p-8 pt-6 bg-background min-h-screen">
-      <OverviewClient stats={statsResult.data} userName={userName} />
+      <OverviewClient
+        stats={statsResult.data}
+        userName={userName}
+        mesReferencia={mes}
+        anoReferencia={ano}
+      />
     </div>
   );
 }

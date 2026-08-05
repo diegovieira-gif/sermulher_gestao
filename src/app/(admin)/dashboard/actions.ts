@@ -59,7 +59,10 @@ export type DashboardStats = {
   growthInfratores?: string;
 };
 
-export async function getDashboardStats(): Promise<{
+/** Mês/ano de referência para os indicadores mensais do dashboard. */
+export type PeriodoDashboard = { mes: number; ano: number };
+
+export async function getDashboardStats(periodo?: PeriodoDashboard): Promise<{
   success: boolean;
   data?: DashboardStats;
   error?: string;
@@ -74,17 +77,34 @@ export async function getDashboardStats(): Promise<{
   todayStart.setHours(0, 0, 0, 0);
   const todayStr = todayStart.toISOString();
 
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-    .toISOString()
-    .split("T")[0];
-  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-    .toISOString()
-    .split("T")[0];
+  // Período de referência: mês corrente por padrão, ou o mês/ano escolhido no
+  // seletor do dashboard — permite responder "e em junho, como foi?".
+  const mesSel =
+    periodo && periodo.mes >= 1 && periodo.mes <= 12
+      ? periodo.mes
+      : now.getMonth() + 1;
+  const anoSel =
+    periodo && periodo.ano >= 2000 && periodo.ano <= 2100
+      ? periodo.ano
+      : now.getFullYear();
+  const mesCorrente =
+    mesSel === now.getMonth() + 1 && anoSel === now.getFullYear();
 
-  // Data para gráfico (últimos 30 dias)
+  const startOfMonth = new Date(anoSel, mesSel - 1, 1)
+    .toISOString()
+    .split("T")[0];
+  const endOfMonth = new Date(anoSel, mesSel, 0).toISOString().split("T")[0];
+
+  // Gráfico: últimos 30 dias no mês corrente; o mês inteiro quando é um
+  // período passado escolhido no seletor.
   const chartStartDate = new Date();
   chartStartDate.setDate(chartStartDate.getDate() - 30);
-  const chartStartDateStr = chartStartDate.toISOString().split("T")[0];
+  const chartStartDateStr = mesCorrente
+    ? chartStartDate.toISOString().split("T")[0]
+    : startOfMonth;
+  const chartEndDateStr = mesCorrente
+    ? new Date().toISOString().split("T")[0]
+    : endOfMonth;
 
   try {
     // Executa as queries em paralelo para performance
@@ -109,7 +129,9 @@ export async function getDashboardStats(): Promise<{
       // @ts-ignore
       directus.request(
         readItems("atendimentos", {
-          filter: { data_abertura: { _gte: chartStartDateStr } },
+          filter: {
+            data_abertura: { _between: [chartStartDateStr, chartEndDateStr] },
+          },
           fields: ["data_abertura"],
           limit: -1,
           sort: ["data_abertura"],

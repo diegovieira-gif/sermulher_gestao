@@ -20,6 +20,8 @@ import {
   inscricaoCursoSchema,
 } from "./schemas";
 import { calcularCompletude } from "./completude";
+import { assertAccess } from "@/lib/permissions";
+import { getDirectusAdmin } from "@/lib/directus";
 
 // URL da API (Fallback seguro para localhost)
 const API_URL = process.env.DIRECTUS_API_URL || "http://192.168.0.118:8055";
@@ -147,6 +149,7 @@ export async function getBeneficiarias(
   sortField = "created_at",
   sortOrder: "asc" | "desc" = "desc"
 ) {
+  await assertAccess("mulheres");
   const { client } = await getAuthenticatedClient();
   const offset = (page - 1) * limit;
 
@@ -266,6 +269,7 @@ export async function getBeneficiarias(
 }
 
 export async function getBeneficiariasMetrics() {
+  await assertAccess("mulheres");
   const { client } = await getAuthenticatedClient();
   try {
     const [totalRes, mpRes, bfRes, bpcRes, recentRes] = await Promise.all([
@@ -308,6 +312,7 @@ export async function getBeneficiariasMetrics() {
 }
 
 export async function getBeneficiaria(id: number) {
+  await assertAccess("mulheres");
   const { client } = await getAuthenticatedClient();
   try {
     // Cast necessário: a coleção "beneficiarias" não está no schema tipado do
@@ -328,6 +333,7 @@ export async function getBeneficiaria(id: number) {
 }
 
 export async function getBeneficiariaFormOptions() {
+  await assertAccess("mulheres");
   const { client } = await getAuthenticatedClient();
   try {
     const [racas, estadosCivis, escolaridades, situacoesTrabalho, bairros, ubs] = await Promise.all([
@@ -360,6 +366,7 @@ export async function getBeneficiariaFormOptions() {
  * @param ids     Quando informado, exporta apenas estes registros.
  */
 export async function getBeneficiariasExport(search = "", ids?: number[]) {
+  await assertAccess("mulheres");
   const { client } = await getAuthenticatedClient();
   // CPF é armazenado só com dígitos; compara pela versão sem máscara (ver getBeneficiarias).
   const searchDigits = search.replace(/\D/g, "");
@@ -436,6 +443,7 @@ export async function getBeneficiariasExport(search = "", ids?: number[]) {
 }
 
 export async function getHistoricoBeneficios(beneficiariaId: string) {
+  await assertAccess("mulheres");
   const { client } = await getAuthenticatedClient();
   try {
     const historico = await client.request(
@@ -461,6 +469,7 @@ export async function getHistoricoBeneficios(beneficiariaId: string) {
 // --- Ações de Escrita (Mutations) ---
 
 export async function saveBeneficiaria(input: any) {
+  await assertAccess("mulheres");
   try {
     let rawData: any;
     if (input && typeof input.forEach === "function") {
@@ -533,6 +542,7 @@ export async function saveBeneficiaria(input: any) {
 }
 
 export async function deleteBeneficiaria(id: number) {
+  await assertAccess("mulheres");
   const { client } = await getAuthenticatedClient();
   try {
     await client.request(deleteItem("beneficiarias", id));
@@ -545,6 +555,7 @@ export async function deleteBeneficiaria(id: number) {
 }
 
 export async function registrarEntrega(data: unknown) {
+  await assertAccess("mulheres");
   const { client } = await getAuthenticatedClient();
   try {
     const parsedData = entregaBeneficioSchema.parse(data);
@@ -582,6 +593,7 @@ export async function registrarEntrega(data: unknown) {
 }
 
 export async function deletarEntrega(id: number, beneficiariaId: number) {
+  await assertAccess("mulheres");
   const { client } = await getAuthenticatedClient();
   try {
     await client.request(deleteItem("entregas_beneficios", id));
@@ -593,6 +605,7 @@ export async function deletarEntrega(id: number, beneficiariaId: number) {
 }
 
 export async function findBeneficiariaByCPF(cpf: string) {
+  await assertAccess("mulheres");
   try {
     const cleanCpf = cpf.replace(/\D/g, "");
     if (cleanCpf.length !== 11) {
@@ -627,6 +640,7 @@ export async function findBeneficiariaByCPF(cpf: string) {
 // --- Participações em Eventos (coleção participacoes_evento) ---
 
 export async function getEventosOptions() {
+  await assertAccess("mulheres");
   const { client } = await getAuthenticatedClient();
   try {
     const eventos = await client.request(
@@ -645,6 +659,7 @@ export async function getEventosOptions() {
 }
 
 export async function getParticipacoesEvento(beneficiariaId: string) {
+  await assertAccess("mulheres");
   const { client } = await getAuthenticatedClient();
   try {
     const historico = await client.request(
@@ -669,6 +684,7 @@ export async function getParticipacoesEvento(beneficiariaId: string) {
 }
 
 export async function registrarParticipacaoEvento(data: unknown) {
+  await assertAccess("mulheres");
   const { client } = await getAuthenticatedClient();
   try {
     const parsedData = participacaoEventoSchema.parse(data);
@@ -704,6 +720,7 @@ export async function registrarParticipacaoEvento(data: unknown) {
 }
 
 export async function deletarParticipacaoEvento(id: number, beneficiariaId: number) {
+  await assertAccess("mulheres");
   const { client } = await getAuthenticatedClient();
   try {
     await client.request(deleteItem("participacoes_evento", id));
@@ -717,6 +734,7 @@ export async function deletarParticipacaoEvento(id: number, beneficiariaId: numb
 // --- Inscrições em Cursos (coleção inscricoes_curso) ---
 
 export async function getCursosOptions() {
+  await assertAccess("mulheres");
   const { client } = await getAuthenticatedClient();
   try {
     const cursos = await client.request(
@@ -732,7 +750,140 @@ export async function getCursosOptions() {
   }
 }
 
+// --- Linha do tempo unificada -----------------------------------------------
+
+export type EventoLinhaDoTempo = {
+  /** Data do fato (AAAA-MM-DD ou ISO). */
+  data: string;
+  tipo: "atendimento" | "cram" | "beneficio" | "evento" | "curso";
+  titulo: string;
+  detalhe?: string;
+  /** Rota para abrir o registro de origem, quando existe tela própria. */
+  href?: string;
+};
+
+/**
+ * Tudo que aconteceu com a beneficiária, em ordem cronológica: atendimentos,
+ * instrumentais do CRAM, benefícios entregues, eventos e cursos. É a visão que
+ * uma técnica precisa antes de um atendimento — os dados já existiam, mas
+ * espalhados em cinco abas/módulos.
+ *
+ * As cinco consultas rodam com `allSettled`: se uma coleção falhar (ex.: perfil
+ * sem acesso ao CRAM no Directus), a linha do tempo mostra o que conseguiu.
+ */
+export async function getLinhaDoTempo(beneficiariaId: string) {
+  await assertAccess("mulheres");
+  const { client } = await getAuthenticatedClient();
+
+  const consultas = await Promise.allSettled([
+    client.request(
+      readItems("atendimentos", {
+        filter: { beneficiaria: { _eq: beneficiariaId } },
+        fields: [
+          "id",
+          "data_abertura",
+          "status",
+          // @ts-ignore
+          "prioridade_id.nome",
+          "origem_id.nome",
+        ],
+        sort: ["-data_abertura"],
+        limit: -1,
+      }),
+    ),
+    // CRAM usa o cliente admin: a coleção não é exposta ao token do usuário.
+    // O acesso já foi validado pelo assertAccess acima.
+    getDirectusAdmin().request(
+      readItems("cram_atendimentos", {
+        filter: { beneficiaria: { _eq: beneficiariaId } },
+        fields: ["id", "data_atendimento", "status", "tipos_violencia"],
+        sort: ["-data_atendimento"],
+        limit: -1,
+      }),
+    ),
+    client.request(
+      readItems("entregas_beneficios", {
+        filter: { beneficiaria: { _eq: beneficiariaId } },
+        // @ts-ignore
+        fields: ["id", "data_entrega", "beneficio.nome"],
+        sort: ["-data_entrega"],
+        limit: -1,
+      }),
+    ),
+    client.request(
+      readItems("participacoes_evento", {
+        filter: { beneficiaria: { _eq: beneficiariaId } },
+        // @ts-ignore
+        fields: ["id", "data_participacao", "evento.nome", "observacao"],
+        sort: ["-data_participacao"],
+        limit: -1,
+      }),
+    ),
+    client.request(
+      readItems("inscricoes_curso", {
+        filter: { beneficiaria: { _eq: beneficiariaId } },
+        // @ts-ignore
+        fields: ["id", "data_inscricao", "curso.nome", "curso.titulo", "status"],
+        sort: ["-data_inscricao"],
+        limit: -1,
+      }),
+    ),
+  ]);
+
+  const dado = (i: number): any[] =>
+    consultas[i].status === "fulfilled"
+      ? ((consultas[i] as PromiseFulfilledResult<unknown>).value as any[])
+      : [];
+
+  const eventos: EventoLinhaDoTempo[] = [
+    ...dado(0).map((a: any) => ({
+      data: a.data_abertura ?? "",
+      tipo: "atendimento" as const,
+      titulo: "Atendimento aberto",
+      detalhe: [a.status, a.prioridade_id?.nome, a.origem_id?.nome]
+        .filter(Boolean)
+        .join(" · "),
+      href: `/mulheres/atendimentos/${a.id}`,
+    })),
+    ...dado(1).map((c: any) => ({
+      data: c.data_atendimento ?? "",
+      tipo: "cram" as const,
+      titulo: "Instrumental CRAM",
+      detalhe: [
+        c.status,
+        Array.isArray(c.tipos_violencia) ? c.tipos_violencia.join(", ") : null,
+      ]
+        .filter(Boolean)
+        .join(" · "),
+      href: `/cram/${c.id}`,
+    })),
+    ...dado(2).map((b: any) => ({
+      data: b.data_entrega ?? "",
+      tipo: "beneficio" as const,
+      titulo: `Benefício entregue: ${b.beneficio?.nome ?? "—"}`,
+    })),
+    ...dado(3).map((p: any) => ({
+      data: p.data_participacao ?? "",
+      tipo: "evento" as const,
+      titulo: `Participou do evento: ${p.evento?.nome ?? "—"}`,
+      detalhe: p.observacao || undefined,
+    })),
+    ...dado(4).map((i: any) => ({
+      data: i.data_inscricao ?? "",
+      tipo: "curso" as const,
+      titulo: `Inscrita no curso: ${i.curso?.nome ?? i.curso?.titulo ?? "—"}`,
+      detalhe: i.status || undefined,
+    })),
+  ]
+    .filter((e) => e.data)
+    .sort((a, b) => String(b.data).localeCompare(String(a.data)));
+
+  const falhas = consultas.filter((c) => c.status === "rejected").length;
+  return { success: true, data: eventos, parcial: falhas > 0 };
+}
+
 export async function getInscricoesCurso(beneficiariaId: string) {
+  await assertAccess("mulheres");
   const { client } = await getAuthenticatedClient();
   try {
     const historico = await client.request(
@@ -758,6 +909,7 @@ export async function getInscricoesCurso(beneficiariaId: string) {
 }
 
 export async function registrarInscricaoCurso(data: unknown) {
+  await assertAccess("mulheres");
   const { client } = await getAuthenticatedClient();
   try {
     const parsedData = inscricaoCursoSchema.parse(data);
@@ -794,6 +946,7 @@ export async function registrarInscricaoCurso(data: unknown) {
 }
 
 export async function deletarInscricaoCurso(id: number, beneficiariaId: number) {
+  await assertAccess("mulheres");
   const { client } = await getAuthenticatedClient();
   try {
     await client.request(deleteItem("inscricoes_curso", id));

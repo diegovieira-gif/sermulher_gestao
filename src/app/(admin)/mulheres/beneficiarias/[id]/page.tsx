@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BeneficiosTab } from "./beneficios-tab";
 import { EventosTab } from "./eventos-tab";
 import { CursosTab } from "./cursos-tab";
+import { LinhaDoTempoTab } from "./linha-do-tempo-tab";
 import {
   getBeneficiaria,
   getHistoricoBeneficios,
@@ -14,6 +15,7 @@ import {
   getEventosOptions,
   getInscricoesCurso,
   getCursosOptions,
+  getLinhaDoTempo,
 } from "../actions";
 import { getAuxItems } from "../../../configuracoes/actions";
 
@@ -23,7 +25,13 @@ interface PageProps {
 }
 
 /** Abas que aceitam link direto via `?tab=`. */
-const ABAS_VALIDAS = ["dados", "beneficios", "eventos", "cursos"] as const;
+const ABAS_VALIDAS = [
+  "dados",
+  "linha-do-tempo",
+  "beneficios",
+  "eventos",
+  "cursos",
+] as const;
 
 export default async function BeneficiariaDetalhePage({
   params,
@@ -52,6 +60,7 @@ export default async function BeneficiariaDetalhePage({
     eventosOptionsResult,
     inscricoesCursoResult,
     cursosOptionsResult,
+    linhaDoTempoResult,
   ] = await Promise.all([
     getBeneficiaria(beneficiariaId),
     getHistoricoBeneficios(String(beneficiariaId)),
@@ -60,6 +69,7 @@ export default async function BeneficiariaDetalhePage({
     getEventosOptions(),
     getInscricoesCurso(String(beneficiariaId)),
     getCursosOptions(),
+    getLinhaDoTempo(String(beneficiariaId)),
   ]);
 
   if (!beneficiariaResult.success || !beneficiariaResult.data) {
@@ -112,6 +122,7 @@ export default async function BeneficiariaDetalhePage({
       <Tabs defaultValue={abaInicial} className="space-y-4">
         <TabsList>
           <TabsTrigger value="dados">Dados</TabsTrigger>
+          <TabsTrigger value="linha-do-tempo">Linha do Tempo</TabsTrigger>
           <TabsTrigger value="beneficios">Benefícios</TabsTrigger>
           <TabsTrigger value="eventos">Eventos</TabsTrigger>
           <TabsTrigger value="cursos">Cursos</TabsTrigger>
@@ -147,6 +158,17 @@ export default async function BeneficiariaDetalhePage({
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="linha-do-tempo">
+          <LinhaDoTempoTab
+            eventos={
+              linhaDoTempoResult.success && linhaDoTempoResult.data
+                ? linhaDoTempoResult.data
+                : []
+            }
+            parcial={Boolean(linhaDoTempoResult.parcial)}
+          />
         </TabsContent>
 
         <TabsContent value="beneficios">

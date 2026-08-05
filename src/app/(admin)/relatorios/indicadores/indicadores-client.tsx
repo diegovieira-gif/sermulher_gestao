@@ -20,8 +20,10 @@ import {
     Filter,
     Instagram,
     Globe,
-    Share2
+    Share2,
+    Download
 } from "lucide-react";
+import { baixarCsv } from "@/lib/csv";
 import {
     Card,
     CardContent,
@@ -88,6 +90,55 @@ export function IndicadoresClient({ dados, mesInicial, anoInicial }: Indicadores
         window.print();
     };
 
+    /** Exporta todas as seções do painel num único CSV para planilha. */
+    const handleExportarCsv = () => {
+        const mesLabel = MESES.find((m) => m.value === mes)?.label ?? mes;
+        const grupo = (
+            titulo: string,
+            itens: { name: string; value: number }[],
+        ): (string | number)[][] => [
+            [],
+            [titulo],
+            ["Item", "Quantidade"],
+            ...itens.map((i) => [i.name, i.value] as (string | number)[]),
+        ];
+        const linhas: (string | number)[][] = [
+            ["PAINEL DE INDICADORES — SERMULHER"],
+            ["Referência", `${mesLabel}/${ano}`],
+            [],
+            ["1. IDENTIFICAÇÃO"],
+            ["Total de atendimentos", dados.identificacao.totalAtendimentos],
+            ...grupo("Atendimentos por origem", dados.identificacao.porOrigem),
+            ...grupo("Demandas por tipo", dados.identificacao.porTipoDemanda),
+            [],
+            ["2. AÇÕES"],
+            ["Atendimentos técnicos (total)", dados.acoes.atendimentosTecnicos.total],
+            ["— Individuais", dados.acoes.atendimentosTecnicos.individual],
+            ["— Coletivos", dados.acoes.atendimentosTecnicos.coletivo],
+            ["— Encaminhamentos", dados.acoes.atendimentosTecnicos.encaminhamentos],
+            ["— Devolutivas", dados.acoes.atendimentosTecnicos.devolutivas],
+            ...grupo("Atendimentos por setor", dados.acoes.porSetor),
+            ["Turmas ativas", dados.acoes.educacao.turmasAtivas],
+            ["Alunas matriculadas", dados.acoes.educacao.totalAlunas],
+            ["Eventos no mês", dados.acoes.eventos.total],
+            ["Reuniões de rede", dados.acoes.eventos.reunioesRede],
+            [],
+            ["3. COMUNICAÇÃO"],
+            ["Total de publicações", dados.comunicacao.totalPosts],
+            ["Alcance total", dados.comunicacao.alcanceTotal],
+            ...grupo("Alcance por canal", dados.comunicacao.porCanal),
+            [],
+            ["4. PERFIL DEMOGRÁFICO (NOVOS CASOS)"],
+            ...grupo("Faixa etária", dados.perfil.faixaEtaria),
+            ...grupo("Raça/Cor", dados.perfil.racaCor),
+            ...grupo("Escolaridade", dados.perfil.escolaridade),
+        ];
+        baixarCsv(
+            `Indicadores-${ano}-${String(mes).padStart(2, "0")}.csv`,
+            linhas,
+        );
+    };
+
     const anosDisponiveis = Array.from(
         { length: 5 },
         (_, i) => new Date().getFullYear() - i,
@@ -127,10 +178,16 @@ export function IndicadoresClient({ dados, mesInicial, anoInicial }: Indicadores
                     <h2 className="text-3xl font-bold tracking-tight">Painel de Indicadores</h2>
                     <p className="text-muted-foreground">Monitoramento Mensal CRAM & Ações</p>
                 </div>
-                <Button variant="outline" onClick={handleImprimir} className="gap-2">
-                    <Printer className="h-4 w-4" />
-                    Imprimir Relatório
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" onClick={handleExportarCsv} className="gap-2">
+                        <Download className="h-4 w-4" />
+                        Exportar CSV
+                    </Button>
+                    <Button variant="outline" onClick={handleImprimir} className="gap-2">
+                        <Printer className="h-4 w-4" />
+                        Imprimir Relatório
+                    </Button>
+                </div>
             </div>
 
             {/* Filters */}
