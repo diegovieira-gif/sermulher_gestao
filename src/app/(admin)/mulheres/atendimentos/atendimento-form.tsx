@@ -49,6 +49,26 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
+import { todayLocalISO } from "@/lib/utils";
+import { useRascunho } from "@/hooks/use-rascunho";
+import { RascunhoBanner } from "@/components/shared/rascunho-banner";
+
+/** Aba de cada campo — para o erro de validação apontar onde está a pendência. */
+const ABA_POR_CAMPO: Record<string, string> = {
+  beneficiaria: "Triagem Inicial",
+  origem_id: "Triagem Inicial",
+  prioridade_id: "Triagem Inicial",
+  status: "Triagem Inicial",
+  data_abertura: "Triagem Inicial",
+  encaminhamento_id: "Triagem Inicial",
+  tipos_violencia: "Triagem Inicial",
+  medida_protetiva: "Triagem Inicial",
+  gestante_puerpera: "Triagem Inicial",
+  boletim_ocorrencia: "Triagem Inicial",
+  necessidades_sociais: "Socioassistencial",
+  necessidades_juridicas: "Jurídico",
+  avaliacao_risco: "Avaliação de Risco",
+};
 
 interface AtendimentoFormProps {
   open: boolean;
@@ -207,8 +227,9 @@ export function AtendimentoForm({
         origem_id: origemId || undefined,
         prioridade_id: prioridadeId || undefined,
         status: atendimento.status || StatusAtendimento.ABERTO,
-        data_abertura:
-          dataAberturaFormatted || new Date().toISOString().split("T")[0],
+        // `todayLocalISO`: toISOString() devolve a data UTC — depois das 21h
+        // (UTC-3) o campo aparecia com a data de AMANHÃ.
+        data_abertura: dataAberturaFormatted || todayLocalISO(),
         encaminhamento_id: encaminhamentoId || undefined,
         tipos_violencia: tiposViolenciaIds,
         medida_protetiva: atendimento.medida_protetiva || false,
@@ -226,7 +247,7 @@ export function AtendimentoForm({
       origem_id: undefined,
       prioridade_id: undefined,
       status: StatusAtendimento.ABERTO,
-      data_abertura: new Date().toISOString().split("T")[0],
+      data_abertura: todayLocalISO(),
       encaminhamento_id: undefined,
       tipos_violencia: [],
       medida_protetiva: false,
@@ -247,6 +268,29 @@ export function AtendimentoForm({
     form.reset(normalizedValues);
   }, [normalizedValues, form]);
 
+  // Rascunho local: protege o preenchimento das 4 abas contra sessão expirada
+  // ou fechamento acidental do dialog/aba do navegador.
+  const rascunho = useRascunho(
+    form,
+    atendimento?.id ? `atendimento:${atendimento.id}` : "atendimento:novo",
+    open,
+  );
+
+  const onValidationError = (errors: Record<string, unknown>) => {
+    const abas = Array.from(
+      new Set(
+        Object.keys(errors)
+          .map((campo) => ABA_POR_CAMPO[campo])
+          .filter(Boolean),
+      ),
+    );
+    toast.error(
+      abas.length > 0
+        ? `Há campos obrigatórios ou inválidos na aba: ${abas.join(", ")}.`
+        : "Há campos obrigatórios ou inválidos no formulário.",
+    );
+  };
+
   const onSubmit = async (data: AtendimentoFormValues) => {
     setIsSubmitting(true);
 
@@ -254,6 +298,7 @@ export function AtendimentoForm({
       const result = await saveAtendimento(data);
 
       if (result.success) {
+        rascunho.limpar();
         toast.success(result.message);
         onOpenChange(false);
         form.reset();
@@ -280,8 +325,10 @@ export function AtendimentoForm({
           </DialogDescription>
         </DialogHeader>
 
+        <RascunhoBanner rascunho={rascunho} />
+
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit, onValidationError)} className="space-y-6">
             <Tabs defaultValue="triagem" className="w-full">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="triagem">Triagem Inicial</TabsTrigger>

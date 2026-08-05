@@ -50,6 +50,36 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 const Loader2Icon = Loader2 as React.ComponentType<any>;
 import { InfoTooltip } from "@/components/ui/info-tooltip";
+import { useRascunho } from "@/hooks/use-rascunho";
+import { RascunhoBanner } from "@/components/shared/rascunho-banner";
+
+/**
+ * Aba onde cada campo vive — usado para dizer, no erro de validação, ONDE está
+ * a pendência. Sem isso o submit falhava em silêncio quando o campo obrigatório
+ * estava em outra aba: a pessoa clicava em "Cadastrar" e nada acontecia.
+ */
+const ABA_POR_CAMPO: Record<string, string> = {
+  cpf: "Dados Pessoais",
+  nome_completo: "Dados Pessoais",
+  nome_social: "Dados Pessoais",
+  data_nascimento: "Dados Pessoais",
+  quantidade_filhos: "Dados Pessoais",
+  raca_cor_id: "Dados Pessoais",
+  estado_civil_id: "Dados Pessoais",
+  telefone: "Endereço e Contato",
+  telefone_validado: "Endereço e Contato",
+  email: "Endereço e Contato",
+  contato: "Endereço e Contato",
+  endereco: "Endereço e Contato",
+  numero_cad_unico: "Dados Sociais",
+  ubs_id: "Dados Sociais",
+  escolaridade_id: "Dados Sociais",
+  situacao_trabalho_id: "Dados Sociais",
+  perfil_socioeconomico: "Dados Sociais",
+  recebe_bolsa_familia: "Dados Sociais",
+  recebe_bpc: "Dados Sociais",
+  possui_medida_protetiva: "Dados Sociais",
+};
 
 interface FormOption {
   id: number;
@@ -130,6 +160,14 @@ export function BeneficiariaForm({
       ubs_id: undefined,
     },
   });
+
+  // Rede de segurança: rascunho local por registro (ou "nova") enquanto o
+  // dialog está aberto, com aviso ao fechar a aba com alterações pendentes.
+  const rascunho = useRascunho(
+    form,
+    beneficiaria?.id ? `beneficiaria:${beneficiaria.id}` : "beneficiaria:nova",
+    open,
+  );
 
   const cpfValue = form.watch("cpf");
 
@@ -325,6 +363,7 @@ export function BeneficiariaForm({
 
       if (result.success) {
         router.refresh();
+        rascunho.limpar();
 
         // Em vez do toast, o resumo de completude: mostra o quanto a ficha está
         // preenchida e o que falta, ordenado por peso. Se a action não devolver
@@ -359,6 +398,22 @@ export function BeneficiariaForm({
     }
   };
 
+  /** Erro de validação: aponta as abas com pendência em vez de falhar mudo. */
+  const onValidationError = (errors: Record<string, unknown>) => {
+    const abas = Array.from(
+      new Set(
+        Object.keys(errors)
+          .map((campo) => ABA_POR_CAMPO[campo])
+          .filter(Boolean),
+      ),
+    );
+    toast.error(
+      abas.length > 0
+        ? `Há campos obrigatórios ou inválidos na aba: ${abas.join(", ")}.`
+        : "Há campos obrigatórios ou inválidos no formulário.",
+    );
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -371,8 +426,10 @@ export function BeneficiariaForm({
           </DialogDescription>
         </DialogHeader>
 
+        <RascunhoBanner rascunho={rascunho} />
+
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit, (err) => console.log("❌ RHF VALIDATION ERRORS:", err))} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit, onValidationError)} className="space-y-6">
             <Tabs defaultValue="dados-pessoais" className="w-full">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="dados-pessoais">Dados Pessoais</TabsTrigger>

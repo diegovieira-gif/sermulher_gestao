@@ -58,6 +58,8 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { useRascunho } from "@/hooks/use-rascunho";
+import { RascunhoBanner } from "@/components/shared/rascunho-banner";
 
 // --- Blocos reutilizáveis ---------------------------------------------------
 
@@ -362,10 +364,19 @@ export function CramForm({
 
   const edicao = Boolean(valoresIniciais?.id);
 
+  // O Instrumental é o formulário mais longo do sistema (4 abas) e é
+  // preenchido durante o atendimento — o rascunho local evita perder tudo em
+  // caso de sessão expirada ou aba fechada.
+  const rascunho = useRascunho(
+    form,
+    valoresIniciais?.id ? `cram:${valoresIniciais.id}` : "cram:novo",
+  );
+
   const onSubmit = (valores: InstrumentalFormState) => {
     startSalvamento(async () => {
       const resultado = await saveInstrumental(valores);
       if (resultado.success) {
+        rascunho.limpar();
         toast.success(
           edicao ? "Instrumental atualizado." : "Instrumental registrado com sucesso.",
         );
@@ -387,6 +398,7 @@ export function CramForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-6">
+        <RascunhoBanner rascunho={rascunho} />
         <Tabs value={aba} onValueChange={setAba}>
           <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
             <TabsTrigger value="atendimento">Atendimento</TabsTrigger>
