@@ -1,11 +1,23 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2, Pencil, Search, ShieldAlert, Trash2 } from "lucide-react";
-import { deleteInstrumental, type InstrumentalListItem } from "./actions";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  Pencil,
+  Search,
+  ShieldAlert,
+  Trash2,
+} from "lucide-react";
+import {
+  deleteInstrumental,
+  type InstrumentaisMeta,
+  type InstrumentalListItem,
+} from "./actions";
 import { calcularRisco } from "./schemas";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -58,24 +70,52 @@ const CORES_STATUS: Record<string, string> = {
 
 interface CramClientProps {
   initialData: InstrumentalListItem[];
+  meta?: InstrumentaisMeta;
 }
 
-export function CramClient({ initialData }: CramClientProps) {
+export function CramClient({ initialData, meta }: CramClientProps) {
   const router = useRouter();
-  const [busca, setBusca] = useState("");
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const buscaUrl = searchParams.get("q") ?? "";
+  const [busca, setBusca] = useState(buscaUrl);
   const [paraExcluir, setParaExcluir] = useState<InstrumentalListItem | null>(null);
   const [excluindo, startExclusao] = useTransition();
 
-  const filtrados = useMemo(() => {
-    const termo = busca.trim().toLowerCase();
-    if (!termo) return initialData;
-    const digitos = termo.replace(/\D/g, "");
-    return initialData.filter((item) => {
-      const nome = item.beneficiaria?.nome_completo?.toLowerCase() ?? "";
-      const cpf = item.beneficiaria?.cpf?.replace(/\D/g, "") ?? "";
-      return nome.includes(termo) || (digitos !== "" && cpf.includes(digitos));
-    });
-  }, [busca, initialData]);
+  // A busca roda no servidor (nome ou CPF, via Directus) — filtrar só o que já
+  // está no client deixava de fora qualquer registro além da página carregada.
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (busca !== buscaUrl) {
+        const params = new URLSearchParams(searchParams.toString());
+        if (busca.trim()) params.set("q", busca.trim());
+        else params.delete("q");
+        params.delete("page");
+        router.push(`${pathname}?${params.toString()}`);
+      }
+    }, 400);
+    return () => clearTimeout(handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [busca]);
+
+  // Ressincroniza quando a URL muda por fora (voltar/avançar do navegador).
+  useEffect(() => {
+    setBusca(buscaUrl);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [buscaUrl]);
+
+  const irParaPagina = useCallback(
+    (page: number) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (page <= 1) params.delete("page");
+      else params.set("page", String(page));
+      router.push(`${pathname}?${params.toString()}`);
+    },
+    [router, pathname, searchParams],
+  );
+
+  const filtrados = initialData;
 
   const confirmarExclusao = () => {
     if (!paraExcluir) return;
@@ -122,9 +162,9 @@ export function CramClient({ initialData }: CramClientProps) {
               {filtrados.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
-                    {initialData.length === 0
-                      ? "Nenhum instrumental registrado ainda."
-                      : "Nenhum atendimento corresponde à busca."}
+                    {buscaUrl
+                      ? "Nenhum atendimento corresponde à busca."
+                      : "Nenhum instrumental registrado ainda."}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -213,6 +253,37 @@ export function CramClient({ initialData }: CramClientProps) {
           </Table>
         </CardContent>
       </Card>
+
+      {meta && meta.total > 0 && (
+        <div className="flex flex-col items-center justify-between gap-3 text-sm text-muted-foreground sm:flex-row">
+          <div>
+            Mostrando <strong>{(meta.page - 1) * meta.limit + 1}</strong> a{" "}
+            <strong>{Math.min(meta.page * meta.limit, meta.total)}</strong> de{" "}
+            <strong>{meta.total}</strong> atendimentos
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => irParaPagina(meta.page - 1)}
+              disabled={meta.page <= 1}
+            >
+              <ChevronLeft className="mr-1 size-4" /> Anterior
+            </Button>
+            <span>
+              Página {meta.page} de {meta.totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => irParaPagina(meta.page + 1)}
+              disabled={meta.page >= meta.totalPages}
+            >
+              Próxima <ChevronRight className="ml-1 size-4" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       <AlertDialog
         open={paraExcluir !== null}

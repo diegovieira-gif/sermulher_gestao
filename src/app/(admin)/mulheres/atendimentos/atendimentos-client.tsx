@@ -3,7 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -24,11 +25,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { AtendimentoForm } from "./atendimento-form";
 import { deleteAtendimento } from "./actions";
-import { Plus, Pencil, Trash2, Eye, FileText } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { toast } from "sonner";
 import Link from "next/link";
 import type {
+  AtendimentosMeta,
   BeneficiariaOption,
   OrigemOption,
   PrioridadeOption,
@@ -38,6 +40,7 @@ import type {
 
 interface AtendimentosClientProps {
   atendimentos: any[];
+  meta?: AtendimentosMeta;
   beneficiariasOptions: BeneficiariaOption[];
   origensOptions: OrigemOption[];
   prioridadesOptions: PrioridadeOption[];
@@ -47,12 +50,17 @@ interface AtendimentosClientProps {
 
 export function AtendimentosClient({
   atendimentos,
+  meta,
   beneficiariasOptions,
   origensOptions,
   prioridadesOptions,
   encaminhamentosOptions,
   tiposViolenciaOptions,
 }: AtendimentosClientProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [formOpen, setFormOpen] = useState(false);
   const [selectedAtendimento, setSelectedAtendimento] = useState<any | null>(
     null
@@ -63,12 +71,36 @@ export function AtendimentosClient({
   );
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Filtros
-  const [statusFilter, setStatusFilter] = useState<string>("todos");
-  const [origemFilter, setOrigemFilter] = useState<string>("todos");
-  const [prioridadeFilter, setPrioridadeFilter] = useState<string>("todos");
-  const [encaminhamentoFilter, setEncaminhamentoFilter] = useState<string>("todos");
-  const [tipoViolenciaFilter, setTipoViolenciaFilter] = useState<string>("todos");
+  // Filtros derivados da URL (fonte única de verdade): o servidor aplica os
+  // filtros no Directus e devolve só a página atual — a listagem cobre a base
+  // inteira, não os primeiros 100 registros.
+  const statusFilter = searchParams.get("status") || "todos";
+  const origemFilter = searchParams.get("origem") || "todos";
+  const prioridadeFilter = searchParams.get("prioridade") || "todos";
+  const encaminhamentoFilter = searchParams.get("encaminhamento") || "todos";
+  const tipoViolenciaFilter = searchParams.get("violencia") || "todos";
+
+  // Troca um filtro na URL, sempre voltando à página 1.
+  const setFiltro = useCallback(
+    (chave: string, valor: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (valor === "todos") params.delete(chave);
+      else params.set(chave, valor);
+      params.delete("page");
+      router.push(`${pathname}?${params.toString()}`);
+    },
+    [router, pathname, searchParams],
+  );
+
+  const irParaPagina = useCallback(
+    (page: number) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (page <= 1) params.delete("page");
+      else params.set("page", String(page));
+      router.push(`${pathname}?${params.toString()}`);
+    },
+    [router, pathname, searchParams],
+  );
 
   const handleNew = () => {
     setSelectedAtendimento(null);
@@ -168,49 +200,8 @@ export function AtendimentosClient({
     };
   };
 
-  // Auxiliares para filtros
-  const normalizeId = (val: any): number | undefined => {
-    if (val == null) return undefined;
-    if (typeof val === "object") return val?.id ?? undefined;
-    if (typeof val === "string") {
-      const n = Number(val);
-      return Number.isNaN(n) ? undefined : n;
-    }
-    if (typeof val === "number") return val;
-    return undefined;
-  };
-
-  const atendimentoHasTipoViolencia = (item: any, tipoId: number): boolean => {
-    // Pode vir como lista m2m (tipos_violencia_lista) ou array simples (tipos_violencia)
-    const lista = Array.isArray(item?.tipos_violencia_lista)
-      ? item.tipos_violencia_lista
-      : Array.isArray(item?.tipos_violencia)
-      ? item.tipos_violencia
-      : [];
-
-    return lista.some((it: any) => {
-      if (it?.config_tipos_agressao_id) {
-        const id = normalizeId(it.config_tipos_agressao_id);
-        return id === tipoId;
-      }
-      const id = normalizeId(it);
-      return id === tipoId;
-    });
-  };
-
-  const filteredAtendimentos = atendimentos.filter((a) => {
-    const statusOk =
-      statusFilter === "todos" || (a.status || "Aberto") === statusFilter;
-    const origemOk =
-      origemFilter === "todos" || normalizeId(a.origem_id) === Number(origemFilter);
-    const prioridadeOk =
-      prioridadeFilter === "todos" || normalizeId(a.prioridade_id) === Number(prioridadeFilter);
-    const encaminhamentoOk =
-      encaminhamentoFilter === "todos" || normalizeId(a.encaminhamento_id) === Number(encaminhamentoFilter);
-    const tipoOk =
-      tipoViolenciaFilter === "todos" || atendimentoHasTipoViolencia(a, Number(tipoViolenciaFilter));
-    return statusOk && origemOk && prioridadeOk && encaminhamentoOk && tipoOk;
-  });
+  // A filtragem acontece no servidor — aqui a lista já vem pronta.
+  const filteredAtendimentos = atendimentos;
 
   return (
     <>
@@ -230,7 +221,7 @@ export function AtendimentosClient({
       {/* Filtros */}
       <div className="mb-4 flex flex-wrap gap-3">
         {/* Filtro de Status */}
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select value={statusFilter} onValueChange={(v) => setFiltro("status", v)}>
           <SelectTrigger className="w-[180px] bg-white">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
@@ -244,7 +235,7 @@ export function AtendimentosClient({
         </Select>
 
         {/* Filtro de Origem */}
-        <Select value={origemFilter} onValueChange={setOrigemFilter}>
+        <Select value={origemFilter} onValueChange={(v) => setFiltro("origem", v)}>
           <SelectTrigger className="w-[200px] bg-white">
             <SelectValue placeholder="Origem" />
           </SelectTrigger>
@@ -259,7 +250,7 @@ export function AtendimentosClient({
         </Select>
 
         {/* Filtro de Prioridade */}
-        <Select value={prioridadeFilter} onValueChange={setPrioridadeFilter}>
+        <Select value={prioridadeFilter} onValueChange={(v) => setFiltro("prioridade", v)}>
           <SelectTrigger className="w-[200px] bg-white">
             <SelectValue placeholder="Prioridade" />
           </SelectTrigger>
@@ -274,7 +265,7 @@ export function AtendimentosClient({
         </Select>
 
         {/* Filtro de Encaminhamento */}
-        <Select value={encaminhamentoFilter} onValueChange={setEncaminhamentoFilter}>
+        <Select value={encaminhamentoFilter} onValueChange={(v) => setFiltro("encaminhamento", v)}>
           <SelectTrigger className="w-[220px] bg-white">
             <SelectValue placeholder="Encaminhamento" />
           </SelectTrigger>
@@ -289,7 +280,7 @@ export function AtendimentosClient({
         </Select>
 
         {/* Filtro de Tipo de Violência */}
-        <Select value={tipoViolenciaFilter} onValueChange={setTipoViolenciaFilter}>
+        <Select value={tipoViolenciaFilter} onValueChange={(v) => setFiltro("violencia", v)}>
           <SelectTrigger className="w-[240px] bg-white">
             <SelectValue placeholder="Tipo de Violência" />
           </SelectTrigger>
@@ -415,6 +406,38 @@ export function AtendimentosClient({
           </TableBody>
         </Table>
       </div>
+
+      {/* Paginação */}
+      {meta && meta.total > 0 && (
+        <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-muted-foreground">
+          <div>
+            Mostrando <strong>{(meta.page - 1) * meta.limit + 1}</strong> a{" "}
+            <strong>{Math.min(meta.page * meta.limit, meta.total)}</strong> de{" "}
+            <strong>{meta.total}</strong> atendimentos
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => irParaPagina(meta.page - 1)}
+              disabled={meta.page <= 1}
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" /> Anterior
+            </Button>
+            <span>
+              Página {meta.page} de {meta.totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => irParaPagina(meta.page + 1)}
+              disabled={meta.page >= meta.totalPages}
+            >
+              Próxima <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       <AtendimentoForm
         open={formOpen}

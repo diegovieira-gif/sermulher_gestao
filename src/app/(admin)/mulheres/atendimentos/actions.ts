@@ -2,8 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { directus } from "@/lib/directus";
-import { readItems, createItem, updateItem, deleteItem } from "@directus/sdk";
+import {
+  readItems,
+  createItem,
+  updateItem,
+  deleteItem,
+  aggregate,
+} from "@directus/sdk";
 import { atendimentoFormSchema } from "./schemas";
+import { assertAccess } from "@/lib/permissions";
 
 const slugify = (value: string) =>
   value
@@ -82,19 +89,84 @@ export type TipoViolenciaOption = {
   nome: string;
 };
 
-/**
- * Busca todas as atendimentos com relacionamentos
- */
-export async function getAtendimentos() {
-  try {
-    const atendimentos = await directus.request(
-      readItems("atendimentos", {
-        fields: ATENDIMENTO_FIELDS,
-        sort: ["-data_abertura"],
-      }),
-    );
+export interface AtendimentosQuery {
+  page?: number;
+  status?: string;
+  origemId?: number;
+  prioridadeId?: number;
+  encaminhamentoId?: number;
+  tipoViolenciaId?: number;
+}
 
-    return { success: true, data: atendimentos };
+export interface AtendimentosMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+const ATENDIMENTOS_POR_PAGINA = 20;
+
+/**
+ * Busca atendimentos com relacionamentos, filtros e paginação no servidor.
+ *
+ * Antes esta consulta ia sem `limit` — e o default silencioso do Directus é
+ * 100. O 101º atendimento simplesmente não aparecia na listagem, sem nenhum
+ * erro. Os filtros também eram aplicados em memória no client, só sobre a
+ * página que o Directus resolvia devolver.
+ */
+export async function getAtendimentos(query: AtendimentosQuery = {}) {
+  await assertAccess("mulheres");
+  try {
+    const page = Math.max(1, query.page ?? 1);
+    const limit = ATENDIMENTOS_POR_PAGINA;
+
+    const filter: Record<string, unknown> = {};
+    if (query.status && query.status !== "todos") {
+      // Registros antigos têm status nulo e sempre foram exibidos como
+      // "Aberto" — o filtro precisa preservar essa equivalência.
+      filter._or =
+        query.status === "Aberto"
+          ? [{ status: { _eq: "Aberto" } }, { status: { _null: true } }]
+          : [{ status: { _eq: query.status } }];
+    }
+    if (query.origemId) filter.origem_id = { _eq: query.origemId };
+    if (query.prioridadeId) filter.prioridade_id = { _eq: query.prioridadeId };
+    if (query.encaminhamentoId)
+      filter.encaminhamento_id = { _eq: query.encaminhamentoId };
+    if (query.tipoViolenciaId) {
+      filter.tipos_violencia_lista = {
+        config_tipos_agressao_id: { _eq: query.tipoViolenciaId },
+      };
+    }
+
+    const [atendimentos, contagem] = await Promise.all([
+      directus.request(
+        readItems("atendimentos", {
+          fields: ATENDIMENTO_FIELDS,
+          sort: ["-data_abertura"],
+          filter,
+          limit,
+          offset: (page - 1) * limit,
+        }),
+      ),
+      directus.request(
+        aggregate("atendimentos", {
+          aggregate: { count: "*" },
+          query: { filter },
+        }),
+      ),
+    ]);
+
+    const total = Number((contagem as any)?.[0]?.count ?? 0);
+    const meta: AtendimentosMeta = {
+      page,
+      limit,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / limit)),
+    };
+
+    return { success: true, data: atendimentos, meta };
   } catch (error) {
     console.error("Erro ao buscar atendimentos:", error);
     return {
@@ -108,6 +180,7 @@ export async function getAtendimentos() {
  * Busca opções para o formulário (beneficiárias, origens, prioridades)
  */
 export async function getFormOptions() {
+  await assertAccess("mulheres");
   try {
     const [
       beneficiarias,
@@ -172,6 +245,7 @@ export async function getFormOptions() {
  * Salva um atendimento (cria ou atualiza)
  */
 export async function saveAtendimento(data: unknown) {
+  await assertAccess("mulheres");
   try {
     // Valida os dados com Zod
     const validatedData = atendimentoFormSchema.parse(data);
@@ -321,6 +395,7 @@ export async function saveAtendimento(data: unknown) {
  * Deleta um atendimento
  */
 export async function deleteAtendimento(id: number) {
+  await assertAccess("mulheres");
   try {
     await directus.request(deleteItem("atendimentos", id));
 

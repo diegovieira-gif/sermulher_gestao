@@ -3,9 +3,27 @@ import { AtendimentosClient } from "./atendimentos-client";
 
 export const dynamic = "force-dynamic";
 
-export default async function AtendimentosPage() {
+const toId = (value?: string) => {
+  const n = Number(value);
+  return Number.isInteger(n) && n > 0 ? n : undefined;
+};
+
+export default async function AtendimentosPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
+  const sp = await searchParams;
+
   const [atendimentosResult, optionsResult] = await Promise.all([
-    getAtendimentos(),
+    getAtendimentos({
+      page: toId(sp.page) ?? 1,
+      status: sp.status,
+      origemId: toId(sp.origem),
+      prioridadeId: toId(sp.prioridade),
+      encaminhamentoId: toId(sp.encaminhamento),
+      tipoViolenciaId: toId(sp.violencia),
+    }),
     getFormOptions(),
   ]);
 
@@ -33,6 +51,7 @@ export default async function AtendimentosPage() {
     <div className="p-6">
       <AtendimentosClient
         atendimentos={atendimentosResult.data || []}
+        meta={atendimentosResult.meta}
         beneficiariasOptions={optionsResult.data?.beneficiarias || []}
         origensOptions={optionsResult.data?.origens || []}
         prioridadesOptions={optionsResult.data?.prioridades || []}

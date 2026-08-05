@@ -1,7 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createItem, deleteItem, readItem, readItems, updateItem } from "@directus/sdk";
+import {
+  aggregate,
+  createItem,
+  deleteItem,
+  readItem,
+  readItems,
+  updateItem,
+} from "@directus/sdk";
 import { getDirectusAdmin } from "@/lib/directus";
 import { assertAccess } from "@/lib/permissions";
 import { evolucaoSchema, instrumentalSchema, piaSchema } from "./schemas";
@@ -67,7 +74,20 @@ const normalizeDate = (value?: string | null) => {
 
 // --- Leitura ----------------------------------------------------------------
 
-export async function getInstrumentais(search?: string) {
+export type InstrumentaisMeta = {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+};
+
+const INSTRUMENTAIS_POR_PAGINA = 20;
+
+/**
+ * Lista paginada com busca no Directus — o teto fixo de 200 registros fazia
+ * atendimentos antigos sumirem da listagem (e da busca) sem nenhum aviso.
+ */
+export async function getInstrumentais(search?: string, page = 1) {
   const directus = await getCramDirectus();
   try {
     const filter: Record<string, unknown> = {};
@@ -83,16 +103,31 @@ export async function getInstrumentais(search?: string) {
       };
     }
 
-    const data = await directus.request(
-      readItems(COLLECTION, {
-        fields: LISTA_FIELDS,
-        filter,
-        sort: ["-data_atendimento", "-id"],
-        limit: 200,
-      }),
-    );
+    const paginaAtual = Math.max(1, page);
+    const [data, contagem] = await Promise.all([
+      directus.request(
+        readItems(COLLECTION, {
+          fields: LISTA_FIELDS,
+          filter,
+          sort: ["-data_atendimento", "-id"],
+          limit: INSTRUMENTAIS_POR_PAGINA,
+          offset: (paginaAtual - 1) * INSTRUMENTAIS_POR_PAGINA,
+        }),
+      ),
+      directus.request(
+        aggregate(COLLECTION, { aggregate: { count: "*" }, query: { filter } }),
+      ),
+    ]);
 
-    return { success: true, data: data as unknown as InstrumentalListItem[] };
+    const total = Number((contagem as any)?.[0]?.count ?? 0);
+    const meta: InstrumentaisMeta = {
+      page: paginaAtual,
+      limit: INSTRUMENTAIS_POR_PAGINA,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / INSTRUMENTAIS_POR_PAGINA)),
+    };
+
+    return { success: true, data: data as unknown as InstrumentalListItem[], meta };
   } catch (error) {
     console.error("Erro ao buscar instrumentais do CRAM:", error);
     return { success: false, error: "Falha ao carregar os atendimentos." };

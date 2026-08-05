@@ -8,8 +8,13 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export const dynamic = "force-dynamic";
 
-export default async function CramPage() {
-  const resultado = await getInstrumentais();
+export default async function CramPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; page?: string }>;
+}) {
+  const { q, page } = await searchParams;
+  const resultado = await getInstrumentais(q, Number(page) || 1);
 
   return (
     <div className="min-h-screen bg-gray-50/50">
@@ -28,7 +33,7 @@ export default async function CramPage() {
 
       <div className="mx-auto max-w-[1600px] p-6">
         {resultado.success ? (
-          <CramClient initialData={resultado.data ?? []} />
+          <CramClient initialData={resultado.data ?? []} meta={resultado.meta} />
         ) : (
           <Alert variant="destructive">
             <AlertCircle className="size-4" />
