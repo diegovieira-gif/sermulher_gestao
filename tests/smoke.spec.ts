@@ -108,6 +108,48 @@ test.describe("Smoke — Rotas de API exigem autorização (regressão IDOR)", (
   });
 });
 
+test.describe("Smoke — Login limita tentativas (força bruta)", () => {
+  // Este teste NÃO precisa do Directus: com o banco fora do ar o login falha
+  // mesmo, e a falha é o que alimenta o contador. A partir do limite, a rota
+  // responde 429 antes de tentar autenticar.
+  //
+  // Usa um e-mail único e inexistente de propósito: o limite por conta é
+  // rígido (5), enquanto o limite por origem é folgado (30) justamente para
+  // que a rede compartilhada da secretaria não seja bloqueada — então gastar
+  // ~6 tentativas aqui não derruba o `auth.setup.ts`.
+  test("6ª tentativa com a mesma conta → 429 com Retry-After", async ({
+    request,
+  }) => {
+    const email = `bloqueio-${Date.now()}@exemplo.invalid`;
+    const tentativa = () =>
+      request.post("/api/auth/login", {
+        data: { email, password: "senha-errada-de-proposito" },
+      });
+
+    for (let i = 1; i <= 5; i++) {
+      const res = await tentativa();
+      expect(
+        res.status(),
+        `tentativa ${i} deveria ser recusada por credencial, não por limite`,
+      ).toBe(401);
+    }
+
+    const bloqueada = await tentativa();
+    expect(bloqueada.status()).toBe(429);
+    expect(Number(bloqueada.headers()["retry-after"])).toBeGreaterThan(0);
+
+    const corpo = await bloqueada.json();
+    expect(corpo.error).toContain("Muitas tentativas");
+  });
+
+  test("login sem e-mail ou senha → 400 (não consome tentativa)", async ({
+    request,
+  }) => {
+    const res = await request.post("/api/auth/login", { data: { email: "" } });
+    expect(res.status()).toBe(400);
+  });
+});
+
 test.describe("Smoke — Recursos estáticos", () => {
   test("Ficheiro de estilos globais carrega (sem 404)", async ({ page }) => {
     // Navega para a app para forçar carregamento dos assets

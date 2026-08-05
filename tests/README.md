@@ -1,70 +1,85 @@
-# Testes E2E com Playwright
+# Testes
 
-## Arquivos de Teste Criados
+O projeto tem **duas camadas** de teste, com pré-requisitos bem diferentes.
 
-✅ **tests/beneficiarias.spec.ts** (313 linhas)
+| Camada | Onde | Precisa de servidor/Directus? | Comando |
+| --- | --- | --- | --- |
+| **Unitária** | `tests/unit/` | ❌ Não — roda offline | `npm run test:unit` |
+| **Smoke (E2E)** | `tests/smoke.spec.ts` | Servidor sim, Directus **não** | `npx playwright test --project=smoke` |
+| **E2E autenticado** | demais `*.spec.ts` | Sim, ambos + credenciais | `npx playwright test` |
 
-- CRUD completo de Beneficiárias
-- Gera CPF válido e nome aleatório
-- Testes: Create, Read, Update, Delete
+Essa separação é deliberada: quando o Directus está fora do ar — o que acontece
+sempre que se trabalha fora da rede do servidor — as duas primeiras camadas
+continuam dando sinal.
 
-✅ **tests/escola.spec.ts** (343 linhas)
+---
 
-- Cursos: Create, Read, Delete
-- Turmas: Create com curso existente, Create com pré-requisito
-- Validação de dependências
+## 1. Testes unitários (`tests/unit/`)
 
-✅ **tests/sala-azul.spec.ts** (524 linhas)
-
-- Infratores: Create, Read, Update, Delete
-- Ciclos Reflexivos: Create, Create com participante (desafio), Delete
-- Fluxo de participação integrado
-
-✅ **tests/eventos.spec.ts** (427 linhas)
-
-- Eventos: Create (amanhã), Read, Update, Delete
-- Calendário: Visualização integrada
-- Mudança de status e edição
-
-## Padrões Implementados
-
-✅ `test.step()` para organização de logs estruturados
-✅ Sem mocks - testes integram com Directus real
-✅ Dados dinâmicos com timestamps e validação
-✅ Localização robusta de elementos
-✅ Tratamento de timeouts e fallbacks
-
-## Executar Testes
+Lógica pura, sem navegador e sem rede. Rodam em ~10 segundos.
 
 ```bash
-# Todos os testes
-npx playwright test
-
-# Teste específico
-npx playwright test tests/beneficiarias.spec.ts
-
-# Com visual (headed mode)
-npx playwright test --headed
-
-# Debug mode
-npx playwright test --debug
-
-# Relatório HTML
-npx playwright test && npx playwright show-report
+npm run test:unit
 ```
 
-## Pré-requisitos
+**Runner:** o próprio Playwright, via `playwright.unit.config.ts`. Ele já está
+no projeto e já transpila TypeScript — um Vitest/Jest só para isto
+acrescentaria dependência e configuração sem ganho.
 
-- ✅ Servidor em `http://localhost:3000`
-- ✅ Banco de dados Directus acessível
-- ✅ Browsers instalados: `npx playwright install`
-- ✅ **Credenciais no ambiente** (ver abaixo)
+> O script chama o Node com `--conditions=react-server`. Sem isso, o pacote
+> `server-only` (importado por `lib/rate-limit`) lança *"cannot be imported from
+> a Client Component"*. É a mesma condição que o Next.js usa no bundle de
+> servidor.
+
+| Arquivo | O que protege |
+| --- | --- |
+| `menu-registry.spec.ts` | Cálculo de permissão de perfil. Um erro aqui expõe prontuário a quem não deveria ver — vale mais que o resto somado. |
+| `rate-limit.spec.ts` | Limite de tentativas de login, incluindo a regressão do IP compartilhado (a secretaria inteira sai pelo mesmo IP). |
+| `csv.spec.ts` | Escape do CSV dos relatórios. Erro aqui não gera exceção: gera planilha com colunas deslocadas, percebida depois de entregue. |
+| `utils.spec.ts` | Máscaras de CPF/telefone e datas em fuso local (o bug da "data de amanhã" após as 21h). |
+
+---
+
+## 2. Smoke (`tests/smoke.spec.ts`)
+
+Roda **sem autenticação** e sem depender do banco. É o gate de PR.
+
+- Login responde 200 e o formulário aparece.
+- Rotas protegidas redirecionam para `/login` — nunca 500.
+- **Regressão IDOR:** `/api/files/<uuid>` e `/api/whatsapp/imagem/<uuid>` sem
+  sessão retornam 401.
+- **Força bruta:** a 6ª tentativa na mesma conta retorna 429 com `Retry-After`.
+  Funciona sem Directus porque a falha de conexão também conta como tentativa.
+
+---
+
+## 3. E2E autenticado
+
+Cobrem o fluxo real contra o Directus. Exigem credenciais (ver abaixo).
+
+| Arquivo | Cobertura |
+| --- | --- |
+| `rotas.spec.ts` | Toda rota do menu renderiza autenticada; nenhum link aponta para `/admin`. |
+| `beneficiarias.spec.ts` | CRUD completo (cria e apaga os próprios dados). |
+| `ficha-beneficiaria.spec.ts` | Abas da ficha, linha do tempo e rascunho automático. |
+| `atendimentos.spec.ts` | Listagem, filtros por URL e paginação no servidor. |
+| `cram.spec.ts` | Listagem, busca, paginação e as 4 abas do Instrumental. |
+| `escola.spec.ts` | Cursos e turmas, incluindo turma com pré-requisito. |
+| `sala-azul.spec.ts` | Infratores e ciclos reflexivos com participante. |
+| `eventos.spec.ts` | CRUD de evento e visualização no calendário. |
+| `dashboard.spec.ts` | KPIs, gráfico e links. |
+| `tramitacoes.spec.ts` | Smoke do Kanban. |
+| `observatorio.spec.ts` | Busca, diálogo e abas. |
+| `app-amar.spec.ts` | Smoke das 7 subrotas. |
+
+`atendimentos`, `cram` e `ficha-beneficiaria` são **somente leitura** — não
+criam nem apagam registros. Os demais criam dados e os removem ao final.
 
 ### Credenciais
 
-`tests/auth.setup.ts` lê `TEST_USER_EMAIL` e `TEST_USER_PASSWORD` **do ambiente**,
-sem valor padrão. Sem elas, o setup falha com instrução — de propósito: até
-2026-07 havia uma credencial real commitada como fallback neste arquivo.
+`auth.setup.ts` lê `TEST_USER_EMAIL` e `TEST_USER_PASSWORD` **do ambiente**, sem
+valor padrão. Sem elas o setup falha com instrução — de propósito: até 2026-07
+havia uma credencial real commitada como fallback neste arquivo.
 
 ```bash
 export TEST_USER_EMAIL="conta-de-teste@exemplo.gov.br"
@@ -72,76 +87,37 @@ export TEST_USER_PASSWORD="..."
 npx playwright test
 ```
 
-Use uma **conta de teste dedicada**, nunca a credencial pessoal de um servidor.
-No CI, cadastre as duas como secrets do repositório.
-
-> O projeto `smoke` não depende de autenticação e roda sem essas variáveis — é
-> por isso que o pipeline atual (`--project=smoke`) continua verde sem elas.
-
-### Rotas: `(admin)` não é segmento de URL
-
-`src/app/(admin)/` é um **route group** do App Router — ele agrupa arquivos sem
-aparecer na URL. As rotas reais são `/dashboard`, `/escola`, `/sala-azul`, e
-**não** `/admin/dashboard`. Como o proxy redireciona qualquer rota sem sessão
-para `/login`, testes apontando para `/admin/...` passavam sem testar nada.
-`tests/rotas.spec.ts` guarda contra essa regressão.
-
-## Cenários por Módulo
-
-### Beneficiárias (/mulheres/beneficiarias)
-
-- ✅ Criar com campos obrigatórios (nome_completo)
-- ✅ Filtrar por nome
-- ✅ Editar telefone/endereço
-- ✅ Deletar e verificar remoção
-
-### Escola - Cursos (/escola/cursos)
-
-- ✅ Criar curso com área e carga horária
-- ✅ Verificar na lista
-- ✅ Deletar curso
-
-### Escola - Turmas (/escola/turmas)
-
-- ✅ Criar turma com curso existente
-- ✅ Criar turma com pré-requisito (curso criado antes)
-- ✅ Verificar vínculo com curso real
-
-### Sala Azul - Infratores (/sala-azul/infratores)
-
-- ✅ Cadastrar infrator com CPF válido
-- ✅ Selecionar nível, status legal, tipos agressão
-- ✅ Encontrar e deletar na lista
-
-### Sala Azul - Ciclos (/sala-azul/ciclos)
-
-- ✅ Criar ciclo reflexivo com datas
-- ✅ Adicionar infrator como participante (se interface permitir)
-- ✅ Deletar ciclo
-
-### Eventos (/eventos)
-
-- ✅ Criar evento para data de amanhã
-- ✅ Verificar em calendário/lista
-- ✅ Editar título e status
-- ✅ Deletar evento
-
-## Dados Gerados
-
-- **Nome**: Aleatório (primeira + última)
-- **CPF**: Validado com dígito verificador correto
-- **Timestamps**: Garante unicidade entre rodadas
-- **Datas**: Calculadas dinamicamente (hoje, amanhã, próximo mês)
-
-## Documentação Completa
-
-Ver [TESTES_E2E_DOCUMENTACAO.md](../TESTES_E2E_DOCUMENTACAO.md) para:
-
-- Detalhes de cada cenário
-- Padrões implementados
-- Guia de troubleshooting
-- Melhorias futuras
+Use uma **conta de teste dedicada**, nunca a credencial pessoal de uma
+servidora. No CI, cadastre as duas como secrets do repositório.
 
 ---
 
-**Criado com ❤️ para validar a qualidade da aplicação Ser Mulher Gestão**
+## Comandos úteis
+
+```bash
+npm run test:unit                          # unitários (offline)
+npx playwright test --project=smoke        # smoke (precisa do app no ar)
+npx playwright test tests/cram.spec.ts     # um arquivo
+npx playwright test --headed               # vendo o navegador
+npx playwright test --debug                # passo a passo
+npx playwright show-report                 # relatório da última execução
+```
+
+---
+
+## Armadilhas conhecidas
+
+**`(admin)` não é segmento de URL.** `src/app/(admin)/` é um *route group*: ele
+agrupa arquivos sem aparecer na URL. As rotas reais são `/dashboard`,
+`/escola` — **não** `/admin/dashboard`. Como o proxy manda toda rota sem sessão
+para `/login`, testes apontando para `/admin/...` passavam sem testar nada.
+`rotas.spec.ts` guarda contra essa regressão.
+
+**O error boundary devolve HTTP 200.** Um erro de render no cliente (por
+exemplo, `FormLabel` fora de `<FormField>`, que já derrubou `/cram/novo`) não
+aparece como 500 nem falha no build. Por isso os specs verificam explicitamente
+a ausência do texto *"Ops! Algo deu errado"* — só o status não basta.
+
+**Base vazia.** Os testes de leitura usam `test.skip()` quando não há registros,
+em vez de falhar. Um ambiente recém-criado não deve reportar defeito onde só
+falta dado.

@@ -1,4 +1,4 @@
-name: CI (Quality + Smoke Tests)
+name: CI (Quality + Unit + Smoke Tests)
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 
 jobs:
   quality:
-    name: Type Check + Lint (PR Gate)
+    name: Type Check + Unit + Lint (PR Gate)
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -30,6 +30,12 @@ jobs:
       # (o `ignoreBuildErrors` do next.config foi removido — este é o guarda de regressão)
       - name: Type check
         run: npx tsc --noEmit
+
+      # Testes de lógica pura (permissões de menu, limite de login, CSV,
+      # máscaras). Não sobem servidor nem tocam no Directus, então rodam aqui
+      # no gate rápido — e continuam rodando quando o banco está fora do ar.
+      - name: Unit tests
+        run: npm run test:unit
 
       # Informativo por ora: o repo ainda tem findings pré-existentes de lint.
       # Endureça para bloqueante conforme a dívida de `any` for zerada.

@@ -40,6 +40,9 @@ const SUBROTAS = [
   "/app-amar/cursos",
   "/app-amar/contatos",
   "/app-amar/projetos",
+  // Página 403: não está no menu, mas é para onde o gate manda quem tenta
+  // abrir um módulo fora do seu perfil.
+  "/acesso-negado",
 ];
 
 /**

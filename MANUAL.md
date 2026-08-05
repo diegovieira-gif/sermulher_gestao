@@ -256,7 +256,7 @@ O acesso é organizado por **perfil** (o "grupo" do usuário). Cada usuário per
 
 Quem tenta acessar um módulo fora do seu perfil — por link direto ou URL — vê a página **"Acesso não permitido"**, com o nome do módulo e a orientação de solicitar a liberação à administração. O bloqueio também vale **no servidor**: mesmo chamadas diretas às operações de um módulo não permitido são negadas, não apenas o menu escondido.
 
-Por segurança, o **login** também limita tentativas: após 5 senhas erradas seguidas (por usuário ou por computador), é preciso aguardar alguns minutos antes de tentar de novo.
+Por segurança, o **login** limita tentativas: após **5 senhas erradas** na mesma conta, é preciso aguardar cerca de 15 minutos antes de tentar de novo. O bloqueio é **por conta**, não pela rede — o erro de uma colega não impede as demais de entrar. Se isso acontecer com você, aguarde o tempo indicado na mensagem ou peça à administração a redefinição da sua senha.
 
 ---
 

@@ -18,7 +18,20 @@ import "server-only";
  */
 
 const JANELA_MS = 15 * 60 * 1000;
-const MAX_FALHAS = 5;
+
+/**
+ * Limite por CONTA: protege a senha de uma pessoa específica.
+ */
+export const MAX_FALHAS_EMAIL = 5;
+
+/**
+ * Limite por ORIGEM: bem mais folgado de propósito. A secretaria inteira sai
+ * pelo mesmo IP público (NAT), então um limite baixo aqui deixaria todas as
+ * servidoras sem acesso porque cinco pessoas erraram a senha na segunda-feira.
+ * Serve contra varredura distribuída de contas, não contra o erro cotidiano.
+ */
+export const MAX_FALHAS_IP = 30;
+
 /** Faxina simples para o Map não crescer sem limite sob varredura de IPs. */
 const MAX_CHAVES = 10_000;
 
@@ -37,12 +50,16 @@ function podar(chave: string, agora: number): number[] {
 }
 
 /** Segundos até a chave poder tentar de novo (0 = liberada). */
-export function segundosParaLiberar(chave: string): number {
+export function segundosParaLiberar(chave: string, maxFalhas: number): number {
   const agora = Date.now();
   const lista = podar(chave, agora);
-  if (lista.length < MAX_FALHAS) return 0;
-  const maisAntiga = lista[0];
-  return Math.max(1, Math.ceil((maisAntiga + JANELA_MS - agora) / 1000));
+  if (lista.length < maxFalhas) return 0;
+  // A janela só corre a partir da falha que ainda conta para o limite.
+  const maisAntigaRelevante = lista[lista.length - maxFalhas];
+  return Math.max(
+    1,
+    Math.ceil((maisAntigaRelevante + JANELA_MS - agora) / 1000),
+  );
 }
 
 export function registrarFalha(chave: string): void {

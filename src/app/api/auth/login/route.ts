@@ -14,6 +14,8 @@ import {
   limparFalhas,
   registrarFalha,
   segundosParaLiberar,
+  MAX_FALHAS_EMAIL,
+  MAX_FALHAS_IP,
 } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
@@ -29,14 +31,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Email e senha são obrigatórios." }, { status: 400 });
     }
 
-    // Proteção contra força bruta: IP e e-mail contam separadamente, para que
-    // um atacante distribuído não escape trocando de conta, nem um IP
-    // compartilhado (rede da prefeitura) seja punido por um vizinho.
+    // Proteção contra força bruta: a conta tem limite rígido (protege a senha
+    // de uma pessoa) e a origem tem limite folgado (a secretaria inteira sai
+    // pelo mesmo IP — ver as constantes em lib/rate-limit).
     chaveIp = `ip:${ipDaRequisicao(request)}`;
     chaveEmail = `email:${String(email).trim().toLowerCase()}`;
     const espera = Math.max(
-      segundosParaLiberar(chaveIp),
-      segundosParaLiberar(chaveEmail),
+      segundosParaLiberar(chaveIp, MAX_FALHAS_IP),
+      segundosParaLiberar(chaveEmail, MAX_FALHAS_EMAIL),
     );
     if (espera > 0) {
       return NextResponse.json(

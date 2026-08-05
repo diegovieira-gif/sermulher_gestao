@@ -384,3 +384,28 @@ buracos nesse princípio.
 4. `src/app/(admin)/escola/certificado/[id]/page.tsx` — `assertAccess("escola")` (10.2).
 5. `src/app/(admin)/mulheres/beneficiarias/actions.ts` — normalização de telefone no save (10.4).
 6. `src/app/(admin)/marketing/whatsapp/actions.ts` — remoção do bloco DEBUG e do import `readMe` (10.5).
+
+---
+
+## 11. Posfácio — o que mudou depois desta rodada
+
+> Este documento é um **relatório datado**. As linhas abaixo registram o que foi
+> resolvido em trabalho posterior, para que a leitura das pendências acima não
+> induza a erro.
+
+| Pendência da rodada 2 | Situação atual |
+|---|---|
+| **Refresh de sessão (1.7)** — listado como "infra, não aplicado" | ✅ **Implementado.** `src/lib/session.ts` + `src/proxy.ts`: renovação proativa (5 min de folga) com rotação de refresh token e tratamento da corrida entre requisições concorrentes. |
+| **4.6 Performance** — `limit: -1` e filtros em memória | ✅ **Parcial.** Atendimentos (que ia **sem `limit`**, sofrendo o corte silencioso de 100 do Directus) e CRAM (teto fixo de 200) passaram a paginar e filtrar no servidor. Escola, Sala Azul e Indicadores ainda usam `limit: -1`. |
+| **4.1 Autorização** — `assertAccess` nas actions com token admin | ✅ **Ampliado além do escopo original.** A guarda foi estendida a ~100 actions que usavam o token **do usuário** e dependiam apenas do RBAC do Directus — onde a policy "App Padrão" concede acesso amplo, tornando o gate de menu a única barreira efetiva (e ela era client-side). |
+| **Força bruta no login** — não coberto na rodada 2 | ✅ **Implementado.** `src/lib/rate-limit.ts`: 5 falhas por conta / 30 por origem, em janela de 15 min. O limite de origem é folgado de propósito — a secretaria inteira sai pelo mesmo IP. |
+| **Vazamento de erro interno ao usuário** — não coberto | ✅ **Corrigido.** `(admin)/error.tsx` mostrava `error.message` cru; agora exibe mensagem genérica + `digest` para o suporte. |
+| **HTTPS/TLS (1.4)** | ⏸️ **Segue pendente** — mudança de infraestrutura. |
+| **Rotação de `DIRECTUS_TOKEN`/`CRON_SECRET`** | ⏸️ **Segue pendente.** |
+| **Bearer token hardcoded — API SIGED (10.7)** | ⏸️ **Segue pendente** — decisão humana. |
+| **Migração de telefones legados (10.4)** | ⏸️ **Script proposto, não executado** contra a base. |
+
+**Cobertura de teste desde então:** a suíte ganhou uma camada unitária
+(`tests/unit/`, roda offline) cobrindo permissões de menu, limite de login,
+CSV e máscaras; e specs E2E para Atendimentos, CRAM e a ficha da beneficiária —
+três módulos que não tinham cobertura nenhuma. Ver `tests/README.md`.

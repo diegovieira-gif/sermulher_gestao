@@ -400,6 +400,12 @@ export default function ManualPage() {
               centralmente — por segurança, a redefinição é feita pela equipe
               responsável.
             </Callout>
+            <Callout variant="warn" title="Limite de tentativas">
+              Após <strong>5 senhas erradas</strong> na mesma conta, o acesso
+              fica bloqueado por cerca de 15 minutos. O bloqueio é por conta,
+              não pela rede — o erro de uma colega não impede as demais de
+              entrar.
+            </Callout>
           </div>
           <div className="space-y-3">
             <h3 className="font-semibold text-foreground">O menu lateral</h3>

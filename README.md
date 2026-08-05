@@ -50,7 +50,8 @@ O SerMulher utiliza ferramentas modernas para fornecer desempenho e facilidade d
   * Fetch com desabilitação de cache agressivo do Next.js.
   * Captura inteligente de tokens httpOnly baseados em cookies de sessão.
   * Interceptador `safeDirectusCall` para gerenciamento centralizado de erros de autorização (401) e redirecionamento automático para a tela de login.
-* **Testes:** [Playwright](https://playwright.dev/) para testes de ponta a ponta (E2E) e validação de fluxos.
+* **Testes:** [Playwright](https://playwright.dev/) tanto para os testes de ponta a ponta (E2E) quanto para a suíte unitária de lógica pura.
+* **Autorização:** duas camadas — as permissões do Directus e, no app, `assertAccess(<módulo>)` em toda Server Action, com política *fail-closed* (ver `src/lib/permissions.ts`).
 
 ---
 
@@ -101,17 +102,30 @@ Após iniciar o servidor de desenvolvimento, acesse [http://localhost:3000](http
 
 ---
 
-## 🧪 Testes E2E (Playwright)
+## 🧪 Testes
 
-O projeto possui cobertura de testes automatizados com o Playwright:
+Duas camadas, com pré-requisitos diferentes — a separação existe para que haja
+sinal mesmo quando o Directus está fora de alcance (trabalho fora da rede do
+servidor):
+
+| Camada | Precisa de servidor / Directus? | Comando |
+| --- | --- | --- |
+| **Unitária** — permissões, limite de login, CSV, máscaras | ❌ roda offline | `npm run test:unit` |
+| **Smoke** — rotas, IDOR, força bruta | servidor sim, Directus não | `npx playwright test --project=smoke` |
+| **E2E autenticado** — fluxos por módulo | ambos + credenciais | `npm run test` |
 
 ```bash
-# Executar todos os testes E2E
-npm run test
-
-# Executar os testes em modo interativo (UI do Playwright)
-npm run test:e2e:ui
+npm run test:unit      # ~10s, sem rede — roda sempre
+npm run test           # suíte E2E completa (exige TEST_USER_EMAIL/PASSWORD)
+npm run test:e2e:ui    # modo interativo do Playwright
+npm run typecheck      # tsc --noEmit
 ```
+
+> Os testes unitários usam o próprio Playwright como runner
+> (`playwright.unit.config.ts`), sem adicionar Vitest/Jest ao projeto.
+
+Detalhes de cobertura, credenciais e armadilhas conhecidas em
+[`tests/README.md`](tests/README.md).
 
 ---
 
@@ -119,17 +133,19 @@ npm run test:e2e:ui
 
 ```text
 ├── .github/          # Workflows e agentes de automação
+├── docs/             # Trilha de vídeo-aulas e planos de aula
 ├── public/           # Ativos públicos (imagens, fontes, etc)
-├── tests/            # Testes de integração e E2E (Playwright)
+├── scripts/          # Migrações do Directus, backup e diagnóstico
+├── tests/            # E2E (Playwright)
+│   └── unit/         # Testes de lógica pura, sem servidor
 └── src/
     ├── app/          # Rotas e Páginas (App Router)
-    │   ├── (admin)   # Rotas autenticadas de gestão e administração
-    │   ├── (app)     # Rotas gerais da aplicação
-    │   ├── api/      # Endpoints HTTP (login, proxies)
+    │   ├── (admin)   # Rotas autenticadas — o grupo NÃO vira segmento de URL
+    │   ├── api/      # Endpoints HTTP (login, proxies de arquivo)
     │   └── login/    # Página de acesso autenticado
     ├── components/   # Componentes de UI reutilizáveis (Shadcn/custom)
     ├── hooks/        # Custom React Hooks
-    ├── lib/          # Clientes de integração (Directus, helpers)
+    ├── lib/          # Clientes de integração (Directus, sessão, permissões)
     └── types/        # Definições de tipo TypeScript
 ```
 
