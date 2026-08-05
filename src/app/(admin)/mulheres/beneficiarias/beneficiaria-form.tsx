@@ -12,7 +12,12 @@ import {
 import { saveBeneficiaria, findBeneficiariaByCPF } from "./actions";
 import { CompletudeDialog } from "./completude-dialog";
 import type { ResumoCompletude } from "./completude";
-import { BAIRROS_ARACAJU } from "@/lib/utils";
+import {
+  BAIRROS_ARACAJU,
+  mascararCpf,
+  mascararTelefone,
+  somenteDigitos,
+} from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import {
@@ -394,11 +399,14 @@ export function BeneficiariaForm({
                             <Input
                               placeholder="000.000.000-00"
                               {...field}
-                              value={field.value || ""}
+                              // Máscara só na exibição: o valor do formulário —
+                              // e portanto o que vai para o banco — continua
+                              // sendo apenas dígitos.
+                              value={mascararCpf(field.value)}
                               onChange={(e) => {
-                                const value = e.target.value.replace(/\D/g, "");
-                                field.onChange(value.slice(0, 11));
+                                field.onChange(somenteDigitos(e.target.value).slice(0, 11));
                               }}
+                              inputMode="numeric"
                               className={isSearchingCPF ? "pr-10" : ""}
                               autoComplete="off"
                             />
@@ -565,7 +573,20 @@ export function BeneficiariaForm({
                         <FormItem>
                           <FormLabel>Telefone</FormLabel>
                           <FormControl>
-                            <Input placeholder="(79) 99999-9999" {...field} value={field.value || ""} />
+                            <Input
+                              placeholder="(79) 99999-9999"
+                              {...field}
+                              // Mesma regra do CPF: máscara na tela, dígitos no
+                              // valor. A digitação manual gravava com máscara
+                              // enquanto o auto-preenchimento gravava limpo —
+                              // dois formatos na mesma coluna, que quebravam a
+                              // busca por `_contains`.
+                              value={mascararTelefone(field.value)}
+                              onChange={(e) => {
+                                field.onChange(somenteDigitos(e.target.value).slice(0, 11));
+                              }}
+                              inputMode="numeric"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

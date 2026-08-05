@@ -10,6 +10,46 @@ export function cn(...inputs: ClassValue[]) {
  * Usa split string simples para garantir que o dia exibido é o dia salvo.
  */
 /**
+ * Máscaras de exibição para CPF e telefone.
+ *
+ * O banco guarda SÓ DÍGITOS — `saveBeneficiaria` limpa os dois campos antes de
+ * gravar, e as buscas comparam pela versão sem máscara. A máscara existe apenas
+ * na tela: facilita conferir o número em voz alta com a assistida e evita erro
+ * de digitação. O que sai daqui para o servidor continua passando por
+ * `somenteDigitos`.
+ */
+export function somenteDigitos(valor: string | null | undefined): string {
+  return String(valor ?? "").replace(/\D/g, "");
+}
+
+/** 123.456.789-01 — aplica progressivamente, conforme a pessoa digita. */
+export function mascararCpf(valor: string | null | undefined): string {
+  const d = somenteDigitos(valor).slice(0, 11);
+  if (d.length <= 3) return d;
+  if (d.length <= 6) return `${d.slice(0, 3)}.${d.slice(3)}`;
+  if (d.length <= 9) return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6)}`;
+  return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
+}
+
+/**
+ * (79) 99999-9999 ou (79) 9999-9999.
+ *
+ * Aceita as duas formas porque a base tem números de 8 e 9 dígitos. Um DDI 55
+ * colado no início é descartado — aparece em números importados e quebraria a
+ * formatação.
+ */
+export function mascararTelefone(valor: string | null | undefined): string {
+  let d = somenteDigitos(valor);
+  if (d.startsWith("55") && (d.length === 12 || d.length === 13)) d = d.slice(2);
+  d = d.slice(0, 11);
+
+  if (d.length <= 2) return d;
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+}
+
+/**
  * Data de hoje como AAAA-MM-DD no fuso LOCAL.
  *
  * `new Date().toISOString().slice(0,10)` devolve a data em UTC. No Brasil

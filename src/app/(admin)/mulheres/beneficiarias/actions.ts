@@ -161,6 +161,10 @@ export async function getBeneficiarias(
     const orConditions: any[] = [{ nome_completo: { _icontains: search } }];
     if (searchDigits) {
       orConditions.push({ cpf: { _contains: searchDigits } });
+      // Telefone também é gravado só com dígitos. Buscar por ele é o caminho
+      // mais rápido quando a beneficiária liga: o número aparece no visor, o
+      // nome nem sempre é dito por inteiro.
+      orConditions.push({ telefone: { _contains: searchDigits } });
     }
     filterConditions.push({ _or: orConditions });
   }
@@ -364,7 +368,12 @@ export async function getBeneficiariasExport(search = "", ids?: number[]) {
     ? {
       _or: [
         { nome_completo: { _icontains: search } },
-        ...(searchDigits ? [{ cpf: { _contains: searchDigits } }] : []),
+        ...(searchDigits
+          ? [
+            { cpf: { _contains: searchDigits } },
+            { telefone: { _contains: searchDigits } },
+          ]
+          : []),
       ],
     }
     : {};

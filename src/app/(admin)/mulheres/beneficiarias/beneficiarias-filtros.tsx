@@ -167,7 +167,7 @@ export function BeneficiariasFiltros({
         <div className="relative flex-1 w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
-            placeholder="Buscar por nome ou CPF..."
+            placeholder="Buscar por nome, CPF ou telefone..."
             className="pl-10 pr-10 h-10 w-full bg-slate-50/50 border-slate-200/80 focus-visible:bg-white focus-visible:ring-purple-500/20"
             value={searchInput}
             onChange={(e) => handleSearchChange(e.target.value)}
