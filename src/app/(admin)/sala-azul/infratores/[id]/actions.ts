@@ -2,11 +2,13 @@
 
 import { directus } from "@/lib/directus";
 import { readItems, readItem } from "@directus/sdk";
+import { assertAccess } from "@/lib/permissions";
 
 /**
  * Busca o histórico de participações de um infrator em ciclos
  */
 export async function getInfratorHistory(infratorId: number) {
+  await assertAccess("sala-azul");
   try {
     // Busca todas as participações do infrator
     const participacoes = await directus.request(
@@ -100,6 +102,7 @@ export async function getInfratorHistory(infratorId: number) {
  * Busca os dados completos de um infrator
  */
 export async function getInfratorById(id: number) {
+  await assertAccess("sala-azul");
   try {
     const infrator = await directus.request(
       readItem("infratores", id, {

@@ -17,11 +17,13 @@ import {
   type UpdateParticipacaoData,
   type SessaoData,
 } from "./schemas";
+import { assertAccess } from "@/lib/permissions";
 
 /**
  * Busca detalhes da sala e lista de participantes
  */
 export async function getSalaDetails(id: string | number) {
+  await assertAccess("sala-azul");
   try {
     const salaId = typeof id === "string" ? parseInt(id, 10) : id;
 
@@ -89,6 +91,7 @@ export async function getSalaDetails(id: string | number) {
  * Busca todos os infratores disponíveis (para adicionar à turma)
  */
 export async function getInfratoresDisponiveis(salaId: number) {
+  await assertAccess("sala-azul");
   try {
     // Primeiro, busca IDs dos infratores que já estão na sala
     const participacoesExistentes = await directus.request(
@@ -147,6 +150,7 @@ export async function getInfratoresDisponiveis(salaId: number) {
  * Adiciona um participante à sala
  */
 export async function addParticipante(data: unknown) {
+  await assertAccess("sala-azul");
   try {
     // Valida os dados com Zod
     const validatedData = addParticipanteSchema.parse(data);
@@ -214,6 +218,7 @@ export async function updateParticipante(
   participacaoId: number,
   data: unknown
 ) {
+  await assertAccess("sala-azul");
   try {
     // Valida os dados com Zod
     const validatedData = updateParticipacaoSchema.parse(data);
@@ -256,6 +261,7 @@ export async function updateParticipante(
  * Remove um participante da sala
  */
 export async function removeParticipante(participacaoId: number) {
+  await assertAccess("sala-azul");
   try {
     // Busca a participação para obter o ID da sala antes de deletar
     const participacao = await directus.request(
@@ -284,6 +290,7 @@ export async function removeParticipante(participacaoId: number) {
  * Busca todas as sessões de uma sala ordenadas por data (desc)
  */
 export async function getSessoes(salaId: number) {
+  await assertAccess("sala-azul");
   try {
     const sessoes = await directus.request(
       readItems("ciclo_sessoes", {
@@ -315,6 +322,7 @@ export async function getSessoes(salaId: number) {
  * Salva uma sessão (cria ou atualiza)
  */
 export async function saveSessao(data: unknown) {
+  await assertAccess("sala-azul");
   try {
     // Valida os dados com Zod
     const validatedData = sessaoSchema.parse(data);
@@ -370,6 +378,7 @@ export async function saveSessao(data: unknown) {
  * Deleta uma sessão
  */
 export async function deleteSessao(id: number) {
+  await assertAccess("sala-azul");
   try {
     // Busca a sessão para obter o ID da sala antes de deletar
     const sessao = await directus.request(
@@ -398,6 +407,7 @@ export async function deleteSessao(id: number) {
  * Busca a lista de chamada (presença) para uma sessão
  */
 export async function getChamada(sessaoId: number, cicloId: number) {
+  await assertAccess("sala-azul");
   try {
     // Busca todos os participantes do ciclo
     const participacoes = await directus.request(
@@ -465,6 +475,7 @@ export async function saveChamada(
   sessaoId: number,
   presencas: Array<{ participacao_id: number; presente: boolean }>
 ) {
+  await assertAccess("sala-azul");
   try {
     if (!Array.isArray(presencas)) {
       return {

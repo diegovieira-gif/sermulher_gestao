@@ -30,6 +30,18 @@ export default function LoginPage() {
     }
   }, []);
 
+  /**
+   * Destino após o login: o proxy grava `?redirect=<rota>` ao barrar uma
+   * navegação sem sessão — honrá-lo devolve a pessoa exatamente para onde
+   * estava (antes caía sempre no dashboard). Só aceita caminho interno
+   * ("/..."), nunca URL absoluta, para não virar open redirect.
+   */
+  const destinoPosLogin = () => {
+    const params = new URLSearchParams(window.location.search);
+    const destino = params.get("redirect") || "";
+    if (destino.startsWith("/") && !destino.startsWith("//")) return destino;
+    return "/dashboard";
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +63,7 @@ export default function LoginPage() {
         return;
       }
 
-      router.push("/dashboard");
+      router.push(destinoPosLogin());
       router.refresh();
     } catch {
       setError("Erro de conexão. Tente novamente.");

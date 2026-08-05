@@ -4,6 +4,7 @@ import { directus } from "@/lib/directus";
 import { createItem, deleteItem, readItems, updateItem } from "@directus/sdk";
 import { revalidatePath } from "next/cache";
 import { InsertInfrator, insertInfratorSchema } from "./schemas";
+import { assertAccess } from "@/lib/permissions";
 
 const INFRATOR_FIELDS = [
   'id',
@@ -40,6 +41,7 @@ export type TipoAgressaoOption = {
 };
 
 export async function getOptions() {
+  await assertAccess("sala-azul");
   try {
     const [niveis, status, tiposAgressao] = await Promise.all([
       directus.request(readItems('config_niveis_periculosidade', { fields: ['id', 'nome', 'cor'] })),
@@ -64,6 +66,7 @@ export async function getOptions() {
 }
 
 export async function getInfratores() {
+  await assertAccess("sala-azul");
   try {
     const items = await directus.request(readItems('infratores', {
       sort: ['nome_completo'],
@@ -85,6 +88,7 @@ export async function getInfratores() {
 }
 
 export async function saveInfrator(data: InsertInfrator & { id?: number }) {
+  await assertAccess("sala-azul");
   // Validação Zod
   const validation = insertInfratorSchema.safeParse(data);
   if (!validation.success) {
@@ -122,6 +126,7 @@ export async function saveInfrator(data: InsertInfrator & { id?: number }) {
 }
 
 export async function deleteInfrator(id: number) {
+  await assertAccess("sala-azul");
   try {
     await directus.request(deleteItem('infratores', id));
     revalidatePath("/sala-azul/infratores");

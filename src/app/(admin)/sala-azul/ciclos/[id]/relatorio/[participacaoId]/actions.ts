@@ -2,6 +2,7 @@
 
 import { directus } from "@/lib/directus";
 import { readItems, readItem } from "@directus/sdk";
+import { assertAccess } from "@/lib/permissions";
 
 /**
  * Busca dados completos para o Relatório Individual de Frequência
@@ -10,6 +11,7 @@ export async function getRelatorioIndividual(
   cicloId: string | number,
   participacaoId: string | number
 ) {
+  await assertAccess("sala-azul");
   try {
     const cicloIdNum = typeof cicloId === "string" ? parseInt(cicloId, 10) : cicloId;
     const participacaoIdNum =

@@ -2,6 +2,7 @@
 
 import { getDirectusClient } from "@/lib/directus";
 import { readItems } from "@directus/sdk";
+import { assertAccess } from "@/lib/permissions";
 
 // Tipos para as estatísticas
 export type MulheresDashboardStats = {
@@ -44,6 +45,7 @@ export async function getMulheresDashboardStats(): Promise<
   | { success: true; data: MulheresDashboardStats }
   | { success: false; error: string }
 > {
+  await assertAccess("mulheres");
   try {
     const directus = await getDirectusClient({ requireAuth: true });
 

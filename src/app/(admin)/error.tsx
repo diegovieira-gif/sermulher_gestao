@@ -22,26 +22,35 @@ export default function AdminError({
   const router = useRouter();
 
   useEffect(() => {
-    // Log the error to an error reporting service if needed
     console.error(error);
   }, [error]);
+
+  // O erro de `assertAccess` é escrito para o usuário e pode ser exibido.
+  // Qualquer outro `error.message` é detalhe interno (stack de SDK, URL de
+  // serviço, nome de coleção) e NÃO deve vazar — mostramos texto genérico e o
+  // `digest`, que permite localizar o erro real no log do servidor.
+  const acessoNegado = error.message?.startsWith('Acesso negado');
 
   return (
     <div className="flex items-center justify-center min-h-screen p-4">
       <Card className="w-full max-w-md shadow-lg border-destructive/20">
         <CardHeader className="space-y-2 text-center">
           <CardTitle className="text-2xl font-semibold text-destructive">
-            Ops! Algo deu errado
+            {acessoNegado ? 'Acesso não permitido' : 'Ops! Algo deu errado'}
           </CardTitle>
           <CardDescription className="text-base">
-            Ocorreu um erro inesperado ao carregar os dados.
+            {acessoNegado
+              ? error.message
+              : 'Ocorreu um erro inesperado ao carregar os dados. Tente novamente; se o problema continuar, informe o suporte.'}
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="bg-muted/50 p-4 rounded-md border text-sm font-mono text-muted-foreground overflow-auto">
-            {error.message || 'Erro desconhecido'}
-          </div>
-        </CardContent>
+        {!acessoNegado && error.digest && (
+          <CardContent>
+            <p className="text-center text-xs text-muted-foreground">
+              Código para o suporte: <span className="font-mono">{error.digest}</span>
+            </p>
+          </CardContent>
+        )}
         <CardFooter className="flex flex-col sm:flex-row gap-3">
           <Button
             className="w-full"

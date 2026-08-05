@@ -3,11 +3,13 @@
 import { directus } from "@/lib/directus";
 import { readItem } from "@directus/sdk";
 import { StatusParticipacao } from "../../../schemas";
+import { assertAccess } from "@/lib/permissions";
 
 /**
  * Busca dados completos para o Certificado de Participação
  */
 export async function getCertificadoData(participacaoId: string | number) {
+  await assertAccess("sala-azul");
   try {
     const id = Number(participacaoId);
     if (isNaN(id)) throw new Error("ID inválido");

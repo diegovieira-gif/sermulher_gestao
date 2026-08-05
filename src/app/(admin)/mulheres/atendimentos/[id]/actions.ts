@@ -6,6 +6,7 @@ import { readItems, readItem, createItem } from "@directus/sdk";
 import { z } from "zod";
 import { tramitacaoSchema } from "./schemas";
 import { getCurrentDemandAccess } from "@/lib/demanda-permissions";
+import { assertAccess } from "@/lib/permissions";
 
 export type TramitacaoInput = z.infer<typeof tramitacaoSchema>;
 
@@ -82,6 +83,7 @@ export type AtendimentoDetails = {
  * Busca detalhes completos de um atendimento
  */
 export async function getAtendimentoDetails(id: number) {
+  await assertAccess("mulheres");
   try {
     const atendimento = await directus.request(
       readItem("atendimentos", id, {
@@ -129,6 +131,7 @@ export async function getAtendimentoDetails(id: number) {
  * Busca o histórico de tramitações
  */
 export async function getTramitacoes(atendimentoId: number) {
+  await assertAccess("mulheres");
   try {
     const tramitacoes = await directus.request(
       readItems("tramitacoes", {
@@ -168,6 +171,7 @@ export async function getTramitacoes(atendimentoId: number) {
  * Salva uma nova tramitação
  */
 export async function saveTramitacao(data: unknown) {
+  await assertAccess("mulheres");
   try {
     const validatedData = tramitacaoSchema.parse(data);
 
@@ -220,6 +224,7 @@ export async function saveTramitacao(data: unknown) {
 export async function getSetores(): Promise<
   { success: true; data: SetorOption[] } | { success: false; error: string }
 > {
+  await assertAccess("mulheres");
   try {
     const setores = await directus.request(
       readItems("setores", {
@@ -240,6 +245,7 @@ export async function getSetores(): Promise<
 export async function getTiposDemanda(): Promise<
   { success: true; data: ConfigOption[] } | { success: false; error: string }
 > {
+  await assertAccess("mulheres");
   try {
     const tipos = await directus.request(
       readItems("config_tipos_demanda", {
@@ -261,6 +267,7 @@ export async function getTiposDemanda(): Promise<
 export async function getStatusEtapas(): Promise<
   { success: true; data: ConfigOption[] } | { success: false; error: string }
 > {
+  await assertAccess("mulheres");
   try {
     const status = await directus.request(
       readItems("config_status_etapa", {

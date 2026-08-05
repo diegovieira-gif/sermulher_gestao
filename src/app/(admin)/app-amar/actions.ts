@@ -3,6 +3,7 @@
 import { directus, safeDirectusCall } from "@/lib/directus";
 import { readItems, updateItem, deleteItem, createItem } from "@directus/sdk";
 import { revalidatePath } from "next/cache";
+import { assertAccess } from "@/lib/permissions";
 
 // Observação: o tratamento de 401 (token inválido/expirado → redirect para
 // /login?error=unauthorized) é centralizado em `safeDirectusCall()`.
@@ -18,6 +19,7 @@ type MutationResult = {
 // --- CATEGORIAS ---
 
 export async function getCategorias() {
+  await assertAccess("app-amar");
   try {
     const result = await directus.request(
       readItems("amar_categorias", {
@@ -32,6 +34,7 @@ export async function getCategorias() {
 }
 
 export async function toggleCategoriaStatus(id: string, newStatus: string): Promise<MutationResult> {
+  await assertAccess("app-amar");
   try {
     return await safeDirectusCall(async () => {
       const result = await directus.request(
@@ -51,6 +54,7 @@ export async function toggleCategoriaStatus(id: string, newStatus: string): Prom
 }
 
 export async function deleteCategoria(id: string): Promise<MutationResult> {
+  await assertAccess("app-amar");
   try {
     await directus.request(deleteItem("amar_categorias", id));
     revalidatePath("/app-amar/categorias");
@@ -62,6 +66,7 @@ export async function deleteCategoria(id: string): Promise<MutationResult> {
 }
 
 export async function createCategoria(data: any): Promise<MutationResult> {
+  await assertAccess("app-amar");
   try {
     return await safeDirectusCall(async () => {
       const result = await directus.request(
@@ -81,6 +86,7 @@ export async function createCategoria(data: any): Promise<MutationResult> {
 }
 
 export async function updateCategoria(id: string, data: any): Promise<MutationResult> {
+  await assertAccess("app-amar");
   try {
     return await safeDirectusCall(async () => {
       const result = await directus.request(
@@ -102,6 +108,7 @@ export async function updateCategoria(id: string, data: any): Promise<MutationRe
 // --- SERVIÇOS ---
 
 export async function getServicos() {
+  await assertAccess("app-amar");
   try {
     const result = await directus.request(
       readItems("amar_servicos", {
@@ -117,6 +124,7 @@ export async function getServicos() {
 }
 
 export async function toggleServicoStatus(id: string, newStatus: string): Promise<MutationResult> {
+  await assertAccess("app-amar");
   try {
     return await safeDirectusCall(async () => {
       const result = await directus.request(
@@ -136,6 +144,7 @@ export async function toggleServicoStatus(id: string, newStatus: string): Promis
 }
 
 export async function deleteServico(id: string): Promise<MutationResult> {
+  await assertAccess("app-amar");
   try {
     return await safeDirectusCall(async () => {
       await directus.request(deleteItem("amar_servicos", id));
@@ -150,6 +159,7 @@ export async function deleteServico(id: string): Promise<MutationResult> {
 }
 
 export async function createServico(data: any): Promise<MutationResult> {
+  await assertAccess("app-amar");
   try {
     return await safeDirectusCall(async () => {
       const result = await directus.request(createItem("amar_servicos", data));
@@ -167,6 +177,7 @@ export async function createServico(data: any): Promise<MutationResult> {
 }
 
 export async function updateServico(id: string, data: any): Promise<MutationResult> {
+  await assertAccess("app-amar");
   try {
     return await safeDirectusCall(async () => {
       // Sanitização técnica: removemos o ID do corpo caso ele tenha vindo do objeto de formulário
@@ -202,6 +213,7 @@ export async function updateServico(id: string, data: any): Promise<MutationResu
 // --- CAMPANHAS ---
 
 export async function getCampanhas() {
+  await assertAccess("app-amar");
   try {
     const result = await directus.request(
       readItems("amar_campanhas", {
@@ -216,6 +228,7 @@ export async function getCampanhas() {
 }
 
 export async function toggleCampanhaStatus(id: string, newStatus: string): Promise<MutationResult> {
+  await assertAccess("app-amar");
   try {
     return await safeDirectusCall(async () => {
       const result = await directus.request(
@@ -235,6 +248,7 @@ export async function toggleCampanhaStatus(id: string, newStatus: string): Promi
 }
 
 export async function deleteCampanha(id: string): Promise<MutationResult> {
+  await assertAccess("app-amar");
   try {
     return await safeDirectusCall(async () => {
       await directus.request(deleteItem("amar_campanhas", id));
@@ -249,6 +263,7 @@ export async function deleteCampanha(id: string): Promise<MutationResult> {
 }
 
 export async function createCampanha(data: any): Promise<MutationResult> {
+  await assertAccess("app-amar");
   try {
     return await safeDirectusCall(async () => {
       const result = await directus.request(createItem("amar_campanhas", data));
@@ -266,6 +281,7 @@ export async function createCampanha(data: any): Promise<MutationResult> {
 }
 
 export async function updateCampanha(id: string, data: any): Promise<MutationResult> {
+  await assertAccess("app-amar");
   try {
     return await safeDirectusCall(async () => {
       const result = await directus.request(
@@ -287,6 +303,7 @@ export async function updateCampanha(id: string, data: any): Promise<MutationRes
 // --- SONHOS ---
 
 export async function getSonhos() {
+  await assertAccess("app-amar");
   try {
     const result = await directus.request(
       readItems("amar_sonhos", {
@@ -301,6 +318,7 @@ export async function getSonhos() {
 }
 
 export async function getSonhoById(id: string) {
+  await assertAccess("app-amar");
   try {
     const result = await directus.request(
       readItems("amar_sonhos", {
@@ -320,6 +338,7 @@ export async function getSonhoById(id: string) {
 }
 
 export async function createSonho(data: any): Promise<MutationResult> {
+  await assertAccess("app-amar");
   try {
     return await safeDirectusCall(async () => {
       const result = await directus.request(createItem("amar_sonhos", data));
@@ -337,6 +356,7 @@ export async function createSonho(data: any): Promise<MutationResult> {
 }
 
 export async function updateSonho(id: string, data: any): Promise<MutationResult> {
+  await assertAccess("app-amar");
   try {
     return await safeDirectusCall(async () => {
       const result = await directus.request(
@@ -356,6 +376,7 @@ export async function updateSonho(id: string, data: any): Promise<MutationResult
 }
 
 export async function deleteSonho(id: string): Promise<MutationResult> {
+  await assertAccess("app-amar");
   try {
     return await safeDirectusCall(async () => {
       await directus.request(deleteItem("amar_sonhos", id));
@@ -372,6 +393,7 @@ export async function deleteSonho(id: string): Promise<MutationResult> {
 // --- CURSOS ---
 
 export async function getCursos() {
+  await assertAccess("app-amar");
   try {
     const result = await directus.request(
       readItems("amar_cursos", {
@@ -386,6 +408,7 @@ export async function getCursos() {
 }
 
 export async function getCursoById(id: string) {
+  await assertAccess("app-amar");
   try {
     const result = await directus.request(
       readItems("amar_cursos", {
@@ -405,6 +428,7 @@ export async function getCursoById(id: string) {
 }
 
 export async function createCurso(data: any): Promise<MutationResult> {
+  await assertAccess("app-amar");
   try {
     return await safeDirectusCall(async () => {
       const result = await directus.request(createItem("amar_cursos", data));
@@ -422,6 +446,7 @@ export async function createCurso(data: any): Promise<MutationResult> {
 }
 
 export async function updateCurso(id: string, data: any): Promise<MutationResult> {
+  await assertAccess("app-amar");
   try {
     return await safeDirectusCall(async () => {
       const result = await directus.request(
@@ -441,6 +466,7 @@ export async function updateCurso(id: string, data: any): Promise<MutationResult
 }
 
 export async function deleteCurso(id: string): Promise<MutationResult> {
+  await assertAccess("app-amar");
   try {
     return await safeDirectusCall(async () => {
       await directus.request(deleteItem("amar_cursos", id));
@@ -457,6 +483,7 @@ export async function deleteCurso(id: string): Promise<MutationResult> {
 // --- CONTATOS ---
 
 export async function getContatos() {
+  await assertAccess("app-amar");
   try {
     const result = await directus.request(
       readItems("amar_contatos", {
@@ -471,6 +498,7 @@ export async function getContatos() {
 }
 
 export async function getContatoById(id: string) {
+  await assertAccess("app-amar");
   try {
     const result = await directus.request(
       readItems("amar_contatos", {
@@ -490,6 +518,7 @@ export async function getContatoById(id: string) {
 }
 
 export async function deleteContato(id: string): Promise<MutationResult> {
+  await assertAccess("app-amar");
   try {
     return await safeDirectusCall(async () => {
       await directus.request(deleteItem("amar_contatos", id));
@@ -506,6 +535,7 @@ export async function deleteContato(id: string): Promise<MutationResult> {
 // --- PROJETOS ---
 
 export async function getProjetos() {
+  await assertAccess("app-amar");
   try {
     const result = await directus.request(
       readItems("amar_projetos", {
@@ -520,6 +550,7 @@ export async function getProjetos() {
 }
 
 export async function getProjetoById(id: string) {
+  await assertAccess("app-amar");
   try {
     const result = await directus.request(
       readItems("amar_projetos", {
@@ -539,6 +570,7 @@ export async function getProjetoById(id: string) {
 }
 
 export async function createProjeto(data: any): Promise<MutationResult> {
+  await assertAccess("app-amar");
   try {
     return await safeDirectusCall(async () => {
       const result = await directus.request(createItem("amar_projetos", data));
@@ -556,6 +588,7 @@ export async function createProjeto(data: any): Promise<MutationResult> {
 }
 
 export async function updateProjeto(id: string, data: any): Promise<MutationResult> {
+  await assertAccess("app-amar");
   try {
     return await safeDirectusCall(async () => {
       const result = await directus.request(
@@ -575,6 +608,7 @@ export async function updateProjeto(id: string, data: any): Promise<MutationResu
 }
 
 export async function deleteProjeto(id: string): Promise<MutationResult> {
+  await assertAccess("app-amar");
   try {
     return await safeDirectusCall(async () => {
       await directus.request(deleteItem("amar_projetos", id));

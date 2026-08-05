@@ -37,9 +37,11 @@ export function LayoutClient({
 
   useEffect(() => {
     if (blocked) {
-      router.replace('/dashboard');
+      // Página 403 real, com o nome do módulo — antes o redirect silencioso
+      // para o dashboard parecia bug para quem clicava num link sem permissão.
+      router.replace(`/acesso-negado?de=${encodeURIComponent(menuKey ?? '')}`);
     }
-  }, [blocked, router]);
+  }, [blocked, menuKey, router]);
 
   return (
     <>

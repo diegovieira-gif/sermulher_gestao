@@ -9,6 +9,7 @@ import {
   deleteItem,
 } from "@directus/sdk";
 import { insertSalaSchema, type Sala } from "./schemas";
+import { assertAccess } from "@/lib/permissions";
 
 /**
  * Busca todas as salas do Directus ordenadas por data_inicio descrescente
@@ -33,6 +34,7 @@ const SALA_FIELDS = [
  * Busca todas as salas do Directus ordenadas por data_inicio descrescente
  */
 export async function getSalas() {
+  await assertAccess("sala-azul");
   try {
     const salas = await directus.request(
       readItems("salas_azul", {
@@ -56,6 +58,7 @@ export async function getSalas() {
  * Busca opções para os selects (locais e responsáveis)
  */
 export async function getOptions() {
+  await assertAccess("sala-azul");
   try {
     const directusUrl = process.env.NEXT_PUBLIC_DIRECTUS_URL || "";
     const directusToken = process.env.DIRECTUS_TOKEN || "";
@@ -110,6 +113,7 @@ export async function getOptions() {
  * Salva uma sala (cria ou atualiza)
  */
 export async function saveSala(data: unknown) {
+  await assertAccess("sala-azul");
   try {
     // Valida os dados com Zod
     const validatedData = insertSalaSchema.parse(data);
@@ -167,6 +171,7 @@ export async function saveSala(data: unknown) {
  * Deleta uma sala
  */
 export async function deleteSala(id: number) {
+  await assertAccess("sala-azul");
   try {
     await directus.request(deleteItem("salas_azul", id));
 

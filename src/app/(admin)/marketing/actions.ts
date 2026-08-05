@@ -10,6 +10,7 @@ import {
 } from "@directus/sdk";
 import { revalidatePath } from "next/cache";
 import { marketingPostSchema } from "./schemas";
+import { assertAccess } from "@/lib/permissions";
 
 const COLLECTION = "marketing_items";
 
@@ -40,6 +41,7 @@ function parsePayload(data: any) {
 
 // 1. Listar Itens
 export async function getMarketingItems() {
+  await assertAccess("marketing");
   try {
     const items = await directus.request(
       readItems(COLLECTION, {
@@ -59,6 +61,7 @@ export async function getMarketingItems() {
 
 // 2. Salvar (Criar ou Atualizar)
 export async function saveMarketingItem(data: any) {
+  await assertAccess("marketing");
   try {
     // 1. Normaliza os dados
     const rawPayload = parsePayload(data);
@@ -106,6 +109,7 @@ export async function saveMarketingItem(data: any) {
 
 // 3. Deletar
 export async function deleteMarketingItem(id: number) {
+  await assertAccess("marketing");
   try {
     await directus.request(deleteItem(COLLECTION, id));
     revalidatePath("/marketing");
@@ -118,6 +122,7 @@ export async function deleteMarketingItem(id: number) {
 
 // 4. Estatísticas Avançadas
 export async function getMarketingStats() {
+  await assertAccess("marketing");
   try {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)

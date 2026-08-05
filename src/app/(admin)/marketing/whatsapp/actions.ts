@@ -140,6 +140,7 @@ async function assertCronOrMarketingAccess(): Promise<void> {
 export async function getWhatsappConfig(): Promise<
   ActionResult<WhatsappConfigData | null>
 > {
+  await assertAccess("marketing");
   try {
     return await safeDirectusCall(async () => {
       const client = await getDirectusClient({ requireAuth: true });
@@ -176,6 +177,7 @@ export async function saveWhatsappConfig(data: {
   evolution_api_instance: string | null;
   n8n_webhook_url: string | null;
 }): Promise<ActionResult<WhatsappConfigData>> {
+  await assertAccess("marketing");
   try {
     return await safeDirectusCall(async () => {
       const client = await getDirectusClient({ requireAuth: true });
@@ -250,6 +252,7 @@ export async function testEvolutionConnection(config: {
   token: string;
   instance?: string;
 }): Promise<ConnectionTestResult> {
+  await assertAccess("marketing");
   try {
     const { url, token } = config;
     if (!url || !token) {
@@ -325,6 +328,7 @@ export async function testEvolutionConnection(config: {
 export async function getWhatsappCampaigns(): Promise<
   ActionResult<WhatsappCampaignRecord[]>
 > {
+  await assertAccess("marketing");
   try {
     return await safeDirectusCall(async () => {
       const client = await getDirectusClient({ requireAuth: true });
@@ -362,6 +366,7 @@ export async function saveWhatsappCampaign(data: {
   dias_semana?: number[] | null; // 0-6 (dom-sáb); vazio = todos os dias
   filtro_json?: BeneficiariaFilter | null;
 }): Promise<ActionResult<WhatsappCampaignRecord>> {
+  await assertAccess("marketing");
   try {
     return await safeDirectusCall(async () => {
       const client = await getDirectusClient({ requireAuth: true });
@@ -430,6 +435,7 @@ export async function uploadCampaignImage(
 export async function deleteWhatsappCampaign(
   id: string,
 ): Promise<{ success: true } | ActionFailure> {
+  await assertAccess("marketing");
   try {
     return await safeDirectusCall(async () => {
       const client = await getDirectusClient({ requireAuth: true });
@@ -451,6 +457,7 @@ export async function deleteWhatsappCampaign(
 // 4a. Contagem leve de beneficiárias elegíveis (com telefone) — usada na UI
 // sem precisar trafegar milhares de registros.
 export async function getEligibleBeneficiariasCount(): Promise<CountResult> {
+  await assertAccess("marketing");
   try {
     return await safeDirectusCall(async () => {
       const client = await getDirectusClient({ requireAuth: true });
@@ -576,6 +583,7 @@ export async function getBeneficiariaFilterOptions(): Promise<
   | { success: true; data: BeneficiariaFilterOptionsData }
   | { success: false; data: null; error: string }
 > {
+  await assertAccess("marketing");
   try {
     return await safeDirectusCall(async () => {
       const client = await getDirectusClient({ requireAuth: true });
@@ -619,6 +627,7 @@ export async function getBeneficiariaFilterOptions(): Promise<
 export async function getBeneficiariasCountForFilter(
   filter?: BeneficiariaFilter,
 ): Promise<CountResult> {
+  await assertAccess("marketing");
   try {
     return await safeDirectusCall(async () => {
       const client = await getDirectusClient({ requireAuth: true });
@@ -647,6 +656,7 @@ export async function getBeneficiariasCountForFilter(
 export async function searchBeneficiarias(
   query: string,
 ): Promise<ActionResult<EligibleBeneficiaria[]>> {
+  await assertAccess("marketing");
   try {
     return await safeDirectusCall(async () => {
       const client = await getDirectusClient({ requireAuth: true });
@@ -692,6 +702,7 @@ export async function searchBeneficiarias(
 export async function getDispatchLogs(): Promise<
   ActionResult<DispatchLogRecord[]>
 > {
+  await assertAccess("marketing");
   try {
     return await safeDirectusCall(async () => {
       const client = await getDirectusClient({ requireAuth: true });
@@ -778,6 +789,7 @@ export async function triggerCampaignDispatch(
   campaignId: string,
   target: DispatchTarget
 ): Promise<DispatchResult> {
+  await assertAccess("marketing");
   const client = await getDirectusClient({ requireAuth: true });
   return dispatchCampaignWithClient(client, campaignId, target);
 }

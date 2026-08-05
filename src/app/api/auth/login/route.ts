@@ -9,8 +9,17 @@ import {
   isHttpsRequest,
   refreshCookieOptions,
 } from "@/lib/session";
+import {
+  ipDaRequisicao,
+  limparFalhas,
+  registrarFalha,
+  segundosParaLiberar,
+} from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
+  // Chaves fora do try: precisam estar visíveis no catch para registrar falha.
+  let chaveIp = "";
+  let chaveEmail = "";
   try {
     // O WAF adora requisições JSON. Ele vai deixar passar!
     const body = await request.json();
@@ -18,6 +27,24 @@ export async function POST(request: Request) {
 
     if (!email || !password) {
       return NextResponse.json({ error: "Email e senha são obrigatórios." }, { status: 400 });
+    }
+
+    // Proteção contra força bruta: IP e e-mail contam separadamente, para que
+    // um atacante distribuído não escape trocando de conta, nem um IP
+    // compartilhado (rede da prefeitura) seja punido por um vizinho.
+    chaveIp = `ip:${ipDaRequisicao(request)}`;
+    chaveEmail = `email:${String(email).trim().toLowerCase()}`;
+    const espera = Math.max(
+      segundosParaLiberar(chaveIp),
+      segundosParaLiberar(chaveEmail),
+    );
+    if (espera > 0) {
+      return NextResponse.json(
+        {
+          error: `Muitas tentativas de login. Aguarde ${Math.ceil(espera / 60)} minuto(s) e tente novamente.`,
+        },
+        { status: 429, headers: { "Retry-After": String(espera) } },
+      );
     }
 
     // Modo "json": o refresh_token vem no corpo da resposta em vez de um cookie
@@ -30,8 +57,13 @@ export async function POST(request: Request) {
     const authResult = await directus.login(email, password);
 
     if (!authResult || !authResult.access_token) {
+      registrarFalha(chaveIp);
+      registrarFalha(chaveEmail);
       return NextResponse.json({ error: "Credenciais inválidas." }, { status: 401 });
     }
+
+    limparFalhas(chaveIp);
+    limparFalhas(chaveEmail);
 
     // Cria os cookies de sessão no servidor. Ver `isHttpsRequest` para o
     // porquê de o `Secure` seguir o protocolo real da requisição.
@@ -71,6 +103,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error("[Login API] Erro:", error);
+    // O SDK lança em credencial errada — a falha conta para o limite.
+    if (chaveIp) registrarFalha(chaveIp);
+    if (chaveEmail) registrarFalha(chaveEmail);
     return NextResponse.json({ error: "Credenciais inválidas ou erro no servidor." }, { status: 401 });
   }
 }
