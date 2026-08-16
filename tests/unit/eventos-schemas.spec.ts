@@ -1,5 +1,7 @@
 import { test, expect } from "@playwright/test";
 import {
+  ORDENACAO_PADRAO,
+  ORDENACOES_EVENTO,
   insertEventoSchema,
   membroEquipeEventoSchema,
 } from "../../src/app/(admin)/eventos/schemas";
@@ -55,6 +57,61 @@ test.describe("membroEquipeEventoSchema", () => {
     if (!r.success) {
       expect(r.error.issues[0].message).toBe("Selecione uma pessoa da equipe.");
     }
+  });
+});
+
+test.describe("ORDENACOES_EVENTO", () => {
+  // Colunas que existem de fato em `eventos_campanhas`. Um `sort` para campo
+  // inexistente não quebra o typecheck — quebra a listagem em produção, com
+  // erro do Directus.
+  const COLUNAS_REAIS = new Set([
+    "id",
+    "nome",
+    "tipo",
+    "data_inicio",
+    "data_fim",
+    "descricao",
+    "recorrencia",
+    "tipo_id",
+    "local",
+  ]);
+
+  test("toda ordenação aponta para colunas existentes", () => {
+    for (const [chave, opcao] of Object.entries(ORDENACOES_EVENTO)) {
+      for (const campo of opcao.sort) {
+        const nome = campo.replace(/^-/, "");
+        expect(COLUNAS_REAIS.has(nome), `${chave} usa "${nome}"`).toBe(true);
+      }
+    }
+  });
+
+  test("toda ordenação tem rótulo legível", () => {
+    for (const [chave, opcao] of Object.entries(ORDENACOES_EVENTO)) {
+      expect(opcao.rotulo.length, `${chave} sem rótulo`).toBeGreaterThan(3);
+    }
+  });
+
+  test("a ordenação padrão existe no mapa", () => {
+    // O padrão vem de constante; se alguém renomear a chave, a listagem cairia
+    // silenciosamente para um sort indefinido.
+    expect(Object.keys(ORDENACOES_EVENTO)).toContain(ORDENACAO_PADRAO);
+  });
+
+  test("o padrão preserva o comportamento anterior (mais recentes primeiro)", () => {
+    expect(ORDENACOES_EVENTO[ORDENACAO_PADRAO].sort).toEqual(["-data_inicio"]);
+  });
+
+  test("as chaves são seguras para URL", () => {
+    for (const chave of Object.keys(ORDENACOES_EVENTO)) {
+      expect(chave).toMatch(/^[a-z_]+$/);
+      expect(encodeURIComponent(chave)).toBe(chave);
+    }
+  });
+
+  test("ordenar por local desempata por data", () => {
+    // Sem o segundo critério, eventos no mesmo local sairiam em ordem
+    // arbitrária a cada consulta.
+    expect(ORDENACOES_EVENTO.local_asc.sort.length).toBeGreaterThan(1);
   });
 });
 

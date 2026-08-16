@@ -179,6 +179,28 @@ A coluna **Período** resume as duas datas:
 
 Quando o horário é meia-noite, ele é omitido — o sistema entende como "horário não informado". Eventos cadastrados antes desta versão ficaram assim; basta editá-los para informar a hora.
 
+### Encontrar e organizar os eventos (aba Lista)
+
+A aba **Gestão de Eventos (Lista)** mostra os eventos em páginas de 20, com o total à direita. Antes ela exibia apenas os 100 mais recentes — com 171 eventos cadastrados, 71 não apareciam de forma alguma.
+
+**Buscar:** o campo no topo procura por **título ou local**, em toda a base — não só na página aberta.
+
+**Ordenar:** o seletor à direita oferece:
+
+| Ordenação | Quando ajuda |
+| --- | --- |
+| Data do evento (mais recente) | Padrão — o que acabou de acontecer ou está por vir |
+| Data do evento (mais antiga) | Retomar o histórico desde o começo |
+| Título (A–Z / Z–A) | Procurar pelo nome quando não se lembra a data |
+| Local (A–Z) | Agrupar tudo que aconteceu no mesmo espaço |
+| Cadastrados por último | Conferir o que foi incluído recentemente |
+
+**Filtrar** por tipo, categoria e situação (Em Breve, Em Andamento, Encerrado). Os filtros valem sobre a base inteira; quando há algum ativo, aparece o botão **Limpar filtros** com a contagem.
+
+**Exportar CSV** baixa **todos** os eventos do recorte atual — não apenas a página visível —, com título, período, local, categoria, tipo, recorrência, situação e descrição.
+
+> A busca, os filtros e a ordenação ficam no endereço da página. Dá para salvar ou compartilhar o link de uma consulta específica.
+
 ### Participantes de um evento
 
 1. Na aba **Lista de Eventos**, localize o evento.

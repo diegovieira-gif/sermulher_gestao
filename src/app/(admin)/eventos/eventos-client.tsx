@@ -29,9 +29,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { EventoForm } from "./evento-form";
+import { useCallback, useEffect } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ParticipantesDialog } from "./participantes-dialog";
 import { EquipeDialog } from "./equipe-dialog";
-import { deleteEvento } from "./actions";
+import { deleteEvento, getEventosParaExportar } from "./actions";
+import { ORDENACOES_EVENTO, type EventosListaMeta } from "./schemas";
+import { Input } from "@/components/ui/input";
+import { baixarCsv } from "@/lib/csv";
 import {
   Plus,
   Edit,
@@ -41,6 +46,14 @@ import {
   Eye,
   Users,
   Briefcase,
+  ArrowUpDown,
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  Download,
+  Loader2,
+  X,
+  MapPin,
 } from "lucide-react";
 import {
   Dialog,
@@ -60,6 +73,8 @@ type TipoEventoOption = { id: number; nome: string; icone?: string };
 interface EventosClientProps {
   eventos: any[];
   tiposEventoOptions: TipoEventoOption[];
+  /** Página, total e ordenação atual — ausente se a consulta falhou. */
+  meta?: EventosListaMeta;
 }
 
 type StatusEvento = "Encerrado" | "Em Andamento" | "Breve";
@@ -178,15 +193,132 @@ function getTipoBadgeVariant(tipo?: string): "default" | "secondary" | "outline"
 export function EventosClient({
   eventos,
   tiposEventoOptions,
+  meta,
 }: EventosClientProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [formOpen, setFormOpen] = useState(false);
   const [selectedEvento, setSelectedEvento] = useState<Evento | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [eventoToDelete, setEventoToDelete] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [tipoFilter, setTipoFilter] = useState("todos");
-  const [categoriaFilter, setCategoriaFilter] = useState("todos");
-  const [situacaoFilter, setSituacaoFilter] = useState("todos");
+
+  // Filtros e ordenação vivem na URL: o servidor os aplica sobre a base
+  // inteira, e o estado sobrevive a recarregar a página ou compartilhar o link.
+  const tipoFilter = searchParams.get("tipo") || "todos";
+  const categoriaFilter = searchParams.get("categoria") || "todos";
+  const situacaoFilter = searchParams.get("situacao") || "todos";
+  const ordemAtual = meta?.ordenacao ?? "data_desc";
+
+  const atualizarParam = useCallback(
+    (chave: string, valor: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (valor === "todos") params.delete(chave);
+      else params.set(chave, valor);
+      // Trocar filtro ou ordenação sempre volta para a primeira página.
+      params.delete("page");
+      // A aba de lista precisa continuar aberta após a navegação.
+      params.set("aba", "lista");
+      router.push(`${pathname}?${params.toString()}`);
+    },
+    [router, pathname, searchParams],
+  );
+
+  const irParaPagina = useCallback(
+    (page: number) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (page <= 1) params.delete("page");
+      else params.set("page", String(page));
+      params.set("aba", "lista");
+      router.push(`${pathname}?${params.toString()}`);
+    },
+    [router, pathname, searchParams],
+  );
+
+  // Busca com debounce — empurra o termo para a URL, onde o servidor o aplica
+  // sobre a base inteira (título ou local).
+  const buscaUrl = searchParams.get("q") ?? "";
+  const [busca, setBusca] = useState(buscaUrl);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (busca !== buscaUrl) atualizarParam("q", busca.trim() || "todos");
+    }, 400);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [busca]);
+
+  // Ressincroniza quando a URL muda por fora (voltar/avançar, limpar filtros).
+  useEffect(() => {
+    setBusca(buscaUrl);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [buscaUrl]);
+
+  const filtrosAtivos =
+    (tipoFilter !== "todos" ? 1 : 0) +
+    (categoriaFilter !== "todos" ? 1 : 0) +
+    (situacaoFilter !== "todos" ? 1 : 0) +
+    (buscaUrl ? 1 : 0);
+
+  const limparFiltros = () => {
+    const params = new URLSearchParams();
+    params.set("aba", "lista");
+    // A ordenação é preferência de leitura, não filtro — é preservada.
+    const ordem = searchParams.get("ordem");
+    if (ordem) params.set("ordem", ordem);
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const [exportando, setExportando] = useState(false);
+
+  const exportarCsv = async () => {
+    setExportando(true);
+    try {
+      const res = await getEventosParaExportar({
+        ordenacao: searchParams.get("ordem") ?? undefined,
+        tipoId: Number(searchParams.get("tipo")) || undefined,
+        categoria: categoriaFilter,
+        situacao: situacaoFilter,
+        busca: buscaUrl,
+      });
+      if (!res.success || !res.data) {
+        toast.error(res.error || "Não foi possível exportar.");
+        return;
+      }
+      const linhas: (string | number)[][] = [
+        [
+          "ID",
+          "Título",
+          "Início",
+          "Término",
+          "Local",
+          "Categoria",
+          "Tipo de evento",
+          "Recorrência",
+          "Situação",
+          "Descrição",
+        ],
+        ...res.data.map((e) => [
+          e.id,
+          e.nome ?? "",
+          formatarData(e.data_inicio),
+          formatarData(e.data_fim),
+          e.local ?? "",
+          e.tipo ?? "",
+          e.tipo_id?.nome ?? "",
+          e.recorrencia ?? "",
+          calcularStatus(e.data_inicio, e.data_fim),
+          e.descricao ?? "",
+        ]),
+      ];
+      baixarCsv(`eventos-${todayLocalISO()}.csv`, linhas);
+      toast.success(`${res.data.length} evento(s) exportado(s).`);
+    } finally {
+      setExportando(false);
+    }
+  };
 
   // Visualização de detalhes
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
@@ -244,25 +376,8 @@ export function EventosClient({
     }
   };
 
-  // Filtrar eventos baseado nos filtros selecionados
-  const eventosFiltrados = eventos.filter((evento) => {
-    const tipoMatch =
-      tipoFilter === "todos" ||
-      String(
-        typeof evento.tipo_id === "object" && evento.tipo_id !== null
-          ? evento.tipo_id.id
-          : evento.tipo_id,
-      ) === tipoFilter;
-
-    const categoriaMatch =
-      categoriaFilter === "todos" || evento.tipo === categoriaFilter;
-
-    const situacao = calcularStatus(evento.data_inicio, evento.data_fim);
-    const situacaoMatch =
-      situacaoFilter === "todos" || situacao === situacaoFilter;
-
-    return tipoMatch && categoriaMatch && situacaoMatch;
-  });
+  // Filtros e ordenação são resolvidos no servidor — a lista já chega pronta.
+  const eventosFiltrados = eventos;
 
   return (
     <>
@@ -279,9 +394,39 @@ export function EventosClient({
         </Button>
       </div>
 
-      <div className="mb-4 flex flex-wrap gap-3">
+      {/* Busca + exportação */}
+      <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder="Buscar por título ou local..."
+            className="bg-white pl-9"
+            aria-label="Buscar evento"
+          />
+        </div>
+        <Button
+          variant="outline"
+          onClick={exportarCsv}
+          disabled={exportando || !meta || meta.total === 0}
+          className="bg-white"
+        >
+          {exportando ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Download className="mr-2 h-4 w-4" />
+          )}
+          Exportar CSV
+        </Button>
+      </div>
+
+      <div className="mb-4 flex flex-wrap items-center gap-3">
         {/* Filtro de Tipo de Evento */}
-        <Select value={tipoFilter} onValueChange={setTipoFilter}>
+        <Select
+          value={tipoFilter}
+          onValueChange={(v) => atualizarParam("tipo", v)}
+        >
           <SelectTrigger className="w-[180px] bg-white">
             <SelectValue placeholder="Tipo de Evento" />
           </SelectTrigger>
@@ -296,7 +441,10 @@ export function EventosClient({
         </Select>
 
         {/* Filtro de Categoria (Campo 'tipo' na tabela) */}
-        <Select value={categoriaFilter} onValueChange={setCategoriaFilter}>
+        <Select
+          value={categoriaFilter}
+          onValueChange={(v) => atualizarParam("categoria", v)}
+        >
           <SelectTrigger className="w-[180px] bg-white">
             <SelectValue placeholder="Categoria" />
           </SelectTrigger>
@@ -310,8 +458,11 @@ export function EventosClient({
           </SelectContent>
         </Select>
 
-        {/* Filtro de Situação (Calculado) */}
-        <Select value={situacaoFilter} onValueChange={setSituacaoFilter}>
+        {/* Filtro de Situação (posição do evento no tempo) */}
+        <Select
+          value={situacaoFilter}
+          onValueChange={(v) => atualizarParam("situacao", v)}
+        >
           <SelectTrigger className="w-[180px] bg-white">
             <SelectValue placeholder="Situação" />
           </SelectTrigger>
@@ -322,6 +473,38 @@ export function EventosClient({
             <SelectItem value="Encerrado">Encerrado</SelectItem>
           </SelectContent>
         </Select>
+
+        {filtrosAtivos > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={limparFiltros}
+            className="text-red-600 hover:bg-red-50 hover:text-red-700"
+          >
+            <X className="mr-1 h-4 w-4" />
+            Limpar filtros ({filtrosAtivos})
+          </Button>
+        )}
+
+        {/* Ordenação */}
+        <div className="ml-auto flex items-center gap-2">
+          <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+          <Select
+            value={ordemAtual}
+            onValueChange={(v) => atualizarParam("ordem", v)}
+          >
+            <SelectTrigger className="w-[240px] bg-white">
+              <SelectValue placeholder="Ordenar por" />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(ORDENACOES_EVENTO).map(([chave, opcao]) => (
+                <SelectItem key={chave} value={chave}>
+                  {opcao.rotulo}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="border rounded-lg">
@@ -335,6 +518,10 @@ export function EventosClient({
               <TableHead>
                 Período
                 <InfoTooltip text="Datas de início e término do evento. Quando começa e termina no mesmo dia, aparece uma só data." />
+              </TableHead>
+              <TableHead>
+                Local
+                <InfoTooltip text="Onde o evento acontece. Também é usado na busca e na ordenação." />
               </TableHead>
               <TableHead>
                 Tipo de Evento
@@ -355,10 +542,12 @@ export function EventosClient({
             {eventosFiltrados.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={6}
-                  className="text-center text-muted-foreground"
+                  colSpan={7}
+                  className="py-8 text-center text-muted-foreground"
                 >
-                  Nenhum evento cadastrado
+                  {filtrosAtivos > 0
+                    ? "Nenhum evento corresponde aos filtros aplicados."
+                    : "Nenhum evento cadastrado"}
                 </TableCell>
               </TableRow>
             ) : (
@@ -400,11 +589,6 @@ export function EventosClient({
                             </div>
                           )}
                         </div>
-                        {evento.local && (
-                          <span className="text-xs text-muted-foreground font-normal mt-0.5">
-                            {evento.local}
-                          </span>
-                        )}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -412,6 +596,20 @@ export function EventosClient({
                         <Calendar className="h-4 w-4 text-muted-foreground" />
                         <span>{dataFormatada}</span>
                       </div>
+                    </TableCell>
+                    {/* Local em coluna própria: era um subtítulo discreto sob
+                        o título, o que tornava ilegível a ordenação por local. */}
+                    <TableCell>
+                      {evento.local ? (
+                        <div className="flex items-center gap-1.5 text-sm">
+                          <MapPin className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                          <span className="truncate max-w-[200px]" title={evento.local}>
+                            {evento.local}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       {tipoNome ? (
@@ -493,6 +691,38 @@ export function EventosClient({
           </TableBody>
         </Table>
       </div>
+
+      {/* Paginação */}
+      {meta && meta.total > 0 && (
+        <div className="mt-4 flex flex-col items-center justify-between gap-3 text-sm text-muted-foreground sm:flex-row">
+          <div>
+            Mostrando <strong>{(meta.page - 1) * meta.limit + 1}</strong> a{" "}
+            <strong>{Math.min(meta.page * meta.limit, meta.total)}</strong> de{" "}
+            <strong>{meta.total}</strong> eventos
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => irParaPagina(meta.page - 1)}
+              disabled={meta.page <= 1}
+            >
+              <ChevronLeft className="mr-1 h-4 w-4" /> Anterior
+            </Button>
+            <span>
+              Página {meta.page} de {meta.totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => irParaPagina(meta.page + 1)}
+              disabled={meta.page >= meta.totalPages}
+            >
+              Próxima <ChevronRight className="ml-1 h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       <ParticipantesDialog
         evento={eventoParticipantes}

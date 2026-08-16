@@ -173,25 +173,61 @@ na véspera (8h).
 | E-mail | `SMTP_*` no ambiente | Canal fica inativo, o resto funciona |
 | WhatsApp (GoWA) | Config no módulo Marketing + telefone e consentimento no usuário | Não envia para quem não autorizou |
 
+As contas institucionais são **Google Workspace**, então o envio sai pela conta
+da secretaria para os endereços individuais — tudo dentro do mesmo domínio:
+
 ```bash
-SMTP_HOST=smtp.exemplo.gov.br
-SMTP_PORT=587           # 465 = TLS implícito; demais usam STARTTLS
-SMTP_USER=...           # opcional, se o relay exigir autenticação
-SMTP_PASSWORD=...
-SMTP_FROM="SIGMA <nao-responda@aracaju.se.gov.br>"
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587                       # STARTTLS (465 também funciona, com TLS implícito)
+SMTP_USER=sermulher@aracaju.se.gov.br
+SMTP_PASSWORD=<senha de app, 16 caracteres>
+SMTP_FROM="SIGMA <sermulher@aracaju.se.gov.br>"
 ```
 
 > [!IMPORTANT]
+> **`SMTP_PASSWORD` não é a senha da conta.** O Google bloqueia login SMTP com
+> a senha normal desde 2022. É preciso gerar uma **Senha de app** em
+> `myaccount.google.com/apppasswords`, o que exige a **verificação em duas
+> etapas ativada** na conta `sermulher@`. A senha de app dá acesso apenas ao
+> envio, e pode ser revogada isoladamente sem trocar a senha da conta.
+
+**`SMTP_FROM` precisa ser a mesma conta autenticada** (ou um alias autorizado
+nela). O Gmail recusa remetente arbitrário — é o que impede spoofing.
+
+**Limite de envio:** ~2.000 mensagens por dia por conta do Workspace. Para o
+volume desta secretaria (dezenas de avisos), sobra folga. Se um dia apertar,
+o Workspace oferece o `smtp-relay.gmail.com`, liberado por IP no Admin Console
+e com teto bem maior — mas exige configuração do administrador do domínio.
+
+**Entrega:** como remetente e destinatários estão no mesmo Workspace, a
+mensagem é interna ao domínio. Não há risco de cair em spam por reputação de
+IP, que é o problema usual de SMTP próprio.
+
+> [!NOTE]
 > O `/server/health` do Directus reporta `email:connection: ok`, mas isso **não
-> comprova** que há SMTP real: sem nenhuma variável `EMAIL_*` definida, o
-> Directus usa o transporte `sendmail` padrão, que num contêiner sem MTA não
-> entrega nada. Trate o canal de e-mail como **não verificado** até o primeiro
-> envio real chegar a uma caixa de entrada.
+> comprova** que há SMTP real: sem nenhuma variável `EMAIL_*` definida, ele usa
+> o transporte `sendmail` padrão, que num contêiner sem MTA não entrega nada.
+> Trate o canal como **não verificado** até o primeiro envio chegar a uma caixa
+> de entrada.
 
 > [!NOTE]
 > O envio de e-mail é feito pelo próprio app (nodemailer), e **não** por um Flow
 > com webhook no Directus — um endpoint de envio exposto viraria um relay aberto
 > para disparar mensagem em nome da secretaria.
+
+### Conferir o e-mail antes de depender dele
+
+"Configurei o SMTP" e "o e-mail chega" são coisas diferentes — senha de app
+errada ou remetente não autorizado só apareceriam num aviso de escala que a
+servidora nunca recebeu.
+
+```bash
+node scripts/testar-email.mjs                          # verifica conexão e credenciais
+node scripts/testar-email.mjs voce@aracaju.se.gov.br   # envia uma mensagem de teste
+```
+
+O script traduz os erros mais comuns do Gmail em instrução acionável (senha de
+app, 2FA, remetente recusado, porta bloqueada).
 
 ### Agendador
 

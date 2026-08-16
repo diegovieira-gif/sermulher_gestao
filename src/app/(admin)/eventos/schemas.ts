@@ -58,6 +58,47 @@ export const recorrenciaEnum = [
 ] as const;
 
 /**
+ * Ordenações oferecidas na aba "Gestão de Eventos".
+ *
+ * Vive aqui, e não em `actions.ts`, porque um arquivo `"use server"` só pode
+ * exportar funções assíncronas — exportar este objeto de lá quebraria o build.
+ *
+ * A chave é o que vai na URL; o valor é o `sort` do Directus. Manter o mapa
+ * fechado impede que um parâmetro arbitrário vire ordenação e evita erro do
+ * Directus com campo inexistente.
+ */
+export const ORDENACOES_EVENTO = {
+  data_desc: { rotulo: "Data do evento (mais recente)", sort: ["-data_inicio"] },
+  data_asc: { rotulo: "Data do evento (mais antiga)", sort: ["data_inicio"] },
+  titulo_asc: { rotulo: "Título (A–Z)", sort: ["nome"] },
+  titulo_desc: { rotulo: "Título (Z–A)", sort: ["-nome"] },
+  local_asc: { rotulo: "Local (A–Z)", sort: ["local", "-data_inicio"] },
+  cadastro_desc: { rotulo: "Cadastrados por último", sort: ["-id"] },
+} as const;
+
+export type ChaveOrdenacaoEvento = keyof typeof ORDENACOES_EVENTO;
+
+export const ORDENACAO_PADRAO: ChaveOrdenacaoEvento = "data_desc";
+
+export interface EventosListaQuery {
+  page?: number;
+  ordenacao?: string;
+  tipoId?: number;
+  categoria?: string;
+  situacao?: string;
+  /** Busca por título ou local. */
+  busca?: string;
+}
+
+export interface EventosListaMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  ordenacao: ChaveOrdenacaoEvento;
+}
+
+/**
  * Vínculo entre um evento e uma servidora/servidor que atuou nele.
  *
  * O usuário vem de `directus_users` — são as contas que já existem no sistema,

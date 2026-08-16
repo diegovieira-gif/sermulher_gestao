@@ -1,6 +1,4 @@
-import { getGlobalEvents, getTiposOptions } from "./actions";
-import { directus } from "@/lib/directus";
-import { readItems } from "@directus/sdk";
+import { getEventosLista, getGlobalEvents, getTiposOptions } from "./actions";
 import { EventosCalendarioClient } from "./eventos-calendario-client";
 import { EventosClient } from "./eventos-client";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -9,26 +7,33 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const dynamic = "force-dynamic";
 
-export default async function EventosPage() {
+const paraId = (valor?: string) => {
+  const n = Number(valor);
+  return Number.isInteger(n) && n > 0 ? n : undefined;
+};
+
+export default async function EventosPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
+  const sp = await searchParams;
+
   // 1. Busca dados em paralelo:
   // - Eventos Globais (formatados para o calendário visual)
   // - Opções de Tipos (para os selects)
-  // - Eventos Brutos (para a tabela de gestão/CRUD)
-  const [globalEventsResult, tiposResult, rawEventosResult] = await Promise.all(
-    [
-      getGlobalEvents(),
-      getTiposOptions(),
-      directus
-        .request(
-          readItems("eventos_campanhas", {
-            fields: ["*", "tipo_id.*"],
-            sort: ["-data_inicio"],
-            limit: 100,
-          }),
-        )
-        .catch(() => []),
-    ],
-  );
+  // - Lista de gestão: filtros, ordenação e paginação resolvidos no servidor
+  const [globalEventsResult, tiposResult, listaResult] = await Promise.all([
+    getGlobalEvents(),
+    getTiposOptions(),
+    getEventosLista({
+      page: paraId(sp.page) ?? 1,
+      ordenacao: sp.ordem,
+      tipoId: paraId(sp.tipo),
+      categoria: sp.categoria,
+      situacao: sp.situacao,
+    }),
+  ]);
 
   // Tratamento de Erro Crítico (apenas se falhar o calendário)
   if (!globalEventsResult.success) {
@@ -49,8 +54,8 @@ export default async function EventosPage() {
   // Prepara dados com fallbacks seguros
   const tiposOptions =
     tiposResult.success && tiposResult.data ? tiposResult.data : [];
-  // @ts-ignore
-  const eventosTabela = Array.isArray(rawEventosResult) ? rawEventosResult : [];
+  const eventosTabela =
+    listaResult.success && listaResult.data ? listaResult.data : [];
 
   return (
     <div className="p-6 h-screen flex flex-col bg-gray-50/50">
@@ -66,8 +71,13 @@ export default async function EventosPage() {
       </div>
 
       <div className="flex-1 min-h-0 flex flex-col">
-        {/* Componente de Abas */}
-        <Tabs defaultValue="calendario" className="h-full flex flex-col">
+        {/* Componente de Abas.
+            `defaultValue` vem da URL para que filtrar, ordenar ou paginar não
+            devolva a pessoa ao calendário a cada clique. */}
+        <Tabs
+          defaultValue={sp.aba === "lista" ? "lista" : "calendario"}
+          className="h-full flex flex-col"
+        >
           <div className="flex items-center justify-between mb-4">
             <TabsList className="bg-white border shadow-sm">
               <TabsTrigger
@@ -109,6 +119,7 @@ export default async function EventosPage() {
               <EventosClient
                 eventos={eventosTabela}
                 tiposEventoOptions={tiposOptions}
+                meta={listaResult.success ? listaResult.meta : undefined}
               />
             </div>
           </TabsContent>

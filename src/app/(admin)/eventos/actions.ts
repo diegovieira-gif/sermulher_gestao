@@ -3,6 +3,7 @@
 import { getDirectusAdmin, getDirectusClient } from "@/lib/directus";
 import { assertAccess } from "@/lib/permissions";
 import {
+  aggregate,
   createItem,
   deleteItem,
   readItems,
@@ -10,7 +11,16 @@ import {
   updateItem,
 } from "@directus/sdk";
 import { revalidatePath } from "next/cache";
-import { Evento, insertEventoSchema, membroEquipeEventoSchema } from "./schemas";
+import {
+  Evento,
+  insertEventoSchema,
+  membroEquipeEventoSchema,
+  ORDENACAO_PADRAO,
+  ORDENACOES_EVENTO,
+  type ChaveOrdenacaoEvento,
+  type EventosListaMeta,
+  type EventosListaQuery,
+} from "./schemas";
 import { participacaoEventoSchema } from "../mulheres/beneficiarias/schemas";
 import {
   calcularLembrete,
@@ -66,6 +76,157 @@ export async function getTiposOptions(): Promise<{
     console.error("Erro ao buscar tipos de evento:", error);
     // Retorna array vazio em vez de erro para não quebrar a página toda
     return { success: true, data: [] };
+  }
+}
+
+// --- Listagem de gestão (filtros, ordenação e paginação no servidor) --------
+
+const EVENTOS_POR_PAGINA = 20;
+
+/**
+ * Lista paginada de eventos para a aba de gestão.
+ *
+ * Antes esta consulta trazia 100 registros ordenados por data e filtrava no
+ * navegador. Com 171 eventos cadastrados, 71 simplesmente não apareciam — e
+ * ordenar por título dentro de um recorte dos 100 mais recentes daria uma
+ * lista "alfabética" que esconde metade da base, o que é pior do que não
+ * oferecer a ordenação.
+ */
+export async function getEventosLista(query: EventosListaQuery = {}) {
+  await assertAccess("eventos");
+
+  const directus = getDirectusAdmin();
+  const page = Math.max(1, query.page ?? 1);
+  const chave: ChaveOrdenacaoEvento =
+    query.ordenacao && query.ordenacao in ORDENACOES_EVENTO
+      ? (query.ordenacao as ChaveOrdenacaoEvento)
+      : ORDENACAO_PADRAO;
+
+  const filtros: Record<string, unknown>[] = [];
+  if (query.tipoId) filtros.push({ tipo_id: { _eq: query.tipoId } });
+  if (query.categoria && query.categoria !== "todos") {
+    filtros.push({ tipo: { _eq: query.categoria } });
+  }
+
+  // Busca por título OU local: com 171 eventos e páginas de 20, procurar um
+  // evento específico folheando página a página é inviável.
+  if (query.busca && query.busca.trim()) {
+    const termo = query.busca.trim();
+    filtros.push({
+      _or: [{ nome: { _icontains: termo } }, { local: { _icontains: termo } }],
+    });
+  }
+
+  // A "situação" não é uma coluna: é a posição do evento no tempo. Traduzir
+  // para filtros de data mantém o recorte correto sobre a base inteira, em vez
+  // de sobre a página carregada.
+  const agora = new Date().toISOString();
+  if (query.situacao === "Breve") {
+    filtros.push({ data_inicio: { _gt: agora } });
+  } else if (query.situacao === "Em Andamento") {
+    filtros.push({ data_inicio: { _lte: agora } });
+    filtros.push({ data_fim: { _gte: agora } });
+  } else if (query.situacao === "Encerrado") {
+    filtros.push({ data_fim: { _lt: agora } });
+  }
+
+  const filter = filtros.length > 0 ? { _and: filtros } : {};
+
+  try {
+    const [itens, contagem] = await Promise.all([
+      directus.request(
+        readItems("eventos_campanhas", {
+          fields: ["*", "tipo_id.*"],
+          filter,
+          sort: [...ORDENACOES_EVENTO[chave].sort],
+          limit: EVENTOS_POR_PAGINA,
+          offset: (page - 1) * EVENTOS_POR_PAGINA,
+        }),
+      ),
+      directus.request(
+        aggregate("eventos_campanhas", {
+          aggregate: { count: "*" },
+          query: { filter },
+        }),
+      ),
+    ]);
+
+    const total = Number((contagem as any)?.[0]?.count ?? 0);
+    const meta: EventosListaMeta = {
+      page,
+      limit: EVENTOS_POR_PAGINA,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / EVENTOS_POR_PAGINA)),
+      ordenacao: chave,
+    };
+
+    return { success: true, data: itens as unknown as any[], meta };
+  } catch (error) {
+    console.error("Erro ao listar eventos:", error);
+    return { success: false, error: "Falha ao carregar os eventos." };
+  }
+}
+
+/**
+ * Todos os eventos do recorte atual, para exportação.
+ *
+ * Ignora a paginação de propósito: exportar apenas a página visível daria um
+ * arquivo que parece completo e não é — o mesmo engano que a listagem tinha
+ * com o teto de 100.
+ */
+export async function getEventosParaExportar(query: EventosListaQuery = {}) {
+  await assertAccess("eventos");
+  const directus = getDirectusAdmin();
+
+  const chave: ChaveOrdenacaoEvento =
+    query.ordenacao && query.ordenacao in ORDENACOES_EVENTO
+      ? (query.ordenacao as ChaveOrdenacaoEvento)
+      : ORDENACAO_PADRAO;
+
+  const filtros: Record<string, unknown>[] = [];
+  if (query.tipoId) filtros.push({ tipo_id: { _eq: query.tipoId } });
+  if (query.categoria && query.categoria !== "todos") {
+    filtros.push({ tipo: { _eq: query.categoria } });
+  }
+  if (query.busca && query.busca.trim()) {
+    const termo = query.busca.trim();
+    filtros.push({
+      _or: [{ nome: { _icontains: termo } }, { local: { _icontains: termo } }],
+    });
+  }
+  const agora = new Date().toISOString();
+  if (query.situacao === "Breve") filtros.push({ data_inicio: { _gt: agora } });
+  else if (query.situacao === "Em Andamento") {
+    filtros.push({ data_inicio: { _lte: agora } });
+    filtros.push({ data_fim: { _gte: agora } });
+  } else if (query.situacao === "Encerrado") {
+    filtros.push({ data_fim: { _lt: agora } });
+  }
+
+  try {
+    const itens = await directus.request(
+      readItems("eventos_campanhas", {
+        fields: [
+          "id",
+          "nome",
+          "data_inicio",
+          "data_fim",
+          "local",
+          "tipo",
+          "recorrencia",
+          "descricao",
+          // @ts-ignore - relação m2o
+          "tipo_id.nome",
+        ],
+        filter: filtros.length > 0 ? { _and: filtros } : {},
+        sort: [...ORDENACOES_EVENTO[chave].sort],
+        limit: -1,
+      }),
+    );
+    return { success: true, data: itens as unknown as any[] };
+  } catch (error) {
+    console.error("Erro ao exportar eventos:", error);
+    return { success: false, error: "Falha ao exportar." };
   }
 }
 

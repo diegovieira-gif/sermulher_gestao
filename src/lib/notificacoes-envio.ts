@@ -57,9 +57,17 @@ async function enviarEmail(
       port: porta,
       // 465 é TLS implícito; as demais portas usam STARTTLS.
       secure: porta === 465,
+      // Sem isto, um STARTTLS que falhasse faria o nodemailer seguir em texto
+      // claro — e a senha de app iria pela rede sem cifra.
+      requireTLS: porta !== 465,
       auth: process.env.SMTP_USER
         ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD }
         : undefined,
+      // Um SMTP que não responde não pode travar a varredura inteira: o lote
+      // seguinte reprocessa o que ficou pendente.
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 20_000,
     });
 
     await transporte.sendMail({

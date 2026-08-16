@@ -1051,6 +1051,41 @@ export default function ManualPage() {
             </AccordionContent>
           </AccordionItem>
 
+          <AccordionItem value="a4">
+            <AccordionTrigger>
+              Buscar, ordenar e exportar a lista{" "}
+              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25">
+                Novo
+              </Badge>
+            </AccordionTrigger>
+            <AccordionContent className="space-y-3 text-sm text-muted-foreground">
+              <p>
+                A aba <strong>Gestão de Eventos (Lista)</strong> mostra os
+                eventos em páginas de 20, com o total à direita.
+              </p>
+              <Callout variant="warn" title="Eventos que não apareciam">
+                A lista trazia apenas os 100 mais recentes. Com 171 eventos
+                cadastrados, 71 ficavam invisíveis — sem aviso nenhum. Agora a
+                navegação cobre a base inteira.
+              </Callout>
+              <p>
+                <strong>Buscar</strong> por título ou local, em toda a base.{" "}
+                <strong>Ordenar</strong> por data (crescente ou decrescente),
+                título, local ou ordem de cadastro. <strong>Filtrar</strong> por
+                tipo, categoria e situação — com botão de limpar quando houver
+                filtro ativo.
+              </p>
+              <p>
+                <strong>Exportar CSV</strong> baixa todos os eventos do recorte
+                atual, não apenas a página visível.
+              </p>
+              <Callout variant="tip" title="O link guarda a consulta">
+                Busca, filtros e ordenação ficam no endereço da página — dá para
+                salvar ou compartilhar o link de uma consulta específica.
+              </Callout>
+            </AccordionContent>
+          </AccordionItem>
+
           <AccordionItem value="a1">
             <AccordionTrigger>
               Ver quem participou de um evento{" "}
