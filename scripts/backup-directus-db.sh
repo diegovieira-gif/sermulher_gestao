@@ -39,6 +39,18 @@ TAMANHO_MINIMO_BYTES="${TAMANHO_MINIMO_BYTES:-100000}"
 # Imagem usada só se o contêiner do Directus não tiver o cliente sqlite3.
 SQLITE_IMAGE="${SQLITE_IMAGE:-keinos/sqlite3:latest}"
 
+# O contêiner auxiliar roda como root de propósito.
+#
+# A imagem keinos/sqlite3 roda como uid=100(sqlite); o diretório de backup é
+# 700 e os arquivos 600, ambos de root — porque guardam prontuários de mulheres
+# em situação de violência. Sem isto o VACUUM INTO falha com "unable to open
+# database", e a validação seguinte nem consegue LER a cópia recém-criada.
+#
+# A alternativa seria afrouxar a permissão do diretório, o que é exatamente o
+# que não se deve fazer com esse conteúdo. O contêiner é efêmero e só enxerga
+# os volumes montados aqui.
+DOCKER_SQLITE=(docker run --rm --user 0:0)
+
 SOMENTE_VERIFICAR=0
 [[ "${1:-}" == "--verificar" ]] && SOMENTE_VERIFICAR=1
 
@@ -138,7 +150,7 @@ sqlite_exec() {
   if [[ "$MODO_SQLITE" == "interno" ]]; then
     docker exec "$CONTAINER" sqlite3 "$DB_FILENAME" "$sql"
   else
-    docker run --rm -v "$VOLUME_DB:/db" "$SQLITE_IMAGE" \
+    "${DOCKER_SQLITE[@]}" -v "$VOLUME_DB:/db" "$SQLITE_IMAGE" \
       sqlite3 "/db/$(basename "$DB_FILENAME")" "$sql"
   fi
 }
@@ -186,7 +198,7 @@ if [[ "$MODO_SQLITE" == "interno" ]]; then
   docker cp "$CONTAINER:$TMP_NO_CONTAINER" "$PARCIAL"
   docker exec "$CONTAINER" rm -f "$TMP_NO_CONTAINER"
 else
-  docker run --rm -v "$VOLUME_DB:/db" -v "$(cd "$BACKUP_DIR" && pwd):/saida" \
+  "${DOCKER_SQLITE[@]}" -v "$VOLUME_DB:/db" -v "$(cd "$BACKUP_DIR" && pwd):/saida" \
     "$SQLITE_IMAGE" sqlite3 "/db/$(basename "$DB_FILENAME")" \
     "VACUUM INTO '/saida/$(basename "$PARCIAL")';"
 fi
@@ -204,7 +216,7 @@ fi
 if command -v sqlite3 >/dev/null 2>&1; then
   CHECK_COPIA="$(sqlite3 "$PARCIAL" 'PRAGMA integrity_check;' 2>/dev/null || echo "falhou")"
 else
-  CHECK_COPIA="$(docker run --rm -v "$(cd "$BACKUP_DIR" && pwd):/b" "$SQLITE_IMAGE" \
+  CHECK_COPIA="$("${DOCKER_SQLITE[@]}" -v "$(cd "$BACKUP_DIR" && pwd):/b" "$SQLITE_IMAGE" \
     sqlite3 "/b/$(basename "$PARCIAL")" 'PRAGMA integrity_check;' 2>/dev/null || echo "falhou")"
 fi
 
@@ -222,10 +234,10 @@ if command -v sqlite3 >/dev/null 2>&1; then
   TABELAS="$(sqlite3 "$PARCIAL" \
     "SELECT count(*) FROM sqlite_master WHERE type='table';" 2>/dev/null || echo 0)"
 else
-  TEM_BENEF="$(docker run --rm -v "$(cd "$BACKUP_DIR" && pwd):/b" "$SQLITE_IMAGE" \
+  TEM_BENEF="$("${DOCKER_SQLITE[@]}" -v "$(cd "$BACKUP_DIR" && pwd):/b" "$SQLITE_IMAGE" \
     sqlite3 "/b/$(basename "$PARCIAL")" \
     "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='beneficiarias';" 2>/dev/null || echo 0)"
-  TABELAS="$(docker run --rm -v "$(cd "$BACKUP_DIR" && pwd):/b" "$SQLITE_IMAGE" \
+  TABELAS="$("${DOCKER_SQLITE[@]}" -v "$(cd "$BACKUP_DIR" && pwd):/b" "$SQLITE_IMAGE" \
     sqlite3 "/b/$(basename "$PARCIAL")" \
     "SELECT count(*) FROM sqlite_master WHERE type='table';" 2>/dev/null || echo 0)"
 fi

@@ -29,6 +29,11 @@ SOBRESCREVER=0
 
 SQLITE_IMAGE="${SQLITE_IMAGE:-keinos/sqlite3:latest}"
 
+# Como no backup: a imagem roda como uid=100(sqlite) e os arquivos de backup
+# são 600 de root, porque contêm prontuários. Sem `--user 0:0` o contêiner nem
+# consegue LER o arquivo que vai restaurar.
+DOCKER_SQLITE=(docker run --rm --user 0:0)
+
 log()  { printf '[%s] %s\n' "$(date '+%H:%M:%S')" "$*"; }
 erro() { printf 'ERRO: %s\n' "$*" >&2; }
 
@@ -49,7 +54,7 @@ sq() {
   if command -v sqlite3 >/dev/null 2>&1; then
     sqlite3 "$DIR_ARQ/$NOME_ARQ" "$sql"
   else
-    docker run --rm -v "$DIR_ARQ:/b" "$SQLITE_IMAGE" sqlite3 "/b/$NOME_ARQ" "$sql"
+    "${DOCKER_SQLITE[@]}" -v "$DIR_ARQ:/b" "$SQLITE_IMAGE" sqlite3 "/b/$NOME_ARQ" "$sql"
   fi
 }
 
@@ -139,13 +144,14 @@ log "substituindo o banco…"
 # Os arquivos -wal e -shm precisam sair junto: se sobrarem, o SQLite tenta
 # aplicá-los sobre o banco novo e o resultado é imprevisível.
 docker cp "$ARQUIVO" "$CONTAINER:$DB_FILENAME"
-docker run --rm --volumes-from "$CONTAINER" "$SQLITE_IMAGE" \
+"${DOCKER_SQLITE[@]}" --volumes-from "$CONTAINER" "$SQLITE_IMAGE" \
   sh -c "rm -f ${DB_FILENAME}-wal ${DB_FILENAME}-shm" 2>/dev/null || true
 
 if [[ -n "${UPLOADS:-}" ]]; then
   if [[ -f "$UPLOADS" ]]; then
     log "restaurando os arquivos enviados…"
-    docker run --rm --volumes-from "$CONTAINER" -v "$(cd "$(dirname "$UPLOADS")" && pwd):/bk" \
+    "${DOCKER_SQLITE[@]}" --volumes-from "$CONTAINER" \
+      -v "$(cd "$(dirname "$UPLOADS")" && pwd):/bk" \
       "$SQLITE_IMAGE" sh -c "tar xzf /bk/$(basename "$UPLOADS") -C /directus" \
       || erro "falha ao restaurar uploads — o banco foi restaurado mesmo assim."
   else
