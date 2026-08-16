@@ -1183,12 +1183,11 @@ export default function ManualPage() {
                 mentira é pior que nenhuma.
               </Callout>
               <p className="text-sm text-muted-foreground">
-                <strong>WhatsApp é opcional e exige autorização.</strong> Como é
-                aparelho pessoal, só recebe quem tiver, no próprio cadastro de
-                usuário, o <strong>telefone para notificação</strong> preenchido
-                e a opção <strong>Notificar por WhatsApp</strong> marcada. Sem
-                os dois, nada é enviado por esse canal — e o sino e o e-mail
-                seguem funcionando.
+                <strong>WhatsApp é opcional e exige autorização</strong> — como
+                é aparelho pessoal, quem liga e desliga é a própria pessoa, em{" "}
+                <strong>Meu Perfil → Notificações</strong>. Basta ligar a chave
+                e informar o celular com DDD. O sino e o e-mail seguem
+                funcionando independentemente disso.
               </p>
             </AccordionContent>
           </AccordionItem>

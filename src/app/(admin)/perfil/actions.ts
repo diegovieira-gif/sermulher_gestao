@@ -24,6 +24,9 @@ export type MeuPerfil = {
   location: string | null;
   last_access: string | null;
   role: { id: string; name: string | null } | null;
+  /** Contato e consentimento para os avisos de escala em eventos. */
+  telefone_notificacao: string | null;
+  notificar_whatsapp: boolean | null;
 };
 
 /** Dados do usuário logado (a partir do token de sessão). */
@@ -43,6 +46,10 @@ export async function getMyProfile(): Promise<
             "title",
             "location",
             "last_access",
+            // @ts-ignore - campos adicionados por migração
+            "telefone_notificacao",
+            // @ts-ignore
+            "notificar_whatsapp",
             // @ts-ignore - relação m2o
             "role.id",
             "role.name",
@@ -54,6 +61,49 @@ export async function getMyProfile(): Promise<
   } catch (error) {
     console.error("Erro ao carregar perfil:", error);
     return { success: false, error: "Não foi possível carregar o perfil." };
+  }
+}
+
+/**
+ * Salva as preferências de notificação da própria pessoa.
+ *
+ * Usa `updateMe` com o token de sessão de propósito: o consentimento para
+ * receber mensagem no WhatsApp pessoal precisa ser dado — e revogado — pela
+ * própria titular, não por alguém com acesso ao Directus. A policy limita a
+ * escrita a estes campos do próprio registro.
+ */
+export async function updateMinhasNotificacoes(input: {
+  telefone: string;
+  notificarWhatsapp: boolean;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    // Só dígitos: é o formato que o disparo espera, e evita duas grafias na
+    // mesma coluna (o mesmo precedente do telefone das beneficiárias).
+    const digitos = (input.telefone || "").replace(/\D/g, "");
+
+    if (input.notificarWhatsapp && digitos.length < 10) {
+      return {
+        success: false,
+        error:
+          "Para receber por WhatsApp, informe o celular com DDD (ao menos 10 dígitos).",
+      };
+    }
+
+    const directus = await getDirectusClient({ requireAuth: true });
+    await directus.request(
+      updateMe({
+        telefone_notificacao: digitos || null,
+        notificar_whatsapp: input.notificarWhatsapp,
+      } as any),
+    );
+
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao salvar preferências de notificação:", error);
+    return {
+      success: false,
+      error: "Não foi possível salvar as preferências. Tente novamente.",
+    };
   }
 }
 

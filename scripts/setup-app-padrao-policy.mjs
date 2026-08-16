@@ -63,9 +63,13 @@ const READONLY_COLLECTIONS = new Set(["config_permissoes_menu", "config_permisso
 // geral (que concederia leitura irrestrita).
 const SELF_ONLY_COLLECTIONS = new Set(["notificacoes"]);
 // Campos que o usuário pode editar do próprio cadastro (exclui role/policies/status).
+// `telefone_notificacao` e `notificar_whatsapp` estão aqui de propósito: o
+// consentimento para receber WhatsApp precisa ser dado E revogado pela própria
+// pessoa, na tela de Perfil, sem depender de alguém com acesso ao Studio.
 const SELF_USER_FIELDS = [
   "first_name", "last_name", "email", "password", "title", "location",
   "avatar", "language", "theme", "description",
+  "telefone_notificacao", "notificar_whatsapp",
 ];
 
 const summary = { policy: null, permissionsCreated: 0, permissionsSkipped: 0, accessCreated: [], accessSkipped: [], errors: [] };

@@ -226,12 +226,14 @@ Os mesmos avisos também são enviados por **e-mail institucional**. E por **Wha
 
 ### Receber avisos por WhatsApp (opcional)
 
-O WhatsApp é aparelho pessoal, então o envio **só acontece com autorização**. Para ativar, é preciso que constem no seu cadastro de usuário, no Directus:
+O WhatsApp é aparelho pessoal, então o envio **só acontece com sua autorização** — e quem dá ou retira essa autorização é você mesma:
 
-- **Telefone para notificação** — seu celular com DDD;
-- **Notificar por WhatsApp** — marcado.
+1. Clique no seu **nome** (canto superior direito) e escolha **Meu Perfil**.
+2. Abra a aba **Notificações**.
+3. Ligue **Receber também por WhatsApp** e informe seu **celular com DDD**.
+4. Clique em **Salvar preferências**.
 
-Sem os dois, nada é enviado por esse canal — e você continua recebendo pelo sino e por e-mail normalmente. Para deixar de receber, basta desmarcar a opção.
+Para deixar de receber, desligue a chave e salve. O sino e o e-mail continuam funcionando de qualquer forma — eles não dependem de configuração.
 
 ---
 

@@ -32,7 +32,13 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { getAuditLogs, type AuditLog } from "../auditoria/actions";
-import { changeMyPassword, type MeuPerfil } from "./actions";
+import {
+  changeMyPassword,
+  updateMinhasNotificacoes,
+  type MeuPerfil,
+} from "./actions";
+import { Switch } from "@/components/ui/switch";
+import { mascararTelefone, somenteDigitos } from "@/lib/utils";
 
 const User = LucideUser as React.ComponentType<any>;
 const Mail = LucideMail as React.ComponentType<any>;
@@ -126,6 +132,37 @@ export function PerfilClient({ perfil, initialLogs, initialMeta }: PerfilClientP
     }
   };
 
+  // Preferências de notificação (o telefone é guardado só com dígitos).
+  const [telefoneNotif, setTelefoneNotif] = useState(
+    somenteDigitos(perfil.telefone_notificacao),
+  );
+  // O Directus devolve booleanos como 1/0 nesta instância.
+  const [notificarWhats, setNotificarWhats] = useState(
+    perfil.notificar_whatsapp === true || (perfil.notificar_whatsapp as unknown) === 1,
+  );
+  const [salvandoNotif, setSalvandoNotif] = useState(false);
+
+  const salvarNotificacoes = async () => {
+    setSalvandoNotif(true);
+    try {
+      const res = await updateMinhasNotificacoes({
+        telefone: telefoneNotif,
+        notificarWhatsapp: notificarWhats,
+      });
+      if (res.success) {
+        toast.success(
+          notificarWhats
+            ? "Preferências salvas. Você receberá os avisos por WhatsApp."
+            : "Preferências salvas. Os avisos seguem pelo sino e por e-mail.",
+        );
+      } else {
+        toast.error(res.error || "Não foi possível salvar.");
+      }
+    } finally {
+      setSalvandoNotif(false);
+    }
+  };
+
   // Alteração de senha
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -169,6 +206,7 @@ export function PerfilClient({ perfil, initialLogs, initialMeta }: PerfilClientP
       <Tabs defaultValue="dados" className="space-y-4">
         <TabsList>
           <TabsTrigger value="dados">Dados</TabsTrigger>
+          <TabsTrigger value="notificacoes">Notificações</TabsTrigger>
           <TabsTrigger value="atividade">Atividade</TabsTrigger>
           <TabsTrigger value="seguranca">Segurança</TabsTrigger>
         </TabsList>
@@ -260,6 +298,76 @@ export function PerfilClient({ perfil, initialLogs, initialMeta }: PerfilClientP
                   </Button>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Notificações */}
+        <TabsContent value="notificacoes">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Mail className="h-4 w-4 text-primary" />
+                Como você quer ser avisada
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="max-w-lg space-y-5">
+              <p className="text-sm text-muted-foreground">
+                Quando você for escalada para a equipe de um evento, o sistema
+                avisa — na escalação, na véspera, se você for retirada e se o
+                evento mudar de data ou local.
+              </p>
+
+              <div className="rounded-lg border bg-muted/30 p-3 text-sm">
+                <p className="font-medium">Sempre ativos</p>
+                <p className="mt-1 text-muted-foreground">
+                  <strong>Sino</strong> no topo da tela e{" "}
+                  <strong>e-mail</strong> para {perfil.email ?? "seu endereço institucional"}.
+                </p>
+              </div>
+
+              <div className="space-y-4 rounded-lg border p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="notificar-whatsapp" className="text-base">
+                      Receber também por WhatsApp
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      É o seu número pessoal — só enviamos se você autorizar
+                      aqui. Pode desligar quando quiser.
+                    </p>
+                  </div>
+                  <Switch
+                    id="notificar-whatsapp"
+                    checked={notificarWhats}
+                    onCheckedChange={setNotificarWhats}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="telefone-notificacao">Celular com DDD</Label>
+                  <Input
+                    id="telefone-notificacao"
+                    inputMode="numeric"
+                    placeholder="(79) 99999-9999"
+                    value={mascararTelefone(telefoneNotif)}
+                    onChange={(e) =>
+                      setTelefoneNotif(somenteDigitos(e.target.value).slice(0, 11))
+                    }
+                    disabled={!notificarWhats}
+                  />
+                  {notificarWhats && telefoneNotif.length > 0 && telefoneNotif.length < 10 && (
+                    <p className="text-xs text-amber-600">
+                      Informe o número completo, com DDD.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <Button onClick={salvarNotificacoes} disabled={salvandoNotif}>
+                {salvandoNotif && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Salvar preferências
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>

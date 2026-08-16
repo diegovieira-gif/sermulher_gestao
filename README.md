@@ -202,9 +202,10 @@ De hora em hora basta; o registro por canal impede reenvio.
 curl -H "x-cron-secret: $CRON_SECRET" https://<host>/api/notificacoes/enviar
 ```
 
-O WhatsApp exige, no cadastro do usuário, `telefone_notificacao` preenchido
-**e** `notificar_whatsapp` marcado — consentimento explícito, já que o aparelho
-é pessoal.
+O WhatsApp exige `telefone_notificacao` preenchido **e** `notificar_whatsapp`
+marcado. A própria pessoa liga e desliga isso em **Meu Perfil → Notificações**,
+sem depender de quem tem acesso ao Directus — consentimento que não pode ser
+revogado pela titular não é consentimento.
 
 ---
 
