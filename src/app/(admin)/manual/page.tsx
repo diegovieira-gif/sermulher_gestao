@@ -1051,6 +1051,46 @@ export default function ManualPage() {
             </AccordionContent>
           </AccordionItem>
 
+          <AccordionItem value="a5">
+            <AccordionTrigger>
+              Legenda e impressão do calendário{" "}
+              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25">
+                Novo
+              </Badge>
+            </AccordionTrigger>
+            <AccordionContent className="space-y-3 text-sm text-muted-foreground">
+              <p>
+                O calendário reúne três origens numa só agenda:{" "}
+                <strong>roxo</strong> para eventos e campanhas,{" "}
+                <strong>verde</strong> para a Escola da Mulher (início e
+                formatura de turmas) e <strong>azul</strong> para as sessões da
+                Sala Azul.
+              </p>
+              <Callout variant="new" title="A legenda é um filtro">
+                Clique numa categoria para ocultá-la do calendário e clique de
+                novo para trazê-la de volta. O número ao lado mostra quantos
+                compromissos há em cada origem.
+              </Callout>
+              <p>
+                <strong>Imprimir</strong> gera um documento próprio, não uma
+                foto da tela: cabeçalho institucional, quadro-resumo por origem,
+                e os compromissos em ordem cronológica agrupados por dia — cada
+                um com horário, origem, título e descrição completa, além de
+                campos de assinatura.
+              </p>
+              <Callout variant="tip" title="Por que não imprimir a grade">
+                Na grade, cada dia é uma célula pequena: o título vem cortado e
+                local e descrição não aparecem. No papel, ela viraria um retrato
+                ilegível da tela.
+              </Callout>
+              <p>
+                O documento acompanha o mês exibido e respeita os filtros da
+                legenda. Para arquivar, use &quot;Salvar como PDF&quot; na
+                janela de impressão.
+              </p>
+            </AccordionContent>
+          </AccordionItem>
+
           <AccordionItem value="a4">
             <AccordionTrigger>
               Buscar, ordenar e exportar a lista{" "}

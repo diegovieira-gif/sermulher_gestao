@@ -21,15 +21,31 @@ import {
   ChevronRight,
   Calendar as CalendarIcon,
   Plus,
+  Printer,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EventoForm } from "./evento-form";
+import { AgendaImpressao } from "./agenda-impressao";
 import type { CalendarEvent } from "./actions";
 
 interface EventosCalendarioClientProps {
   initialEvents: CalendarEvent[];
   tiposEventoOptions: { id: number; nome: string; icone?: string }[];
 }
+
+/**
+ * Origens do calendário unificado, com a cor REAL usada em cada uma.
+ *
+ * As cores vivem em `getGlobalEvents` (actions.ts) e eram repetidas na legenda
+ * à mão — o resultado é que "Eventos" aparecia em índigo na legenda enquanto
+ * os eventos eram desenhados em roxo. Centralizar aqui evita que voltem a
+ * divergir.
+ */
+const ORIGENS = [
+  { tipo: "manual" as const, rotulo: "Eventos", cor: "#a855f7" },
+  { tipo: "escola" as const, rotulo: "Escola", cor: "#059669" },
+  { tipo: "sala_azul" as const, rotulo: "Sala Azul", cor: "#2563eb" },
+];
 
 export function EventosCalendarioClient({
   initialEvents,
@@ -39,6 +55,22 @@ export function EventosCalendarioClient({
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+
+  // A legenda passa a ser controle, não enfeite: clicar liga/desliga a origem.
+  const [origensOcultas, setOrigensOcultas] = useState<Set<string>>(new Set());
+
+  const alternarOrigem = (tipo: string) => {
+    setOrigensOcultas((atual) => {
+      const proximo = new Set(atual);
+      if (proximo.has(tipo)) proximo.delete(tipo);
+      else proximo.add(tipo);
+      return proximo;
+    });
+  };
+
+  const eventosVisiveis = initialEvents.filter(
+    (e) => !origensOcultas.has(e.type),
+  );
 
   // Navegação
   const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
@@ -58,9 +90,9 @@ export function EventosCalendarioClient({
 
   const weekDays = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
-  // Filtra eventos do dia
+  // Filtra eventos do dia (respeitando as origens ligadas na legenda)
   const getEventsForDay = (day: Date) => {
-    return initialEvents.filter((evt) => isSameDay(evt.start, day));
+    return eventosVisiveis.filter((evt) => isSameDay(evt.start, day));
   };
 
   const handleDayClick = (day: Date) => {
@@ -68,7 +100,14 @@ export function EventosCalendarioClient({
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-120px)] bg-white rounded-lg border shadow-sm overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-120px)] bg-white rounded-lg border shadow-sm overflow-hidden print:h-auto print:overflow-visible print:border-0 print:shadow-none">
+      {/* Documento de impressão — oculto na tela, é o que sai no papel. */}
+      <AgendaImpressao
+        eventos={initialEvents}
+        mesReferencia={currentDate}
+        origensOcultas={origensOcultas}
+      />
+
       {/* --- HEADER DO CALENDÁRIO --- */}
       <div className="flex items-center justify-between p-4 border-b">
         <div className="flex items-center gap-4">
@@ -90,21 +129,56 @@ export function EventosCalendarioClient({
         </div>
 
         <div className="flex items-center gap-4">
-          {/* Legenda */}
-          <div className="hidden md:flex gap-3 text-xs">
-            <div className="flex items-center gap-1">
-              <span className="w-3 h-3 rounded-full bg-emerald-600"></span>{" "}
-              Escola
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="w-3 h-3 rounded-full bg-blue-600"></span> Sala
-              Azul
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="w-3 h-3 rounded-full bg-indigo-500"></span>{" "}
-              Eventos
-            </div>
+          {/* Legenda — clicável: filtra por origem */}
+          <div className="hidden md:flex gap-2 text-xs">
+            {ORIGENS.map((origem) => {
+              const oculta = origensOcultas.has(origem.tipo);
+              const quantidade = initialEvents.filter(
+                (e) => e.type === origem.tipo,
+              ).length;
+              return (
+                <button
+                  key={origem.tipo}
+                  type="button"
+                  onClick={() => alternarOrigem(origem.tipo)}
+                  title={
+                    oculta
+                      ? `Mostrar ${origem.rotulo} (${quantidade})`
+                      : `Ocultar ${origem.rotulo} (${quantidade})`
+                  }
+                  aria-pressed={!oculta}
+                  className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 transition-all ${
+                    oculta
+                      ? "border-slate-200 bg-slate-50 text-slate-400"
+                      : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:shadow-sm"
+                  }`}
+                >
+                  <span
+                    className="h-2.5 w-2.5 rounded-full transition-opacity"
+                    style={{
+                      backgroundColor: origem.cor,
+                      opacity: oculta ? 0.3 : 1,
+                    }}
+                  />
+                  <span className={oculta ? "line-through" : ""}>
+                    {origem.rotulo}
+                  </span>
+                  <span className="text-[10px] text-slate-400">{quantidade}</span>
+                </button>
+              );
+            })}
           </div>
+
+          {/* Impressão da agenda */}
+          <Button
+            variant="outline"
+            onClick={() => window.print()}
+            className="gap-2"
+            title="Gerar documento da agenda do mês"
+          >
+            <Printer className="h-4 w-4" />
+            Imprimir
+          </Button>
 
           {/* Botão Novo Evento */}
           <Button

@@ -179,6 +179,27 @@ A coluna **Período** resume as duas datas:
 
 Quando o horário é meia-noite, ele é omitido — o sistema entende como "horário não informado". Eventos cadastrados antes desta versão ficaram assim; basta editá-los para informar a hora.
 
+### Calendário Visual: legenda e impressão
+
+A aba **Calendário Visual** reúne três origens numa só agenda, cada uma com sua cor:
+
+| Cor | Origem |
+| --- | --- |
+| 🟣 Roxo | Eventos e campanhas cadastrados aqui |
+| 🟢 Verde | Escola da Mulher — início e formatura das turmas |
+| 🔵 Azul | Sala Azul — sessões dos grupos reflexivos |
+
+**A legenda é um filtro.** Clique em uma categoria para ocultá-la do calendário e clique de novo para trazê-la de volta. O número ao lado mostra quantos compromissos existem em cada origem. Útil para enxergar só a agenda da Escola, por exemplo.
+
+**Imprimir a agenda** gera um **documento próprio**, não uma foto da tela. A grade do calendário corta os títulos e não mostra local nem descrição; o documento impresso traz:
+
+- Cabeçalho institucional e o mês de referência;
+- Um quadro-resumo com a quantidade de compromissos por origem;
+- Os compromissos **em ordem cronológica, agrupados por dia**, cada um com horário, origem, título e descrição completa;
+- Campos de assinatura para responsável e coordenação.
+
+O documento respeita o mês que está sendo exibido e os filtros da legenda — se você ocultou a Escola, ela não sai no papel (e o documento avisa que há categorias ocultas). Para arquivar em PDF, escolha "Salvar como PDF" na janela de impressão do navegador.
+
 ### Encontrar e organizar os eventos (aba Lista)
 
 A aba **Gestão de Eventos (Lista)** mostra os eventos em páginas de 20, com o total à direita. Antes ela exibia apenas os 100 mais recentes — com 171 eventos cadastrados, 71 não apareciam de forma alguma.
