@@ -151,6 +151,63 @@ Detalhes de cobertura, credenciais e armadilhas conhecidas em
 
 ---
 
+## 🔔 Notificações
+
+Escalar alguém na equipe de um evento gera avisos automáticos. O desenho central
+é uma **fila** (coleção `notificacoes`): gravar nela é o que significa
+"notificar"; sino, e-mail e WhatsApp são **consumidores** dessa fila.
+
+A fila não é over-engineering — ela resolve o cancelamento. Escalar agenda um
+lembrete para a véspera; se a pessoa sair da equipe antes disso, o lembrete
+precisa **morrer**, senão ela recebe "amanhã tem evento" de um evento em que não
+está mais. Com envio direto isso seria impossível.
+
+**Gatilhos:** escalação, remoção, alteração de data/local do evento e lembrete
+na véspera (8h).
+
+### Canais
+
+| Canal | Exige configuração? | Sem ela |
+| --- | --- | --- |
+| Sino no sistema | Não | — |
+| E-mail | `SMTP_*` no ambiente | Canal fica inativo, o resto funciona |
+| WhatsApp (GoWA) | Config no módulo Marketing + telefone e consentimento no usuário | Não envia para quem não autorizou |
+
+```bash
+SMTP_HOST=smtp.exemplo.gov.br
+SMTP_PORT=587           # 465 = TLS implícito; demais usam STARTTLS
+SMTP_USER=...           # opcional, se o relay exigir autenticação
+SMTP_PASSWORD=...
+SMTP_FROM="SIGMA <nao-responda@aracaju.se.gov.br>"
+```
+
+> [!IMPORTANT]
+> O `/server/health` do Directus reporta `email:connection: ok`, mas isso **não
+> comprova** que há SMTP real: sem nenhuma variável `EMAIL_*` definida, o
+> Directus usa o transporte `sendmail` padrão, que num contêiner sem MTA não
+> entrega nada. Trate o canal de e-mail como **não verificado** até o primeiro
+> envio real chegar a uma caixa de entrada.
+
+> [!NOTE]
+> O envio de e-mail é feito pelo próprio app (nodemailer), e **não** por um Flow
+> com webhook no Directus — um endpoint de envio exposto viraria um relay aberto
+> para disparar mensagem em nome da secretaria.
+
+### Agendador
+
+A fila é varrida por uma rota protegida pelo mesmo `CRON_SECRET` das campanhas.
+De hora em hora basta; o registro por canal impede reenvio.
+
+```bash
+curl -H "x-cron-secret: $CRON_SECRET" https://<host>/api/notificacoes/enviar
+```
+
+O WhatsApp exige, no cadastro do usuário, `telefone_notificacao` preenchido
+**e** `notificar_whatsapp` marcado — consentimento explícito, já que o aparelho
+é pessoal.
+
+---
+
 ## 🗄️ Migrações do Directus
 
 O schema não é versionado por um ORM: cada mudança estrutural tem um script

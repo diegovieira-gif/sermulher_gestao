@@ -38,6 +38,7 @@ acrescentaria dependência e configuração sem ganho.
 | `csv.spec.ts` | Escape do CSV dos relatórios. Erro aqui não gera exceção: gera planilha com colunas deslocadas, percebida depois de entregue. |
 | `utils.spec.ts` | Máscaras de CPF/telefone e datas em fuso local (o bug da "data de amanhã" após as 21h). |
 | `eventos-schemas.spec.ts` | Período do evento e o vínculo de equipe — cujo usuário é **UUID**, ao contrário dos demais relacionamentos do projeto, que são inteiros. |
+| `notificacoes.spec.ts` | Agendamento do lembrete de véspera. O erro aqui é silencioso: lembrete agendado para o passado dispara na varredura seguinte e avisa "amanhã tem evento" de algo que já passou. |
 
 ---
 
@@ -51,6 +52,10 @@ Roda **sem autenticação** e sem depender do banco. É o gate de PR.
   sessão retornam 401.
 - **Força bruta:** a 6ª tentativa na mesma conta retorna 429 com `Retry-After`.
   Funciona sem Directus porque a falha de conexão também conta como tentativa.
+- **Rotas de cron:** `/api/campanhas/automaticas/run` e
+  `/api/notificacoes/enviar` recusam requisição sem o segredo. A segunda envia
+  e-mail e WhatsApp — aberta, seria um relay para disparar mensagem em nome da
+  secretaria.
 
 ---
 

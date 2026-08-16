@@ -59,6 +59,9 @@ const ROLE_NAMES = [
   "CRAM",
 ];
 const READONLY_COLLECTIONS = new Set(["config_permissoes_menu", "config_permissoes_demanda"]);
+// Coleções cujo acesso é restrito ao PRÓPRIO usuário, tratadas fora do laço
+// geral (que concederia leitura irrestrita).
+const SELF_ONLY_COLLECTIONS = new Set(["notificacoes"]);
 // Campos que o usuário pode editar do próprio cadastro (exclui role/policies/status).
 const SELF_USER_FIELDS = [
   "first_name", "last_name", "email", "password", "title", "location",
@@ -110,7 +113,27 @@ async function ensurePermissions(policyId) {
 
   const business = await listBusinessCollections();
   for (const col of business) {
-    if (READONLY_COLLECTIONS.has(col)) {
+    if (SELF_ONLY_COLLECTIONS.has(col)) {
+      // Notificações são pessoais e podem citar caso, evento e pessoas
+      // envolvidas. Sem o filtro por destinatário, qualquer usuária leria os
+      // avisos de todas as outras pelo Directus Studio — que ela ACESSA, já
+      // que a policy é de app e não bloqueia o Studio.
+      //
+      // `create`/`delete` ficam de fora de propósito: quem escreve na fila é
+      // o sistema, usando o token administrativo. A única escrita permitida é
+      // marcar o próprio aviso como lido.
+      add(
+        permRow(policyId, col, "read", {
+          permissions: { destinatario: { _eq: "$CURRENT_USER" } },
+        }),
+      );
+      add(
+        permRow(policyId, col, "update", {
+          fields: ["lida_em"],
+          permissions: { destinatario: { _eq: "$CURRENT_USER" } },
+        }),
+      );
+    } else if (READONLY_COLLECTIONS.has(col)) {
       add(permRow(policyId, col, "read"));
     } else {
       for (const action of ["read", "create", "update", "delete"]) add(permRow(policyId, col, action));

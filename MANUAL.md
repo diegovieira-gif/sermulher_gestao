@@ -207,6 +207,32 @@ Para tirar alguém da equipe, use o ícone de lixeira ao lado do nome. Isso remo
 
 > **O histórico não se perde.** Se a conta de uma servidora for excluída do Directus mais tarde, os eventos em que ela atuou continuam registrados — a linha aparece como "Usuário removido" em vez de desaparecer.
 
+### Avisos automáticos de escala
+
+Quem entra na equipe **é avisado pelo sistema**. Não é preciso mandar recado à parte.
+
+| Quando acontece | O que a pessoa recebe |
+| --- | --- |
+| É adicionada à equipe | "Você foi escalada para *evento*", com data e local |
+| Véspera do evento, às 8h | "Amanhã: *evento*" |
+| É retirada da equipe | "Você não está mais escalada" — e o lembrete da véspera é cancelado |
+| O evento muda de data ou local | Toda a equipe é reavisada, com o que mudou |
+
+O aviso de mudança existe por um motivo prático: sem ele, quem foi avisado antes iria no dia ou no lugar errado, **confiando no sistema**.
+
+**Onde os avisos aparecem:** no **sino** ao lado do seu nome, no topo da tela. O número em vermelho indica quantos não foram lidos; clicar no aviso leva ao evento e o marca como lido.
+
+Os mesmos avisos também são enviados por **e-mail institucional**. E por **WhatsApp**, para quem tiver o número cadastrado e tiver autorizado — ver abaixo.
+
+### Receber avisos por WhatsApp (opcional)
+
+O WhatsApp é aparelho pessoal, então o envio **só acontece com autorização**. Para ativar, é preciso que constem no seu cadastro de usuário, no Directus:
+
+- **Telefone para notificação** — seu celular com DDD;
+- **Notificar por WhatsApp** — marcado.
+
+Sem os dois, nada é enviado por esse canal — e você continua recebendo pelo sino e por e-mail normalmente. Para deixar de receber, basta desmarcar a opção.
+
 ---
 
 ## 7. Marketing e Comunicação

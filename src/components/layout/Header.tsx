@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { SinoNotificacoes } from "@/components/layout/SinoNotificacoes";
 
 interface HeaderProps {
   title: string;
@@ -50,6 +51,7 @@ export function Header({
 
       {/* User Menu */}
       <div className="flex items-center gap-3">
+        <SinoNotificacoes />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button

@@ -1140,6 +1140,58 @@ export default function ManualPage() {
               </Callout>
             </AccordionContent>
           </AccordionItem>
+
+          <AccordionItem value="a3">
+            <AccordionTrigger>
+              Avisos automáticos de escala{" "}
+              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25">
+                Novo
+              </Badge>
+            </AccordionTrigger>
+            <AccordionContent className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Quem entra na equipe <strong>é avisado pelo sistema</strong> —
+                não é preciso mandar recado à parte. São quatro momentos:
+              </p>
+              <ul className="ml-5 list-disc space-y-1 text-sm text-muted-foreground">
+                <li>
+                  <strong>Ao ser escalada</strong> — com data e local do evento.
+                </li>
+                <li>
+                  <strong>Na véspera, às 8h</strong> — o lembrete que faz
+                  diferença quando a escala é montada com semanas de
+                  antecedência.
+                </li>
+                <li>
+                  <strong>Ao ser retirada</strong> — e o lembrete da véspera é
+                  cancelado junto.
+                </li>
+                <li>
+                  <strong>Se o evento mudar de data ou local</strong> — toda a
+                  equipe é reavisada.
+                </li>
+              </ul>
+              <Callout variant="tip" title="Onde os avisos aparecem">
+                No <strong>sino</strong> ao lado do seu nome, no topo da tela. O
+                número em vermelho mostra quantos não foram lidos; clicar leva
+                ao evento e marca como lido. Os mesmos avisos vão por{" "}
+                <strong>e-mail institucional</strong>.
+              </Callout>
+              <Callout variant="warn" title="Por que o aviso de alteração importa">
+                Sem ele, quem recebeu o aviso antes da mudança iria no dia ou no
+                lugar errado — confiando no sistema. Uma notificação que vira
+                mentira é pior que nenhuma.
+              </Callout>
+              <p className="text-sm text-muted-foreground">
+                <strong>WhatsApp é opcional e exige autorização.</strong> Como é
+                aparelho pessoal, só recebe quem tiver, no próprio cadastro de
+                usuário, o <strong>telefone para notificação</strong> preenchido
+                e a opção <strong>Notificar por WhatsApp</strong> marcada. Sem
+                os dois, nada é enviado por esse canal — e o sino e o e-mail
+                seguem funcionando.
+              </p>
+            </AccordionContent>
+          </AccordionItem>
         </Accordion>
       </Section>
 

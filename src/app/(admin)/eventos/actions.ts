@@ -12,6 +12,13 @@ import {
 import { revalidatePath } from "next/cache";
 import { Evento, insertEventoSchema, membroEquipeEventoSchema } from "./schemas";
 import { participacaoEventoSchema } from "../mulheres/beneficiarias/schemas";
+import {
+  calcularLembrete,
+  cancelarPendentes,
+  descreverQuando,
+  enfileirar,
+  type NovaNotificacao,
+} from "@/lib/notificacoes";
 
 /**
  * Autoriza o usuário no módulo "eventos" e devolve o cliente admin (lazy).
@@ -93,11 +100,39 @@ export async function updateEvento(id: number, data: Evento) {
   if (!validation.success) return { success: false, error: "Dados inválidos" };
 
   try {
-    // @ts-ignore
-    const { id: _, ...payload } = data;
+    // Estado anterior, lido ANTES da gravação: é a única forma de saber se
+    // data ou local mudaram e, portanto, se a equipe precisa ser reavisada.
+    const anterior = (await directus.request(
+      readItems("eventos_campanhas", {
+        filter: { id: { _eq: id } },
+        fields: ["nome", "data_inicio", "data_fim", "local"],
+        limit: 1,
+      }),
+    )) as Array<{
+      nome?: string;
+      data_inicio?: string;
+      data_fim?: string;
+      local?: string;
+    }>;
+
     await directus.request(
       updateItem("eventos_campanhas", id, validation.data),
     );
+
+    const antes = anterior[0];
+    if (antes) {
+      const mudouInicio = antes.data_inicio !== validation.data.data_inicio;
+      const mudouLocal = (antes.local ?? "") !== (validation.data.local ?? "");
+      if (mudouInicio || mudouLocal) {
+        await avisarEquipeSobreAlteracao(id, validation.data, {
+          mudouInicio,
+          mudouLocal,
+          localAnterior: antes.local ?? null,
+          inicioAnterior: antes.data_inicio ?? null,
+        });
+      }
+    }
+
     revalidatePath("/eventos");
     return { success: true };
   } catch (error) {
@@ -406,6 +441,159 @@ export async function removerParticipanteEvento(id: number) {
   }
 }
 
+// --- Notificações da equipe ---------------------------------------------------
+
+/** Dados do evento usados no texto dos avisos. */
+async function lerEventoParaAviso(eventoId: number) {
+  const directus = getDirectusAdmin();
+  const linhas = (await directus.request(
+    readItems("eventos_campanhas", {
+      filter: { id: { _eq: eventoId } },
+      fields: ["id", "nome", "data_inicio", "local"],
+      limit: 1,
+    }),
+  )) as Array<{ id: number; nome?: string; data_inicio?: string; local?: string }>;
+  return linhas[0] ?? null;
+}
+
+const ondeTexto = (local?: string | null) =>
+  local && local.trim() ? `, em ${local.trim()}` : "";
+
+/** Avisa a pessoa recém-escalada e agenda o lembrete da véspera. */
+async function avisarEscalado(
+  eventoId: number,
+  usuarioId: string,
+  vinculoId: number | string,
+) {
+  const evento = await lerEventoParaAviso(eventoId);
+  if (!evento) return;
+
+  const quando = descreverQuando(evento.data_inicio);
+  const nome = evento.nome ?? "evento";
+  const referencia = { colecao: "equipe_evento", id: vinculoId };
+
+  const avisos: NovaNotificacao[] = [
+    {
+      destinatario: usuarioId,
+      tipo: "escala_evento",
+      titulo: `Você foi escalada para: ${nome}`,
+      mensagem: `Você faz parte da equipe do evento "${nome}", em ${quando}${ondeTexto(evento.local)}.`,
+      link: "/eventos",
+      referencia,
+    },
+  ];
+
+  // O lembrete só existe se a véspera ainda está no futuro; escalar alguém
+  // para hoje não deve gerar aviso retroativo.
+  const lembrete = evento.data_inicio ? calcularLembrete(evento.data_inicio) : null;
+  if (lembrete) {
+    avisos.push({
+      destinatario: usuarioId,
+      tipo: "lembrete_evento",
+      titulo: `Amanhã: ${nome}`,
+      mensagem: `Lembrete: você está escalada para "${nome}", em ${quando}${ondeTexto(evento.local)}.`,
+      link: "/eventos",
+      referencia,
+      agendadaPara: lembrete,
+    });
+  }
+
+  await enfileirar(avisos);
+}
+
+/** Avisa quem saiu da equipe e mata o lembrete que estava agendado. */
+async function avisarRemocao(vinculoId: number, eventoId: number, usuarioId: string) {
+  // Cancelar ANTES de enfileirar o aviso novo: senão o próprio aviso de
+  // remoção entraria na varredura de cancelamento.
+  await cancelarPendentes("equipe_evento", vinculoId);
+
+  const evento = await lerEventoParaAviso(eventoId);
+  const nome = evento?.nome ?? "evento";
+
+  await enfileirar([
+    {
+      destinatario: usuarioId,
+      tipo: "remocao_evento",
+      titulo: `Você não está mais escalada para: ${nome}`,
+      mensagem: `Sua participação na equipe do evento "${nome}" foi cancelada. Não é necessário comparecer.`,
+      link: "/eventos",
+      referencia: { colecao: "equipe_evento", id: vinculoId },
+    },
+  ]);
+}
+
+/**
+ * Reavisa toda a equipe quando o evento muda de data ou local.
+ *
+ * Este é o gatilho que impede a notificação de virar desinformação: sem ele,
+ * a pessoa iria ao lugar/dia do aviso antigo, confiando no sistema.
+ */
+async function avisarEquipeSobreAlteracao(
+  eventoId: number,
+  dados: { nome: string; data_inicio: string; local?: string },
+  mudanca: {
+    mudouInicio: boolean;
+    mudouLocal: boolean;
+    inicioAnterior: string | null;
+    localAnterior: string | null;
+  },
+) {
+  const directus = getDirectusAdmin();
+  const equipe = (await directus.request(
+    readItems("equipe_evento", {
+      filter: { evento: { _eq: eventoId } },
+      fields: ["id", "usuario"],
+      limit: -1,
+    }),
+  )) as Array<{ id: number; usuario: string | null }>;
+
+  if (equipe.length === 0) return;
+
+  const partes: string[] = [];
+  if (mudanca.mudouInicio) {
+    partes.push(
+      `a data passou de ${descreverQuando(mudanca.inicioAnterior)} para ${descreverQuando(dados.data_inicio)}`,
+    );
+  }
+  if (mudanca.mudouLocal) {
+    partes.push(
+      `o local passou de "${mudanca.localAnterior || "não informado"}" para "${dados.local || "não informado"}"`,
+    );
+  }
+
+  const avisos: NovaNotificacao[] = [];
+  for (const membro of equipe) {
+    if (!membro.usuario) continue;
+
+    // O lembrete antigo aponta para a data velha — cancela e reagenda.
+    await cancelarPendentes("equipe_evento", membro.id);
+
+    avisos.push({
+      destinatario: membro.usuario,
+      tipo: "alteracao_evento",
+      titulo: `Alteração no evento: ${dados.nome}`,
+      mensagem: `O evento "${dados.nome}" foi alterado — ${partes.join(" e ")}.`,
+      link: "/eventos",
+      referencia: { colecao: "equipe_evento", id: membro.id },
+    });
+
+    const lembrete = calcularLembrete(dados.data_inicio);
+    if (lembrete) {
+      avisos.push({
+        destinatario: membro.usuario,
+        tipo: "lembrete_evento",
+        titulo: `Amanhã: ${dados.nome}`,
+        mensagem: `Lembrete: você está escalada para "${dados.nome}", em ${descreverQuando(dados.data_inicio)}${ondeTexto(dados.local)}.`,
+        link: "/eventos",
+        referencia: { colecao: "equipe_evento", id: membro.id },
+        agendadaPara: lembrete,
+      });
+    }
+  }
+
+  await enfileirar(avisos);
+}
+
 // --- Equipe do evento (servidoras que atuaram) ------------------------------
 
 export type MembroEquipe = {
@@ -531,12 +719,17 @@ export async function registrarMembroEquipe(input: {
       };
     }
 
-    await directus.request(
-      createItem("equipe_evento", {
-        evento: dados.evento,
-        usuario: dados.usuario,
-      }),
-    );
+    const criado = (await directus.request(
+      createItem(
+        "equipe_evento",
+        { evento: dados.evento, usuario: dados.usuario },
+        { fields: ["id"] },
+      ),
+    )) as { id: number };
+
+    // O aviso não pode derrubar a escalação: se falhar, a pessoa continua na
+    // equipe e o erro fica no log.
+    await avisarEscalado(dados.evento, dados.usuario, criado.id);
 
     revalidatePath("/eventos");
     return { success: true };
@@ -550,7 +743,23 @@ export async function removerMembroEquipe(id: number) {
   await assertAccess("eventos");
   try {
     const directus = await getDirectusClient({ requireAuth: true });
+
+    // Lê o vínculo antes de apagar: depois não há como saber quem avisar.
+    const antes = (await directus.request(
+      readItems("equipe_evento", {
+        filter: { id: { _eq: id } },
+        fields: ["id", "evento", "usuario"],
+        limit: 1,
+      }),
+    )) as Array<{ id: number; evento: number | null; usuario: string | null }>;
+
     await directus.request(deleteItem("equipe_evento", id));
+
+    const vinculo = antes[0];
+    if (vinculo?.usuario && vinculo.evento) {
+      await avisarRemocao(id, vinculo.evento, vinculo.usuario);
+    }
+
     revalidatePath("/eventos");
     return { success: true };
   } catch (error) {

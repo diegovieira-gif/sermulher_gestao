@@ -106,6 +106,24 @@ test.describe("Smoke — Rotas de API exigem autorização (regressão IDOR)", (
     // Em nenhum caso deve executar campanhas (200).
     expect([401, 503]).toContain(res.status());
   });
+
+  test("POST /api/notificacoes/enviar sem segredo → bloqueado (401/503)", async ({
+    request,
+  }) => {
+    // A rota entrega e-mail e WhatsApp: aberta, seria um relay para disparar
+    // mensagem em nome da secretaria.
+    const res = await request.post("/api/notificacoes/enviar");
+    expect([401, 503]).toContain(res.status());
+  });
+
+  test("GET /api/notificacoes/enviar com segredo errado → bloqueado", async ({
+    request,
+  }) => {
+    const res = await request.get("/api/notificacoes/enviar", {
+      headers: { "x-cron-secret": "segredo-errado-de-proposito" },
+    });
+    expect([401, 503]).toContain(res.status());
+  });
 });
 
 test.describe("Smoke — Login limita tentativas (força bruta)", () => {
