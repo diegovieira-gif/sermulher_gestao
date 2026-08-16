@@ -45,7 +45,7 @@ O SerMulher utiliza ferramentas modernas para fornecer desempenho e facilidade d
 
 * **Frontend:** [Next.js 16](https://nextjs.org/) (App Router), [React 19](https://react.dev/), [Tailwind CSS v4](https://tailwindcss.com/) e componentes acessíveis com [Radix UI](https://www.radix-ui.com/).
 * **Backend:** Server Actions nativas do Next.js, eliminando intermediários complexos para chamadas seguras.
-* **Banco de Dados & CMS:** [Directus](https://directus.io/) atuando como Headless CMS e gerenciador de persistência sobre banco de dados **PostgreSQL**.
+* **Banco de Dados & CMS:** [Directus](https://directus.io/) atuando como Headless CMS e gerenciador de persistência sobre **SQLite** (`DB_CLIENT=sqlite3`) — ver a seção de Backup, que depende disso.
 * **Comunicação Directus:** Wrapper customizado (`src/lib/directus.ts`) que implementa:
   * Fetch com desabilitação de cache agressivo do Next.js.
   * Captura inteligente de tokens httpOnly baseados em cookies de sessão.
@@ -204,38 +204,62 @@ leva poucos minutos.
 
 ---
 
-## 💾 Backup do banco
+## 💾 Backup
+
+O Directus desta instalação usa **SQLite** (`DB_CLIENT=sqlite3`,
+`DB_FILENAME=/directus/database/data.db`), não PostgreSQL.
+
+O backup cobre **duas** coisas, e faltar uma inutiliza a outra:
+
+1. **`data.db`** — todas as coleções (beneficiárias, atendimentos, CRAM,
+   tramitações, equipe de evento e os vínculos entre elas).
+2. **`uploads/`** — os arquivos anexados. O banco guarda apenas a *referência*
+   ao arquivo; restaurar só o banco devolve um sistema cheio de anexos
+   quebrados.
 
 A exportação CSV das beneficiárias **não é backup**: cobre uma coleção entre
-mais de sessenta. Atendimentos, CRAM, tramitações, participações e os vínculos
-entre eles só voltam com um dump do PostgreSQL.
+mais de sessenta.
 
 Os scripts rodam **no host do Docker**, não neste repositório. Descobrem o
-contêiner do Postgres e leem as credenciais do ambiente dele — não há senha
-escrita em arquivo.
+contêiner e os volumes sozinhos — não há senha escrita em arquivo.
 
 ```bash
-# Verifica o ambiente sem gerar nada
+# Verifica o ambiente e a integridade do banco, sem gerar nada
 ./scripts/backup-directus-db.sh --verificar
 
-# Gera o backup (valida tamanho e legibilidade antes de aceitar o arquivo)
+# Gera o backup (banco + uploads), validando antes de aceitar os arquivos
 BACKUP_DIR=/var/backups/sigma ./scripts/backup-directus-db.sh
 
 # Diário às 2h — crontab -e
 0 2 * * * BACKUP_DIR=/var/backups/sigma /caminho/backup-directus-db.sh >> /var/log/sigma-backup.log 2>&1
 ```
 
-Restauração — por padrão em um banco separado, sem tocar no de produção:
+> [!NOTE]
+> A cópia usa `VACUUM INTO`, que produz um arquivo íntegro **com o Directus em
+> uso** — um `cp data.db` simples pode capturar estado inconsistente, porque
+> parte das transações vive no arquivo `-wal`.
+
+Restauração — o modo padrão **não altera nada**, apenas confere o conteúdo do
+arquivo:
 
 ```bash
-./scripts/restore-directus-db.sh /var/backups/sigma/sigma_*.dump
+# Conferência: valida integridade e mostra quantos registros há dentro
+./scripts/restore-directus-db.sh /var/backups/sigma/sigma_db_*.db
+
+# Restauração real: para o Directus, substitui o banco e religa
+UPLOADS=/var/backups/sigma/sigma_uploads_2026-08-16_020000.tgz \
+  ./scripts/restore-directus-db.sh /var/backups/sigma/sigma_db_2026-08-16_020000.db --sobrescrever
 ```
 
+A restauração real exige confirmação digitada e **guarda o estado atual** num
+arquivo `pre-restauracao_*.db` antes de substituir — para que escolher o
+backup errado ainda tenha caminho de volta.
+
 > [!WARNING]
-> Backup que nunca foi restaurado não é backup, é esperança. Rode a restauração
-> ao menos uma vez antes de precisar dela. Os dumps contêm dados pessoais de
-> mulheres em situação de violência: o diretório é criado com permissão `700` e
-> os arquivos com `600`, e `*.dump` está no `.gitignore`.
+> Backup que nunca foi restaurado não é backup, é esperança. Rode ao menos a
+> conferência antes de precisar dele de verdade. Os arquivos contêm dados
+> pessoais de mulheres em situação de violência: o diretório é criado com
+> permissão `700`, os arquivos com `600`, e `backups/` está no `.gitignore`.
 
 ---
 
