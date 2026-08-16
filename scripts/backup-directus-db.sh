@@ -25,6 +25,9 @@
 #   RETENCAO_DIAS=30 ./backup-directus-db.sh
 #   ./backup-directus-db.sh --verificar      # checa o ambiente, não gera nada
 #
+#   # Com cópia externa (ver "Cópia externa" no README):
+#   RCLONE_REMOTO=sigma-drive:SIGMA-Backups ./backup-directus-db.sh
+#
 # Cron diário às 2h (crontab -e):
 #   0 2 * * * BACKUP_DIR=/var/backups/sigma /caminho/backup-directus-db.sh >> /var/log/sigma-backup.log 2>&1
 
@@ -272,7 +275,55 @@ else
   erro "volume de uploads não identificado — backup do banco concluído SEM os anexos."
 fi
 
-# --- 8. Rotação ------------------------------------------------------------------
+# --- 8. Cópia externa (opcional) -------------------------------------------------
+#
+# O backup local mora no MESMO disco do banco: cobre exclusão acidental e
+# corrupção, não cobre perda do servidor, ransomware ou incêndio. A cópia
+# externa é o que separa "backup" de "cópia no mesmo lugar".
+#
+# Ativa-se definindo RCLONE_REMOTO (ex.: "sigma-drive:SIGMA-Backups"). Sem a
+# variável, este bloco inteiro é ignorado e nada muda.
+#
+# Falha aqui NUNCA invalida o backup local, que a essa altura já foi gerado e
+# validado — por isso todo o bloco tolera erro e apenas reporta.
+if [[ -n "${RCLONE_REMOTO:-}" ]]; then
+  if ! command -v rclone >/dev/null 2>&1; then
+    erro "RCLONE_REMOTO definido, mas o rclone não está instalado."
+    erro "O backup LOCAL está íntegro; apenas a cópia externa não foi enviada."
+  else
+    log "enviando cópia para ${RCLONE_REMOTO}…"
+
+    # `copy` (e não `sync`): sync espelharia a pasta local e poderia APAGAR no
+    # destino algo que sumiu daqui — inclusive por engano. O destino só recebe.
+    ENVIO_OK=1
+    for arquivo in "$ARQ_DB" "$ARQ_UPLOADS"; do
+      [[ -f "$arquivo" ]] || continue
+      if ! rclone copy "$arquivo" "$RCLONE_REMOTO" \
+        --contimeout 30s --timeout 5m --retries 3 --low-level-retries 5 \
+        2>/tmp/sigma-rclone-erro.txt; then
+        ENVIO_OK=0
+        erro "falha ao enviar $(basename "$arquivo"):"
+        tail -3 /tmp/sigma-rclone-erro.txt >&2 || true
+      fi
+    done
+
+    if [[ "$ENVIO_OK" -eq 1 ]]; then
+      log "cópia externa concluída"
+
+      # Rotação no destino, espelhando a retenção local. Sem isto o Drive
+      # cresce para sempre.
+      if REMOVIDOS_REMOTO=$(rclone delete "$RCLONE_REMOTO" \
+        --min-age "${RETENCAO_DIAS}d" --include 'sigma_*' \
+        --rmdirs=false -v 2>&1 | grep -c 'Deleted' || true); then
+        log "rotação remota: ${REMOVIDOS_REMOTO:-0} arquivo(s) antigo(s) removido(s)"
+      fi
+    else
+      erro "a cópia externa falhou — o backup LOCAL continua íntegro em $BACKUP_DIR."
+    fi
+  fi
+fi
+
+# --- 9. Rotação local -------------------------------------------------------------
 REMOVIDOS=$(find "$BACKUP_DIR" -maxdepth 1 \( -name 'sigma_db_*.db' -o -name 'sigma_uploads_*.tgz' \) \
   -type f -mtime +"$RETENCAO_DIAS" -print -delete | wc -l)
 log "rotação: ${REMOVIDOS} arquivo(s) com mais de ${RETENCAO_DIAS} dias removido(s)"

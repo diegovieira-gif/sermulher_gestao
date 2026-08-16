@@ -355,6 +355,59 @@ backup errado ainda tenha caminho de volta.
 > pessoais de mulheres em situação de violência: o diretório é criado com
 > permissão `700`, os arquivos com `600`, e `backups/` está no `.gitignore`.
 
+### Cópia externa (Google Drive)
+
+O backup local fica no **mesmo disco do banco**: cobre exclusão acidental e
+corrupção, não cobre perda do servidor, ransomware ou incêndio. A cópia externa
+é o que separa "backup" de "cópia no mesmo lugar".
+
+Definindo `RCLONE_REMOTO`, o script envia os dois arquivos logo após gerá-los e
+aplica a mesma retenção no destino. Sem a variável, nada muda.
+
+```bash
+RCLONE_REMOTO=sigma-drive:SIGMA-Backups /usr/local/bin/backup-sigma.sh
+```
+
+**Volume:** ~6 MB por backup; 60 dias ocupam ~360 MB. Cabe folgado na cota do
+Workspace já contratado, sem custo adicional.
+
+#### Configurando o rclone no servidor (headless)
+
+```bash
+curl https://rclone.org/install.sh | sudo bash
+rclone config
+```
+
+No assistente: `n` (novo remote) → nome `sigma-drive` → tipo `drive` → deixe
+`client_id` e `client_secret` **em branco** → escopo **`drive.file`** →
+`root_folder_id` em branco → `Edit advanced config? n` →
+**`Use web browser to automatically authenticate? n`**.
+
+Ele exibirá um comando `rclone authorize "drive" "..."`. Rode-o **em uma máquina
+com navegador**, faça login com a conta institucional, e cole de volta no
+servidor o token que aparecer.
+
+> [!IMPORTANT]
+> Use o escopo **`drive.file`**, não o `drive` completo. Com ele o rclone só
+> enxerga o que ele mesmo criou — se o token vazar, não dá acesso ao restante do
+> Drive da conta. Em compensação, a pasta de destino **precisa ser criada pelo
+> próprio rclone**: ele não enxerga pastas feitas à mão na interface.
+
+Crie a pasta e confirme o acesso:
+
+```bash
+rclone mkdir sigma-drive:SIGMA-Backups && rclone lsd sigma-drive:
+```
+
+Depois é só acrescentar a variável à linha do cron.
+
+> [!CAUTION]
+> Os arquivos vão **sem criptografia** — decisão registrada com o responsável.
+> A pasta no Drive deve ser exclusiva do backup e compartilhada com o mínimo de
+> pessoas: quem tiver acesso a ela tem acesso a todos os prontuários de uma só
+> vez. Se um dia quiser cifrar, `rclone crypt` ou GPG resolvem, com a ressalva
+> de que backup cifrado com chave perdida é backup perdido.
+
 ---
 
 ## 🤝 Suporte & Desenvolvimento
