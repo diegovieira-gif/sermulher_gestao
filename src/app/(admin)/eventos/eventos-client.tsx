@@ -30,8 +30,18 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { EventoForm } from "./evento-form";
 import { ParticipantesDialog } from "./participantes-dialog";
+import { EquipeDialog } from "./equipe-dialog";
 import { deleteEvento } from "./actions";
-import { Plus, Edit, Trash2, Calendar, Repeat, Eye, Users } from "lucide-react";
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Calendar,
+  Repeat,
+  Eye,
+  Users,
+  Briefcase,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -183,6 +193,11 @@ export function EventosClient({
   const [selectedViewEvento, setSelectedViewEvento] = useState<any | null>(null);
   // Evento cujo quadro de participantes está aberto (null = fechado).
   const [eventoParticipantes, setEventoParticipantes] = useState<{
+    id: number;
+    nome: string;
+  } | null>(null);
+  // Evento cuja equipe (servidoras que atuaram) está aberta (null = fechado).
+  const [eventoEquipe, setEventoEquipe] = useState<{
     id: number;
     nome: string;
   } | null>(null);
@@ -442,6 +457,22 @@ export function EventosClient({
                         <Button
                           variant="ghost"
                           size="icon"
+                          title="Equipe"
+                          onClick={() =>
+                            setEventoEquipe({
+                              id: evento.id,
+                              nome: evento.nome,
+                            })
+                          }
+                        >
+                          <Briefcase className="h-4 w-4 text-violet-600" />
+                          <span className="sr-only">
+                            Ver equipe de {evento.nome}
+                          </span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => handleEdit(evento)}
                         >
                           <Edit className="h-4 w-4" />
@@ -467,6 +498,12 @@ export function EventosClient({
         evento={eventoParticipantes}
         open={eventoParticipantes !== null}
         onOpenChange={(aberto) => !aberto && setEventoParticipantes(null)}
+      />
+
+      <EquipeDialog
+        evento={eventoEquipe}
+        open={eventoEquipe !== null}
+        onOpenChange={(aberto) => !aberto && setEventoEquipe(null)}
       />
 
       <EventoForm

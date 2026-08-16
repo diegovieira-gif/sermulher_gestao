@@ -191,6 +191,22 @@ Para **registrar** uma participação, use a busca por nome ou CPF dentro do qua
 
 > **Não é possível repetir.** O sistema recusa registrar a mesma beneficiária duas vezes no mesmo evento; quem já está na lista não aparece nas sugestões de busca.
 
+### Equipe de um evento
+
+Registra **quais servidoras e servidores atuaram** no evento — a equipe de trabalho, diferente das participantes atendidas.
+
+1. Na aba **Lista de Eventos**, localize o evento.
+2. Clique no botão **Equipe** (ícone de maleta, em roxo) na linha.
+3. Escolha a pessoa no campo **Servidora ou servidor** e clique em **Adicionar**.
+
+A lista do campo vem das **contas de usuário do próprio sistema** — as mesmas usadas para entrar no SIGMA. Não há cadastro separado de funcionários: quem tem acesso ao sistema já aparece aqui, pelo nome.
+
+Para tirar alguém da equipe, use o ícone de lixeira ao lado do nome. Isso remove apenas o vínculo com aquele evento — a conta de usuário da pessoa não é afetada.
+
+> **Quem já está na equipe some do campo.** Assim não há como adicionar a mesma pessoa duas vezes. Quando todo mundo já foi incluído, o campo exibe "Todos já estão na equipe".
+
+> **O histórico não se perde.** Se a conta de uma servidora for excluída do Directus mais tarde, os eventos em que ela atuou continuam registrados — a linha aparece como "Usuário removido" em vez de desaparecer.
+
 ---
 
 ## 7. Marketing e Comunicação

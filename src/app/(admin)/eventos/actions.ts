@@ -2,9 +2,15 @@
 
 import { getDirectusAdmin, getDirectusClient } from "@/lib/directus";
 import { assertAccess } from "@/lib/permissions";
-import { createItem, deleteItem, readItems, updateItem } from "@directus/sdk";
+import {
+  createItem,
+  deleteItem,
+  readItems,
+  readUsers,
+  updateItem,
+} from "@directus/sdk";
 import { revalidatePath } from "next/cache";
-import { Evento, insertEventoSchema } from "./schemas";
+import { Evento, insertEventoSchema, membroEquipeEventoSchema } from "./schemas";
 import { participacaoEventoSchema } from "../mulheres/beneficiarias/schemas";
 
 /**
@@ -397,5 +403,158 @@ export async function removerParticipanteEvento(id: number) {
   } catch (error) {
     console.error("Erro ao remover participante:", error);
     return { success: false, error: "Erro ao remover a participação." };
+  }
+}
+
+// --- Equipe do evento (servidoras que atuaram) ------------------------------
+
+export type MembroEquipe = {
+  id: number;
+  usuario: {
+    id: string;
+    first_name?: string | null;
+    last_name?: string | null;
+    email?: string | null;
+  } | null;
+};
+
+export type UsuarioParaEquipe = {
+  id: string;
+  nome: string;
+  email?: string | null;
+};
+
+/** "Sobrenome, Nome" não; aqui é o nome como a pessoa é chamada no dia a dia. */
+function nomeDoUsuario(u: {
+  first_name?: string | null;
+  last_name?: string | null;
+  email?: string | null;
+}): string {
+  const nome = [u.first_name, u.last_name].filter(Boolean).join(" ").trim();
+  return nome || u.email || "Usuário sem nome";
+}
+
+export async function getEquipeEvento(eventoId: number) {
+  await assertAccess("eventos");
+  try {
+    const directus = await getDirectusClient({ requireAuth: true });
+    const equipe = await directus.request(
+      readItems("equipe_evento", {
+        filter: { evento: { _eq: eventoId } },
+        fields: [
+          "id",
+          "usuario.id",
+          "usuario.first_name",
+          "usuario.last_name",
+          "usuario.email",
+        ],
+        sort: ["usuario.first_name"],
+        limit: -1,
+      }),
+    );
+    return { success: true, data: equipe as unknown as MembroEquipe[] };
+  } catch (error) {
+    console.error("Erro ao buscar equipe do evento:", error);
+    return { success: false, error: "Falha ao carregar a equipe." };
+  }
+}
+
+/**
+ * Usuários disponíveis para compor a equipe.
+ *
+ * Lista TODAS as contas, sem filtrar por status — decisão de produto: contas
+ * com status atípico no Directus ainda correspondem a pessoas que podem ter
+ * atuado, e esconder alguém do cadastro é pior do que oferecer uma opção a
+ * mais. A policy "App Padrão" já concede leitura de `directus_users`, então
+ * isto funciona com o token da própria usuária.
+ */
+export async function getUsuariosParaEquipe() {
+  await assertAccess("eventos");
+  try {
+    const directus = await getDirectusClient({ requireAuth: true });
+    const usuarios = (await directus.request(
+      readUsers({
+        fields: ["id", "first_name", "last_name", "email"],
+        sort: ["first_name", "last_name"],
+        limit: -1,
+      }),
+    )) as Array<{
+      id: string;
+      first_name?: string | null;
+      last_name?: string | null;
+      email?: string | null;
+    }>;
+
+    const data: UsuarioParaEquipe[] = usuarios
+      .map((u) => ({ id: u.id, nome: nomeDoUsuario(u), email: u.email }))
+      .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+
+    return { success: true, data };
+  } catch (error) {
+    console.error("Erro ao carregar usuários:", error);
+    return { success: false, data: [] as UsuarioParaEquipe[] };
+  }
+}
+
+export async function registrarMembroEquipe(input: {
+  evento: number;
+  usuario: string;
+}) {
+  await assertAccess("eventos");
+
+  const validacao = membroEquipeEventoSchema.safeParse(input);
+  if (!validacao.success) {
+    const primeiro = validacao.error.issues[0];
+    return { success: false, error: primeiro?.message || "Dados inválidos." };
+  }
+  const dados = validacao.data;
+
+  try {
+    const directus = await getDirectusClient({ requireAuth: true });
+
+    // A coleção não tem restrição de unicidade e, pela tela, repetir é fácil.
+    const jaExiste = (await directus.request(
+      readItems("equipe_evento", {
+        filter: {
+          evento: { _eq: dados.evento },
+          usuario: { _eq: dados.usuario },
+        },
+        fields: ["id"],
+        limit: 1,
+      }),
+    )) as Array<{ id: number }>;
+
+    if (jaExiste.length > 0) {
+      return {
+        success: false,
+        error: "Esta pessoa já consta na equipe deste evento.",
+      };
+    }
+
+    await directus.request(
+      createItem("equipe_evento", {
+        evento: dados.evento,
+        usuario: dados.usuario,
+      }),
+    );
+
+    revalidatePath("/eventos");
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao registrar membro da equipe:", error);
+    return { success: false, error: "Erro ao registrar na equipe." };
+  }
+}
+
+export async function removerMembroEquipe(id: number) {
+  await assertAccess("eventos");
+  try {
+    const directus = await getDirectusClient({ requireAuth: true });
+    await directus.request(deleteItem("equipe_evento", id));
+    revalidatePath("/eventos");
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao remover membro da equipe:", error);
+    return { success: false, error: "Erro ao remover da equipe." };
   }
 }

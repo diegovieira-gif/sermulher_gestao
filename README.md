@@ -151,6 +151,30 @@ Detalhes de cobertura, credenciais e armadilhas conhecidas em
 
 ---
 
+## 🗄️ Migrações do Directus
+
+O schema não é versionado por um ORM: cada mudança estrutural tem um script
+**idempotente** em `scripts/`, aplicado via API REST do Directus. Rodar duas
+vezes é seguro — o script pula o que já existe e imprime um relatório.
+
+```bash
+# Lê DIRECTUS_API_URL e DIRECTUS_TOKEN do .env.local
+node scripts/add-equipe-evento.mjs
+```
+
+> [!IMPORTANT]
+> Depois de criar uma **coleção nova**, rode também
+> `node scripts/setup-app-padrao-policy.mjs`. É ele que concede à política
+> "App Padrão" a permissão na coleção recém-criada — sem isso, perfis
+> não-administradores veem a tela vazia ou recebem erro de permissão.
+
+Ao criar campos relacionais, o script precisa registrar a relação em
+`/relations`, além de criar a coluna. Sem isso o *deep-read* devolve o UUID
+cru em vez do objeto — foi o que quebrou a coluna "Registrado por" e exigiu o
+`fix-user-created-vinculos.mjs`.
+
+---
+
 ## 🚢 Deploy
 
 > [!IMPORTANT]

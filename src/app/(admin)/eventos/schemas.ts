@@ -57,6 +57,22 @@ export const recorrenciaEnum = [
   { value: "anual", label: "Anual" },
 ] as const;
 
+/**
+ * Vínculo entre um evento e uma servidora/servidor que atuou nele.
+ *
+ * O usuário vem de `directus_users` — são as contas que já existem no sistema,
+ * não um cadastro paralelo — por isso o id é UUID, e não o inteiro dos demais
+ * relacionamentos do projeto.
+ */
+export const membroEquipeEventoSchema = z.object({
+  evento: z.coerce.number().positive({ message: "Evento inválido." }),
+  usuario: z
+    .string()
+    .uuid({ message: "Selecione uma pessoa da equipe." }),
+});
+
+export type MembroEquipeEventoInput = z.infer<typeof membroEquipeEventoSchema>;
+
 // Tipos TypeScript derivados dos schemas
 export type Evento = z.infer<typeof insertEventoSchema>;
 export type EventoFormValues = z.input<typeof insertEventoSchema>;

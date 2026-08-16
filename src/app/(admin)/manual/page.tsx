@@ -1093,6 +1093,53 @@ export default function ManualPage() {
               </Callout>
             </AccordionContent>
           </AccordionItem>
+
+          <AccordionItem value="a2">
+            <AccordionTrigger>
+              Registrar a equipe que atuou no evento{" "}
+              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25">
+                Novo
+              </Badge>
+            </AccordionTrigger>
+            <AccordionContent className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Diferente das <strong>participantes</strong> (as mulheres
+                atendidas), a <strong>equipe</strong> são as servidoras e
+                servidores que trabalharam na ação.
+              </p>
+              <Steps
+                items={[
+                  <>
+                    Na aba <strong>Lista de Eventos</strong>, localize o evento.
+                  </>,
+                  <>
+                    Clique no botão <strong>Equipe</strong> (ícone de maleta, em
+                    roxo) na linha do evento.
+                  </>,
+                  <>
+                    Escolha a pessoa no campo{" "}
+                    <strong>Servidora ou servidor</strong> e clique em{" "}
+                    <strong>Adicionar</strong>.
+                  </>,
+                ]}
+              />
+              <Callout variant="tip" title="A lista vem das contas do sistema">
+                Não há cadastro separado de funcionários: o campo lista, pelo
+                nome, as mesmas contas usadas para entrar no SIGMA. Quem ganha
+                acesso ao sistema passa a aparecer aqui automaticamente.
+              </Callout>
+              <p className="text-sm text-muted-foreground">
+                Para tirar alguém da equipe, use o ícone de lixeira ao lado do
+                nome — isso remove apenas o vínculo com aquele evento, nunca a
+                conta de usuário da pessoa.
+              </p>
+              <Callout variant="warn" title="O histórico não se perde">
+                Se a conta de uma servidora for excluída do Directus mais tarde,
+                os eventos em que ela atuou continuam registrados — a linha
+                aparece como &quot;Usuário removido&quot; em vez de desaparecer.
+              </Callout>
+            </AccordionContent>
+          </AccordionItem>
         </Accordion>
       </Section>
 

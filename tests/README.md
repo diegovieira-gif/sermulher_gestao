@@ -37,6 +37,7 @@ acrescentaria dependência e configuração sem ganho.
 | `rate-limit.spec.ts` | Limite de tentativas de login, incluindo a regressão do IP compartilhado (a secretaria inteira sai pelo mesmo IP). |
 | `csv.spec.ts` | Escape do CSV dos relatórios. Erro aqui não gera exceção: gera planilha com colunas deslocadas, percebida depois de entregue. |
 | `utils.spec.ts` | Máscaras de CPF/telefone e datas em fuso local (o bug da "data de amanhã" após as 21h). |
+| `eventos-schemas.spec.ts` | Período do evento e o vínculo de equipe — cujo usuário é **UUID**, ao contrário dos demais relacionamentos do projeto, que são inteiros. |
 
 ---
 
@@ -67,6 +68,7 @@ Cobrem o fluxo real contra o Directus. Exigem credenciais (ver abaixo).
 | `escola.spec.ts` | Cursos e turmas, incluindo turma com pré-requisito. |
 | `sala-azul.spec.ts` | Infratores e ciclos reflexivos com participante. |
 | `eventos.spec.ts` | CRUD de evento e visualização no calendário. |
+| `equipe-evento.spec.ts` | Diálogo da equipe do evento e o dropdown de usuários. |
 | `dashboard.spec.ts` | KPIs, gráfico e links. |
 | `tramitacoes.spec.ts` | Smoke do Kanban. |
 | `observatorio.spec.ts` | Busca, diálogo e abas. |
