@@ -18,10 +18,10 @@ import {
 
 /** Ícone e cor por tipo — o aviso de remoção precisa se distinguir à primeira vista. */
 const ESTILO = {
-  escala_evento: { icone: UserPlus, cor: "text-emerald-600 bg-emerald-500/10" },
-  lembrete_evento: { icone: CalendarClock, cor: "text-sky-600 bg-sky-500/10" },
-  remocao_evento: { icone: CalendarX, cor: "text-rose-600 bg-rose-500/10" },
-  alteracao_evento: { icone: Megaphone, cor: "text-amber-600 bg-amber-500/10" },
+  escala_evento: { icone: UserPlus, cor: "text-sucesso bg-sucesso/10" },
+  lembrete_evento: { icone: CalendarClock, cor: "text-info bg-info/10" },
+  remocao_evento: { icone: CalendarX, cor: "text-destructive bg-destructive/10" },
+  alteracao_evento: { icone: Megaphone, cor: "text-alerta bg-alerta/10" },
 } as const;
 
 function tempoRelativo(iso: string): string {
@@ -113,7 +113,7 @@ export function SinoNotificacoes() {
         >
           <Bell className="h-5 w-5 text-muted-foreground" />
           {naoLidas > 0 && (
-            <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
+            <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
               {naoLidas > 9 ? "9+" : naoLidas}
             </span>
           )}
