@@ -85,14 +85,14 @@ export function AudienceFilterPanel({ value, onChange, options, loadingOptions }
     return (
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
-          <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{label}</label>
+          <label className="text-xs font-semibold text-foreground">{label}</label>
           {selected.length > 0 && (
-            <span className="text-[10px] text-purple-600 font-medium">{selected.length} selec.</span>
+            <span className="text-[10px] text-purple-600 font-medium dark:text-purple-400">{selected.length} selec.</span>
           )}
         </div>
         <div className="flex flex-wrap gap-1.5">
           {opts.length === 0 ? (
-            <span className="text-[11px] text-slate-400">Sem opções</span>
+            <span className="text-[11px] text-muted-foreground">Sem opções</span>
           ) : (
             opts.map((o) => {
               const active = selected.includes(o.id);
@@ -104,8 +104,8 @@ export function AudienceFilterPanel({ value, onChange, options, loadingOptions }
                   className={cn(
                     "rounded-full border px-2.5 py-1 text-[11px] transition-colors",
                     active
-                      ? "border-purple-300 bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200"
-                      : "border-slate-200 text-slate-600 hover:bg-slate-50",
+                      ? "border-purple-300 bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200 dark:border-purple-700"
+                      : "border-border text-muted-foreground hover:bg-muted/50",
                   )}
                 >
                   {o.nome}
@@ -129,7 +129,7 @@ export function AudienceFilterPanel({ value, onChange, options, loadingOptions }
         onClick={() => patch({ [field]: v } as Partial<BeneficiariaFilter>)}
         className={cn(
           "flex-1 rounded-md px-2 py-1 text-[11px] font-medium transition-colors",
-          val === v ? "bg-purple-600 text-white" : "text-slate-600 hover:bg-slate-100",
+          val === v ? "bg-purple-600 text-white" : "text-muted-foreground hover:bg-muted",
         )}
       >
         {lbl}
@@ -137,8 +137,8 @@ export function AudienceFilterPanel({ value, onChange, options, loadingOptions }
     );
     return (
       <div className="space-y-1">
-        <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{label}</label>
-        <div className="flex items-center gap-1 rounded-lg border border-slate-200 p-0.5">
+        <label className="text-xs font-semibold text-foreground">{label}</label>
+        <div className="flex items-center gap-1 rounded-lg border border-border p-0.5">
           {opt("Qualquer", null)}
           {opt("Sim", true)}
           {opt("Não", false)}
@@ -149,7 +149,7 @@ export function AudienceFilterPanel({ value, onChange, options, loadingOptions }
 
   if (loadingOptions && !options) {
     return (
-      <div className="flex items-center justify-center gap-2 p-6 text-xs text-slate-400">
+      <div className="flex items-center justify-center gap-2 p-6 text-xs text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" /> Carregando filtros...
       </div>
     );
@@ -174,15 +174,15 @@ export function AudienceFilterPanel({ value, onChange, options, loadingOptions }
         className={cn(
           "flex w-full items-center justify-between rounded-lg border p-3 text-left transition-colors",
           value.aniversariantes_hoje
-            ? "border-purple-300 bg-purple-50 ring-1 ring-purple-300 dark:bg-purple-950/20"
-            : "border-slate-200 hover:bg-slate-50",
+            ? "border-purple-300 bg-purple-50 ring-1 ring-purple-300 dark:bg-purple-950/20 dark:border-purple-700 dark:ring-purple-700"
+            : "border-border hover:bg-muted/50",
         )}
       >
         <span className="flex flex-col">
-          <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+          <span className="text-sm font-semibold text-foreground">
             🎂 Aniversariantes de hoje
           </span>
-          <span className="text-[11px] text-slate-500">
+          <span className="text-[11px] text-muted-foreground">
             Quem faz aniversário na data de execução
           </span>
         </span>
@@ -194,7 +194,7 @@ export function AudienceFilterPanel({ value, onChange, options, loadingOptions }
             "flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border",
             value.aniversariantes_hoje
               ? "border-purple-600 bg-purple-600 text-white"
-              : "border-slate-300",
+              : "border-border",
           )}
         >
           {value.aniversariantes_hoje && <Check className="h-3 w-3" />}
@@ -203,8 +203,8 @@ export function AudienceFilterPanel({ value, onChange, options, loadingOptions }
 
       {/* Situação cadastral */}
       <div className="space-y-1">
-        <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Situação cadastral</label>
-        <div className="flex items-center gap-1 rounded-lg border border-slate-200 p-0.5">
+        <label className="text-xs font-semibold text-foreground">Situação cadastral</label>
+        <div className="flex items-center gap-1 rounded-lg border border-border p-0.5">
           {[
             { lbl: "Todas", v: "" },
             { lbl: "Ativas", v: "ativa" },
@@ -216,7 +216,7 @@ export function AudienceFilterPanel({ value, onChange, options, loadingOptions }
               onClick={() => patch({ status: s.v })}
               className={cn(
                 "flex-1 rounded-md px-2 py-1 text-[11px] font-medium transition-colors",
-                (value.status || "") === s.v ? "bg-purple-600 text-white" : "text-slate-600 hover:bg-slate-100",
+                (value.status || "") === s.v ? "bg-purple-600 text-white" : "text-muted-foreground hover:bg-muted",
               )}
             >
               {s.lbl}
@@ -228,7 +228,7 @@ export function AudienceFilterPanel({ value, onChange, options, loadingOptions }
       {/* Faixas numéricas */}
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
-          <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Idade</label>
+          <label className="text-xs font-semibold text-foreground">Idade</label>
           <div className="flex items-center gap-1.5">
             <Input
               type="number"
@@ -238,7 +238,7 @@ export function AudienceFilterPanel({ value, onChange, options, loadingOptions }
               value={value.idade_min ?? ""}
               onChange={(e) => patch({ idade_min: numOrNull(e.target.value) })}
             />
-            <span className="text-xs text-slate-400">a</span>
+            <span className="text-xs text-muted-foreground">a</span>
             <Input
               type="number"
               min={0}
@@ -250,7 +250,7 @@ export function AudienceFilterPanel({ value, onChange, options, loadingOptions }
           </div>
         </div>
         <div className="space-y-1">
-          <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Nº de filhos</label>
+          <label className="text-xs font-semibold text-foreground">Nº de filhos</label>
           <div className="flex items-center gap-1.5">
             <Input
               type="number"
@@ -260,7 +260,7 @@ export function AudienceFilterPanel({ value, onChange, options, loadingOptions }
               value={value.filhos_min ?? ""}
               onChange={(e) => patch({ filhos_min: numOrNull(e.target.value) })}
             />
-            <span className="text-xs text-slate-400">a</span>
+            <span className="text-xs text-muted-foreground">a</span>
             <Input
               type="number"
               min={0}
@@ -291,7 +291,7 @@ export function AudienceFilterPanel({ value, onChange, options, loadingOptions }
         </div>
       )}
 
-      <p className="text-[10px] text-slate-400">
+      <p className="text-[10px] text-muted-foreground">
         Apenas beneficiárias com WhatsApp cadastrado entram no envio. Critérios vazios não restringem o público.
       </p>
     </div>

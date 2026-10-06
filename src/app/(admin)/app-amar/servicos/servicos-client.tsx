@@ -140,7 +140,7 @@ export function ServicosClient({ initialData, categorias }: ServicosClientProps)
       case "published":
         return <Badge className="bg-green-600 hover:bg-green-700">Publicado</Badge>;
       case "draft":
-        return <Badge variant="secondary" className="bg-gray-200 text-gray-800 hover:bg-gray-300">Rascunho</Badge>;
+        return <Badge variant="secondary" className="bg-muted text-foreground hover:bg-gray-300">Rascunho</Badge>;
       case "archived":
         return <Badge variant="destructive">Arquivado</Badge>;
       default:
@@ -150,7 +150,7 @@ export function ServicosClient({ initialData, categorias }: ServicosClientProps)
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-4 rounded-lg shadow-sm gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-card p-4 rounded-lg shadow-sm gap-4">
         <div className="flex items-center gap-4">
           <h3 className="text-lg font-medium">Lista de Serviços</h3>
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
@@ -173,7 +173,7 @@ export function ServicosClient({ initialData, categorias }: ServicosClientProps)
         </Button>
       </div>
 
-      <div className="rounded-md border bg-white shadow-sm">
+      <div className="rounded-md border bg-card shadow-sm">
         <Table>
           <TableHeader>
             <TableRow>
@@ -234,7 +234,7 @@ export function ServicosClient({ initialData, categorias }: ServicosClientProps)
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem 
-                          className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                          className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:text-red-400 dark:focus:text-red-400 dark:focus:bg-red-950/40"
                           onClick={() => setDeleteId(servico.id)}
                         >
                           <Trash2 className="mr-2 h-4 w-4" />

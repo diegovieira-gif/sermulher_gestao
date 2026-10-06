@@ -402,7 +402,7 @@ export function BeneficiariasClient({
       {/* Título e Ação */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Beneficiárias</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Beneficiárias</h1>
           <p className="text-muted-foreground text-sm">
             Gerencie o cadastro das mulheres atendidas ({meta.total} registros).
           </p>
@@ -420,42 +420,42 @@ export function BeneficiariasClient({
 
       {/* 1. Cards de Métricas Rápidas */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow duration-200">
+        <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex items-center justify-between hover:shadow-md transition-shadow duration-200">
           <div className="space-y-1">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total</span>
-            <h3 className="text-2xl font-bold text-slate-900">{metrics.total}</h3>
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total</span>
+            <h3 className="text-2xl font-bold text-foreground">{metrics.total}</h3>
           </div>
-          <div className="h-10 w-10 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600 border border-purple-100">
+          <div className="h-10 w-10 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600 border border-purple-100 dark:bg-purple-950/40 dark:text-purple-400 dark:border-purple-900">
             <Users className="h-5 w-5" />
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow duration-200">
+        <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex items-center justify-between hover:shadow-md transition-shadow duration-200">
           <div className="space-y-1">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Medida Protetiva</span>
-            <h3 className="text-2xl font-bold text-red-600">{metrics.medidaProtetiva}</h3>
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Medida Protetiva</span>
+            <h3 className="text-2xl font-bold text-red-600 dark:text-red-400">{metrics.medidaProtetiva}</h3>
           </div>
-          <div className="h-10 w-10 rounded-lg bg-red-50 flex items-center justify-center text-red-600 border border-red-100">
+          <div className="h-10 w-10 rounded-lg bg-red-50 flex items-center justify-center text-red-600 border border-red-100 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900">
             <ShieldAlert className="h-5 w-5" />
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow duration-200">
+        <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex items-center justify-between hover:shadow-md transition-shadow duration-200">
           <div className="space-y-1">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Benefícios Sociais</span>
-            <h3 className="text-2xl font-bold text-emerald-600">{metrics.bolsaFamilia + metrics.bpc}</h3>
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Benefícios Sociais</span>
+            <h3 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{metrics.bolsaFamilia + metrics.bpc}</h3>
           </div>
-          <div className="h-10 w-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100">
+          <div className="h-10 w-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900">
             <Gift className="h-5 w-5" />
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow duration-200">
+        <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex items-center justify-between hover:shadow-md transition-shadow duration-200">
           <div className="space-y-1">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Últimos 30 dias</span>
-            <h3 className="text-2xl font-bold text-blue-600">{metrics.recentes}</h3>
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Últimos 30 dias</span>
+            <h3 className="text-2xl font-bold text-blue-600 dark:text-blue-400">{metrics.recentes}</h3>
           </div>
-          <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100">
+          <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-900">
             <Calendar className="h-5 w-5" />
           </div>
         </div>
@@ -471,10 +471,10 @@ export function BeneficiariasClient({
       />
 
       {/* Tabela de Dados */}
-      <div className="rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden relative">
+      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden relative">
         {/* 3. Indicador de Carregamento */}
         {isLoadingData && (
-          <div className="absolute inset-x-0 top-0 h-1 bg-purple-100 overflow-hidden z-10">
+          <div className="absolute inset-x-0 top-0 h-1 bg-purple-100 overflow-hidden z-10 dark:bg-purple-900/40">
             <div className="h-full bg-purple-600 animate-pulse w-1/3 rounded-full" />
           </div>
         )}
@@ -491,48 +491,48 @@ export function BeneficiariasClient({
                 />
               </TableHead>
               <TableHead
-                className="font-semibold text-slate-700 cursor-pointer select-none hover:bg-slate-100/50 transition-colors group"
+                className="font-semibold text-foreground cursor-pointer select-none hover:bg-slate-100/50 transition-colors group"
                 onClick={() => handleSort("nome_completo")}
               >
                 <div className="flex items-center gap-1.5">
                   Beneficiária
                   {currentSortField === "nome_completo" ? (
-                    currentSortOrder === "asc" ? <ArrowUp className="h-3.5 w-3.5 text-purple-600" /> : <ArrowDown className="h-3.5 w-3.5 text-purple-600" />
+                    currentSortOrder === "asc" ? <ArrowUp className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" /> : <ArrowDown className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
                   ) : (
-                    <ArrowUpDown className="h-3.5 w-3.5 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                   )}
                 </div>
               </TableHead>
-              <TableHead className="font-semibold text-slate-700">CPF</TableHead>
-              <TableHead className="font-semibold text-slate-700">Contato</TableHead>
-              <TableHead className="font-semibold text-slate-700">Localização</TableHead>
+              <TableHead className="font-semibold text-foreground">CPF</TableHead>
+              <TableHead className="font-semibold text-foreground">Contato</TableHead>
+              <TableHead className="font-semibold text-foreground">Localização</TableHead>
               <TableHead
-                className="font-semibold text-slate-700 cursor-pointer select-none hover:bg-slate-100/50 transition-colors group"
+                className="font-semibold text-foreground cursor-pointer select-none hover:bg-slate-100/50 transition-colors group"
                 onClick={() => handleSort("data_nascimento")}
               >
                 <div className="flex items-center gap-1.5">
                   Idade
                   {currentSortField === "data_nascimento" ? (
-                    currentSortOrder === "asc" ? <ArrowUp className="h-3.5 w-3.5 text-purple-600" /> : <ArrowDown className="h-3.5 w-3.5 text-purple-600" />
+                    currentSortOrder === "asc" ? <ArrowUp className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" /> : <ArrowDown className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
                   ) : (
-                    <ArrowUpDown className="h-3.5 w-3.5 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                   )}
                 </div>
               </TableHead>
               <TableHead
-                className="font-semibold text-slate-700 cursor-pointer select-none hover:bg-slate-100/50 transition-colors group"
+                className="font-semibold text-foreground cursor-pointer select-none hover:bg-slate-100/50 transition-colors group"
                 onClick={() => handleSort("created_at")}
               >
                 <div className="flex items-center gap-1.5">
                   Cadastro
                   {currentSortField === "created_at" ? (
-                    currentSortOrder === "asc" ? <ArrowUp className="h-3.5 w-3.5 text-purple-600" /> : <ArrowDown className="h-3.5 w-3.5 text-purple-600" />
+                    currentSortOrder === "asc" ? <ArrowUp className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" /> : <ArrowDown className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
                   ) : (
-                    <ArrowUpDown className="h-3.5 w-3.5 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                   )}
                 </div>
               </TableHead>
-              <TableHead className="text-right font-semibold text-slate-700">Ações</TableHead>
+              <TableHead className="text-right font-semibold text-foreground">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -551,7 +551,7 @@ export function BeneficiariasClient({
                   key={b.id}
                   className={cn(
                     "hover:bg-slate-50/40 transition-colors duration-200",
-                    selectedIds.includes(b.id) && "bg-purple-50/25 hover:bg-purple-50/35",
+                    selectedIds.includes(b.id) && "bg-purple-50/25 hover:bg-purple-50/35 dark:bg-purple-950/25 dark:hover:bg-purple-950/35",
                     isLoadingData && "opacity-60"
                   )}
                 >
@@ -565,7 +565,7 @@ export function BeneficiariasClient({
                   </TableCell>
                   <TableCell className="font-medium py-3">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 text-purple-800 font-semibold text-xs border border-purple-200/50 shadow-sm">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 text-purple-800 font-semibold text-xs border border-purple-200/50 shadow-sm dark:from-purple-900/40 dark:to-indigo-900/40 dark:text-purple-200 dark:border-purple-800">
                         {getInitials(b.nome_completo)}
                       </div>
                       <div className="flex flex-col">
@@ -575,34 +575,34 @@ export function BeneficiariasClient({
                             de um botão que aparentava ser só de visualização. */}
                         <Link
                           href={`/mulheres/beneficiarias/${b.id}`}
-                          className="font-semibold text-slate-900 leading-none hover:text-purple-700 hover:underline"
+                          className="font-semibold text-foreground leading-none hover:text-purple-700 hover:underline dark:hover:text-purple-300"
                           title="Abrir ficha completa"
                         >
                           {b.nome_completo}
                         </Link>
                         {isValidNomeSocial(b.nome_social) && (
-                          <span className="text-xs text-slate-500 mt-1 italic">
+                          <span className="text-xs text-muted-foreground mt-1 italic">
                             Nome social: {b.nome_social}
                           </span>
                         )}
                         <div className="flex flex-wrap gap-1 mt-1.5 items-center">
                           {!!b.possui_medida_protetiva && (
-                            <Badge className="bg-red-50 text-red-700 border border-red-200 text-[10px] py-0 px-1.5 font-medium hover:bg-red-50">
+                            <Badge className="bg-red-50 text-red-700 border border-red-200 text-[10px] py-0 px-1.5 font-medium hover:bg-red-50 dark:bg-red-950/40 dark:text-red-300 dark:border-red-800 dark:hover:bg-red-950/40">
                               Medida Protetiva
                             </Badge>
                           )}
                           {!!b.recebe_bolsa_familia && (
-                            <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] py-0 px-1.5 font-medium hover:bg-emerald-50">
+                            <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] py-0 px-1.5 font-medium hover:bg-emerald-50 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800 dark:hover:bg-emerald-950/40">
                               Bolsa Família
                             </Badge>
                           )}
                           {!!b.recebe_bpc && (
-                            <Badge className="bg-blue-50 text-blue-700 border border-blue-200 text-[10px] py-0 px-1.5 font-medium hover:bg-blue-50">
+                            <Badge className="bg-blue-50 text-blue-700 border border-blue-200 text-[10px] py-0 px-1.5 font-medium hover:bg-blue-50 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800 dark:hover:bg-blue-950/40">
                               BPC
                             </Badge>
                           )}
                           {b.origem_dado === "importacao_odoo" && (
-                            <Badge className="bg-amber-50 text-amber-700 border border-amber-200 text-[10px] py-0 px-1.5 font-medium hover:bg-amber-50">
+                            <Badge className="bg-amber-50 text-amber-700 border border-amber-200 text-[10px] py-0 px-1.5 font-medium hover:bg-amber-50 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800 dark:hover:bg-amber-950/40">
                               Importado
                             </Badge>
                           )}
@@ -610,16 +610,16 @@ export function BeneficiariasClient({
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="font-mono text-xs text-slate-600">
+                  <TableCell className="font-mono text-xs text-muted-foreground">
                     {maskCPF(b.cpf)}
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col">
-                      <span className="flex items-center gap-1 text-slate-800 text-sm font-medium">
+                      <span className="flex items-center gap-1 text-foreground text-sm font-medium">
                         {maskPhone(b.telefone)}
                         {b.telefone_validado && (
                           <LucideBadgeCheck
-                            className="h-4 w-4 text-emerald-600 shrink-0"
+                            className="h-4 w-4 text-emerald-600 shrink-0 dark:text-emerald-400"
                             aria-label="Telefone validado"
                           >
                             <title>Telefone validado</title>
@@ -627,7 +627,7 @@ export function BeneficiariasClient({
                         )}
                       </span>
                       {b.email && (
-                        <span className="text-xs text-slate-400 font-normal mt-0.5 truncate max-w-[180px]">
+                        <span className="text-xs text-muted-foreground font-normal mt-0.5 truncate max-w-[180px]">
                           {b.email}
                         </span>
                       )}
@@ -635,21 +635,21 @@ export function BeneficiariasClient({
                   </TableCell>
                   <TableCell>
                     {b.endereco?.cidade || b.endereco?.bairro ? (
-                      <div className="flex items-start gap-1 text-slate-800 text-sm">
-                        <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0 mt-0.5" />
+                      <div className="flex items-start gap-1 text-foreground text-sm">
+                        <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
                         <div className="flex flex-col">
                           <span className="font-medium leading-none">{b.endereco.bairro || "-"}</span>
-                          <span className="text-slate-500 text-xs mt-1">{b.endereco.cidade || "-"}</span>
+                          <span className="text-muted-foreground text-xs mt-1">{b.endereco.cidade || "-"}</span>
                         </div>
                       </div>
                     ) : (
-                      <span className="text-gray-400 text-sm">-</span>
+                      <span className="text-muted-foreground text-sm">-</span>
                     )}
                   </TableCell>
                   <TableCell>
                     {b.data_nascimento ? (
                       <div className="flex flex-col">
-                        <span className="text-slate-800 text-sm font-medium">
+                        <span className="text-foreground text-sm font-medium">
                           {(() => {
                             const today = new Date();
                             const birthDate = new Date(b.data_nascimento);
@@ -664,29 +664,29 @@ export function BeneficiariasClient({
                             return age + " anos";
                           })()}
                         </span>
-                        <span className="text-slate-400 text-xs font-mono mt-0.5">
+                        <span className="text-muted-foreground text-xs font-mono mt-0.5">
                           {formatDateDisplay(b.data_nascimento)}
                         </span>
                       </div>
                     ) : (
-                      <span className="text-gray-400">-</span>
+                      <span className="text-muted-foreground">-</span>
                     )}
                   </TableCell>
                   <TableCell>
                     {b.created_at ? (
                       <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-1.5 text-slate-900 text-sm font-semibold">
-                          <Calendar className="h-4 w-4 text-slate-400 shrink-0" />
+                        <div className="flex items-center gap-1.5 text-foreground text-sm font-semibold">
+                          <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
                           <span>{formatDateDisplay(b.created_at)}</span>
                         </div>
                         {b.updated_at && (
-                          <span className="text-xs text-slate-400 pl-[22px]">
+                          <span className="text-xs text-muted-foreground pl-[22px]">
                             Atu: {formatDateDisplay(b.updated_at)}
                           </span>
                         )}
                       </div>
                     ) : (
-                      <span className="text-gray-400">-</span>
+                      <span className="text-muted-foreground">-</span>
                     )}
                   </TableCell>
 
@@ -696,7 +696,7 @@ export function BeneficiariasClient({
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-full"
+                        className="h-8 w-8 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-full dark:text-purple-400 dark:hover:text-purple-300 dark:hover:bg-purple-950/40"
                         title="Visualizar Resumo"
                         onClick={() => setPreviewBeneficiaria(b)}
                       >
@@ -706,7 +706,7 @@ export function BeneficiariasClient({
                         asChild
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-full"
+                        className="h-8 w-8 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-full dark:text-indigo-400 dark:hover:text-indigo-300 dark:hover:bg-indigo-950/40"
                         title="Ficha completa"
                       >
                         <Link href={`/mulheres/beneficiarias/${b.id}`}>
@@ -724,7 +724,7 @@ export function BeneficiariasClient({
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded-full"
+                            className="h-8 w-8 text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded-full dark:text-teal-400 dark:hover:text-teal-300 dark:hover:bg-teal-950/40"
                             title="Vínculos: benefícios, eventos e cursos"
                           >
                             <Link2 className="h-4 w-4" />
@@ -765,7 +765,7 @@ export function BeneficiariasClient({
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-full"
+                        className="h-8 w-8 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-full dark:text-amber-400 dark:hover:text-amber-300 dark:hover:bg-amber-950/40"
                         onClick={() => handleEditClick(b)}
                         aria-label="Editar"
                         title="Editar"
@@ -775,7 +775,7 @@ export function BeneficiariasClient({
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-full"
+                        className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-full dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950/40"
                         onClick={() => handleDeleteClick(b.id)}
                         aria-label="Excluir"
                         title="Excluir"
@@ -794,7 +794,7 @@ export function BeneficiariasClient({
       {/* Paginação */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500">Itens por página:</span>
+          <span className="text-sm text-muted-foreground">Itens por página:</span>
           <Select
             value={String(meta.limit)}
             onValueChange={(value) => {
@@ -805,7 +805,7 @@ export function BeneficiariasClient({
               router.push(`${pathname}?${params.toString()}`);
             }}
           >
-            <SelectTrigger className="w-[70px] h-8 bg-white border-slate-200">
+            <SelectTrigger className="w-[70px] h-8 bg-card border-border">
               <SelectValue placeholder={String(meta.limit)} />
             </SelectTrigger>
             <SelectContent>
@@ -818,7 +818,7 @@ export function BeneficiariasClient({
           </Select>
         </div>
 
-        <div className="text-sm text-gray-500">
+        <div className="text-sm text-muted-foreground">
           Mostrando <strong>{(meta.page - 1) * meta.limit + 1}</strong> a{" "}
           <strong>{Math.min(meta.page * meta.limit, meta.total)}</strong> de{" "}
           <strong>{meta.total}</strong> resultados
@@ -829,7 +829,7 @@ export function BeneficiariasClient({
             size="sm"
             onClick={() => handlePageChange(meta.page - 1)}
             disabled={meta.page <= 1}
-            className="border-slate-200 text-slate-700 hover:bg-slate-50"
+            className="border-border text-foreground hover:bg-muted/50"
           >
             <ChevronLeft className="h-4 w-4 mr-1" /> Anterior
           </Button>
@@ -841,7 +841,7 @@ export function BeneficiariasClient({
             size="sm"
             onClick={() => handlePageChange(meta.page + 1)}
             disabled={meta.page >= meta.totalPages}
-            className="border-slate-200 text-slate-700 hover:bg-slate-50"
+            className="border-border text-foreground hover:bg-muted/50"
           >
             Próximo <ChevronRight className="h-4 w-4 ml-1" />
           </Button>
@@ -896,43 +896,43 @@ export function BeneficiariasClient({
             <div className="space-y-6 pt-4">
               <SheetHeader className="text-left">
                 <div className="flex items-center gap-4">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 text-purple-800 font-bold text-lg border border-purple-200/50 shadow-sm">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 text-purple-800 font-bold text-lg border border-purple-200/50 shadow-sm dark:from-purple-900/40 dark:to-indigo-900/40 dark:text-purple-200 dark:border-purple-800">
                     {getInitials(previewBeneficiaria.nome_completo)}
                   </div>
                   <div>
-                    <SheetTitle className="text-xl font-bold text-slate-900 leading-tight">
+                    <SheetTitle className="text-xl font-bold text-foreground leading-tight">
                       {previewBeneficiaria.nome_completo}
                     </SheetTitle>
                     {isValidNomeSocial(previewBeneficiaria.nome_social) && (
-                      <p className="text-xs text-slate-500 mt-0.5 italic">
+                      <p className="text-xs text-muted-foreground mt-0.5 italic">
                         Nome social: {previewBeneficiaria.nome_social}
                       </p>
                     )}
                   </div>
                 </div>
-                <SheetDescription className="pt-2 text-slate-400 text-xs">
+                <SheetDescription className="pt-2 text-muted-foreground text-xs">
                   Resumo cadastral da beneficiária.
                 </SheetDescription>
               </SheetHeader>
 
-              <div className="border-t border-slate-100 my-4" />
+              <div className="border-t border-border my-4" />
 
               {/* Status Badges */}
               <div className="flex flex-wrap gap-2">
                  {!!previewBeneficiaria.possui_medida_protetiva && (
-                  <Badge className="bg-red-50 text-red-700 border border-red-200 font-semibold text-xs py-1 px-2.5 hover:bg-red-50">
+                  <Badge className="bg-red-50 text-red-700 border border-red-200 font-semibold text-xs py-1 px-2.5 hover:bg-red-50 dark:bg-red-950/40 dark:text-red-300 dark:border-red-800 dark:hover:bg-red-950/40">
                     <ShieldAlert className="h-3.5 w-3.5 mr-1" />
                     Medida Protetiva
                   </Badge>
                 )}
                 {!!previewBeneficiaria.recebe_bolsa_familia && (
-                  <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold text-xs py-1 px-2.5 hover:bg-emerald-50">
+                  <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold text-xs py-1 px-2.5 hover:bg-emerald-50 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800 dark:hover:bg-emerald-950/40">
                     <Gift className="h-3.5 w-3.5 mr-1" />
                     Bolsa Família
                   </Badge>
                 )}
                 {!!previewBeneficiaria.recebe_bpc && (
-                  <Badge className="bg-blue-50 text-blue-700 border border-blue-200 font-semibold text-xs py-1 px-2.5 hover:bg-blue-50">
+                  <Badge className="bg-blue-50 text-blue-700 border border-blue-200 font-semibold text-xs py-1 px-2.5 hover:bg-blue-50 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800 dark:hover:bg-blue-950/40">
                     <Gift className="h-3.5 w-3.5 mr-1" />
                     BPC
                   </Badge>
@@ -941,15 +941,15 @@ export function BeneficiariasClient({
 
               {/* Informações Básicas */}
               <div className="space-y-4">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Dados Pessoais</h4>
-                <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Dados Pessoais</h4>
+                <div className="grid grid-cols-2 gap-4 bg-muted/50 p-4 rounded-xl border border-border">
                   <div>
-                    <span className="text-[10px] font-semibold text-slate-500 uppercase">CPF</span>
-                    <p className="text-sm font-medium text-slate-800">{formatCPF(previewBeneficiaria.cpf)}</p>
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase">CPF</span>
+                    <p className="text-sm font-medium text-foreground">{formatCPF(previewBeneficiaria.cpf)}</p>
                   </div>
                   <div>
-                    <span className="text-[10px] font-semibold text-slate-500 uppercase">Idade / Nasc.</span>
-                    <p className="text-sm font-medium text-slate-800">
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase">Idade / Nasc.</span>
+                    <p className="text-sm font-medium text-foreground">
                       {previewBeneficiaria.data_nascimento ? (
                         <>
                           {(() => {
@@ -962,7 +962,7 @@ export function BeneficiariasClient({
                             }
                             return `${age} anos`;
                           })()}{" "}
-                          <span className="text-slate-400 text-xs font-mono">
+                          <span className="text-muted-foreground text-xs font-mono">
                             ({formatDateDisplay(previewBeneficiaria.data_nascimento)})
                           </span>
                         </>
@@ -972,12 +972,12 @@ export function BeneficiariasClient({
                     </p>
                   </div>
                   <div>
-                    <span className="text-[10px] font-semibold text-slate-500 uppercase">Telefone</span>
-                    <p className="text-sm font-medium text-slate-800">{formatPhone(previewBeneficiaria.telefone)}</p>
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase">Telefone</span>
+                    <p className="text-sm font-medium text-foreground">{formatPhone(previewBeneficiaria.telefone)}</p>
                   </div>
                   <div>
-                    <span className="text-[10px] font-semibold text-slate-500 uppercase">E-mail</span>
-                    <p className="text-sm font-medium text-slate-800 truncate max-w-[150px]" title={previewBeneficiaria.email}>
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase">E-mail</span>
+                    <p className="text-sm font-medium text-foreground truncate max-w-[150px]" title={previewBeneficiaria.email}>
                       {previewBeneficiaria.email || "-"}
                     </p>
                   </div>
@@ -986,16 +986,16 @@ export function BeneficiariasClient({
 
               {/* Endereço */}
               <div className="space-y-4">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Endereço</h4>
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3">
+                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Endereço</h4>
+                <div className="bg-muted/50 p-4 rounded-xl border border-border space-y-3">
                   <div className="flex gap-2">
-                    <MapPin className="h-4 w-4 text-slate-400 shrink-0 mt-0.5" />
+                    <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-sm font-medium text-slate-800">
+                      <p className="text-sm font-medium text-foreground">
                         {previewBeneficiaria.endereco?.logradouro || "-"}
                         {previewBeneficiaria.endereco?.numero ? `, nº ${previewBeneficiaria.endereco.numero}` : ""}
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-muted-foreground">
                         {previewBeneficiaria.endereco?.bairro || "-"} — {previewBeneficiaria.endereco?.cidade || "-"}
                       </p>
                     </div>
@@ -1005,26 +1005,26 @@ export function BeneficiariasClient({
 
               {/* Informações de Cadastro */}
               <div className="space-y-4">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Histórico</h4>
-                <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Histórico</h4>
+                <div className="grid grid-cols-2 gap-4 bg-muted/50 p-4 rounded-xl border border-border">
                   <div>
-                    <span className="text-[10px] font-semibold text-slate-500 uppercase">Data Cadastro</span>
-                    <p className="text-xs font-medium text-slate-800 flex items-center gap-1 mt-0.5">
-                      <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase">Data Cadastro</span>
+                    <p className="text-xs font-medium text-foreground flex items-center gap-1 mt-0.5">
+                      <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
                       {formatDateDisplay(previewBeneficiaria.created_at)}
                     </p>
                   </div>
                   <div>
-                    <span className="text-[10px] font-semibold text-slate-500 uppercase">Última Atualização</span>
-                    <p className="text-xs font-medium text-slate-800 flex items-center gap-1 mt-0.5">
-                      <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase">Última Atualização</span>
+                    <p className="text-xs font-medium text-foreground flex items-center gap-1 mt-0.5">
+                      <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
                       {formatDateDisplay(previewBeneficiaria.updated_at)}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="border-t border-slate-100 my-4" />
+              <div className="border-t border-border my-4" />
 
               <div className="flex gap-3">
                 <Link href={`/mulheres/beneficiarias/${previewBeneficiaria.id}`} className="flex-1">
@@ -1035,7 +1035,7 @@ export function BeneficiariasClient({
                 </Link>
                 <Button
                   variant="outline"
-                  className="flex-1 font-medium border-slate-200 text-slate-700"
+                  className="flex-1 font-medium border-border text-foreground"
                   onClick={() => {
                     setPreviewBeneficiaria(null);
                     handleEditClick(previewBeneficiaria);

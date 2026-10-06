@@ -172,20 +172,20 @@ export function MarketingClient({
   const getChannelIcon = (canal: string) => {
     switch (canal) {
       case "Instagram":
-        return <Instagram className="w-4 h-4 text-pink-600" />;
+        return <Instagram className="w-4 h-4 text-pink-600 dark:text-pink-400" />;
       case "Facebook":
-        return <Facebook className="w-4 h-4 text-blue-600" />;
+        return <Facebook className="w-4 h-4 text-blue-600 dark:text-blue-400" />;
       case "Site PMA":
       case "Site SERMULHER":
-        return <Globe className="w-4 h-4 text-green-600" />;
+        return <Globe className="w-4 h-4 text-green-600 dark:text-green-400" />;
       case "Jornal":
-        return <Newspaper className="w-4 h-4 text-gray-600" />;
+        return <Newspaper className="w-4 h-4 text-muted-foreground" />;
       case "TV":
-        return <Tv className="w-4 h-4 text-orange-600" />;
+        return <Tv className="w-4 h-4 text-orange-600 dark:text-orange-400" />;
       case "Rádio":
-        return <Radio className="w-4 h-4 text-yellow-600" />;
+        return <Radio className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />;
       default:
-        return <Monitor className="w-4 h-4 text-gray-500" />;
+        return <Monitor className="w-4 h-4 text-muted-foreground" />;
     }
   };
 
@@ -235,18 +235,18 @@ export function MarketingClient({
         </Card>
 
         {stats.topAlcance && (
-          <Card className="bg-gradient-to-br from-yellow-50 to-orange-50 border-orange-200">
+          <Card className="bg-gradient-to-br from-yellow-50 to-orange-50 border-orange-200 dark:from-yellow-950/40 dark:to-orange-950/40 dark:border-orange-800">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-orange-800">
+              <CardTitle className="text-sm font-medium text-orange-800 dark:text-orange-200">
                 Top Alcance
               </CardTitle>
-              <Trophy className="h-4 w-4 text-orange-600" />
+              <Trophy className="h-4 w-4 text-orange-600 dark:text-orange-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-lg font-bold truncate text-orange-900">
+              <div className="text-lg font-bold truncate text-orange-900 dark:text-orange-100">
                 {stats.topAlcance.alcance.toLocaleString("pt-BR")}
               </div>
-              <p className="text-xs text-orange-700 truncate max-w-[180px]">
+              <p className="text-xs text-orange-700 truncate max-w-[180px] dark:text-orange-300">
                 {stats.topAlcance.titulo}
               </p>
             </CardContent>
@@ -268,7 +268,7 @@ export function MarketingClient({
                 <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
                 <Tooltip
                   cursor={{ fill: 'transparent' }}
-                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  contentStyle={{ backgroundColor: 'var(--popover)', color: 'var(--popover-foreground)', borderRadius: '8px', border: '1px solid var(--border)', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                 />
                 <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                   {stats.postsPorCanal.map((entry, index) => (
@@ -491,7 +491,7 @@ export function MarketingClient({
                             href={item.link}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="ml-2 text-blue-500 hover:text-blue-700 inline-flex items-center"
+                            className="ml-2 text-blue-500 hover:text-blue-700 inline-flex items-center dark:hover:text-blue-300"
                           >
                             <ExternalLink className="w-3 h-3" />
                           </a>

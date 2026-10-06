@@ -38,24 +38,24 @@ export function DashboardClient({ stats }: DashboardClientProps) {
       value: kpis.totalBeneficiarias.toLocaleString("pt-BR"),
       icon: Users,
       color: "bg-purple-500",
-      lightColor: "bg-purple-50",
-      textColor: "text-purple-600",
+      lightColor: "bg-purple-50 dark:bg-purple-950/40",
+      textColor: "text-purple-600 dark:text-purple-400",
     },
     {
       title: "Casos Ativos",
       value: kpis.atendimentosEmAndamento.toLocaleString("pt-BR"),
       icon: Activity,
       color: "bg-pink-500",
-      lightColor: "bg-pink-50",
-      textColor: "text-pink-600",
+      lightColor: "bg-pink-50 dark:bg-pink-950/40",
+      textColor: "text-pink-600 dark:text-pink-400",
     },
     {
       title: "Novos Este Mês",
       value: kpis.novosAtendimentosMes.toLocaleString("pt-BR"),
       icon: Calendar,
       color: "bg-violet-500",
-      lightColor: "bg-violet-50",
-      textColor: "text-violet-600",
+      lightColor: "bg-violet-50 dark:bg-violet-950/40",
+      textColor: "text-violet-600 dark:text-violet-400",
     },
   ];
 
@@ -63,21 +63,21 @@ export function DashboardClient({ stats }: DashboardClientProps) {
   const getStatusColor = (status: string) => {
     const statusLower = status.toLowerCase();
     if (statusLower.includes("andamento")) {
-      return "bg-blue-100 text-blue-800";
+      return "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200";
     }
     if (
       statusLower.includes("concluído") ||
       statusLower.includes("concluido")
     ) {
-      return "bg-green-100 text-green-800";
+      return "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200";
     }
     if (statusLower.includes("aberto")) {
-      return "bg-yellow-100 text-yellow-800";
+      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200";
     }
     if (statusLower.includes("arquivado")) {
-      return "bg-gray-100 text-gray-800";
+      return "bg-muted text-foreground";
     }
-    return "bg-gray-100 text-gray-800";
+    return "bg-muted text-foreground";
   };
 
   return (
@@ -132,10 +132,10 @@ export function DashboardClient({ stats }: DashboardClientProps) {
                 </Pie>
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
+                    backgroundColor: "var(--card)",
+                    border: "1px solid var(--border)",
                     borderRadius: "8px",
-                    color: "hsl(var(--foreground))",
+                    color: "var(--foreground)",
                   }}
                   formatter={(value: number | undefined) => [
                     `${value || 0} casos`,

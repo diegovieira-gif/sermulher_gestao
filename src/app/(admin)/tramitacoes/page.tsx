@@ -24,7 +24,7 @@ export default async function TramitacoesPage() {
     <div className="flex-1 p-6 md:p-8 pt-6 h-[calc(100vh-60px)] flex flex-col overflow-hidden">
       <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
             Fluxo de Trabalho
           </h1>
           <p className="text-muted-foreground">

@@ -298,7 +298,7 @@ export function EventosTab({
                           legítimo (reposição, atendimento posterior). Quem sabe
                           é a técnica — o sistema só sinaliza o provável engano. */}
                       {foraDoPeriodo(eventoSelecionado, field.value || "") && (
-                        <p className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800">
+                        <p className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
                           <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                           Esta data está fora do período do evento. Confirme se
                           está correta.

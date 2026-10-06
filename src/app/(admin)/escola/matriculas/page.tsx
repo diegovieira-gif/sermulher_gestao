@@ -24,11 +24,11 @@ export default async function MatriculasGlobalPage() {
     <div className="p-6 space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <Users className="h-6 w-6 text-primary" />
             Matrículas Gerais
           </h1>
-          <p className="text-gray-500">
+          <p className="text-muted-foreground">
             Visão unificada de todas as alunas em todas as turmas.
           </p>
         </div>
@@ -37,7 +37,7 @@ export default async function MatriculasGlobalPage() {
       <Card>
         <CardHeader>
           <div className="relative w-full max-w-sm">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Buscar (esta tela exibe as últimas 100)..."
               className="pl-9"
@@ -62,7 +62,7 @@ export default async function MatriculasGlobalPage() {
                 <TableRow>
                   <TableCell
                     colSpan={6}
-                    className="text-center py-8 text-gray-500"
+                    className="text-center py-8 text-muted-foreground"
                   >
                     Nenhuma matrícula encontrada.
                   </TableCell>

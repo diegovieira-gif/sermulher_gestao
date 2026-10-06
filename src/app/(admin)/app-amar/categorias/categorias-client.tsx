@@ -107,7 +107,7 @@ export function CategoriasClient({ initialData }: CategoriasClientProps) {
       case "published":
         return <Badge className="bg-green-600 hover:bg-green-700">Publicado</Badge>;
       case "draft":
-        return <Badge variant="secondary" className="bg-gray-200 text-gray-800 hover:bg-gray-300">Rascunho</Badge>;
+        return <Badge variant="secondary" className="bg-muted text-foreground hover:bg-gray-300">Rascunho</Badge>;
       case "archived":
         return <Badge variant="destructive">Arquivado</Badge>;
       default:
@@ -117,7 +117,7 @@ export function CategoriasClient({ initialData }: CategoriasClientProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm">
+      <div className="flex justify-between items-center bg-card p-4 rounded-lg shadow-sm">
         <h3 className="text-lg font-medium">Lista de Categorias</h3>
         <Button onClick={handleCreateNew}>
           <Plus className="mr-2 h-4 w-4" />
@@ -125,7 +125,7 @@ export function CategoriasClient({ initialData }: CategoriasClientProps) {
         </Button>
       </div>
 
-      <div className="rounded-md border bg-white shadow-sm">
+      <div className="rounded-md border bg-card shadow-sm">
         <Table>
           <TableHeader>
             <TableRow>
@@ -154,7 +154,7 @@ export function CategoriasClient({ initialData }: CategoriasClientProps) {
                     {categoria.cor_hex ? (
                       <div className="flex items-center gap-2">
                         <div 
-                          className="w-4 h-4 rounded-full border border-gray-200" 
+                          className="w-4 h-4 rounded-full border border-border" 
                           style={{ backgroundColor: categoria.cor_hex }} 
                         />
                         <span className="text-xs text-muted-foreground font-mono">{categoria.cor_hex}</span>
@@ -192,7 +192,7 @@ export function CategoriasClient({ initialData }: CategoriasClientProps) {
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem 
-                          className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                          className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:text-red-400 dark:focus:text-red-400 dark:focus:bg-red-950/40"
                           onClick={() => setDeleteId(categoria.id)}
                         >
                           <Trash2 className="mr-2 h-4 w-4" />

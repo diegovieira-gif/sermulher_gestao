@@ -100,8 +100,8 @@ export default async function AppAmarPage() {
     <div className="p-6 space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">App Amar</h1>
-          <p className="text-gray-500">
+          <h1 className="text-2xl font-bold text-foreground">App Amar</h1>
+          <p className="text-muted-foreground">
             Painel de gestão de conteúdo e relacionamento do aplicativo.
           </p>
         </div>
@@ -116,7 +116,7 @@ export default async function AppAmarPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-slate-900">{item.total}</p>
+              <p className="text-2xl font-bold text-foreground">{item.total}</p>
             </CardContent>
           </Card>
         ))}

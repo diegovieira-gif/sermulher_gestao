@@ -28,8 +28,8 @@ export default async function EscolaDashboardPage() {
     <div className="p-6 space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Escola da Mulher</h1>
-          <p className="text-gray-500">
+          <h1 className="text-2xl font-bold text-foreground">Escola da Mulher</h1>
+          <p className="text-muted-foreground">
             Gestão de qualificação profissional e autonomia.
           </p>
         </div>
@@ -56,10 +56,10 @@ export default async function EscolaDashboardPage() {
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Total de Alunas
             </CardTitle>
-            <GraduationCap className="h-4 w-4 text-emerald-600" />
+            <GraduationCap className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-emerald-700">
+            <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
               {stats.totalAlunos}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
@@ -76,7 +76,7 @@ export default async function EscolaDashboardPage() {
             <BookOpen className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-700">
+            <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
               {stats.turmasAtivas}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
@@ -90,10 +90,10 @@ export default async function EscolaDashboardPage() {
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Certificados Emitidos
             </CardTitle>
-            <Award className="h-4 w-4 text-amber-600" />
+            <Award className="h-4 w-4 text-amber-600 dark:text-amber-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-amber-700">
+            <div className="text-2xl font-bold text-amber-700 dark:text-amber-300">
               {stats.alunosCertificados}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
@@ -117,7 +117,7 @@ export default async function EscolaDashboardPage() {
           <CardContent className="grid gap-4">
             <Link href="/escola/turmas">
               <Button className="w-full justify-start gap-3" variant="outline" size="lg">
-                <div className="p-2 bg-emerald-100 rounded-full text-emerald-600">
+                <div className="p-2 bg-emerald-100 rounded-full text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400">
                   <GraduationCap className="h-5 w-5" />
                 </div>
                 <div className="flex flex-col items-start">
@@ -141,7 +141,7 @@ export default async function EscolaDashboardPage() {
             </Link>
             <Link href="/escola/turmas?status=concluida">
               <Button className="w-full justify-start gap-3" variant="outline" size="lg">
-                <div className="p-2 bg-amber-100 rounded-full text-amber-600">
+                <div className="p-2 bg-amber-100 rounded-full text-amber-600 dark:bg-amber-900/40 dark:text-amber-400">
                   <Award className="h-5 w-5" />
                 </div>
                 <div className="flex flex-col items-start">

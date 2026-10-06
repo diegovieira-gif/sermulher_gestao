@@ -102,7 +102,7 @@ export function CursosClient({ initialData }: CursosClientProps) {
         return (
           <Badge
             variant="secondary"
-            className="bg-gray-200 text-gray-800 hover:bg-gray-300"
+            className="bg-muted text-foreground hover:bg-gray-300"
           >
             Rascunho
           </Badge>
@@ -114,7 +114,7 @@ export function CursosClient({ initialData }: CursosClientProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm">
+      <div className="flex justify-between items-center bg-card p-4 rounded-lg shadow-sm">
         <h3 className="text-lg font-medium">Lista de Cursos</h3>
         <Button onClick={handleCreateNew}>
           <Plus className="mr-2 h-4 w-4" />
@@ -122,7 +122,7 @@ export function CursosClient({ initialData }: CursosClientProps) {
         </Button>
       </div>
 
-      <div className="rounded-md border bg-white shadow-sm">
+      <div className="rounded-md border bg-card shadow-sm">
         <Table>
           <TableHeader>
             <TableRow>
@@ -159,7 +159,7 @@ export function CursosClient({ initialData }: CursosClientProps) {
                         href={curso.link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-purple-600 hover:underline inline-flex items-center gap-1"
+                        className="text-purple-600 hover:underline inline-flex items-center gap-1 dark:text-purple-400"
                       >
                         Abrir <ExternalLink className="h-3 w-3" />
                       </a>
@@ -189,7 +189,7 @@ export function CursosClient({ initialData }: CursosClientProps) {
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                          className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:text-red-400 dark:focus:text-red-400 dark:focus:bg-red-950/40"
                           onClick={() => setDeleteId(curso.id)}
                         >
                           {" "}

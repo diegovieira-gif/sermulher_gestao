@@ -83,7 +83,7 @@ export function ResultadosClient({ performance }: ResultadosClientProps) {
                   <div className="flex items-center gap-3">
                     {/* Barra de progresso visual */}
                     <div className="flex-1">
-                      <div className="h-2 w-full rounded-full bg-gray-200 overflow-hidden">
+                      <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
                         <div
                           className={`h-full transition-all ${
                             item.frequencia_percentual >= 75
@@ -104,12 +104,12 @@ export function ResultadosClient({ performance }: ResultadosClientProps) {
                 {/* Status (Aprovada/Reprovada) */}
                 <TableCell className="text-center">
                   {item.aprovada ? (
-                    <div className="flex items-center justify-center gap-2 text-green-600">
+                    <div className="flex items-center justify-center gap-2 text-green-600 dark:text-green-400">
                       <CheckCircle2 className="h-5 w-5" />
                       <span className="text-sm font-semibold">Aprovada</span>
                     </div>
                   ) : (
-                    <div className="flex items-center justify-center gap-2 text-red-600">
+                    <div className="flex items-center justify-center gap-2 text-red-600 dark:text-red-400">
                       <XCircle className="h-5 w-5" />
                       <span className="text-sm font-semibold">Reprovada</span>
                     </div>
@@ -149,17 +149,17 @@ export function ResultadosClient({ performance }: ResultadosClientProps) {
         </div>
 
         {/* Aprovadas */}
-        <div className="rounded-md border p-4 border-green-200 bg-green-50">
-          <p className="text-sm text-green-600">Aprovadas</p>
-          <p className="text-2xl font-bold text-green-600">
+        <div className="rounded-md border p-4 border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/40">
+          <p className="text-sm text-green-600 dark:text-green-400">Aprovadas</p>
+          <p className="text-2xl font-bold text-green-600 dark:text-green-400">
             {performance.filter((p) => p.aprovada).length}
           </p>
         </div>
 
         {/* Reprovadas */}
-        <div className="rounded-md border p-4 border-red-200 bg-red-50">
-          <p className="text-sm text-red-600">Reprovadas</p>
-          <p className="text-2xl font-bold text-red-600">
+        <div className="rounded-md border p-4 border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/40">
+          <p className="text-sm text-red-600 dark:text-red-400">Reprovadas</p>
+          <p className="text-2xl font-bold text-red-600 dark:text-red-400">
             {performance.filter((p) => !p.aprovada).length}
           </p>
         </div>

@@ -159,7 +159,7 @@ export function PiaPanel({ atendimentoId, beneficiariaId, piaInicial }: PiaPanel
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold uppercase tracking-wide text-slate-700">
+          <CardTitle className="text-sm font-semibold uppercase tracking-wide text-foreground">
             Plano Individual de Atendimento
           </CardTitle>
         </CardHeader>
@@ -195,7 +195,7 @@ export function PiaPanel({ atendimentoId, beneficiariaId, piaInicial }: PiaPanel
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold uppercase tracking-wide text-slate-700">
+          <CardTitle className="text-sm font-semibold uppercase tracking-wide text-foreground">
             Pactuações com a usuária
           </CardTitle>
         </CardHeader>
@@ -278,7 +278,7 @@ export function PiaPanel({ atendimentoId, beneficiariaId, piaInicial }: PiaPanel
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold uppercase tracking-wide text-slate-700">
+          <CardTitle className="text-sm font-semibold uppercase tracking-wide text-foreground">
             Formas de participação da assistida
           </CardTitle>
         </CardHeader>
@@ -330,13 +330,13 @@ export function PiaPanel({ atendimentoId, beneficiariaId, piaInicial }: PiaPanel
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold uppercase tracking-wide text-slate-700">
+          <CardTitle className="text-sm font-semibold uppercase tracking-wide text-foreground">
             Evolução do acompanhamento técnico
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {!form.watch("id") && (
-            <p className="rounded-md bg-amber-50 p-3 text-sm text-amber-800">
+            <p className="rounded-md bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
               Salve o plano individual acima para habilitar o registro de evoluções.
             </p>
           )}

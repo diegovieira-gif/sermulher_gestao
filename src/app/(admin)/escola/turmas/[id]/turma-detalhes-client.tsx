@@ -435,7 +435,7 @@ export function TurmaDetalhesClient({
                                 );
                               }}
                             >
-                              <Check className="mr-2 h-4 w-4 text-emerald-600" />
+                              <Check className="mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                               Aprovar
                             </DropdownMenuItem>
                             <DropdownMenuItem
@@ -448,7 +448,7 @@ export function TurmaDetalhesClient({
                                 );
                               }}
                             >
-                              <X className="mr-2 h-4 w-4 text-red-600" />
+                              <X className="mr-2 h-4 w-4 text-red-600 dark:text-red-400" />
                               Reprovar
                             </DropdownMenuItem>
                             <DropdownMenuItem
@@ -461,7 +461,7 @@ export function TurmaDetalhesClient({
                                 );
                               }}
                             >
-                              <LogOut className="mr-2 h-4 w-4 text-yellow-600" />
+                              <LogOut className="mr-2 h-4 w-4 text-yellow-600 dark:text-yellow-400" />
                               🏃 Evadiu
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />

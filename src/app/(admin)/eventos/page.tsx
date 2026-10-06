@@ -61,10 +61,10 @@ export default async function EventosPage({
     <div className="p-6 h-screen flex flex-col bg-gray-50/50">
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-foreground">
             Agenda Institucional
           </h1>
-          <p className="text-gray-500">
+          <p className="text-muted-foreground">
             Gestão de eventos, campanhas e calendário escolar unificado.
           </p>
         </div>
@@ -79,7 +79,7 @@ export default async function EventosPage({
           className="h-full flex flex-col"
         >
           <div className="flex items-center justify-between mb-4">
-            <TabsList className="bg-white border shadow-sm">
+            <TabsList className="bg-card border shadow-sm">
               <TabsTrigger
                 value="calendario"
                 className="gap-2 data-[state=active]:bg-purple-50 data-[state=active]:text-purple-700"
@@ -102,7 +102,7 @@ export default async function EventosPage({
             value="calendario"
             className="flex-1 mt-0 min-h-0 overflow-hidden animate-in fade-in duration-300"
           >
-            <div className="h-full border rounded-xl bg-white shadow-sm overflow-hidden">
+            <div className="h-full border rounded-xl bg-card shadow-sm overflow-hidden">
               <EventosCalendarioClient
                 initialEvents={globalEventsResult.data || []}
                 tiposEventoOptions={tiposOptions}
@@ -115,7 +115,7 @@ export default async function EventosPage({
             value="lista"
             className="flex-1 mt-0 min-h-0 overflow-hidden animate-in fade-in duration-300"
           >
-            <div className="bg-white border rounded-xl shadow-sm p-4 h-full overflow-y-auto custom-scrollbar">
+            <div className="bg-card border rounded-xl shadow-sm p-4 h-full overflow-y-auto custom-scrollbar">
               <EventosClient
                 eventos={eventosTabela}
                 tiposEventoOptions={tiposOptions}

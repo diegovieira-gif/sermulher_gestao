@@ -66,11 +66,11 @@ function formatarData(data: string | Date): string {
 function getStatusBadge(status: string) {
   switch (status) {
     case StatusSala.PLANEJADA:
-      return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Planejada</Badge>;
+      return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800">Planejada</Badge>;
     case StatusSala.EM_ANDAMENTO:
-      return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Em Andamento</Badge>;
+      return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-950/40 dark:text-green-300 dark:border-green-800">Em Andamento</Badge>;
     case StatusSala.FINALIZADA:
-      return <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-200">Finalizada</Badge>;
+      return <Badge variant="outline" className="bg-muted text-foreground border-border">Finalizada</Badge>;
     default:
       return <Badge variant="outline">{status}</Badge>;
   }

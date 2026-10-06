@@ -86,7 +86,7 @@ function Secao({ titulo, children }: { titulo: string; children: ReactNode }) {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-semibold uppercase tracking-wide text-slate-700">
+        <CardTitle className="text-sm font-semibold uppercase tracking-wide text-foreground">
           {titulo}
         </CardTitle>
       </CardHeader>
@@ -144,7 +144,7 @@ function GrupoCheckbox({
                 return (
                   <label
                     key={opcao}
-                    className="flex cursor-pointer items-start gap-2 rounded-md border border-transparent p-1 hover:border-slate-200"
+                    className="flex cursor-pointer items-start gap-2 rounded-md border border-transparent p-1 hover:border-border"
                   >
                     <Checkbox
                       checked={marcado}
@@ -1018,9 +1018,9 @@ export function CramForm({
 
           {/* ---------------- ABA 4: Parte III ---------------- */}
           <TabsContent value="psicologico" className="space-y-4 pt-4">
-            <Card className="border-red-200 bg-red-50/40">
+            <Card className="border-red-200 bg-red-50/40 dark:border-red-800 dark:bg-red-950/40">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold uppercase tracking-wide text-red-800">
+                <CardTitle className="text-sm font-semibold uppercase tracking-wide text-red-800 dark:text-red-200">
                   Avaliação de risco
                 </CardTitle>
               </CardHeader>
@@ -1031,7 +1031,7 @@ export function CramForm({
                     control={form.control}
                     name={`risco.${pergunta.key}`}
                     render={({ field }) => (
-                      <FormItem className="grid grid-cols-1 items-center gap-3 border-b border-red-100 pb-3 last:border-0 md:grid-cols-[2fr_220px]">
+                      <FormItem className="grid grid-cols-1 items-center gap-3 border-b border-red-100 pb-3 last:border-0 md:grid-cols-[2fr_220px] dark:border-red-900">
                         <FormLabel className="text-sm font-medium leading-snug">
                           {pergunta.label}
                         </FormLabel>

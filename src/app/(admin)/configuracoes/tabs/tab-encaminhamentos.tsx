@@ -37,7 +37,7 @@ export function TabEncaminhamentos({ data }: TabEncaminhamentosProps) {
           key: "grupo_rma",
           label: "Grupo RMA",
           render: (item) => (
-            <span className="capitalize px-2 py-1 bg-slate-100 rounded text-xs">
+            <span className="capitalize px-2 py-1 bg-muted rounded text-xs">
               {item.grupo_rma?.replace("_", " ") || "-"}
             </span>
           ),

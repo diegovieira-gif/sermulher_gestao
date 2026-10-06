@@ -30,23 +30,23 @@ const CORES: Record<
 > = {
   completa: {
     barra: "bg-emerald-500",
-    texto: "text-emerald-700",
-    fundo: "bg-emerald-50 border-emerald-200",
+    texto: "text-emerald-700 dark:text-emerald-300",
+    fundo: "bg-emerald-50 border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-800",
   },
   boa: {
     barra: "bg-teal-500",
-    texto: "text-teal-700",
-    fundo: "bg-teal-50 border-teal-200",
+    texto: "text-teal-700 dark:text-teal-300",
+    fundo: "bg-teal-50 border-teal-200 dark:bg-teal-950/40 dark:border-teal-800",
   },
   parcial: {
     barra: "bg-amber-500",
-    texto: "text-amber-700",
-    fundo: "bg-amber-50 border-amber-200",
+    texto: "text-amber-700 dark:text-amber-300",
+    fundo: "bg-amber-50 border-amber-200 dark:bg-amber-950/40 dark:border-amber-800",
   },
   inicial: {
     barra: "bg-slate-400",
-    texto: "text-slate-700",
-    fundo: "bg-slate-50 border-slate-200",
+    texto: "text-foreground",
+    fundo: "bg-muted/50 border-border",
   },
 };
 
@@ -88,9 +88,9 @@ export function CompletudeDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {completa ? (
-              <CheckCircle2 className="size-5 text-emerald-600" />
+              <CheckCircle2 className="size-5 text-emerald-600 dark:text-emerald-400" />
             ) : (
-              <Sparkles className="size-5 text-teal-600" />
+              <Sparkles className="size-5 text-teal-600 dark:text-teal-400" />
             )}
             {novoCadastro ? "Cadastro realizado" : "Cadastro atualizado"}
           </DialogTitle>
@@ -125,7 +125,7 @@ export function CompletudeDialog({
           </div>
 
           {resumo.telefonePendenteValidacao && (
-            <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+            <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
               <PhoneOff className="mt-0.5 size-4 shrink-0" />
               <span>
                 O telefone ainda não foi <strong>validado</strong>. Marque
@@ -166,7 +166,7 @@ export function CompletudeDialog({
               )}
             </div>
           ) : (
-            <p className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+            <p className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200">
               Todos os campos acompanhados estão preenchidos. Uma ficha completa
               alimenta corretamente os relatórios e o alcance das campanhas.
             </p>

@@ -222,15 +222,15 @@ export function IndicadoresClient({ dados, mesInicial, anoInicial }: Indicadores
             </Card>
 
             {/* PRINTABLE AREA */}
-            <div id="print-area" className="max-w-[210mm] mx-auto bg-white min-h-[297mm] p-6 space-y-8">
+            <div id="print-area" className="papel max-w-[210mm] mx-auto bg-card min-h-[297mm] p-6 space-y-8">
 
                 {/* REPORT HEADER */}
                 <div className="text-center border-b-2 border-slate-800 pb-4">
                     <h1 className="text-xl font-bold uppercase">Prefeitura Municipal de Aracaju</h1>
-                    <h2 className="text-lg font-semibold uppercase text-slate-600 mt-1">SERMULHER</h2>
-                    <h3 className="text-sm font-semibold uppercase text-slate-500 mt-1">Secretaria Municipal do Respeito às Políticas para as Mulheres</h3>
-                    <div className="mt-4 bg-slate-100 py-2 border rounded-md">
-                        <h3 className="text-lg font-bold text-slate-900 border-2 border-slate-900 inline-block px-4 py-1">
+                    <h2 className="text-lg font-semibold uppercase text-muted-foreground mt-1">SERMULHER</h2>
+                    <h3 className="text-sm font-semibold uppercase text-muted-foreground mt-1">Secretaria Municipal do Respeito às Políticas para as Mulheres</h3>
+                    <div className="mt-4 bg-muted py-2 border rounded-md">
+                        <h3 className="text-lg font-bold text-foreground border-2 border-slate-900 inline-block px-4 py-1">
                             RELATÓRIO DE INDICADORES DE GESTÃO - CRAM
                         </h3>
                         {/* Correção: Trocado p por div para evitar erro de hidratação/nesting */}
@@ -242,12 +242,12 @@ export function IndicadoresClient({ dados, mesInicial, anoInicial }: Indicadores
 
                 {/* BLOCO 1 & 2: Identificação e Demanda */}
                 <section className="break-inside-avoid">
-                    <h4 className="text-sm font-bold uppercase bg-slate-200 p-2 border-l-4 border-pink-600 mb-4">
+                    <h4 className="text-sm font-bold uppercase bg-muted p-2 border-l-4 border-pink-600 mb-4">
                         1. Identificação da Demanda
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div className="border rounded-lg p-4">
-                            <h5 className="text-xs font-bold uppercase text-slate-500 mb-2">Origem dos Atendimentos</h5>
+                            <h5 className="text-xs font-bold uppercase text-muted-foreground mb-2">Origem dos Atendimentos</h5>
                             <div className="h-[200px] w-full">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={dados.identificacao.porOrigem} layout="vertical" margin={{ left: 20 }}>
@@ -263,7 +263,7 @@ export function IndicadoresClient({ dados, mesInicial, anoInicial }: Indicadores
                         </div>
 
                         <div className="border rounded-lg p-4">
-                            <h5 className="text-xs font-bold uppercase text-slate-500 mb-2">Tipo de Demanda</h5>
+                            <h5 className="text-xs font-bold uppercase text-muted-foreground mb-2">Tipo de Demanda</h5>
                             <div className="flex items-center justify-center h-[200px]">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
@@ -288,7 +288,7 @@ export function IndicadoresClient({ dados, mesInicial, anoInicial }: Indicadores
                         </div>
 
                         <div className="border rounded-lg p-4">
-                            <h5 className="text-xs font-bold uppercase text-slate-500 mb-2">Ações por Setor</h5>
+                            <h5 className="text-xs font-bold uppercase text-muted-foreground mb-2">Ações por Setor</h5>
                             <div className="h-[200px] w-full">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={dados.acoes.porSetor} layout="vertical" margin={{ left: 20 }}>
@@ -307,37 +307,37 @@ export function IndicadoresClient({ dados, mesInicial, anoInicial }: Indicadores
 
                 {/* BLOCO 3: Ações (Resumo Numérico) */}
                 <section className="break-inside-avoid">
-                    <h4 className="text-sm font-bold uppercase bg-slate-200 p-2 border-l-4 border-primary mb-4">
+                    <h4 className="text-sm font-bold uppercase bg-muted p-2 border-l-4 border-primary mb-4">
                         2. Resumo das Ações Técnicas
                     </h4>
                     <div className="grid grid-cols-3 gap-4 text-center">
-                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 dark:bg-blue-950/40 dark:border-blue-900">
                             <p className="text-xs font-bold text-primary uppercase mb-1">Total de Atendimentos</p>
-                            <div className="text-3xl font-black text-slate-800">{dados.acoes.atendimentosTecnicos.total}</div>
-                            <div className="text-[10px] text-slate-500 mt-1 flex justify-center gap-2">
+                            <div className="text-3xl font-black text-foreground">{dados.acoes.atendimentosTecnicos.total}</div>
+                            <div className="text-[10px] text-muted-foreground mt-1 flex justify-center gap-2">
                                 <span>IND: <b>{dados.acoes.atendimentosTecnicos.individual}</b></span>
                                 <span>|</span>
                                 <span>COL: <b>{dados.acoes.atendimentosTecnicos.coletivo}</b></span>
                             </div>
                         </div>
 
-                        <div className="bg-emerald-50 p-4 rounded-lg border border-emerald-100">
-                            <p className="text-xs font-bold text-emerald-600 uppercase mb-1">Escola de Capacitação</p>
-                            <div className="text-3xl font-black text-slate-800">{dados.acoes.educacao.turmasAtivas}</div>
-                            <p className="text-[10px] text-slate-500 mt-1">Turmas Ativas no Mês</p>
+                        <div className="bg-emerald-50 p-4 rounded-lg border border-emerald-100 dark:bg-emerald-950/40 dark:border-emerald-900">
+                            <p className="text-xs font-bold text-emerald-600 uppercase mb-1 dark:text-emerald-400">Escola de Capacitação</p>
+                            <div className="text-3xl font-black text-foreground">{dados.acoes.educacao.turmasAtivas}</div>
+                            <p className="text-[10px] text-muted-foreground mt-1">Turmas Ativas no Mês</p>
                         </div>
 
-                        <div className="bg-violet-50 p-4 rounded-lg border border-violet-100">
-                            <p className="text-xs font-bold text-violet-600 uppercase mb-1">Ações de Rede</p>
-                            <div className="text-3xl font-black text-slate-800">{dados.acoes.eventos.reunioesRede}</div>
-                            <p className="text-[10px] text-slate-500 mt-1">Reuniões com a Rede</p>
+                        <div className="bg-violet-50 p-4 rounded-lg border border-violet-100 dark:bg-violet-950/40 dark:border-violet-900">
+                            <p className="text-xs font-bold text-violet-600 uppercase mb-1 dark:text-violet-400">Ações de Rede</p>
+                            <div className="text-3xl font-black text-foreground">{dados.acoes.eventos.reunioesRede}</div>
+                            <p className="text-[10px] text-muted-foreground mt-1">Reuniões com a Rede</p>
                         </div>
                     </div>
                 </section>
 
                 {/* BLOCO 14: Perfil das Usuárias */}
                 <section className="break-inside-avoid">
-                    <h4 className="text-sm font-bold uppercase bg-slate-200 p-2 border-l-4 border-purple-600 mb-4">
+                    <h4 className="text-sm font-bold uppercase bg-muted p-2 border-l-4 border-purple-600 mb-4">
                         3. Perfil das Usuárias Atendidas
                     </h4>
                     <div className="grid grid-cols-2 gap-6">
@@ -376,34 +376,34 @@ export function IndicadoresClient({ dados, mesInicial, anoInicial }: Indicadores
 
                 {/* BLOCO 12: Comunicação e Marketing */}
                 <section className="break-inside-avoid">
-                    <h4 className="text-sm font-bold uppercase bg-slate-200 p-2 border-l-4 border-orange-500 mb-4">
+                    <h4 className="text-sm font-bold uppercase bg-muted p-2 border-l-4 border-orange-500 mb-4">
                         4. Comunicação Social
                     </h4>
 
                     <div className="grid grid-cols-4 gap-4 mb-4">
-                        <Card className="shadow-none border bg-orange-50/50">
+                        <Card className="shadow-none border bg-orange-50/50 dark:bg-orange-950/50">
                             <CardContent className="p-4 flex flex-col items-center">
-                                <Share2 className="w-5 h-5 text-orange-600 mb-2" />
+                                <Share2 className="w-5 h-5 text-orange-600 mb-2 dark:text-orange-400" />
                                 <span className="text-2xl font-bold">{dados.comunicacao.totalPosts}</span>
                                 <span className="text-[10px] uppercase text-muted-foreground">Postagens</span>
                             </CardContent>
                         </Card>
-                        <Card className="shadow-none border bg-orange-50/50">
+                        <Card className="shadow-none border bg-orange-50/50 dark:bg-orange-950/50">
                             <CardContent className="p-4 flex flex-col items-center">
-                                <Globe className="w-5 h-5 text-orange-600 mb-2" />
+                                <Globe className="w-5 h-5 text-orange-600 mb-2 dark:text-orange-400" />
                                 <span className="text-2xl font-bold">{dados.comunicacao.alcanceTotal.toLocaleString()}</span>
                                 <span className="text-[10px] uppercase text-muted-foreground">Alcance Total</span>
                             </CardContent>
                         </Card>
-                        <Card className="col-span-2 shadow-none border bg-white flex items-center">
+                        <Card className="col-span-2 shadow-none border bg-card flex items-center">
                             <CardContent className="p-4 w-full">
                                 <div className="flex justify-between items-start">
                                     <div>
-                                        <span className="text-[10px] uppercase text-muted-foreground bg-orange-100 text-orange-800 px-1 rounded">Top Post</span>
+                                        <span className="text-[10px] uppercase text-muted-foreground bg-orange-100 text-orange-800 px-1 rounded dark:bg-orange-900/40 dark:text-orange-200">Top Post</span>
                                         <p className="font-bold text-sm line-clamp-2 mt-1">{dados.comunicacao.topPost?.titulo || "Nenhum post registrado"}</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-lg font-bold text-orange-600">{dados.comunicacao.topPost?.alcance.toLocaleString() || 0}</p>
+                                        <p className="text-lg font-bold text-orange-600 dark:text-orange-400">{dados.comunicacao.topPost?.alcance.toLocaleString() || 0}</p>
                                         <p className="text-[10px] text-muted-foreground">Alcance</p>
                                     </div>
                                 </div>
@@ -420,30 +420,30 @@ export function IndicadoresClient({ dados, mesInicial, anoInicial }: Indicadores
                     <div className="border-2 border-slate-800 p-0">
                         <table className="w-full text-sm border-collapse">
                             <tbody>
-                                <tr className="border-b border-slate-300 bg-slate-100">
-                                    <td className="p-2 font-bold border-r border-slate-300 w-2/3">TOTAL DE AÇÕES REALIZADAS (Atendimentos + Turmas + Reuniões)</td>
+                                <tr className="border-b border-border bg-muted">
+                                    <td className="p-2 font-bold border-r border-border w-2/3">TOTAL DE AÇÕES REALIZADAS (Atendimentos + Turmas + Reuniões)</td>
                                     <td className="p-2 text-right font-black text-lg">
                                         {dados.acoes.atendimentosTecnicos.total + dados.acoes.educacao.turmasAtivas + dados.acoes.eventos.total}
                                     </td>
                                 </tr>
-                                <tr className="border-b border-slate-300">
-                                    <td className="p-2 border-r border-slate-300 pl-4">• Atendimentos Individuais</td>
+                                <tr className="border-b border-border">
+                                    <td className="p-2 border-r border-border pl-4">• Atendimentos Individuais</td>
                                     <td className="p-2 text-right">{dados.acoes.atendimentosTecnicos.individual}</td>
                                 </tr>
-                                <tr className="border-b border-slate-300">
-                                    <td className="p-2 border-r border-slate-300 pl-4">• Atividades Coletivas (Oficinas/Grupos)</td>
+                                <tr className="border-b border-border">
+                                    <td className="p-2 border-r border-border pl-4">• Atividades Coletivas (Oficinas/Grupos)</td>
                                     <td className="p-2 text-right">{dados.acoes.atendimentosTecnicos.coletivo}</td>
                                 </tr>
-                                <tr className="border-b border-slate-300">
-                                    <td className="p-2 border-r border-slate-300 pl-4">• Encaminhamentos Realizados (Rede)</td>
+                                <tr className="border-b border-border">
+                                    <td className="p-2 border-r border-border pl-4">• Encaminhamentos Realizados (Rede)</td>
                                     <td className="p-2 text-right">{dados.acoes.atendimentosTecnicos.encaminhamentos}</td>
                                 </tr>
-                                <tr className="border-b border-slate-300">
-                                    <td className="p-2 border-r border-slate-300 pl-4">• Devolutivas / Retornos</td>
+                                <tr className="border-b border-border">
+                                    <td className="p-2 border-r border-border pl-4">• Devolutivas / Retornos</td>
                                     <td className="p-2 text-right">{dados.acoes.atendimentosTecnicos.devolutivas}</td>
                                 </tr>
-                                <tr className="border-b border-slate-300 bg-slate-50">
-                                    <td className="p-2 font-bold border-r border-slate-300">TOTAL DE NOVOS CASOS (Triagem)</td>
+                                <tr className="border-b border-border bg-muted/50">
+                                    <td className="p-2 font-bold border-r border-border">TOTAL DE NOVOS CASOS (Triagem)</td>
                                     <td className="p-2 text-right font-bold">{dados.identificacao.totalAtendimentos}</td>
                                 </tr>
                             </tbody>

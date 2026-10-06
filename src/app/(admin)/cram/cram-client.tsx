@@ -56,16 +56,16 @@ const formatarCpf = (cpf?: string) => {
 };
 
 const CORES_RISCO: Record<string, string> = {
-  Alto: "bg-red-100 text-red-800 border-red-200",
-  Médio: "bg-amber-100 text-amber-800 border-amber-200",
-  Baixo: "bg-yellow-50 text-yellow-800 border-yellow-200",
-  "Sem sinais": "bg-slate-100 text-slate-600 border-slate-200",
+  Alto: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/40 dark:text-red-200 dark:border-red-800",
+  Médio: "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/40 dark:text-amber-200 dark:border-amber-800",
+  Baixo: "bg-yellow-50 text-yellow-800 border-yellow-200 dark:bg-yellow-950/40 dark:text-yellow-200 dark:border-yellow-800",
+  "Sem sinais": "bg-muted text-muted-foreground border-border",
 };
 
 const CORES_STATUS: Record<string, string> = {
-  "Em preenchimento": "bg-blue-50 text-blue-700 border-blue-200",
-  Concluído: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  Arquivado: "bg-slate-100 text-slate-600 border-slate-200",
+  "Em preenchimento": "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800",
+  Concluído: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800",
+  Arquivado: "bg-muted text-muted-foreground border-border",
 };
 
 interface CramClientProps {

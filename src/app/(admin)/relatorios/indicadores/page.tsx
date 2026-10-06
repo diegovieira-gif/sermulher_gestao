@@ -17,7 +17,7 @@ export default async function IndicadoresPage({
 
     if (!success || !data) {
         return (
-            <div className="p-8 text-center text-red-600">
+            <div className="p-8 text-center text-red-600 dark:text-red-400">
                 <h2 className="text-xl font-bold">Erro ao carregar indicadores</h2>
                 <p>Não foi possível processar os dados para o período selecionado.</p>
             </div>
