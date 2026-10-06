@@ -61,3 +61,7 @@ node_modules/
 # Áudio e vídeo gerados pelo pipeline de aulas — artefatos, não fonte
 docs/aulas/audio/
 docs/aulas/video/
+
+# Listas de usuárias e senhas iniciais do scripts/cadastrar-usuarios.mjs —
+# dados pessoais e credenciais, nunca versionar
+/scripts/dados/
