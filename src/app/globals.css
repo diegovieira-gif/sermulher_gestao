@@ -3,15 +3,30 @@
 @plugin "tailwindcss-animate";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+/*
+  Tema escuro por CLASSE: o script anti-flash (`lib/tema.ts`) liga `.dark` no
+  <html>. `:where` dá especificidade zero e casa com o próprio <html> também.
+
+  Só na TELA: impressão sai sempre clara. Relatórios e certificados são papel,
+  e uma página impressa do modo escuro gastaria toner pintando fundo.
+*/
+@custom-variant dark {
+  @media screen {
+    &:where(.dark, .dark *) {
+      @slot;
+    }
+  }
+}
 
 /*
-  SERMULHER — Tema claro, leve e profissional.
+  SERMULHER — Tema claro (padrão) e escuro.
   Canvas levemente acinzentado, cards brancos, acento violeta da marca.
   Fonte única da verdade: tokens em :root consumidos por @theme inline.
 */
 :root {
   --radius: 0.65rem;
+  /* controles NATIVOS (select, date, scrollbar) seguem o tema */
+  color-scheme: light;
 
   /* superfícies */
   --background: oklch(0.972 0.004 300);
@@ -56,6 +71,71 @@
   --sidebar-accent-foreground: oklch(0.42 0.13 300);
   --sidebar-border: oklch(0.92 0.006 300);
   --sidebar-ring: oklch(0.53 0.21 300);
+
+  /* status — use com opacidade para versões suaves: bg-sucesso/10 */
+  --sucesso: oklch(0.60 0.145 162);
+  --sucesso-foreground: oklch(0.99 0 0);
+  --alerta: oklch(0.67 0.17 60);
+  --alerta-foreground: oklch(0.99 0 0);
+  --info: oklch(0.59 0.155 240);
+  --info-foreground: oklch(0.99 0 0);
+}
+
+/*
+  Tema ESCURO — mesma família violeta, superfícies em grafite arroxeado.
+  O primário clareia (L 0.53 → 0.70) para manter contraste sobre fundo escuro,
+  e por isso o texto SOBRE ele passa a ser escuro.
+*/
+@media screen {
+  .dark {
+    color-scheme: dark;
+
+    --background: oklch(0.17 0.014 296);
+    --foreground: oklch(0.95 0.008 300);
+    --card: oklch(0.215 0.017 296);
+    --card-foreground: oklch(0.95 0.008 300);
+    --popover: oklch(0.235 0.019 296);
+    --popover-foreground: oklch(0.95 0.008 300);
+
+    --primary: oklch(0.70 0.17 300);
+    --primary-foreground: oklch(0.16 0.03 300);
+
+    --secondary: oklch(0.27 0.02 298);
+    --secondary-foreground: oklch(0.92 0.01 300);
+    --muted: oklch(0.26 0.018 298);
+    --muted-foreground: oklch(0.72 0.02 297);
+    --accent: oklch(0.30 0.06 300);
+    --accent-foreground: oklch(0.88 0.08 300);
+
+    --destructive: oklch(0.63 0.2 23);
+    --destructive-foreground: oklch(0.99 0 0);
+
+    --border: oklch(1 0 0 / 11%);
+    --input: oklch(1 0 0 / 15%);
+    --ring: oklch(0.70 0.17 300);
+
+    --chart-1: oklch(0.70 0.17 300);
+    --chart-2: oklch(0.72 0.12 200);
+    --chart-3: oklch(0.78 0.14 75);
+    --chart-4: oklch(0.70 0.18 12);
+    --chart-5: oklch(0.72 0.13 160);
+
+    --sidebar: oklch(0.195 0.016 296);
+    --sidebar-foreground: oklch(0.90 0.01 300);
+    --sidebar-primary: oklch(0.70 0.17 300);
+    --sidebar-primary-foreground: oklch(0.16 0.03 300);
+    --sidebar-accent: oklch(0.28 0.05 300);
+    --sidebar-accent-foreground: oklch(0.90 0.07 300);
+    --sidebar-border: oklch(1 0 0 / 9%);
+    --sidebar-ring: oklch(0.70 0.17 300);
+
+    --sucesso: oklch(0.72 0.15 162);
+    --sucesso-foreground: oklch(0.17 0.03 162);
+    --alerta: oklch(0.79 0.15 75);
+    --alerta-foreground: oklch(0.2 0.04 70);
+    --info: oklch(0.72 0.13 238);
+    --info-foreground: oklch(0.17 0.03 240);
+  }
 }
 
 @theme inline {
@@ -98,6 +178,12 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-sucesso: var(--sucesso);
+  --color-sucesso-foreground: var(--sucesso-foreground);
+  --color-alerta: var(--alerta);
+  --color-alerta-foreground: var(--alerta-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
 }
 
 @layer base {
@@ -121,17 +207,17 @@
     height: 10px;
   }
   *::-webkit-scrollbar-thumb {
-    background-color: oklch(0 0 0 / 14%);
+    background-color: color-mix(in oklch, var(--foreground) 16%, transparent);
     border-radius: 9999px;
     border: 2px solid transparent;
     background-clip: content-box;
   }
   *::-webkit-scrollbar-thumb:hover {
-    background-color: oklch(0 0 0 / 22%);
+    background-color: color-mix(in oklch, var(--foreground) 26%, transparent);
   }
 
   ::selection {
-    background: oklch(0.53 0.21 300 / 22%);
+    background: color-mix(in oklch, var(--primary) 26%, transparent);
   }
 }
 

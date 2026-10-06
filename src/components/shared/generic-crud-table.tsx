@@ -249,7 +249,7 @@ export function GenericCrudTable({
                         <Badge
                           variant={isActive ? "default" : "secondary"}
                           className={
-                            isActive ? "bg-green-600 hover:bg-green-700" : ""
+                            isActive ? "bg-sucesso text-sucesso-foreground hover:bg-sucesso/90" : ""
                           }
                         >
                           {isActive ? "Ativo" : "Inativo"}

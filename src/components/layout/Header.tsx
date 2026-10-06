@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SinoNotificacoes } from "@/components/layout/SinoNotificacoes";
+import { AlternadorDeTema } from "@/components/layout/AlternadorDeTema";
 
 interface HeaderProps {
   title: string;
@@ -51,6 +52,8 @@ export function Header({
 
       {/* User Menu */}
       <div className="flex items-center gap-3">
+        {/* No celular a barra é estreita: lá o tema mora no menu do usuário. */}
+        <AlternadorDeTema className="hidden md:inline-flex" />
         <SinoNotificacoes />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -76,7 +79,7 @@ export function Header({
                     {initials}
                   </div>
                 </div>
-                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-card bg-emerald-500" />
+                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-card bg-sucesso" />
               </div>
 
               <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
@@ -110,6 +113,13 @@ export function Header({
 
             <DropdownMenuSeparator className="my-0" />
 
+            {/* No celular o alternador sai da barra e mora aqui. */}
+            <div className="flex items-center justify-between gap-3 px-3 py-2 md:hidden">
+              <span className="text-sm text-muted-foreground">Tema</span>
+              <AlternadorDeTema />
+            </div>
+            <DropdownMenuSeparator className="my-0 md:hidden" />
+
             <div className="p-1">
               <DropdownMenuItem asChild className="cursor-pointer rounded-md">
                 <Link href="/perfil">
@@ -119,7 +129,7 @@ export function Header({
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={handleLogout}
-                className="cursor-pointer rounded-md text-red-600 dark:text-red-400 focus:text-red-700 focus:bg-red-50 dark:focus:bg-red-900/20"
+                className="cursor-pointer rounded-md text-destructive focus:bg-destructive/10 focus:text-destructive"
               >
                 <LogOut className="mr-2 h-4 w-4" />
                 Sair do Sistema

@@ -19,14 +19,14 @@ export function RascunhoBanner({ rascunho }: { rascunho: Rascunho }) {
   });
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 rounded-lg border border-alerta/40 bg-alerta/10 p-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-start gap-3">
-        <History className="mt-0.5 size-5 shrink-0 text-amber-600" aria-hidden />
+        <History className="mt-0.5 size-5 shrink-0 text-alerta" aria-hidden />
         <div className="text-sm">
-          <p className="font-medium text-amber-900">
+          <p className="font-medium text-foreground">
             Há um preenchimento não salvo deste formulário
           </p>
-          <p className="text-amber-800">
+          <p className="text-muted-foreground">
             Salvo automaticamente em {quando}. Deseja continuar de onde parou?
           </p>
         </div>
@@ -35,7 +35,7 @@ export function RascunhoBanner({ rascunho }: { rascunho: Rascunho }) {
         <Button
           type="button"
           size="sm"
-          className="bg-amber-600 text-white hover:bg-amber-700"
+          className="bg-alerta text-alerta-foreground hover:bg-alerta/90"
           onClick={rascunho.recuperar}
         >
           Recuperar
@@ -44,7 +44,7 @@ export function RascunhoBanner({ rascunho }: { rascunho: Rascunho }) {
           type="button"
           size="sm"
           variant="outline"
-          className="border-amber-300 text-amber-800 hover:bg-amber-100"
+          className="border-alerta/50 text-foreground hover:bg-alerta/15"
           onClick={rascunho.descartar}
         >
           <X className="mr-1 size-4" /> Descartar
