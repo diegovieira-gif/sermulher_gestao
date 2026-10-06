@@ -559,13 +559,13 @@ export function WhatsappClient() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-5">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-border pb-5">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-            <Smartphone className="h-8 w-8 text-purple-600" />
+          <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <Smartphone className="h-8 w-8 text-purple-600 dark:text-purple-400" />
             Campanhas WhatsApp
           </h1>
-          <p className="text-slate-500 mt-1">
+          <p className="text-muted-foreground mt-1">
             Gestão de campanhas inbound e outbound e envio automatizado de informativos para beneficiárias.
           </p>
         </div>
@@ -574,14 +574,14 @@ export function WhatsappClient() {
         <div className="flex items-center gap-3 bg-purple-50 dark:bg-purple-950/20 border border-purple-100 dark:border-purple-900/50 rounded-xl p-3">
           <div className="flex flex-col">
             <span className="text-xs text-purple-700 dark:text-purple-300 font-medium">GoWA (WhatsApp)</span>
-            <span className="text-[10px] text-slate-500 font-mono truncate max-w-[120px]">
+            <span className="text-[10px] text-muted-foreground font-mono truncate max-w-[120px]">
               {config.evolution_api_url || "Nenhum configurado"}
             </span>
           </div>
           <Button
             size="sm"
             variant="outline"
-            className="h-8 border-purple-200 text-purple-700 hover:bg-purple-100"
+            className="h-8 border-purple-200 text-purple-700 hover:bg-purple-100 dark:border-purple-800 dark:text-purple-300 dark:hover:bg-purple-900/40"
             onClick={handleTestConnection}
             disabled={connectionState.loading || !config.evolution_api_url}
           >
@@ -605,50 +605,50 @@ export function WhatsappClient() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Card className="shadow-sm border-slate-100">
+        <Card className="shadow-sm border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Total de Campanhas</CardTitle>
-            <MessageSquare className="h-4 w-4 text-purple-600" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total de Campanhas</CardTitle>
+            <MessageSquare className="h-4 w-4 text-purple-600 dark:text-purple-400" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{campaigns.length}</div>
-            <p className="text-xs text-slate-500 mt-1">Registradas no canal WhatsApp</p>
+            <p className="text-xs text-muted-foreground mt-1">Registradas no canal WhatsApp</p>
           </CardContent>
         </Card>
         
-        <Card className="shadow-sm border-slate-100">
+        <Card className="shadow-sm border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Mulheres Elegíveis</CardTitle>
-            <Users className="h-4 w-4 text-emerald-600" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Mulheres Elegíveis</CardTitle>
+            <Users className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{eligibleCount.toLocaleString("pt-BR")}</div>
-            <p className="text-xs text-slate-500 mt-1">Beneficiárias com número cadastrado</p>
+            <p className="text-xs text-muted-foreground mt-1">Beneficiárias com número cadastrado</p>
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm border-slate-100">
+        <Card className="shadow-sm border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Disparos Recentes</CardTitle>
-            <History className="h-4 w-4 text-indigo-600" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Disparos Recentes</CardTitle>
+            <History className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {dispatchLogs.filter((l) => l.status === "sent").length}
             </div>
-            <p className="text-xs text-slate-500 mt-1">Sucessos registrados na linha do tempo</p>
+            <p className="text-xs text-muted-foreground mt-1">Sucessos registrados na linha do tempo</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-slate-100">
+      <div className="flex border-b border-border">
         <button
           onClick={() => setActiveTab("campaigns")}
           className={`py-3 px-6 font-medium text-sm border-b-2 transition-all flex items-center gap-2 ${
             activeTab === "campaigns"
-              ? "border-purple-600 text-purple-600 font-semibold"
-              : "border-transparent text-slate-500 hover:text-slate-700"
+              ? "border-purple-600 text-purple-600 font-semibold dark:text-purple-400"
+              : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
           <MessageSquare className="h-4 w-4" />
@@ -658,8 +658,8 @@ export function WhatsappClient() {
           onClick={() => setActiveTab("logs")}
           className={`py-3 px-6 font-medium text-sm border-b-2 transition-all flex items-center gap-2 ${
             activeTab === "logs"
-              ? "border-purple-600 text-purple-600 font-semibold"
-              : "border-transparent text-slate-500 hover:text-slate-700"
+              ? "border-purple-600 text-purple-600 font-semibold dark:text-purple-400"
+              : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
           <History className="h-4 w-4" />
@@ -669,8 +669,8 @@ export function WhatsappClient() {
           onClick={() => setActiveTab("config")}
           className={`py-3 px-6 font-medium text-sm border-b-2 transition-all flex items-center gap-2 ${
             activeTab === "config"
-              ? "border-purple-600 text-purple-600 font-semibold"
-              : "border-transparent text-slate-500 hover:text-slate-700"
+              ? "border-purple-600 text-purple-600 font-semibold dark:text-purple-400"
+              : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
           <Settings className="h-4 w-4" />
@@ -683,17 +683,17 @@ export function WhatsappClient() {
         {/* CAMPAIGNS TAB */}
         {activeTab === "campaigns" && (
           <div className="space-y-4">
-            <div className="flex justify-between items-center bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 shadow-sm">
-              <h3 className="font-semibold text-slate-800 dark:text-slate-200">Modelos de Campanhas WhatsApp</h3>
+            <div className="flex justify-between items-center bg-card p-4 rounded-xl border border-border shadow-sm">
+              <h3 className="font-semibold text-foreground">Modelos de Campanhas WhatsApp</h3>
               <Button onClick={() => handleOpenCampaignForm()} className="bg-purple-600 hover:bg-purple-700 text-white">
                 <Plus className="mr-2 h-4 w-4" />
                 Criar Campanha
               </Button>
             </div>
 
-            <div className="rounded-xl border border-slate-100 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+            <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
               <Table>
-                <TableHeader className="bg-slate-50 dark:bg-slate-950">
+                <TableHeader className="bg-muted/50">
                   <TableRow>
                     <TableHead className="w-[200px]">Nome</TableHead>
                     <TableHead className="w-[250px]">Objetivo</TableHead>
@@ -705,20 +705,20 @@ export function WhatsappClient() {
                 <TableBody>
                   {campaigns.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="h-24 text-center text-slate-400">
+                      <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                         Nenhuma campanha WhatsApp cadastrada. Clique em &quot;Criar Campanha&quot; para começar.
                       </TableCell>
                     </TableRow>
                   ) : (
                     campaigns.map((camp) => (
                       <TableRow key={camp.id} className="hover:bg-slate-50/50">
-                        <TableCell className="font-semibold text-slate-800 dark:text-slate-200">
+                        <TableCell className="font-semibold text-foreground">
                           {camp.nome}
                         </TableCell>
-                        <TableCell className="text-slate-500 text-sm">
+                        <TableCell className="text-muted-foreground text-sm">
                           {camp.objetivo || <span className="italic opacity-50">Não informado</span>}
                         </TableCell>
-                        <TableCell className="text-slate-600 max-w-[400px] truncate text-sm">
+                        <TableCell className="text-muted-foreground max-w-[400px] truncate text-sm">
                           {camp.mensagem}
                         </TableCell>
                         <TableCell>
@@ -743,7 +743,7 @@ export function WhatsappClient() {
                             variant="ghost"
                             size="icon"
                             title="Disparar Campanha"
-                            className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                            className="text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:text-purple-400 dark:hover:text-purple-300 dark:hover:bg-purple-950/40"
                             onClick={() => handleOpenDispatch(camp)}
                             disabled={openingDispatchId === camp.id}
                           >
@@ -781,15 +781,15 @@ export function WhatsappClient() {
 
         {/* LOGS TAB */}
         {activeTab === "logs" && (
-          <Card className="shadow-sm border-slate-100">
+          <Card className="shadow-sm border-border">
             <CardHeader>
               <CardTitle>Linha do Tempo de Disparos</CardTitle>
               <CardDescription>Histórico detalhado das mensagens de WhatsApp enviadas para as beneficiárias.</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="rounded-xl border border-slate-100 overflow-hidden">
+              <div className="rounded-xl border border-border overflow-hidden">
                 <Table>
-                  <TableHeader className="bg-slate-50 dark:bg-slate-950">
+                  <TableHeader className="bg-muted/50">
                     <TableRow>
                       <TableHead>Beneficiária</TableHead>
                       <TableHead>Contato</TableHead>
@@ -802,7 +802,7 @@ export function WhatsappClient() {
                   <TableBody>
                     {dispatchLogs.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="h-24 text-center text-slate-400">
+                        <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                           Nenhum registro de disparo encontrado.
                         </TableCell>
                       </TableRow>
@@ -812,13 +812,13 @@ export function WhatsappClient() {
                           <TableCell className="font-medium">
                             {log.beneficiaria_id?.nome_completo || "Desconhecida"}
                           </TableCell>
-                          <TableCell className="font-mono text-sm text-slate-500">
+                          <TableCell className="font-mono text-sm text-muted-foreground">
                             {log.beneficiaria_id?.telefone || "-"}
                           </TableCell>
-                          <TableCell className="text-slate-600 text-sm">
+                          <TableCell className="text-muted-foreground text-sm">
                             {log.campanha_id?.nome || "Sem campanha"}
                           </TableCell>
-                          <TableCell className="text-slate-500 text-sm">
+                          <TableCell className="text-muted-foreground text-sm">
                             {log.data_envio
                               ? new Date(log.data_envio).toLocaleString("pt-BR", { timeZone: "America/Maceio" })
                               : new Date(log.date_created).toLocaleString("pt-BR", { timeZone: "America/Maceio" })}
@@ -849,11 +849,11 @@ export function WhatsappClient() {
                           </TableCell>
                           <TableCell className="align-top">
                             {log.detalhes_erro ? (
-                              <p className="max-w-[320px] whitespace-pre-wrap break-words text-xs leading-relaxed text-red-600">
+                              <p className="max-w-[320px] whitespace-pre-wrap break-words text-xs leading-relaxed text-red-600 dark:text-red-400">
                                 {log.detalhes_erro}
                               </p>
                             ) : (
-                              <span className="text-xs text-slate-400">-</span>
+                              <span className="text-xs text-muted-foreground">-</span>
                             )}
                           </TableCell>
                         </TableRow>
@@ -868,10 +868,10 @@ export function WhatsappClient() {
 
         {/* CONFIG TAB */}
         {activeTab === "config" && (
-          <Card className="shadow-sm border-slate-100">
+          <Card className="shadow-sm border-border">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Settings2 className="h-5 w-5 text-purple-600" />
+                <Settings2 className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                 Configuração de Integração
               </CardTitle>
               <CardDescription>
@@ -881,13 +881,13 @@ export function WhatsappClient() {
             <CardContent>
               <form onSubmit={handleSaveConfig} className="space-y-6">
                 <div className="space-y-4">
-                  <h4 className="font-medium text-slate-900 dark:text-slate-100 border-b pb-2 flex items-center gap-2">
-                    <Smartphone className="h-4 w-4 text-purple-600" />
+                  <h4 className="font-medium text-foreground border-b pb-2 flex items-center gap-2">
+                    <Smartphone className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                     GoWA (WhatsApp Direto)
                   </h4>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-700 dark:text-slate-300">URL do GoWA</label>
+                      <label className="text-sm font-medium text-foreground">URL do GoWA</label>
                       <Input
                         placeholder="http://192.168.0.118:3000"
                         value={config.evolution_api_url}
@@ -895,14 +895,14 @@ export function WhatsappClient() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Basic Auth (usuário:senha)</label>
+                      <label className="text-sm font-medium text-foreground">Basic Auth (usuário:senha)</label>
                       <Input
                         type="password"
                         placeholder="usuario:senha"
                         value={config.evolution_api_token}
                         onChange={(e) => setConfig({ ...config, evolution_api_token: e.target.value })}
                       />
-                      <p className="text-[11px] text-slate-500">
+                      <p className="text-[11px] text-muted-foreground">
                         As credenciais Basic Auth do GoWA, no formato <code>usuario:senha</code> (variáveis SERVICE_USER_GOWA e SERVICE_PASSWORD_GOWA).
                       </p>
                     </div>
@@ -910,18 +910,18 @@ export function WhatsappClient() {
                 </div>
 
                 <div className="space-y-4 pt-4 border-t">
-                  <h4 className="font-medium text-slate-900 dark:text-slate-100 border-b pb-2 flex items-center gap-2">
-                    <Activity className="h-4 w-4 text-indigo-600" />
+                  <h4 className="font-medium text-foreground border-b pb-2 flex items-center gap-2">
+                    <Activity className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
                     Workflow n8n (Fila & Inbound)
                   </h4>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">URL do Webhook do n8n</label>
+                    <label className="text-sm font-medium text-foreground">URL do Webhook do n8n</label>
                     <Input
                       placeholder="https://n8n.exemplo.com/webhook/campanha-whatsapp"
                       value={config.n8n_webhook_url}
                       onChange={(e) => setConfig({ ...config, n8n_webhook_url: e.target.value })}
                     />
-                    <p className="text-[11px] text-slate-500">
+                    <p className="text-[11px] text-muted-foreground">
                       Caso preenchido, os disparos também notificarão este webhook no n8n com o payload completo do envio da campanha.
                     </p>
                   </div>
@@ -986,7 +986,7 @@ export function WhatsappClient() {
                 onImageChange={setCampaignImage}
                 placeholder="Olá {primeiro_nome}, informamos que no mês de Outubro estamos com exames preventivos agendados..."
               />
-              <p className="text-[10px] text-slate-500 flex items-center gap-1">
+              <p className="text-[10px] text-muted-foreground flex items-center gap-1">
                 <Info className="h-3 w-3" />
                 Variáveis dinâmicas como &quot;{`{primeiro_nome}`}&quot; e &quot;{`{nome_completo}`}&quot; serão substituídas automaticamente antes de enviar. Se anexar uma imagem, a mensagem vira a legenda dela.
               </p>
@@ -1002,14 +1002,14 @@ export function WhatsappClient() {
                   className={cn(
                     "flex flex-col items-start gap-0.5 rounded-lg border p-3 text-left transition-colors",
                     campTipo === "manual"
-                      ? "border-purple-300 bg-purple-50 dark:bg-purple-950/20 ring-1 ring-purple-300"
-                      : "border-slate-200 hover:bg-slate-50",
+                      ? "border-purple-300 bg-purple-50 dark:bg-purple-950/20 ring-1 ring-purple-300 dark:border-purple-700 dark:ring-purple-700"
+                      : "border-border hover:bg-muted/50",
                   )}
                 >
                   <span className="flex items-center gap-1.5 text-sm font-semibold">
-                    <Send className="h-4 w-4 text-purple-600" /> Manual
+                    <Send className="h-4 w-4 text-purple-600 dark:text-purple-400" /> Manual
                   </span>
-                  <span className="text-[11px] text-slate-500">Você dispara quando quiser</span>
+                  <span className="text-[11px] text-muted-foreground">Você dispara quando quiser</span>
                 </button>
                 <button
                   type="button"
@@ -1017,20 +1017,20 @@ export function WhatsappClient() {
                   className={cn(
                     "flex flex-col items-start gap-0.5 rounded-lg border p-3 text-left transition-colors",
                     campTipo === "automatica"
-                      ? "border-purple-300 bg-purple-50 dark:bg-purple-950/20 ring-1 ring-purple-300"
-                      : "border-slate-200 hover:bg-slate-50",
+                      ? "border-purple-300 bg-purple-50 dark:bg-purple-950/20 ring-1 ring-purple-300 dark:border-purple-700 dark:ring-purple-700"
+                      : "border-border hover:bg-muted/50",
                   )}
                 >
                   <span className="flex items-center gap-1.5 text-sm font-semibold">
-                    <History className="h-4 w-4 text-purple-600" /> Automática
+                    <History className="h-4 w-4 text-purple-600 dark:text-purple-400" /> Automática
                   </span>
-                  <span className="text-[11px] text-slate-500">Agendada por filtro/horário</span>
+                  <span className="text-[11px] text-muted-foreground">Agendada por filtro/horário</span>
                 </button>
               </div>
             </div>
 
             {campTipo === "automatica" && (
-              <div className="space-y-4 rounded-lg border border-purple-100 bg-purple-50/40 dark:bg-purple-950/10 p-3">
+              <div className="space-y-4 rounded-lg border border-purple-100 bg-purple-50/40 dark:bg-purple-950/10 p-3 dark:border-purple-900">
                 {/* Ativa */}
                 <button
                   type="button"
@@ -1038,10 +1038,10 @@ export function WhatsappClient() {
                   className="flex w-full items-center justify-between"
                 >
                   <span className="flex flex-col text-left">
-                    <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                    <span className="text-sm font-semibold text-foreground">
                       Agendamento ativo
                     </span>
-                    <span className="text-[11px] text-slate-500">
+                    <span className="text-[11px] text-muted-foreground">
                       Desligue para pausar sem perder a configuração.
                     </span>
                   </span>
@@ -1051,7 +1051,7 @@ export function WhatsappClient() {
                 {/* Horário + dias */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Horário (HH:MM)</label>
+                    <label className="text-xs font-semibold text-foreground">Horário (HH:MM)</label>
                     <Input
                       type="time"
                       className="h-9"
@@ -1060,7 +1060,7 @@ export function WhatsappClient() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Dias da semana</label>
+                    <label className="text-xs font-semibold text-foreground">Dias da semana</label>
                     <div className="flex flex-wrap gap-1">
                       {DIAS_SEMANA.map((d) => {
                         const active = campDias.includes(d.v);
@@ -1076,8 +1076,8 @@ export function WhatsappClient() {
                             className={cn(
                               "rounded-md border px-2 py-1 text-[11px] transition-colors",
                               active
-                                ? "border-purple-300 bg-purple-100 text-purple-800"
-                                : "border-slate-200 text-slate-600 hover:bg-slate-50",
+                                ? "border-purple-300 bg-purple-100 text-purple-800 dark:border-purple-700 dark:bg-purple-900/40 dark:text-purple-200"
+                                : "border-border text-muted-foreground hover:bg-muted/50",
                             )}
                           >
                             {d.lbl}
@@ -1085,14 +1085,14 @@ export function WhatsappClient() {
                         );
                       })}
                     </div>
-                    <p className="text-[10px] text-slate-400">Vazio = todos os dias.</p>
+                    <p className="text-[10px] text-muted-foreground">Vazio = todos os dias.</p>
                   </div>
                 </div>
 
                 {/* Público (filtro) + contagem ao vivo */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    <label className="text-xs font-semibold text-foreground">
                       Público-alvo (filtros)
                     </label>
                     <span className="text-[11px] text-purple-700 dark:text-purple-300 flex items-center gap-1">
@@ -1115,7 +1115,7 @@ export function WhatsappClient() {
                   />
                 </div>
 
-                <p className="text-[10px] text-slate-500 flex items-start gap-1">
+                <p className="text-[10px] text-muted-foreground flex items-start gap-1">
                   <Info className="h-3 w-3 mt-0.5 shrink-0" />
                   O agendador (n8n) verifica de hora em hora e dispara esta campanha no
                   horário definido, uma vez por dia, para o público do filtro. Ex.:
@@ -1140,10 +1140,10 @@ export function WhatsappClient() {
 
       {/* DISPATCH FLOW SHEET (SELECT BENEFICIARIES & TRIGGER SEND) */}
       <Sheet open={dispatchDialogOpen} onOpenChange={setDispatchDialogOpen}>
-        <SheetContent className="sm:max-w-xl flex flex-col h-full bg-white dark:bg-slate-900 border-l border-slate-100">
+        <SheetContent className="sm:max-w-xl flex flex-col h-full bg-card border-l border-border">
           <SheetHeader className="mb-4">
             <SheetTitle className="flex items-center gap-2">
-              <Send className="h-5 w-5 text-purple-600" />
+              <Send className="h-5 w-5 text-purple-600 dark:text-purple-400" />
               Disparar Campanha
             </SheetTitle>
             <SheetDescription>
@@ -1168,15 +1168,15 @@ export function WhatsappClient() {
                   className={cn(
                     "flex flex-col items-start gap-0.5 rounded-lg border p-3 text-left transition-colors",
                     audienceMode === "all"
-                      ? "border-purple-300 bg-purple-50 dark:bg-purple-950/20 ring-1 ring-purple-300"
-                      : "border-slate-200 hover:bg-slate-50",
+                      ? "border-purple-300 bg-purple-50 dark:bg-purple-950/20 ring-1 ring-purple-300 dark:border-purple-700 dark:ring-purple-700"
+                      : "border-border hover:bg-muted/50",
                   )}
                 >
-                  <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-800 dark:text-slate-200">
-                    <Users className="h-4 w-4 text-purple-600" />
+                  <span className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                    <Users className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                     Todas
                   </span>
-                  <span className="text-xs text-slate-500">
+                  <span className="text-xs text-muted-foreground">
                     {eligibleCount.toLocaleString("pt-BR")} elegíveis
                   </span>
                 </button>
@@ -1186,15 +1186,15 @@ export function WhatsappClient() {
                   className={cn(
                     "flex flex-col items-start gap-0.5 rounded-lg border p-3 text-left transition-colors",
                     audienceMode === "filtered"
-                      ? "border-purple-300 bg-purple-50 dark:bg-purple-950/20 ring-1 ring-purple-300"
-                      : "border-slate-200 hover:bg-slate-50",
+                      ? "border-purple-300 bg-purple-50 dark:bg-purple-950/20 ring-1 ring-purple-300 dark:border-purple-700 dark:ring-purple-700"
+                      : "border-border hover:bg-muted/50",
                   )}
                 >
-                  <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-800 dark:text-slate-200">
-                    <SlidersHorizontal className="h-4 w-4 text-purple-600" />
+                  <span className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                    <SlidersHorizontal className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                     Por filtros
                   </span>
-                  <span className="text-xs text-slate-500">
+                  <span className="text-xs text-muted-foreground">
                     {activeFilterCount > 0
                       ? `${activeFilterCount} filtro(s)`
                       : "Segmentar"}
@@ -1206,22 +1206,22 @@ export function WhatsappClient() {
                   className={cn(
                     "flex flex-col items-start gap-0.5 rounded-lg border p-3 text-left transition-colors",
                     audienceMode === "manual"
-                      ? "border-purple-300 bg-purple-50 dark:bg-purple-950/20 ring-1 ring-purple-300"
-                      : "border-slate-200 hover:bg-slate-50",
+                      ? "border-purple-300 bg-purple-50 dark:bg-purple-950/20 ring-1 ring-purple-300 dark:border-purple-700 dark:ring-purple-700"
+                      : "border-border hover:bg-muted/50",
                   )}
                 >
-                  <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-800 dark:text-slate-200">
-                    <Search className="h-4 w-4 text-purple-600" />
+                  <span className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                    <Search className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                     Selecionar
                   </span>
-                  <span className="text-xs text-slate-500">
+                  <span className="text-xs text-muted-foreground">
                     {selectedBeneficiarias.length} selecionada(s)
                   </span>
                 </button>
               </div>
 
               {audienceMode === "all" ? (
-                <div className="flex items-start gap-2 rounded-lg border border-purple-100 bg-purple-50/60 dark:bg-purple-950/10 p-4 text-sm text-purple-900 dark:text-purple-300">
+                <div className="flex items-start gap-2 rounded-lg border border-purple-100 bg-purple-50/60 dark:bg-purple-950/10 p-4 text-sm text-purple-900 dark:text-purple-300 dark:border-purple-900">
                   <Info className="h-4 w-4 mt-0.5 shrink-0" />
                   <span>
                     A mensagem será enviada para{" "}
@@ -1234,7 +1234,7 @@ export function WhatsappClient() {
               ) : audienceMode === "filtered" ? (
                 <div className="space-y-4">
                   {/* Resumo do público filtrado */}
-                  <div className="flex items-center justify-between rounded-lg border border-purple-100 bg-purple-50/60 dark:bg-purple-950/10 p-3">
+                  <div className="flex items-center justify-between rounded-lg border border-purple-100 bg-purple-50/60 dark:bg-purple-950/10 p-3 dark:border-purple-900">
                     <div className="flex items-center gap-2 text-sm text-purple-900 dark:text-purple-300">
                       <Users className="h-4 w-4" />
                       {countingFilter ? (
@@ -1252,7 +1252,7 @@ export function WhatsappClient() {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-7 text-xs text-slate-500"
+                      className="h-7 text-xs text-muted-foreground"
                       onClick={resetFilter}
                       disabled={activeFilterCount === 0}
                     >
@@ -1271,7 +1271,7 @@ export function WhatsappClient() {
                 <div className="space-y-2">
                   {/* Busca server-side */}
                   <div className="relative">
-                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
                       className="pl-9 h-9"
                       placeholder="Buscar por nome ou telefone..."
@@ -1291,23 +1291,23 @@ export function WhatsappClient() {
                         onCheckedChange={(checked) => handleSelectAll(!!checked)}
                         disabled={searchResults.length === 0}
                       />
-                      <label htmlFor="select-all" className="text-xs font-semibold text-slate-700 cursor-pointer">
+                      <label htmlFor="select-all" className="text-xs font-semibold text-foreground cursor-pointer">
                         Selecionar resultados ({searchResults.length})
                       </label>
                     </div>
-                    <span className="text-xs text-slate-500 font-medium">
+                    <span className="text-xs text-muted-foreground font-medium">
                       {selectedBeneficiarias.length} selecionada(s)
                     </span>
                   </div>
 
-                  <div className="border border-slate-100 rounded-lg max-h-[300px] overflow-y-auto divide-y divide-slate-100">
+                  <div className="border border-border rounded-lg max-h-[300px] overflow-y-auto divide-y divide-border">
                     {searchingAudience ? (
-                      <div className="flex items-center justify-center gap-2 p-6 text-xs text-slate-400">
+                      <div className="flex items-center justify-center gap-2 p-6 text-xs text-muted-foreground">
                         <Loader2 className="h-4 w-4 animate-spin" />
                         Buscando beneficiárias...
                       </div>
                     ) : searchResults.length === 0 ? (
-                      <div className="p-4 text-center text-xs text-slate-400">
+                      <div className="p-4 text-center text-xs text-muted-foreground">
                         {searchBeneficiaria
                           ? "Nenhuma beneficiária encontrada para esta busca."
                           : "Digite um nome ou telefone para localizar beneficiárias."}
@@ -1322,17 +1322,17 @@ export function WhatsappClient() {
                               onCheckedChange={(checked) => handleSelectOne(b.id, !!checked)}
                             />
                             <div className="flex flex-col text-left">
-                              <label htmlFor={`b-${b.id}`} className="text-xs font-medium text-slate-800 dark:text-slate-200 cursor-pointer">
+                              <label htmlFor={`b-${b.id}`} className="text-xs font-medium text-foreground cursor-pointer">
                                 {b.nome_social || b.nome_completo}
                               </label>
-                              <span className="text-[10px] text-slate-500 font-mono">{b.telefone}</span>
+                              <span className="text-[10px] text-muted-foreground font-mono">{b.telefone}</span>
                             </div>
                           </div>
                         </div>
                       ))
                     )}
                   </div>
-                  <p className="text-[10px] text-slate-400 px-1">
+                  <p className="text-[10px] text-muted-foreground px-1">
                     Mostrando até 50 resultados por busca. Refine o termo para
                     encontrar outras beneficiárias.
                   </p>

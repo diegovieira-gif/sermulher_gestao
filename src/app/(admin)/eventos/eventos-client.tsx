@@ -402,7 +402,7 @@ export function EventosClient({
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             placeholder="Buscar por título ou local..."
-            className="bg-white pl-9"
+            className="bg-card pl-9"
             aria-label="Buscar evento"
           />
         </div>
@@ -410,7 +410,7 @@ export function EventosClient({
           variant="outline"
           onClick={exportarCsv}
           disabled={exportando || !meta || meta.total === 0}
-          className="bg-white"
+          className="bg-card"
         >
           {exportando ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -427,7 +427,7 @@ export function EventosClient({
           value={tipoFilter}
           onValueChange={(v) => atualizarParam("tipo", v)}
         >
-          <SelectTrigger className="w-[180px] bg-white">
+          <SelectTrigger className="w-[180px] bg-card">
             <SelectValue placeholder="Tipo de Evento" />
           </SelectTrigger>
           <SelectContent>
@@ -445,7 +445,7 @@ export function EventosClient({
           value={categoriaFilter}
           onValueChange={(v) => atualizarParam("categoria", v)}
         >
-          <SelectTrigger className="w-[180px] bg-white">
+          <SelectTrigger className="w-[180px] bg-card">
             <SelectValue placeholder="Categoria" />
           </SelectTrigger>
           <SelectContent>
@@ -463,7 +463,7 @@ export function EventosClient({
           value={situacaoFilter}
           onValueChange={(v) => atualizarParam("situacao", v)}
         >
-          <SelectTrigger className="w-[180px] bg-white">
+          <SelectTrigger className="w-[180px] bg-card">
             <SelectValue placeholder="Situação" />
           </SelectTrigger>
           <SelectContent>
@@ -479,7 +479,7 @@ export function EventosClient({
             variant="ghost"
             size="sm"
             onClick={limparFiltros}
-            className="text-red-600 hover:bg-red-50 hover:text-red-700"
+            className="text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950/40 dark:hover:text-red-300"
           >
             <X className="mr-1 h-4 w-4" />
             Limpar filtros ({filtrosAtivos})
@@ -493,7 +493,7 @@ export function EventosClient({
             value={ordemAtual}
             onValueChange={(v) => atualizarParam("ordem", v)}
           >
-            <SelectTrigger className="w-[240px] bg-white">
+            <SelectTrigger className="w-[240px] bg-card">
               <SelectValue placeholder="Ordenar por" />
             </SelectTrigger>
             <SelectContent>
@@ -634,7 +634,7 @@ export function EventosClient({
                           title="Visualizar Detalhes"
                           onClick={() => handleView(evento)}
                         >
-                          <Eye className="h-4 w-4 text-sky-600" />
+                          <Eye className="h-4 w-4 text-sky-600 dark:text-sky-400" />
                         </Button>
                         <Button
                           variant="ghost"
@@ -647,7 +647,7 @@ export function EventosClient({
                             })
                           }
                         >
-                          <Users className="h-4 w-4 text-emerald-600" />
+                          <Users className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                           <span className="sr-only">
                             Ver participantes de {evento.nome}
                           </span>
@@ -663,7 +663,7 @@ export function EventosClient({
                             })
                           }
                         >
-                          <Briefcase className="h-4 w-4 text-violet-600" />
+                          <Briefcase className="h-4 w-4 text-violet-600 dark:text-violet-400" />
                           <span className="sr-only">
                             Ver equipe de {evento.nome}
                           </span>
@@ -745,24 +745,24 @@ export function EventosClient({
 
       {/* Modal de Visualização de Detalhes */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="max-w-md bg-white border border-gray-100 shadow-lg rounded-lg">
+        <DialogContent className="max-w-md bg-card border border-border shadow-lg rounded-lg">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-xl font-bold text-gray-800">
-              <Calendar className="h-5 w-5 text-purple-600" />
+            <DialogTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
+              <Calendar className="h-5 w-5 text-purple-600 dark:text-purple-400" />
               Detalhes do Evento
             </DialogTitle>
           </DialogHeader>
           {selectedViewEvento && (
             <div className="space-y-4 pt-2">
               <div>
-                <h3 className="text-lg font-bold text-gray-900 leading-snug">
+                <h3 className="text-lg font-bold text-foreground leading-snug">
                   {selectedViewEvento.nome}
                 </h3>
               </div>
 
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1">
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
                     Categoria
                   </span>
                   <Badge variant={getTipoBadgeVariant(selectedViewEvento.tipo)}>
@@ -771,10 +771,10 @@ export function EventosClient({
                 </div>
 
                 <div>
-                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1">
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
                     Tipo de Evento
                   </span>
-                  <Badge variant="outline" className="border-gray-200 text-gray-600">
+                  <Badge variant="outline" className="border-border text-muted-foreground">
                     {(() => {
                       const tipoObj =
                         typeof selectedViewEvento.tipo_id === "object" &&
@@ -791,21 +791,21 @@ export function EventosClient({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 text-sm border-t pt-3 border-gray-100">
+              <div className="grid grid-cols-2 gap-4 text-sm border-t pt-3 border-border">
                 <div>
-                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-0.5">
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-0.5">
                     Início
                   </span>
-                  <span className="text-gray-700 font-medium block">
+                  <span className="text-foreground font-medium block">
                     {formatarData(selectedViewEvento.data_inicio)}
                   </span>
                 </div>
 
                 <div>
-                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-0.5">
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-0.5">
                     Fim (Término)
                   </span>
-                  <span className="text-gray-700 font-medium block">
+                  <span className="text-foreground font-medium block">
                     {selectedViewEvento.data_fim
                       ? formatarData(selectedViewEvento.data_fim)
                       : "Sem data de término"}
@@ -814,11 +814,11 @@ export function EventosClient({
               </div>
 
               {selectedViewEvento.local && (
-                <div className="text-sm border-t pt-3 border-gray-100">
-                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-0.5">
+                <div className="text-sm border-t pt-3 border-border">
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-0.5">
                     Local
                   </span>
-                  <span className="text-gray-700 font-medium block">
+                  <span className="text-foreground font-medium block">
                     {selectedViewEvento.local}
                   </span>
                 </div>
@@ -826,29 +826,29 @@ export function EventosClient({
 
               {selectedViewEvento.recorrencia &&
                 selectedViewEvento.recorrencia !== "nao_recorrente" && (
-                  <div className="text-sm border-t pt-3 border-gray-100">
-                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-0.5">
+                  <div className="text-sm border-t pt-3 border-border">
+                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-0.5">
                       Recorrência
                     </span>
-                    <span className="text-gray-700 font-medium block capitalize">
+                    <span className="text-foreground font-medium block capitalize">
                       {selectedViewEvento.recorrencia === "mensal" ? "Mensal" : "Anual"}
                     </span>
                   </div>
                 )}
 
               {selectedViewEvento.descricao && (
-                <div className="text-sm pt-3 border-t border-gray-100">
-                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1">
+                <div className="text-sm pt-3 border-t border-border">
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
                     Descrição
                   </span>
-                  <p className="text-gray-600 bg-gray-50/70 p-3 rounded-lg border border-gray-100 text-xs leading-relaxed whitespace-pre-line">
+                  <p className="text-muted-foreground bg-gray-50/70 p-3 rounded-lg border border-border text-xs leading-relaxed whitespace-pre-line">
                     {selectedViewEvento.descricao}
                   </p>
                 </div>
               )}
             </div>
           )}
-          <DialogFooter className="pt-4 border-t border-gray-100">
+          <DialogFooter className="pt-4 border-t border-border">
             <Button onClick={() => setViewDialogOpen(false)} className="bg-gray-800 hover:bg-gray-900 text-white">
               Fechar
             </Button>

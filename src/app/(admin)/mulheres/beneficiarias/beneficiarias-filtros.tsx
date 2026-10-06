@@ -163,12 +163,12 @@ export function BeneficiariasFiltros({
   return (
     <div className="space-y-4">
       {/* Barra de ferramentas: busca + ações */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-xl border border-slate-150 shadow-sm">
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-card p-4 rounded-xl border border-border shadow-sm">
         <div className="relative flex-1 w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Buscar por nome, CPF ou telefone..."
-            className="pl-10 pr-10 h-10 w-full bg-slate-50/50 border-slate-200/80 focus-visible:bg-white focus-visible:ring-purple-500/20"
+            className="pl-10 pr-10 h-10 w-full bg-slate-50/50 border-border focus-visible:bg-card focus-visible:ring-purple-500/20"
             value={searchInput}
             onChange={(e) => handleSearchChange(e.target.value)}
           />
@@ -177,7 +177,7 @@ export function BeneficiariasFiltros({
               type="button"
               aria-label="Limpar busca"
               onClick={() => setSearchInput("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
             >
               <X className="h-4 w-4" />
             </button>
@@ -191,7 +191,7 @@ export function BeneficiariasFiltros({
               "h-10 px-4 transition-colors font-medium",
               panelOpen
                 ? "bg-purple-600 hover:bg-purple-700 text-white"
-                : "text-slate-600 border-slate-200 hover:bg-slate-50",
+                : "text-muted-foreground border-border hover:bg-muted/50",
             )}
             onClick={() => setPanelOpen((v) => !v)}
           >
@@ -201,7 +201,7 @@ export function BeneficiariasFiltros({
               <span
                 className={cn(
                   "ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-bold",
-                  panelOpen ? "bg-white/20 text-white" : "bg-purple-100 text-purple-700",
+                  panelOpen ? "bg-white/20 text-white" : "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
                 )}
               >
                 {activeCount}
@@ -211,7 +211,7 @@ export function BeneficiariasFiltros({
 
           <Button
             variant="outline"
-            className="text-slate-600 border-slate-200 hover:bg-slate-50 h-10 px-4 font-medium"
+            className="text-muted-foreground border-border hover:bg-muted/50 h-10 px-4 font-medium"
             onClick={onExport}
             disabled={isExporting || !hasData}
           >
@@ -227,13 +227,13 @@ export function BeneficiariasFiltros({
 
       {/* Painel de filtros avançados */}
       {panelOpen && (
-        <div className="bg-slate-50/75 p-5 rounded-xl border border-slate-100 shadow-sm animate-in slide-in-from-top-2 duration-200 space-y-5">
+        <div className="bg-slate-50/75 p-5 rounded-xl border border-border shadow-sm animate-in slide-in-from-top-2 duration-200 space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {/* Bairro */}
             <div className="space-y-2">
               <Label
                 htmlFor="filtro-bairro"
-                className="text-xs font-semibold text-slate-600 uppercase tracking-wider"
+                className="text-xs font-semibold text-muted-foreground uppercase tracking-wider"
               >
                 Bairro
               </Label>
@@ -241,7 +241,7 @@ export function BeneficiariasFiltros({
                 value={bairro || "__todos__"}
                 onValueChange={(val) => setParam("bairro", val === "__todos__" ? null : val)}
               >
-                <SelectTrigger id="filtro-bairro" className="h-10 bg-white border-slate-200">
+                <SelectTrigger id="filtro-bairro" className="h-10 bg-card border-border">
                   <SelectValue placeholder="Todos os bairros" />
                 </SelectTrigger>
                 <SelectContent>
@@ -259,7 +259,7 @@ export function BeneficiariasFiltros({
             <div className="space-y-2">
               <Label
                 htmlFor="filtro-ordenacao"
-                className="text-xs font-semibold text-slate-600 uppercase tracking-wider"
+                className="text-xs font-semibold text-muted-foreground uppercase tracking-wider"
               >
                 Ordenação
               </Label>
@@ -275,7 +275,7 @@ export function BeneficiariasFiltros({
                   });
                 }}
               >
-                <SelectTrigger id="filtro-ordenacao" className="h-10 bg-white border-slate-200">
+                <SelectTrigger id="filtro-ordenacao" className="h-10 bg-card border-border">
                   <SelectValue placeholder="Ordenar por" />
                 </SelectTrigger>
                 <SelectContent>
@@ -290,7 +290,7 @@ export function BeneficiariasFiltros({
 
             {/* Toggles */}
             <div className="space-y-2 sm:col-span-2 lg:col-span-2">
-              <Label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Marcadores
               </Label>
               <div className="flex flex-wrap items-center gap-x-6 gap-y-3 h-10">
@@ -300,7 +300,7 @@ export function BeneficiariasFiltros({
                     checked={medidaProtetiva}
                     onCheckedChange={(c) => setParam("medidaProtetiva", c ? "true" : null)}
                   />
-                  <Label htmlFor="filtro-medida" className="text-sm font-medium text-slate-700 cursor-pointer">
+                  <Label htmlFor="filtro-medida" className="text-sm font-medium text-foreground cursor-pointer">
                     Medida Protetiva
                   </Label>
                 </div>
@@ -310,7 +310,7 @@ export function BeneficiariasFiltros({
                     checked={bolsaFamilia}
                     onCheckedChange={(c) => setParam("bolsaFamilia", c ? "true" : null)}
                   />
-                  <Label htmlFor="filtro-bolsa" className="text-sm font-medium text-slate-700 cursor-pointer">
+                  <Label htmlFor="filtro-bolsa" className="text-sm font-medium text-foreground cursor-pointer">
                     Bolsa Família
                   </Label>
                 </div>
@@ -320,7 +320,7 @@ export function BeneficiariasFiltros({
                     checked={bpc}
                     onCheckedChange={(c) => setParam("bpc", c ? "true" : null)}
                   />
-                  <Label htmlFor="filtro-bpc" className="text-sm font-medium text-slate-700 cursor-pointer">
+                  <Label htmlFor="filtro-bpc" className="text-sm font-medium text-foreground cursor-pointer">
                     BPC
                   </Label>
                 </div>
@@ -330,20 +330,20 @@ export function BeneficiariasFiltros({
 
           {/* Chips de filtros ativos + limpar */}
           {activeChips.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 border-t border-slate-200/70 pt-4">
-              <span className="text-xs font-medium text-slate-500">Filtros ativos:</span>
+            <div className="flex flex-wrap items-center gap-2 border-t border-border pt-4">
+              <span className="text-xs font-medium text-muted-foreground">Filtros ativos:</span>
               {activeChips.map((chip) => (
                 <Badge
                   key={chip.key}
                   variant="secondary"
-                  className="gap-1 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 pl-2.5 pr-1.5 py-0.5 font-medium"
+                  className="gap-1 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 pl-2.5 pr-1.5 py-0.5 font-medium dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800 dark:hover:bg-purple-900/40"
                 >
                   {chip.label}
                   <button
                     type="button"
                     aria-label={`Remover filtro ${chip.label}`}
                     onClick={chip.onRemove}
-                    className="rounded-full hover:bg-purple-200/60 p-0.5"
+                    className="rounded-full hover:bg-purple-200/60 p-0.5 dark:hover:bg-purple-800/60"
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -353,7 +353,7 @@ export function BeneficiariasFiltros({
                 variant="ghost"
                 size="sm"
                 onClick={clearAllFilters}
-                className="text-xs text-red-500 hover:text-red-600 h-7 px-2.5 rounded-full hover:bg-red-50 ml-auto"
+                className="text-xs text-red-500 hover:text-red-600 h-7 px-2.5 rounded-full hover:bg-red-50 ml-auto dark:hover:text-red-400 dark:hover:bg-red-950/40"
               >
                 <X className="h-3.5 w-3.5 mr-1" /> Limpar tudo
               </Button>

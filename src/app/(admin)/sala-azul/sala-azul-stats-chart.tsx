@@ -29,18 +29,18 @@ export function SalaAzulStatsChart({ data }: SalaAzulStatsChartProps) {
           <XAxis
             dataKey="nivel"
             className="text-muted-foreground"
-            tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+            tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
           />
           <YAxis
             className="text-muted-foreground"
-            tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+            tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: "hsl(var(--card))",
-              border: "1px solid hsl(var(--border))",
+              backgroundColor: "var(--card)",
+              border: "1px solid var(--border)",
               borderRadius: "8px",
-              color: "hsl(var(--foreground))",
+              color: "var(--foreground)",
             }}
             formatter={(value: any) => [value, "Quantidade"]}
             labelFormatter={(label) => `Nível: ${label}`}

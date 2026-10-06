@@ -122,7 +122,7 @@ export function MessageEditor({
       type="button"
       onClick={onClick}
       title={title}
-      className="flex h-7 w-7 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+      className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted transition-colors"
     >
       {children}
     </button>
@@ -131,7 +131,7 @@ export function MessageEditor({
   return (
     <div className="space-y-2">
       {/* Toolbar */}
-      <div className="relative flex items-center gap-0.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 px-1 py-1">
+      <div className="relative flex items-center gap-0.5 rounded-lg border border-border bg-slate-50/50 dark:bg-slate-900/40 px-1 py-1">
         <ToolbarBtn onClick={() => wrapSelection("*")} title="Negrito (*texto*)">
           <Bold className="h-3.5 w-3.5" />
         </ToolbarBtn>
@@ -141,7 +141,7 @@ export function MessageEditor({
         <ToolbarBtn onClick={() => wrapSelection("~")} title="Tachado (~texto~)">
           <Strikethrough className="h-3.5 w-3.5" />
         </ToolbarBtn>
-        <div className="mx-1 h-4 w-px bg-slate-200 dark:bg-slate-700" />
+        <div className="mx-1 h-4 w-px bg-muted" />
         <ToolbarBtn onClick={() => setShowEmojis((v) => !v)} title="Emojis">
           <Smile className="h-3.5 w-3.5" />
         </ToolbarBtn>
@@ -164,7 +164,7 @@ export function MessageEditor({
         />
 
         {showEmojis && (
-          <div className="absolute left-0 top-full z-20 mt-1 grid grid-cols-10 gap-0.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 p-2 shadow-lg">
+          <div className="absolute left-0 top-full z-20 mt-1 grid grid-cols-10 gap-0.5 rounded-lg border border-border bg-card p-2 shadow-lg">
             {EMOJIS.map((e) => (
               <button
                 key={e}
@@ -173,7 +173,7 @@ export function MessageEditor({
                   insertAtCursor(e);
                   setShowEmojis(false);
                 }}
-                className="flex h-7 w-7 items-center justify-center rounded text-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+                className="flex h-7 w-7 items-center justify-center rounded text-lg hover:bg-muted"
               >
                 {e}
               </button>
@@ -184,7 +184,7 @@ export function MessageEditor({
 
       <textarea
         ref={textareaRef}
-        className="w-full h-36 p-3 rounded-lg border border-slate-200 dark:border-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600 dark:bg-slate-950"
+        className="w-full h-36 p-3 rounded-lg border border-border text-sm focus:outline-none focus:ring-2 focus:ring-purple-600 dark:bg-slate-950"
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -192,10 +192,10 @@ export function MessageEditor({
       />
 
       <div className="flex items-center justify-between">
-        <span className="text-[10px] text-slate-400">
+        <span className="text-[10px] text-muted-foreground">
           {value.length} caractere{value.length === 1 ? "" : "s"}
         </span>
-        <span className="text-[10px] text-slate-400">
+        <span className="text-[10px] text-muted-foreground">
           *negrito* · _itálico_ · ~tachado~
         </span>
       </div>
@@ -207,7 +207,7 @@ export function MessageEditor({
           <img
             src={previewSrc}
             alt="Imagem da campanha"
-            className="max-h-40 rounded-lg border border-slate-200 dark:border-slate-700 object-contain"
+            className="max-h-40 rounded-lg border border-border object-contain"
           />
           <button
             type="button"

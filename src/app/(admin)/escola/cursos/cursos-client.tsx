@@ -33,12 +33,12 @@ const AREA_LABEL: Record<string, string> = {
 };
 
 const AREA_COLOR: Record<string, string> = {
-  beleza: "bg-pink-100 text-pink-800",
-  gastronomia: "bg-amber-100 text-amber-800",
-  artesanato: "bg-emerald-100 text-emerald-800",
-  tecnologia: "bg-blue-100 text-blue-800",
-  gestao: "bg-indigo-100 text-indigo-800",
-  outros: "bg-slate-100 text-slate-800",
+  beleza: "bg-pink-100 text-pink-800 dark:bg-pink-900/40 dark:text-pink-200",
+  gastronomia: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200",
+  artesanato: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200",
+  tecnologia: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200",
+  gestao: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200",
+  outros: "bg-muted text-foreground",
 };
 
 const cursoFormSchema = z.object({
@@ -108,7 +108,7 @@ export function CursosClient({ cursos }: CursosClientProps) {
           render: (item) => (
             <Badge
               className={
-                AREA_COLOR[item.area_atuacao] || "bg-slate-100 text-slate-800"
+                AREA_COLOR[item.area_atuacao] || "bg-muted text-foreground"
               }
             >
               {AREA_LABEL[item.area_atuacao] || item.area_atuacao}

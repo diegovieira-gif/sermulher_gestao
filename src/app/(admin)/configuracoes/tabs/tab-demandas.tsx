@@ -173,7 +173,7 @@ export function TabDemandas({ roles, configs, tipos }: TabDemandasProps) {
               </div>
 
               {!permitirTudo && selectedTipos.size === 0 && (
-                <p className="text-xs text-amber-600">
+                <p className="text-xs text-amber-600 dark:text-amber-400">
                   Nenhum tipo selecionado — este perfil não verá nenhuma demanda.
                 </p>
               )}

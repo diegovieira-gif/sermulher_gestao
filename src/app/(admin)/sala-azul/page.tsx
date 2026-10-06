@@ -169,7 +169,7 @@ export default async function SalaAzulPage() {
           </div>
           <div
             className={`text-2xl font-bold ${
-              stats.alertaRisco > 0 ? "text-red-600" : ""
+              stats.alertaRisco > 0 ? "text-red-600 dark:text-red-400" : ""
             }`}
           >
             {stats.alertaRisco}

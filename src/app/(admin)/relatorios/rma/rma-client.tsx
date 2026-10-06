@@ -196,7 +196,7 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
       </Card>
 
       {/* ÁREA DE IMPRESSÃO (Documento Oficial) */}
-      <div id="rma-print-area" className="w-full max-w-[210mm] mx-auto bg-white p-8 min-h-[297mm] shadow-sm print:shadow-none border border-gray-200 print:border-none">
+      <div id="rma-print-area" className="papel w-full max-w-[210mm] mx-auto bg-card p-8 min-h-[297mm] shadow-sm print:shadow-none border border-border print:border-none">
 
         {/* Bloco 1: Cabeçalho Institucional */}
         <div className="text-center border-b-2 border-black pb-4 mb-6">
@@ -213,12 +213,12 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
 
         {/* Bloco 2: Volume de Atendimentos */}
         <div className="mb-8">
-          <h4 className="text-sm font-bold uppercase mb-2 border-l-4 border-black pl-2 bg-gray-100 py-1">
+          <h4 className="text-sm font-bold uppercase mb-2 border-l-4 border-black pl-2 bg-muted py-1">
             1. MOVIMENTO MENSAL
           </h4>
           <table className="w-full border-collapse border border-black text-sm">
             <thead>
-              <tr className="bg-gray-200">
+              <tr className="bg-muted">
                 <th className="border border-black p-2 text-left w-2/3">DESCRIÇÃO</th>
                 <th className="border border-black p-2 text-center w-1/3">QUANTIDADE</th>
               </tr>
@@ -240,7 +240,7 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
                   {dados.volume.atendimentos_tecnicos}
                 </td>
               </tr>
-              <tr className="bg-gray-100">
+              <tr className="bg-muted">
                 <td className="border border-black p-2 text-right font-bold">
                   TOTAL DE ATIVIDADES
                 </td>
@@ -254,12 +254,12 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
 
         {/* Bloco 3: Detalhamento por Setor */}
         <div className="mb-8">
-          <h4 className="text-sm font-bold uppercase mb-2 border-l-4 border-black pl-2 bg-gray-100 py-1">
+          <h4 className="text-sm font-bold uppercase mb-2 border-l-4 border-black pl-2 bg-muted py-1">
             2. DETALHAMENTO DOS ATENDIMENTOS TÉCNICOS
           </h4>
           <table className="w-full border-collapse border border-black text-sm">
             <thead>
-              <tr className="bg-gray-200">
+              <tr className="bg-muted">
                 <th className="border border-black p-2 text-left w-2/3">SETOR / EQUIPE TÉCNICA</th>
                 <th className="border border-black p-2 text-center w-1/3">ATENDIMENTOS</th>
               </tr>
@@ -278,7 +278,7 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
                 ))
               ) : (
                 <tr>
-                  <td className="border border-black p-2 text-center italic text-gray-500" colSpan={2}>
+                  <td className="border border-black p-2 text-center italic text-muted-foreground" colSpan={2}>
                     Nenhum atendimento técnico registrado.
                   </td>
                 </tr>
@@ -289,12 +289,12 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
 
         {/* Bloco 4: Perfil da Violência (Novos Casos) */}
         <div className="mb-8">
-          <h4 className="text-sm font-bold uppercase mb-2 border-l-4 border-black pl-2 bg-gray-100 py-1">
+          <h4 className="text-sm font-bold uppercase mb-2 border-l-4 border-black pl-2 bg-muted py-1">
             3. TIPOS DE VIOLÊNCIA IDENTIFICADOS (NOVOS CASOS)
           </h4>
           <table className="w-full border-collapse border border-black text-sm">
             <thead>
-              <tr className="bg-gray-200">
+              <tr className="bg-muted">
                 <th className="border border-black p-2 text-left w-2/3">TIPOLOGIA</th>
                 <th className="border border-black p-2 text-center w-1/3">OCORRÊNCIAS</th>
               </tr>
@@ -313,7 +313,7 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
                 ))
               ) : (
                 <tr>
-                  <td className="border border-black p-2 text-center italic text-gray-500" colSpan={2}>
+                  <td className="border border-black p-2 text-center italic text-muted-foreground" colSpan={2}>
                     Nenhuma tipologia identificada nos novos casos.
                   </td>
                 </tr>
@@ -321,8 +321,8 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
             </tbody>
             {dados.violencia.length > 0 && (
               <tfoot>
-                <tr className="bg-gray-100">
-                  <td className="border border-black p-2 text-xs italic text-gray-600">
+                <tr className="bg-muted">
+                  <td className="border border-black p-2 text-xs italic text-muted-foreground">
                     * Um caso pode envolver múltiplos tipos de violência.
                   </td>
                   <td className="border border-black p-2"></td>

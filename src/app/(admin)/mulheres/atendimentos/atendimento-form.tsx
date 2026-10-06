@@ -678,8 +678,8 @@ export function AtendimentoForm({
 
               {/* ABA 4: AVALIAÇÃO DE RISCO */}
               <TabsContent value="risco" className="space-y-4 pt-4">
-                <div className="border rounded-lg p-4 bg-red-50/50">
-                  <h3 className="text-md font-semibold text-red-800 mb-4 flex items-center gap-2">
+                <div className="border rounded-lg p-4 bg-red-50/50 dark:bg-red-950/50">
+                  <h3 className="text-md font-semibold text-red-800 mb-4 flex items-center gap-2 dark:text-red-200">
                     Mapeamento de Risco
                   </h3>
                   <div className="space-y-4">
@@ -689,7 +689,7 @@ export function AtendimentoForm({
                         control={form.control}
                         name={`avaliacao_risco.${pergunta.key}`}
                         render={({ field }) => (
-                          <FormItem className="grid grid-cols-1 md:grid-cols-[2fr_1fr] items-center gap-4 border-b border-red-100 pb-2 last:border-0">
+                          <FormItem className="grid grid-cols-1 md:grid-cols-[2fr_1fr] items-center gap-4 border-b border-red-100 pb-2 last:border-0 dark:border-red-900">
                             <FormLabel className="text-sm font-medium">
                               {pergunta.label}
                             </FormLabel>

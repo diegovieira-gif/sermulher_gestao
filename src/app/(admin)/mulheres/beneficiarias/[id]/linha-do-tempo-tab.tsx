@@ -21,11 +21,11 @@ const ESTILO: Record<
   EventoLinhaDoTempo["tipo"],
   { icone: LucideIcon; cor: string; rotulo: string }
 > = {
-  atendimento: { icone: Activity, cor: "bg-fuchsia-100 text-fuchsia-700", rotulo: "Atendimento" },
-  cram: { icone: ShieldAlert, cor: "bg-red-100 text-red-700", rotulo: "CRAM" },
-  beneficio: { icone: Gift, cor: "bg-emerald-100 text-emerald-700", rotulo: "Benefício" },
-  evento: { icone: CalendarCheck, cor: "bg-sky-100 text-sky-700", rotulo: "Evento" },
-  curso: { icone: GraduationCap, cor: "bg-indigo-100 text-indigo-700", rotulo: "Curso" },
+  atendimento: { icone: Activity, cor: "bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900/40 dark:text-fuchsia-300", rotulo: "Atendimento" },
+  cram: { icone: ShieldAlert, cor: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300", rotulo: "CRAM" },
+  beneficio: { icone: Gift, cor: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300", rotulo: "Benefício" },
+  evento: { icone: CalendarCheck, cor: "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300", rotulo: "Evento" },
+  curso: { icone: GraduationCap, cor: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300", rotulo: "Curso" },
 };
 
 export function LinhaDoTempoTab({
@@ -50,7 +50,7 @@ export function LinhaDoTempoTab({
     <Card>
       <CardContent className="p-6">
         {parcial && (
-          <p className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          <p className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
             Alguns módulos não puderam ser consultados — a linha do tempo pode
             estar incompleta.
           </p>

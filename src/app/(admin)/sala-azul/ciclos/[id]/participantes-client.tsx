@@ -459,7 +459,7 @@ export function ParticipantesClient({
                             variant="ghost"
                             size="icon"
                             title="Emitir certificado"
-                            className="text-amber-600 hover:text-amber-700"
+                            className="text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300"
                           >
                             <Award className="h-4 w-4" />
                           </Button>

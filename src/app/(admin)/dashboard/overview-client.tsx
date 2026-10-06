@@ -88,16 +88,16 @@ type Tone =
   | "orange";
 
 const TONE: Record<Tone, { bar: string; chip: string; icon: string }> = {
-  violet: { bar: "bg-violet-500", chip: "bg-violet-500/10", icon: "text-violet-600" },
-  fuchsia: { bar: "bg-fuchsia-500", chip: "bg-fuchsia-500/10", icon: "text-fuchsia-600" },
-  sky: { bar: "bg-sky-500", chip: "bg-sky-500/10", icon: "text-sky-600" },
-  amber: { bar: "bg-amber-500", chip: "bg-amber-500/10", icon: "text-amber-600" },
-  emerald: { bar: "bg-emerald-500", chip: "bg-emerald-500/10", icon: "text-emerald-600" },
-  rose: { bar: "bg-rose-500", chip: "bg-rose-500/10", icon: "text-rose-600" },
-  indigo: { bar: "bg-indigo-500", chip: "bg-indigo-500/10", icon: "text-indigo-600" },
-  cyan: { bar: "bg-cyan-500", chip: "bg-cyan-500/10", icon: "text-cyan-600" },
-  teal: { bar: "bg-teal-500", chip: "bg-teal-500/10", icon: "text-teal-600" },
-  orange: { bar: "bg-orange-500", chip: "bg-orange-500/10", icon: "text-orange-600" },
+  violet: { bar: "bg-violet-500", chip: "bg-violet-500/10", icon: "text-violet-600 dark:text-violet-400" },
+  fuchsia: { bar: "bg-fuchsia-500", chip: "bg-fuchsia-500/10", icon: "text-fuchsia-600 dark:text-fuchsia-400" },
+  sky: { bar: "bg-sky-500", chip: "bg-sky-500/10", icon: "text-sky-600 dark:text-sky-400" },
+  amber: { bar: "bg-amber-500", chip: "bg-amber-500/10", icon: "text-amber-600 dark:text-amber-400" },
+  emerald: { bar: "bg-emerald-500", chip: "bg-emerald-500/10", icon: "text-emerald-600 dark:text-emerald-400" },
+  rose: { bar: "bg-rose-500", chip: "bg-rose-500/10", icon: "text-rose-600 dark:text-rose-400" },
+  indigo: { bar: "bg-indigo-500", chip: "bg-indigo-500/10", icon: "text-indigo-600 dark:text-indigo-400" },
+  cyan: { bar: "bg-cyan-500", chip: "bg-cyan-500/10", icon: "text-cyan-600 dark:text-cyan-400" },
+  teal: { bar: "bg-teal-500", chip: "bg-teal-500/10", icon: "text-teal-600 dark:text-teal-400" },
+  orange: { bar: "bg-orange-500", chip: "bg-orange-500/10", icon: "text-orange-600 dark:text-orange-400" },
 };
 
 interface KpiDef {
@@ -189,7 +189,7 @@ export function OverviewClient({
 
   if (!stats) {
     return (
-      <div className="flex items-center justify-center h-96 text-muted-foreground bg-gray-50 rounded-lg border border-dashed">
+      <div className="flex items-center justify-center h-96 text-muted-foreground bg-muted/50 rounded-lg border border-dashed">
         <p>Aguardando dados...</p>
       </div>
     );
@@ -435,10 +435,10 @@ export function OverviewClient({
           <Card className="h-[400px] flex flex-col shadow-sm">
             <CardHeader>
               <div className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-purple-600" />
+                <TrendingUp className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                 <CardTitle>Fluxo de Atendimentos</CardTitle>
               </div>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted-foreground">
                 Volume diário nos últimos 30 dias
               </p>
             </CardHeader>
@@ -453,11 +453,11 @@ export function OverviewClient({
                       <CartesianGrid
                         strokeDasharray="3 3"
                         vertical={false}
-                        stroke="#e5e7eb"
+                        stroke="var(--border)"
                       />
                       <XAxis
                         dataKey="data"
-                        stroke="#9ca3af"
+                        stroke="var(--muted-foreground)"
                         fontSize={11}
                         tickFormatter={(value) => formatarDataCurta(value)}
                         axisLine={false}
@@ -465,16 +465,18 @@ export function OverviewClient({
                         dy={10}
                       />
                       <YAxis
-                        stroke="#9ca3af"
+                        stroke="var(--muted-foreground)"
                         fontSize={11}
                         axisLine={false}
                         tickLine={false}
                       />
                       <Tooltip
-                        cursor={{ fill: "#f9fafb" }}
+                        cursor={{ fill: "var(--muted)" }}
                         contentStyle={{
+                          backgroundColor: "var(--popover)",
+                          color: "var(--popover-foreground)",
                           borderRadius: "8px",
-                          border: "none",
+                          border: "1px solid var(--border)",
                           boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                         }}
                         labelFormatter={(value) => formatarDataCurta(value)}
@@ -489,7 +491,7 @@ export function OverviewClient({
                   </ResponsiveContainer>
                 </div>
               ) : (
-                <div className="h-full flex items-center justify-center text-gray-400 text-sm border-2 border-dashed border-gray-100 rounded-lg">
+                <div className="h-full flex items-center justify-center text-muted-foreground text-sm border-2 border-dashed border-border rounded-lg">
                   Sem dados para exibir no período
                 </div>
               )}
@@ -505,7 +507,7 @@ export function OverviewClient({
                 <Clock className="h-5 w-5 text-pink-500" />
                 <CardTitle>Agenda Rápida</CardTitle>
               </div>
-              <p className="text-sm text-gray-500">Próximos compromissos</p>
+              <p className="text-sm text-muted-foreground">Próximos compromissos</p>
             </CardHeader>
             <CardContent className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
               {proximosEventos.length > 0 ? (
@@ -513,21 +515,21 @@ export function OverviewClient({
                   {proximosEventos.map((evento) => (
                     <div
                       key={evento.id}
-                      className="group flex gap-3 p-3 rounded-lg border border-gray-100 bg-gray-50/50 hover:bg-white hover:border-purple-100 hover:shadow-sm transition-all"
+                      className="group flex gap-3 p-3 rounded-lg border border-border bg-gray-50/50 hover:bg-card hover:border-purple-100 hover:shadow-sm transition-all dark:hover:border-purple-900"
                     >
                       <div className="flex-shrink-0 mt-1">
                         <div className="w-2 h-2 rounded-full bg-pink-500 ring-4 ring-pink-50" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate group-hover:text-purple-700 transition-colors">
+                        <p className="text-sm font-medium text-foreground truncate group-hover:text-purple-700 transition-colors dark:group-hover:text-purple-300">
                           {evento.titulo}
                         </p>
                         <div className="flex items-center gap-2 mt-1.5">
-                          <span className="text-[10px] font-semibold text-gray-500 bg-white px-1.5 py-0.5 rounded border border-gray-200 uppercase tracking-wide">
+                          <span className="text-[10px] font-semibold text-muted-foreground bg-card px-1.5 py-0.5 rounded border border-border uppercase tracking-wide">
                             {getLabelDataRelativa(evento.data_inicio)}
                           </span>
                           {evento.tipo_id && (
-                            <span className="text-[10px] text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-100 truncate max-w-[100px]">
+                            <span className="text-[10px] text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-100 truncate max-w-[100px] dark:text-purple-400 dark:bg-purple-950/40 dark:border-purple-900">
                               {evento.tipo_id.nome}
                             </span>
                           )}
@@ -539,7 +541,7 @@ export function OverviewClient({
               ) : (
                 <div className="h-full flex flex-col items-center justify-center text-center p-4">
                   <Calendar className="h-10 w-10 text-gray-200 mb-3" />
-                  <p className="text-sm text-gray-500">Nenhum evento próximo</p>
+                  <p className="text-sm text-muted-foreground">Nenhum evento próximo</p>
                 </div>
               )}
             </CardContent>
@@ -548,7 +550,7 @@ export function OverviewClient({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full gap-2 text-gray-600 hover:text-purple-700"
+                  className="w-full gap-2 text-muted-foreground hover:text-purple-700 dark:hover:text-purple-300"
                 >
                   Ver agenda completa <ArrowRight className="h-3 w-3" />
                 </Button>
@@ -567,7 +569,7 @@ export function OverviewClient({
             <Link href="/sala-azul">
               <Button
                 variant="outline"
-                className="w-full border-blue-200 text-blue-700 hover:bg-blue-50 shadow-sm h-auto py-3 flex-col gap-1"
+                className="w-full border-blue-200 text-blue-700 hover:bg-blue-50 shadow-sm h-auto py-3 flex-col gap-1 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-950/40"
               >
                 <ShieldAlert className="h-5 w-5" />
                 <span className="text-xs font-normal">Sala Azul</span>

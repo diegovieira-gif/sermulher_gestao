@@ -62,12 +62,12 @@ function Callout({
     tip: { wrap: "border-primary/30 bg-primary/5", ic: "text-primary", Icon: Lightbulb },
     warn: {
       wrap: "border-amber-500/30 bg-amber-500/10",
-      ic: "text-amber-600",
+      ic: "text-amber-600 dark:text-amber-400",
       Icon: AlertTriangle,
     },
     new: {
       wrap: "border-emerald-500/30 bg-emerald-500/10",
-      ic: "text-emerald-600",
+      ic: "text-emerald-600 dark:text-emerald-400",
       Icon: Sparkles,
     },
   }[variant];
@@ -221,16 +221,16 @@ function KpiIllustration() {
 function BadgeShowcase() {
   return (
     <div className="flex flex-wrap gap-2">
-      <span className="rounded-full bg-rose-500/15 px-3 py-1 text-xs font-semibold text-rose-600">
+      <span className="rounded-full bg-rose-500/15 px-3 py-1 text-xs font-semibold text-rose-600 dark:text-rose-400">
         Alta prioridade
       </span>
-      <span className="rounded-full bg-amber-500/15 px-3 py-1 text-xs font-semibold text-amber-600">
+      <span className="rounded-full bg-amber-500/15 px-3 py-1 text-xs font-semibold text-amber-600 dark:text-amber-400">
         Em análise
       </span>
-      <span className="rounded-full bg-sky-500/15 px-3 py-1 text-xs font-semibold text-sky-600">
+      <span className="rounded-full bg-sky-500/15 px-3 py-1 text-xs font-semibold text-sky-600 dark:text-sky-400">
         Em andamento
       </span>
-      <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-600">
+      <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
         Concluído
       </span>
     </div>
@@ -476,7 +476,7 @@ export default function ManualPage() {
           <AccordionItem value="d3">
             <AccordionTrigger>
               Mudar o período de referência{" "}
-              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25">
+              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25 dark:text-emerald-300">
                 Novo
               </Badge>
             </AccordionTrigger>
@@ -498,7 +498,7 @@ export default function ManualPage() {
         title="Gestão de Mulheres"
         description="Cadastro de beneficiárias, atendimentos e prontuário eletrônico."
         icon={HeartHandshake}
-        iconClass="text-fuchsia-600"
+        iconClass="text-fuchsia-600 dark:text-fuchsia-400"
       >
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="rounded-lg border bg-muted/40 p-4 text-center">
@@ -568,7 +568,7 @@ export default function ManualPage() {
           <AccordionItem value="m7">
             <AccordionTrigger>
               Completude da ficha{" "}
-              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25">
+              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25 dark:text-emerald-300">
                 Novo
               </Badge>
             </AccordionTrigger>
@@ -600,7 +600,7 @@ export default function ManualPage() {
           <AccordionItem value="m8">
             <AccordionTrigger>
               Linha do Tempo{" "}
-              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25">
+              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25 dark:text-emerald-300">
                 Novo
               </Badge>
             </AccordionTrigger>
@@ -621,7 +621,7 @@ export default function ManualPage() {
           <AccordionItem value="m9">
             <AccordionTrigger>
               Rascunho automático{" "}
-              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25">
+              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25 dark:text-emerald-300">
                 Novo
               </Badge>
             </AccordionTrigger>
@@ -669,7 +669,7 @@ export default function ManualPage() {
           <AccordionItem value="m5">
             <AccordionTrigger>
               Eventos e Cursos da beneficiária{" "}
-              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25">
+              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25 dark:text-emerald-300">
                 Novo
               </Badge>
             </AccordionTrigger>
@@ -715,7 +715,7 @@ export default function ManualPage() {
           <AccordionItem value="m6">
             <AccordionTrigger>
               Filtros e telefone validado{" "}
-              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25">
+              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25 dark:text-emerald-300">
                 Novo
               </Badge>
             </AccordionTrigger>
@@ -743,7 +743,7 @@ export default function ManualPage() {
         title="CRAM — Instrumental de Atendimento"
         description="Centro de Referência de Atendimento à Mulher em Situação de Violência: o formulário completo de acolhimento e o Plano Individual."
         icon={ClipboardList}
-        iconClass="text-rose-600"
+        iconClass="text-rose-600 dark:text-rose-400"
       >
         <Callout variant="new" title="Para que serve este módulo">
           O <strong>CRAM</strong> reproduz no sistema o{" "}
@@ -864,7 +864,7 @@ export default function ManualPage() {
           <AccordionItem value="c4">
             <AccordionTrigger>
               Como o nível de risco é calculado{" "}
-              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25">
+              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25 dark:text-emerald-300">
                 Novo
               </Badge>
             </AccordionTrigger>
@@ -875,17 +875,17 @@ export default function ManualPage() {
                 Psicológico foram respondidas com <strong>“Sim”</strong>:
               </p>
               <div className="grid gap-2 sm:grid-cols-4">
-                <div className="rounded-md border border-red-200 bg-red-50 p-2 text-center">
-                  <p className="text-xs font-semibold text-red-800">Alto</p>
-                  <p className="text-xs text-red-700">4 ou mais</p>
+                <div className="rounded-md border border-red-200 bg-red-50 p-2 text-center dark:border-red-800 dark:bg-red-950/40">
+                  <p className="text-xs font-semibold text-red-800 dark:text-red-200">Alto</p>
+                  <p className="text-xs text-red-700 dark:text-red-300">4 ou mais</p>
                 </div>
-                <div className="rounded-md border border-amber-200 bg-amber-50 p-2 text-center">
-                  <p className="text-xs font-semibold text-amber-800">Médio</p>
-                  <p className="text-xs text-amber-700">2 ou 3</p>
+                <div className="rounded-md border border-amber-200 bg-amber-50 p-2 text-center dark:border-amber-800 dark:bg-amber-950/40">
+                  <p className="text-xs font-semibold text-amber-800 dark:text-amber-200">Médio</p>
+                  <p className="text-xs text-amber-700 dark:text-amber-300">2 ou 3</p>
                 </div>
-                <div className="rounded-md border border-yellow-200 bg-yellow-50 p-2 text-center">
-                  <p className="text-xs font-semibold text-yellow-800">Baixo</p>
-                  <p className="text-xs text-yellow-700">1</p>
+                <div className="rounded-md border border-yellow-200 bg-yellow-50 p-2 text-center dark:border-yellow-800 dark:bg-yellow-950/40">
+                  <p className="text-xs font-semibold text-yellow-800 dark:text-yellow-200">Baixo</p>
+                  <p className="text-xs text-yellow-700 dark:text-yellow-300">1</p>
                 </div>
                 <div className="rounded-md border bg-muted/40 p-2 text-center">
                   <p className="text-xs font-semibold text-foreground">
@@ -952,7 +952,7 @@ export default function ManualPage() {
         title="Gestão de Demandas"
         description="Quadro Kanban para acompanhar pendências entre setores."
         icon={GitPullRequest}
-        iconClass="text-orange-600"
+        iconClass="text-orange-600 dark:text-orange-400"
       >
         <p className="text-sm leading-relaxed text-muted-foreground">
           Todas as demandas e encaminhamentos aparecem em um quadro visual.
@@ -984,7 +984,7 @@ export default function ManualPage() {
         title="Agenda Institucional"
         description="Calendário unificado de eventos, aulas e sessões."
         icon={Calendar}
-        iconClass="text-sky-600"
+        iconClass="text-sky-600 dark:text-sky-400"
       >
         <p className="text-sm leading-relaxed text-muted-foreground">
           A Agenda reúne em um só lugar os <strong>eventos manuais</strong>, as{" "}
@@ -1014,7 +1014,7 @@ export default function ManualPage() {
           <AccordionItem value="a0">
             <AccordionTrigger>
               Data e horário do evento{" "}
-              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25">
+              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25 dark:text-emerald-300">
                 Novo
               </Badge>
             </AccordionTrigger>
@@ -1054,7 +1054,7 @@ export default function ManualPage() {
           <AccordionItem value="a5">
             <AccordionTrigger>
               Legenda e impressão do calendário{" "}
-              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25">
+              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25 dark:text-emerald-300">
                 Novo
               </Badge>
             </AccordionTrigger>
@@ -1094,7 +1094,7 @@ export default function ManualPage() {
           <AccordionItem value="a4">
             <AccordionTrigger>
               Buscar, ordenar e exportar a lista{" "}
-              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25">
+              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25 dark:text-emerald-300">
                 Novo
               </Badge>
             </AccordionTrigger>
@@ -1129,7 +1129,7 @@ export default function ManualPage() {
           <AccordionItem value="a1">
             <AccordionTrigger>
               Ver quem participou de um evento{" "}
-              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25">
+              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25 dark:text-emerald-300">
                 Novo
               </Badge>
             </AccordionTrigger>
@@ -1172,7 +1172,7 @@ export default function ManualPage() {
           <AccordionItem value="a2">
             <AccordionTrigger>
               Registrar a equipe que atuou no evento{" "}
-              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25">
+              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25 dark:text-emerald-300">
                 Novo
               </Badge>
             </AccordionTrigger>
@@ -1219,7 +1219,7 @@ export default function ManualPage() {
           <AccordionItem value="a3">
             <AccordionTrigger>
               Avisos automáticos de escala{" "}
-              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25">
+              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25 dark:text-emerald-300">
                 Novo
               </Badge>
             </AccordionTrigger>
@@ -1276,7 +1276,7 @@ export default function ManualPage() {
         title="Escola da Mulher"
         description="Cursos profissionalizantes, turmas, matrículas e certificados."
         icon={GraduationCap}
-        iconClass="text-emerald-600"
+        iconClass="text-emerald-600 dark:text-emerald-400"
       >
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="e1">
@@ -1310,7 +1310,7 @@ export default function ManualPage() {
         title="Sala Azul"
         description="Acompanhamento de autores de violência e ciclos reflexivos."
         icon={ShieldAlert}
-        iconClass="text-indigo-600"
+        iconClass="text-indigo-600 dark:text-indigo-400"
       >
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="s1">
@@ -1340,7 +1340,7 @@ export default function ManualPage() {
         title="Marketing e Comunicação"
         description="Campanhas de conscientização e disparos por WhatsApp."
         icon={Megaphone}
-        iconClass="text-pink-600"
+        iconClass="text-pink-600 dark:text-pink-400"
       >
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-lg border bg-muted/40 p-4">
@@ -1370,7 +1370,7 @@ export default function ManualPage() {
         title="Observatório"
         description="Painéis analíticos consolidados (acesso restrito)."
         icon={LayoutDashboard}
-        iconClass="text-cyan-600"
+        iconClass="text-cyan-600 dark:text-cyan-400"
       >
         <p className="text-sm leading-relaxed text-muted-foreground">
           O Observatório reúne dashboards analíticos para leitura estratégica dos
@@ -1390,7 +1390,7 @@ export default function ManualPage() {
         title="App Amar"
         description="Gestão de conteúdo e relacionamento do aplicativo e do site."
         icon={Smartphone}
-        iconClass="text-rose-600"
+        iconClass="text-rose-600 dark:text-rose-400"
       >
         <p className="text-sm leading-relaxed text-muted-foreground">
           Painel de conteúdo que alimenta o aplicativo/site voltado ao público.
@@ -1426,7 +1426,7 @@ export default function ManualPage() {
         title="Relatórios"
         description="Indicadores gerais e relatórios oficiais do SUAS."
         icon={FileText}
-        iconClass="text-green-600"
+        iconClass="text-green-600 dark:text-green-400"
       >
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="r1">
@@ -1460,7 +1460,7 @@ export default function ManualPage() {
           <AccordionItem value="r3">
             <AccordionTrigger>
               Exportar CSV{" "}
-              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25">
+              <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25 dark:text-emerald-300">
                 Novo
               </Badge>
             </AccordionTrigger>
@@ -1483,7 +1483,7 @@ export default function ManualPage() {
         title="Configurações"
         description="Tabelas auxiliares, campanhas, site e segurança."
         icon={Settings}
-        iconClass="text-slate-600"
+        iconClass="text-muted-foreground"
       >
         <p className="text-sm leading-relaxed text-muted-foreground">
           Aqui você padroniza as opções que aparecem nos formulários de todo o
@@ -1505,7 +1505,7 @@ export default function ManualPage() {
               key={t}
               className="flex items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm text-muted-foreground"
             >
-              <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
               {t}
             </div>
           ))}
@@ -1523,9 +1523,9 @@ export default function ManualPage() {
         title="Controle de Acesso (Perfis)"
         description="Como organizar perfis e definir o que cada equipe acessa."
         icon={Lock}
-        iconClass="text-violet-600"
+        iconClass="text-violet-600 dark:text-violet-400"
       >
-        <Badge className="bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25">
+        <Badge className="bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25 dark:text-emerald-300">
           <Sparkles className="mr-1 h-3 w-3" /> Apenas administradores
         </Badge>
         <p className="text-sm leading-relaxed text-muted-foreground">
@@ -1657,9 +1657,9 @@ export default function ManualPage() {
         title="Meu Perfil"
         description="Seus dados, seu histórico de ações e troca de senha."
         icon={UserCog}
-        iconClass="text-fuchsia-600"
+        iconClass="text-fuchsia-600 dark:text-fuchsia-400"
       >
-        <Badge className="bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25">
+        <Badge className="bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25 dark:text-emerald-300">
           <Sparkles className="mr-1 h-3 w-3" /> Novidade
         </Badge>
         <p className="text-sm leading-relaxed text-muted-foreground">

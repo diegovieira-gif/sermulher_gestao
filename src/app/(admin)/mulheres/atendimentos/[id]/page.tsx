@@ -47,7 +47,7 @@ function JsonList({
   data: any;
   emptyMessage: string;
 }) {
-  if (!data) return <p className="text-sm text-gray-500">{emptyMessage}</p>;
+  if (!data) return <p className="text-sm text-muted-foreground">{emptyMessage}</p>;
 
   // Se for string, tenta parsear
   let parsedData = data;
@@ -55,7 +55,7 @@ function JsonList({
     try {
       parsedData = JSON.parse(data);
     } catch (e) {
-      return <p className="text-sm text-gray-500">Dados inválidos</p>;
+      return <p className="text-sm text-muted-foreground">Dados inválidos</p>;
     }
   }
 
@@ -63,7 +63,7 @@ function JsonList({
   if (typeof parsedData === "object" && parsedData !== null) {
     const entries = Object.entries(parsedData);
     if (entries.length === 0)
-      return <p className="text-sm text-gray-500">{emptyMessage}</p>;
+      return <p className="text-sm text-muted-foreground">{emptyMessage}</p>;
 
     return (
       <ul className="space-y-2 mt-2">
@@ -76,10 +76,10 @@ function JsonList({
 
           return (
             <li key={key} className="flex items-start gap-2 text-sm">
-              <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5" />
+              <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 dark:text-green-400" />
               <span>
-                <span className="font-medium text-gray-700">{formattedKey}:</span>{" "}
-                <span className="text-gray-600">{String(value)}</span>
+                <span className="font-medium text-foreground">{formattedKey}:</span>{" "}
+                <span className="text-muted-foreground">{String(value)}</span>
               </span>
             </li>
           );
@@ -88,19 +88,19 @@ function JsonList({
     );
   }
 
-  return <p className="text-sm text-gray-500">{String(parsedData)}</p>;
+  return <p className="text-sm text-muted-foreground">{String(parsedData)}</p>;
 }
 
 // Helper para Avaliação de Risco
 function AvaliacaoRiscoList({ data }: { data: any }) {
-  if (!data) return <p className="text-sm text-gray-500">Nenhuma avaliação registrada.</p>;
+  if (!data) return <p className="text-sm text-muted-foreground">Nenhuma avaliação registrada.</p>;
 
   let parsedData = data;
   if (typeof data === "string") {
     try {
       parsedData = JSON.parse(data);
     } catch {
-      return <p className="text-sm text-gray-500">Erro ao ler avaliação.</p>;
+      return <p className="text-sm text-muted-foreground">Erro ao ler avaliação.</p>;
     }
   }
 
@@ -108,7 +108,7 @@ function AvaliacaoRiscoList({ data }: { data: any }) {
 
   const entries = Object.entries(parsedData);
   if (entries.length === 0)
-    return <p className="text-sm text-gray-500">Nenhuma avaliação registrada.</p>;
+    return <p className="text-sm text-muted-foreground">Nenhuma avaliação registrada.</p>;
 
   return (
     <ul className="space-y-3">
@@ -118,15 +118,15 @@ function AvaliacaoRiscoList({ data }: { data: any }) {
         return (
           <li
             key={pergunta}
-            className={`p-3 rounded-md border text-sm flex items-start justify-between gap-4 ${isRisk ? "bg-red-50 border-red-200" : "bg-gray-50 border-gray-100"
+            className={`p-3 rounded-md border text-sm flex items-start justify-between gap-4 ${isRisk ? "bg-red-50 border-red-200 dark:bg-red-950/40 dark:border-red-800" : "bg-muted/50 border-border"
               }`}
           >
-            <span className={`font-medium ${isRisk ? "text-red-800" : "text-gray-700"}`}>
+            <span className={`font-medium ${isRisk ? "text-red-800 dark:text-red-200" : "text-foreground"}`}>
               {pergunta.replace(/_/g, " ")}
             </span>
             <div className="flex items-center gap-1 shrink-0">
-              {isRisk && <AlertTriangle className="h-4 w-4 text-red-600" />}
-              <span className={`font-bold ${isRisk ? "text-red-700" : "text-gray-600"}`}>
+              {isRisk && <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />}
+              <span className={`font-bold ${isRisk ? "text-red-700 dark:text-red-300" : "text-muted-foreground"}`}>
                 {String(resposta)}
               </span>
             </div>
@@ -144,7 +144,7 @@ export default async function AtendimentoDetailPage({ params }: PageProps) {
   if (isNaN(atendimentoId)) {
     return (
       <div className="flex h-screen items-center justify-center flex-col gap-4">
-        <h1 className="text-2xl font-bold text-red-600">
+        <h1 className="text-2xl font-bold text-red-600 dark:text-red-400">
           ID do Atendimento Inválido
         </h1>
         <Link href="/mulheres/atendimentos">
@@ -222,10 +222,10 @@ export default async function AtendimentoDetailPage({ params }: PageProps) {
             </Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
               Prontuário #{atendimento.id}
             </h1>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               Aberto em{" "}
               {new Date(atendimento.data_abertura || "").toLocaleDateString(
                 "pt-BR",
@@ -249,20 +249,20 @@ export default async function AtendimentoDetailPage({ params }: PageProps) {
       </div>
 
       {/* Cartão de Resumo da Beneficiária (Mantido no topo) */}
-      <Card className="border-l-4 border-l-purple-600 shadow-sm bg-purple-50/30">
+      <Card className="border-l-4 border-l-purple-600 shadow-sm bg-purple-50/30 dark:bg-purple-950/30">
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Coluna 1: Identificação */}
             <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-full bg-purple-100 flex items-center justify-center">
-                  <User className="h-6 w-6 text-purple-700" />
+                <div className="h-12 w-12 rounded-full bg-purple-100 flex items-center justify-center dark:bg-purple-900/40">
+                  <User className="h-6 w-6 text-purple-700 dark:text-purple-300" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-gray-900">
+                  <h2 className="text-lg font-bold text-foreground">
                     {beneficiaria?.nome_completo || "Nome não informado"}
                   </h2>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     CPF: {beneficiaria?.cpf || "Não informado"}
                   </p>
                 </div>
@@ -280,7 +280,7 @@ export default async function AtendimentoDetailPage({ params }: PageProps) {
                 {atendimento.tipo_violencia && (
                   <Badge
                     variant="outline"
-                    className="text-red-600 border-red-200 bg-red-50"
+                    className="text-red-600 border-red-200 bg-red-50 dark:text-red-400 dark:border-red-800 dark:bg-red-950/40"
                   >
                     {atendimento.tipo_violencia.nome}
                   </Badge>
@@ -339,7 +339,7 @@ export default async function AtendimentoDetailPage({ params }: PageProps) {
             {/* Card Socioassistencial */}
             <Card className="h-full border-t-4 border-t-pink-500">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-pink-700">
+                <CardTitle className="flex items-center gap-2 text-pink-700 dark:text-pink-300">
                   <Baby className="h-5 w-5" />
                   Socioassistencial
                 </CardTitle>
@@ -349,14 +349,14 @@ export default async function AtendimentoDetailPage({ params }: PageProps) {
               </CardHeader>
               <CardContent className="space-y-4">
                 {atendimento.gestante_puerpera && (
-                  <div className="p-3 bg-pink-50 border border-pink-200 rounded-lg flex items-center gap-3">
-                    <Baby className="h-5 w-5 text-pink-600" />
-                    <span className="font-semibold text-pink-800">Gestante / Puérpera</span>
+                  <div className="p-3 bg-pink-50 border border-pink-200 rounded-lg flex items-center gap-3 dark:bg-pink-950/40 dark:border-pink-800">
+                    <Baby className="h-5 w-5 text-pink-600 dark:text-pink-400" />
+                    <span className="font-semibold text-pink-800 dark:text-pink-200">Gestante / Puérpera</span>
                   </div>
                 )}
 
                 <div>
-                  <h4 className="font-semibold text-sm mb-2 text-gray-700">Necessidades Sociais:</h4>
+                  <h4 className="font-semibold text-sm mb-2 text-foreground">Necessidades Sociais:</h4>
                   <JsonList data={atendimento.necessidades_sociais} emptyMessage="Nenhuma necessidade social registrada." />
                 </div>
               </CardContent>
@@ -365,7 +365,7 @@ export default async function AtendimentoDetailPage({ params }: PageProps) {
             {/* Card Jurídico */}
             <Card className="h-full border-t-4 border-t-blue-500">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-blue-700">
+                <CardTitle className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
                   <Scale className="h-5 w-5" />
                   Jurídico & Segurança
                 </CardTitle>
@@ -375,20 +375,20 @@ export default async function AtendimentoDetailPage({ params }: PageProps) {
               </CardHeader>
               <CardContent className="space-y-4">
                 {atendimento.medida_protetiva && (
-                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3 animate-pulse">
-                    <Shield className="h-5 w-5 text-red-600" />
-                    <span className="font-bold text-red-800">Medida Protetiva Vigente</span>
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3 animate-pulse dark:bg-red-950/40 dark:border-red-800">
+                    <Shield className="h-5 w-5 text-red-600 dark:text-red-400" />
+                    <span className="font-bold text-red-800 dark:text-red-200">Medida Protetiva Vigente</span>
                   </div>
                 )}
 
-                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-md">
-                  <Siren className="h-4 w-4 text-gray-500" />
+                <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-md">
+                  <Siren className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium">Boletim de Ocorrência:</span>
-                  <span className="text-sm text-gray-700">{atendimento.boletim_ocorrencia || "Não informado"}</span>
+                  <span className="text-sm text-foreground">{atendimento.boletim_ocorrencia || "Não informado"}</span>
                 </div>
 
                 <div>
-                  <h4 className="font-semibold text-sm mb-2 text-gray-700">Necessidades Jurídicas:</h4>
+                  <h4 className="font-semibold text-sm mb-2 text-foreground">Necessidades Jurídicas:</h4>
                   <JsonList data={atendimento.necessidades_juridicas} emptyMessage="Nenhuma demanda jurídica registrada." />
                 </div>
               </CardContent>
@@ -397,7 +397,7 @@ export default async function AtendimentoDetailPage({ params }: PageProps) {
             {/* Card Avaliação de Risco (Ocupa coluna inteira em mobile, 1 col em lg) */}
             <Card className="h-full border-t-4 border-t-orange-500 md:col-span-2 lg:col-span-1">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-orange-700">
+                <CardTitle className="flex items-center gap-2 text-orange-700 dark:text-orange-300">
                   <AlertTriangle className="h-5 w-5" />
                   Avaliação de Risco
                 </CardTitle>

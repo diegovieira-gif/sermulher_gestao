@@ -100,7 +100,7 @@ export function EventosCalendarioClient({
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-120px)] bg-white rounded-lg border shadow-sm overflow-hidden print:h-auto print:overflow-visible print:border-0 print:shadow-none">
+    <div className="flex flex-col h-[calc(100vh-120px)] bg-card rounded-lg border shadow-sm overflow-hidden print:h-auto print:overflow-visible print:border-0 print:shadow-none">
       {/* Documento de impressão — oculto na tela, é o que sai no papel. */}
       <AgendaImpressao
         eventos={initialEvents}
@@ -111,8 +111,8 @@ export function EventosCalendarioClient({
       {/* --- HEADER DO CALENDÁRIO --- */}
       <div className="flex items-center justify-between p-4 border-b">
         <div className="flex items-center gap-4">
-          <h2 className="text-2xl font-bold text-gray-800 capitalize flex items-center gap-2">
-            <CalendarIcon className="h-6 w-6 text-purple-600" />
+          <h2 className="text-2xl font-bold text-foreground capitalize flex items-center gap-2">
+            <CalendarIcon className="h-6 w-6 text-purple-600 dark:text-purple-400" />
             {format(currentDate, "MMMM yyyy", { locale: ptBR })}
           </h2>
           <div className="flex gap-1">
@@ -149,8 +149,8 @@ export function EventosCalendarioClient({
                   aria-pressed={!oculta}
                   className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 transition-all ${
                     oculta
-                      ? "border-slate-200 bg-slate-50 text-slate-400"
-                      : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:shadow-sm"
+                      ? "border-border bg-muted/50 text-muted-foreground"
+                      : "border-border bg-card text-foreground hover:border-border hover:shadow-sm"
                   }`}
                 >
                   <span
@@ -163,7 +163,7 @@ export function EventosCalendarioClient({
                   <span className={oculta ? "line-through" : ""}>
                     {origem.rotulo}
                   </span>
-                  <span className="text-[10px] text-slate-400">{quantidade}</span>
+                  <span className="text-[10px] text-muted-foreground">{quantidade}</span>
                 </button>
               );
             })}
@@ -201,18 +201,18 @@ export function EventosCalendarioClient({
 
       {/* --- GRID DO CALENDÁRIO --- */}
       <div className="flex-1 flex flex-col min-h-0">
-        <div className="grid grid-cols-7 border-b bg-gray-50">
+        <div className="grid grid-cols-7 border-b bg-muted/50">
           {weekDays.map((day) => (
             <div
               key={day}
-              className="py-2 text-center text-sm font-semibold text-gray-500 uppercase tracking-wider"
+              className="py-2 text-center text-sm font-semibold text-muted-foreground uppercase tracking-wider"
             >
               {day}
             </div>
           ))}
         </div>
 
-        <div className="grid grid-cols-7 flex-1 auto-rows-fr bg-gray-200 gap-px overflow-y-auto">
+        <div className="grid grid-cols-7 flex-1 auto-rows-fr bg-muted gap-px overflow-y-auto">
           {calendarDays.map((day, idx) => {
             const isCurrentMonth = isSameMonth(day, monthStart);
             const isTodayDate = isToday(day);
@@ -221,9 +221,9 @@ export function EventosCalendarioClient({
             return (
               <div
                 key={day.toString()}
-                className={`bg-white p-2 min-h-[100px] flex flex-col gap-1 transition-colors hover:bg-gray-50 ${
-                  !isCurrentMonth ? "bg-gray-50/50 text-gray-400" : ""
-                } ${isTodayDate ? "bg-purple-50/50" : ""}`}
+                className={`bg-card p-2 min-h-[100px] flex flex-col gap-1 transition-colors hover:bg-muted/50 ${
+                  !isCurrentMonth ? "bg-gray-50/50 text-muted-foreground" : ""
+                } ${isTodayDate ? "bg-purple-50/50 dark:bg-purple-950/50" : ""}`}
                 onClick={() => handleDayClick(day)}
               >
                 <div className="flex justify-between items-start">

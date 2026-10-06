@@ -56,11 +56,11 @@ export function ContatosClient({ initialData }: ContatosClientProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center bg-white p-4 rounded-lg shadow-sm">
+      <div className="flex items-center bg-card p-4 rounded-lg shadow-sm">
         <h3 className="text-lg font-medium">Lista de Contatos</h3>
       </div>
 
-      <div className="rounded-md border bg-white shadow-sm">
+      <div className="rounded-md border bg-card shadow-sm">
         <Table>
           <TableHeader>
             <TableRow>

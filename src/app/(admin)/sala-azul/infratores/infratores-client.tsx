@@ -116,13 +116,13 @@ export function InfratoresClient({
   const getNivelColor = (nivel: string) => {
     switch (nivel?.toLowerCase()) {
       case "alto":
-        return "bg-red-100 text-red-800 border-red-200";
+        return "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/40 dark:text-red-200 dark:border-red-800";
       case "médio":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+        return "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/40 dark:text-yellow-200 dark:border-yellow-800";
       case "baixo":
-        return "bg-green-100 text-green-800 border-green-200";
+        return "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/40 dark:text-green-200 dark:border-green-800";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-muted text-foreground";
     }
   };
 
@@ -132,11 +132,11 @@ export function InfratoresClient({
       <div className="print:hidden space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+            <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
               <ShieldAlert className="h-6 w-6 text-primary" />
               Gestão de Infratores
             </h2>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               Gerencie os participantes dos grupos reflexivos
             </p>
           </div>
@@ -163,8 +163,8 @@ export function InfratoresClient({
         </div>
 
         {/* Filtros */}
-        <div className="flex items-center gap-2 bg-white p-2 rounded-lg border shadow-sm">
-          <Search className="h-4 w-4 text-gray-400 ml-2" />
+        <div className="flex items-center gap-2 bg-card p-2 rounded-lg border shadow-sm">
+          <Search className="h-4 w-4 text-muted-foreground ml-2" />
           <Input
             placeholder="Buscar por nome, CPF ou processo..."
             value={searchTerm}
@@ -174,9 +174,9 @@ export function InfratoresClient({
         </div>
 
         {/* Tabela Interativa */}
-        <div className="rounded-md border bg-white shadow-sm overflow-hidden">
+        <div className="rounded-md border bg-card shadow-sm overflow-hidden">
           <Table>
-            <TableHeader className="bg-gray-50">
+            <TableHeader className="bg-muted/50">
               <TableRow>
                 <TableHead>Nome Completo</TableHead>
                 <TableHead>Status Legal</TableHead>
@@ -199,21 +199,21 @@ export function InfratoresClient({
                 filteredData.map((item) => (
                   <TableRow
                     key={item.id}
-                    className="hover:bg-blue-50/30 transition-colors"
+                    className="hover:bg-blue-50/30 transition-colors dark:hover:bg-blue-950/30"
                   >
                     <TableCell className="font-medium">
                       <div className="flex flex-col">
-                        <span className="text-gray-900">
+                        <span className="text-foreground">
                           {item.nome_completo}
                         </span>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-muted-foreground">
                           {item.cpf}
                         </span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="bg-slate-50">
-                        <Gavel className="h-3 w-3 mr-1 text-slate-500" />
+                      <Badge variant="outline" className="bg-muted/50">
+                        <Gavel className="h-3 w-3 mr-1 text-muted-foreground" />
                         Status Legal
                       </Badge>
                     </TableCell>
@@ -224,7 +224,7 @@ export function InfratoresClient({
                         Nível
                       </span>
                     </TableCell>
-                    <TableCell className="text-sm text-gray-600 font-mono">
+                    <TableCell className="text-sm text-muted-foreground font-mono">
                       {item.numero_processo || "---"}
                     </TableCell>
                     <TableCell className="text-right">
@@ -251,7 +251,7 @@ export function InfratoresClient({
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => setDeletingId(item.id as number)}
-                            className="text-red-600 focus:text-red-600"
+                            className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
                             Excluir
@@ -273,15 +273,15 @@ export function InfratoresClient({
         <div className="mb-8 border-b pb-4">
           <div className="flex justify-between items-end">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">
+              <h1 className="text-2xl font-bold text-foreground mb-1">
                 Relatório de Infratores
               </h1>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 Sala Azul - Grupos Reflexivos para Homens
               </p>
             </div>
             <div className="text-right">
-              <p className="text-xs text-gray-500">Data de Emissão</p>
+              <p className="text-xs text-muted-foreground">Data de Emissão</p>
               <p className="font-mono font-medium">
                 {format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
               </p>
@@ -293,34 +293,34 @@ export function InfratoresClient({
         <table className="w-full text-sm text-left">
           <thead>
             <tr className="border-b-2 border-gray-800">
-              <th className="py-2 font-bold text-gray-900">
+              <th className="py-2 font-bold text-foreground">
                 Nome Completo / CPF
               </th>
-              <th className="py-2 font-bold text-gray-900">Processo</th>
-              <th className="py-2 font-bold text-gray-900">Status Legal</th>
-              <th className="py-2 font-bold text-gray-900">Nível Risco</th>
+              <th className="py-2 font-bold text-foreground">Processo</th>
+              <th className="py-2 font-bold text-foreground">Status Legal</th>
+              <th className="py-2 font-bold text-foreground">Nível Risco</th>
             </tr>
           </thead>
           <tbody>
             {filteredData.map((item, index) => (
               <tr
                 key={item.id}
-                className={`border-b border-gray-200 ${index % 2 === 0 ? "bg-gray-50" : "bg-white"}`}
+                className={`border-b border-border ${index % 2 === 0 ? "bg-muted/50" : "bg-card"}`}
               >
                 <td className="py-3 pr-4">
-                  <div className="font-semibold text-gray-900">
+                  <div className="font-semibold text-foreground">
                     {item.nome_completo}
                   </div>
-                  <div className="text-gray-500 text-xs">
+                  <div className="text-muted-foreground text-xs">
                     {item.cpf || "CPF não informado"}
                   </div>
                 </td>
-                <td className="py-3 font-mono text-gray-700">
+                <td className="py-3 font-mono text-foreground">
                   {item.numero_processo || "---"}
                 </td>
-                <td className="py-3 text-gray-700">Status Legal</td>
+                <td className="py-3 text-foreground">Status Legal</td>
                 <td className="py-3">
-                  <span className={`text-xs font-bold uppercase text-gray-700`}>
+                  <span className={`text-xs font-bold uppercase text-foreground`}>
                     Nível
                   </span>
                 </td>
@@ -330,7 +330,7 @@ export function InfratoresClient({
         </table>
 
         {/* Rodapé do Relatório */}
-        <div className="mt-12 pt-8 border-t border-gray-300 flex justify-between items-center text-xs text-gray-500">
+        <div className="mt-12 pt-8 border-t border-border flex justify-between items-center text-xs text-muted-foreground">
           <p>Sistema de Gestão Integrada - SERMULHER</p>
           <p>Página 1 de 1</p>
         </div>

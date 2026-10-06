@@ -409,7 +409,7 @@ export function SessoesClient({ salaId, sessoes }: SessoesClientProps) {
                       type="checkbox"
                       checked={item.presente}
                       onChange={() => handleTogglePresenca(item.participacao_id)}
-                      className="h-5 w-5 rounded border-gray-300 cursor-pointer"
+                      className="h-5 w-5 rounded border-border cursor-pointer"
                     />
                     <div className="flex items-center gap-2 flex-1">
                       <User className="h-4 w-4 text-muted-foreground" />

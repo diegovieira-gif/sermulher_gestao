@@ -165,32 +165,32 @@ export function AuditoriaClient({
     switch (action) {
       case "create":
         return (
-          <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50">
+          <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800 dark:hover:bg-emerald-950/40">
             Criação
           </Badge>
         );
       case "update":
         return (
-          <Badge className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50">
+          <Badge className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800 dark:hover:bg-blue-950/40">
             Edição
           </Badge>
         );
       case "delete":
         return (
-          <Badge className="bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-50">
+          <Badge className="bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-50 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800 dark:hover:bg-rose-950/40">
             Exclusão
           </Badge>
         );
       case "login":
       case "authenticate":
         return (
-          <Badge className="bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-50">
+          <Badge className="bg-muted/50 text-foreground border-border hover:bg-muted/50">
             Autenticação
           </Badge>
         );
       default:
         return (
-          <Badge className="bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-50">
+          <Badge className="bg-muted/50 text-foreground border-border hover:bg-muted/50">
             {action}
           </Badge>
         );
@@ -217,11 +217,11 @@ export function AuditoriaClient({
       {/* Cabeçalho */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
             <Activity className="h-6 w-6 text-primary animate-pulse" />
             Auditoria do Sistema
           </h2>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             Rastreabilidade e histórico detalhado das operações realizadas no sistema
           </p>
         </div>
@@ -238,10 +238,10 @@ export function AuditoriaClient({
       </div>
 
       {/* Painel de Filtros */}
-      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm space-y-4">
+      <div className="bg-card p-4 rounded-xl border border-border shadow-sm space-y-4">
         <form onSubmit={handleSearchSubmit} className="flex flex-col md:flex-row gap-3">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Buscar por usuário, email, coleção ou ID do registro..."
               value={searchTerm}
@@ -254,7 +254,7 @@ export function AuditoriaClient({
             <select
               value={selectedCollection}
               onChange={(e) => setSelectedCollection(e.target.value)}
-              className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none focus:ring-1 focus:ring-primary min-w-[180px]"
+              className="bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary min-w-[180px]"
             >
               <option value="all">Todas as Coleções</option>
               {collections.map((col) => (
@@ -267,7 +267,7 @@ export function AuditoriaClient({
             <select
               value={selectedAction}
               onChange={(e) => setSelectedAction(e.target.value)}
-              className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none focus:ring-1 focus:ring-primary min-w-[150px]"
+              className="bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary min-w-[150px]"
             >
               <option value="all">Todas as Ações</option>
               <option value="create">Criação</option>
@@ -284,10 +284,10 @@ export function AuditoriaClient({
       </div>
 
       {/* Tabela de Logs */}
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
-            <TableHeader className="bg-gray-50">
+            <TableHeader className="bg-muted/50">
               <TableRow>
                 <TableHead className="w-[180px]">Usuário</TableHead>
                 <TableHead className="w-[110px]">Ação</TableHead>
@@ -303,22 +303,22 @@ export function AuditoriaClient({
                 Array.from({ length: 5 }).map((_, idx) => (
                   <TableRow key={idx} className="animate-pulse">
                     <TableCell>
-                      <div className="h-4 bg-gray-200 rounded w-28 mb-1" />
-                      <div className="h-3 bg-gray-200 rounded w-36" />
+                      <div className="h-4 bg-muted rounded w-28 mb-1" />
+                      <div className="h-3 bg-muted rounded w-36" />
                     </TableCell>
-                    <TableCell><div className="h-6 bg-gray-200 rounded w-16" /></TableCell>
-                    <TableCell><div className="h-4 bg-gray-200 rounded w-32" /></TableCell>
-                    <TableCell><div className="h-4 bg-gray-200 rounded w-12" /></TableCell>
-                    <TableCell><div className="h-4 bg-gray-200 rounded w-24" /></TableCell>
-                    <TableCell><div className="h-4 bg-gray-200 rounded w-16" /></TableCell>
-                    <TableCell className="text-right"><div className="h-8 bg-gray-200 rounded w-8 ml-auto" /></TableCell>
+                    <TableCell><div className="h-6 bg-muted rounded w-16" /></TableCell>
+                    <TableCell><div className="h-4 bg-muted rounded w-32" /></TableCell>
+                    <TableCell><div className="h-4 bg-muted rounded w-12" /></TableCell>
+                    <TableCell><div className="h-4 bg-muted rounded w-24" /></TableCell>
+                    <TableCell><div className="h-4 bg-muted rounded w-16" /></TableCell>
+                    <TableCell className="text-right"><div className="h-8 bg-muted rounded w-8 ml-auto" /></TableCell>
                   </TableRow>
                 ))
               ) : logs.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-36 text-center text-gray-500">
+                  <TableCell colSpan={7} className="h-36 text-center text-muted-foreground">
                     <div className="flex flex-col items-center justify-center space-y-2">
-                      <Info className="h-8 w-8 text-gray-300" />
+                      <Info className="h-8 w-8 text-muted-foreground/70" />
                       <p>Nenhum log de auditoria encontrado para os filtros selecionados.</p>
                     </div>
                   </TableCell>
@@ -334,29 +334,29 @@ export function AuditoriaClient({
                             {log.user?.first_name?.[0] || log.user?.email?.[0]?.toUpperCase() || "S"}
                           </div>
                           <div className="flex flex-col overflow-hidden">
-                            <span className="font-semibold text-gray-900 truncate">
+                            <span className="font-semibold text-foreground truncate">
                               {log.user ? `${log.user.first_name} ${log.user.last_name || ""}` : "Sistema / API"}
                             </span>
-                            <span className="text-xs text-gray-500 truncate">
+                            <span className="text-xs text-muted-foreground truncate">
                               {log.user?.email || "Chave Administrativa"}
                             </span>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>{getActionBadge(log.action)}</TableCell>
-                      <TableCell className="font-medium text-gray-800">
+                      <TableCell className="font-medium text-foreground">
                         <div className="flex flex-col">
                           <span className="text-sm">{formatFriendlyCollection(log.collection)}</span>
-                          <span className="text-[10px] font-mono text-gray-400">{log.collection}</span>
+                          <span className="text-[10px] font-mono text-muted-foreground">{log.collection}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="font-mono text-xs text-gray-600 font-semibold">
+                      <TableCell className="font-mono text-xs text-muted-foreground font-semibold">
                         {log.item || "---"}
                       </TableCell>
-                      <TableCell className="text-sm text-gray-600">
+                      <TableCell className="text-sm text-muted-foreground">
                         {format(new Date(log.timestamp), "dd/MM/yyyy HH:mm:ss", { locale: ptBR })}
                       </TableCell>
-                      <TableCell className="text-xs font-mono text-gray-500">
+                      <TableCell className="text-xs font-mono text-muted-foreground">
                         {log.ip || "---"}
                       </TableCell>
                       <TableCell className="text-right">
@@ -365,13 +365,13 @@ export function AuditoriaClient({
                             variant="ghost"
                             size="icon"
                             onClick={() => handleOpenDetails(log)}
-                            className="h-8 w-8 text-gray-500 hover:text-primary hover:bg-primary/5"
+                            className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/5"
                             title="Visualizar Alterações"
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
                         ) : (
-                          <span className="text-xs text-gray-300 mr-2">—</span>
+                          <span className="text-xs text-muted-foreground/70 mr-2">—</span>
                         )}
                       </TableCell>
                     </TableRow>
@@ -384,7 +384,7 @@ export function AuditoriaClient({
 
         {/* Paginação */}
         <div className="flex items-center justify-between px-4 py-3 border-t bg-gray-50/50">
-          <div className="text-xs text-gray-500">
+          <div className="text-xs text-muted-foreground">
             Mostrando <span className="font-semibold">{(page - 1) * limit + 1}</span> a{" "}
             <span className="font-semibold">
               {Math.min(page * limit, meta.filter_count)}
@@ -403,7 +403,7 @@ export function AuditoriaClient({
               <ChevronLeft className="h-4 w-4" />
             </Button>
             
-            <span className="text-xs font-medium text-gray-700 px-2">
+            <span className="text-xs font-medium text-foreground px-2">
               Pág. {page} de {totalPages}
             </span>
 
@@ -436,30 +436,30 @@ export function AuditoriaClient({
           {selectedLog && (
             <div className="space-y-6">
               {/* Informações Básicas do Evento */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-lg bg-gray-50 border border-gray-100 text-sm">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-lg bg-muted/50 border border-border text-sm">
                 <div>
-                  <span className="text-xs text-gray-400 block uppercase font-semibold">Quem</span>
-                  <span className="font-semibold text-gray-800 block">
+                  <span className="text-xs text-muted-foreground block uppercase font-semibold">Quem</span>
+                  <span className="font-semibold text-foreground block">
                     {selectedLog.user ? `${selectedLog.user.first_name} ${selectedLog.user.last_name || ""}` : "Sistema"}
                   </span>
-                  <span className="text-xs text-gray-500 truncate block">
+                  <span className="text-xs text-muted-foreground truncate block">
                     {selectedLog.user?.email || "Chave Administrativa"}
                   </span>
                 </div>
                 <div>
-                  <span className="text-xs text-gray-400 block uppercase font-semibold">Ação</span>
+                  <span className="text-xs text-muted-foreground block uppercase font-semibold">Ação</span>
                   <div className="mt-0.5">{getActionBadge(selectedLog.action)}</div>
                 </div>
                 <div>
-                  <span className="text-xs text-gray-400 block uppercase font-semibold">Coleção</span>
-                  <span className="font-medium text-gray-800 block">
+                  <span className="text-xs text-muted-foreground block uppercase font-semibold">Coleção</span>
+                  <span className="font-medium text-foreground block">
                     {formatFriendlyCollection(selectedLog.collection)}
                   </span>
-                  <span className="text-[10px] font-mono text-gray-400 block">{selectedLog.collection}</span>
+                  <span className="text-[10px] font-mono text-muted-foreground block">{selectedLog.collection}</span>
                 </div>
                 <div>
-                  <span className="text-xs text-gray-400 block uppercase font-semibold">Registro ID</span>
-                  <span className="font-mono text-gray-800 block font-bold mt-0.5">{selectedLog.item || "---"}</span>
+                  <span className="text-xs text-muted-foreground block uppercase font-semibold">Registro ID</span>
+                  <span className="font-mono text-foreground block font-bold mt-0.5">{selectedLog.item || "---"}</span>
                 </div>
               </div>
 
@@ -474,12 +474,12 @@ export function AuditoriaClient({
                 <TabsContent value="changes" className="pt-4 space-y-4">
                   {loadingRevisions ? (
                     <div className="space-y-2 py-4">
-                      <div className="h-4 bg-gray-100 rounded w-full animate-pulse" />
-                      <div className="h-4 bg-gray-100 rounded w-5/6 animate-pulse" />
-                      <div className="h-4 bg-gray-100 rounded w-4/5 animate-pulse" />
+                      <div className="h-4 bg-muted rounded w-full animate-pulse" />
+                      <div className="h-4 bg-muted rounded w-5/6 animate-pulse" />
+                      <div className="h-4 bg-muted rounded w-4/5 animate-pulse" />
                     </div>
                   ) : revisions.length === 0 ? (
-                    <div className="text-center py-6 text-gray-400 text-sm">
+                    <div className="text-center py-6 text-muted-foreground text-sm">
                       Nenhum histórico detalhado ou delta disponível para esta ação.
                     </div>
                   ) : (
@@ -489,7 +489,7 @@ export function AuditoriaClient({
 
                       if (entries.length === 0) {
                         return (
-                          <div key={rev.id} className="text-center py-4 text-gray-400 text-sm">
+                          <div key={rev.id} className="text-center py-4 text-muted-foreground text-sm">
                             Nenhum campo modificado nesta revisão.
                           </div>
                         );
@@ -497,7 +497,7 @@ export function AuditoriaClient({
 
                       return (
                         <div key={rev.id} className="rounded-lg border overflow-hidden">
-                          <div className="bg-gray-50 border-b px-4 py-2 text-xs font-semibold text-gray-500 flex justify-between">
+                          <div className="bg-muted/50 border-b px-4 py-2 text-xs font-semibold text-muted-foreground flex justify-between">
                             <span>Revisão ID #{rev.id}</span>
                             <span>Coleção: {rev.collection}</span>
                           </div>
@@ -523,10 +523,10 @@ export function AuditoriaClient({
 
                                 return (
                                   <TableRow key={key} className="hover:bg-transparent">
-                                    <TableCell className="font-mono text-xs font-bold text-gray-600">
+                                    <TableCell className="font-mono text-xs font-bold text-muted-foreground">
                                       {key}
                                     </TableCell>
-                                    <TableCell className="text-sm font-mono break-all whitespace-pre-wrap max-w-lg text-gray-700 bg-slate-50/30">
+                                    <TableCell className="text-sm font-mono break-all whitespace-pre-wrap max-w-lg text-foreground bg-slate-50/30">
                                       {displayedValue}
                                     </TableCell>
                                   </TableRow>
@@ -541,7 +541,7 @@ export function AuditoriaClient({
                 </TabsContent>
 
                 <TabsContent value="raw" className="pt-4">
-                  <div className="rounded-lg border border-gray-200 bg-gray-950 p-4 text-gray-100 font-mono text-xs overflow-x-auto max-h-[300px] leading-relaxed">
+                  <div className="rounded-lg border border-border bg-gray-950 p-4 text-gray-100 font-mono text-xs overflow-x-auto max-h-[300px] leading-relaxed">
                     <pre>
                       {JSON.stringify(
                         {
@@ -562,32 +562,32 @@ export function AuditoriaClient({
                 </TabsContent>
 
                 <TabsContent value="device" className="pt-4 space-y-4">
-                  <div className="rounded-lg border border-gray-200 overflow-hidden text-sm">
+                  <div className="rounded-lg border border-border overflow-hidden text-sm">
                     <div className="flex border-b p-3 hover:bg-slate-50/50">
-                      <div className="w-[180px] font-semibold text-gray-600 flex items-center gap-2">
-                        <Globe className="h-4 w-4 text-gray-400" />
+                      <div className="w-[180px] font-semibold text-muted-foreground flex items-center gap-2">
+                        <Globe className="h-4 w-4 text-muted-foreground" />
                         Endereço IP
                       </div>
-                      <div className="font-mono text-gray-800">{selectedLog.ip || "Não registrado"}</div>
+                      <div className="font-mono text-foreground">{selectedLog.ip || "Não registrado"}</div>
                     </div>
                     
                     <div className="flex border-b p-3 hover:bg-slate-50/50">
-                      <div className="w-[180px] font-semibold text-gray-600 flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-gray-400" />
+                      <div className="w-[180px] font-semibold text-muted-foreground flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
                         Data Completa
                       </div>
-                      <div className="text-gray-800">
+                      <div className="text-foreground">
                         {format(new Date(selectedLog.timestamp), "PPPP 'às' HH:mm:ss (zzzz)", { locale: ptBR })}
                       </div>
                     </div>
 
                     <div className="flex p-3 hover:bg-slate-50/50">
-                      <div className="w-[180px] font-semibold text-gray-600 flex items-center gap-2 shrink-0">
-                        <Smartphone className="h-4 w-4 text-gray-400" />
+                      <div className="w-[180px] font-semibold text-muted-foreground flex items-center gap-2 shrink-0">
+                        <Smartphone className="h-4 w-4 text-muted-foreground" />
                         User Agent / Dispositivo
                       </div>
-                      <div className="text-xs text-gray-600 font-mono break-words overflow-hidden">
-                        <p className="font-semibold text-sm text-gray-800 font-sans mb-1">
+                      <div className="text-xs text-muted-foreground font-mono break-words overflow-hidden">
+                        <p className="font-semibold text-sm text-foreground font-sans mb-1">
                           {formatBrowser(selectedLog.user_agent)}
                         </p>
                         {selectedLog.user_agent || "Não registrado"}

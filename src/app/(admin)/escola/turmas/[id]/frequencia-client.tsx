@@ -146,11 +146,11 @@ export function FrequenciaClient({ turmaId, matriculas }: FrequenciaClientProps)
 
         <div className="flex items-center gap-6">
           <div className="text-sm">
-            <span className="font-semibold text-green-600">{presentes}</span>{" "}
+            <span className="font-semibold text-green-600 dark:text-green-400">{presentes}</span>{" "}
             <span className="text-muted-foreground">Presentes</span>
           </div>
           <div className="text-sm">
-            <span className="font-semibold text-red-600">{ausentes}</span>{" "}
+            <span className="font-semibold text-red-600 dark:text-red-400">{ausentes}</span>{" "}
             <span className="text-muted-foreground">Ausentes</span>
           </div>
           <Button onClick={handleSave} disabled={isLoading || isSaving}>
@@ -215,8 +215,8 @@ export function FrequenciaClient({ turmaId, matriculas }: FrequenciaClientProps)
                           htmlFor={`presenca-${beneficiariaId}`}
                           className={`cursor-pointer select-none ${
                             isPresente
-                              ? "text-green-600 font-semibold"
-                              : "text-red-600 font-semibold"
+                              ? "text-green-600 font-semibold dark:text-green-400"
+                              : "text-red-600 font-semibold dark:text-red-400"
                           }`}
                         >
                           {isPresente ? "Presente" : "Ausente"}

@@ -9,10 +9,13 @@
 
   Só na TELA: impressão sai sempre clara. Relatórios e certificados são papel,
   e uma página impressa do modo escuro gastaria toner pintando fundo.
+
+  E nunca dentro de `.papel` (ver abaixo): documento exibido na tela continua
+  sendo papel.
 */
 @custom-variant dark {
   @media screen {
-    &:where(.dark, .dark *) {
+    &:where(.dark, .dark *):not(:where(.papel, .papel *)) {
       @slot;
     }
   }
@@ -22,8 +25,13 @@
   SERMULHER — Tema claro (padrão) e escuro.
   Canvas levemente acinzentado, cards brancos, acento violeta da marca.
   Fonte única da verdade: tokens em :root consumidos por @theme inline.
+
+  `.papel` repete a paleta CLARA: um documento exibido na tela (prévia A4 do
+  RMA, dos Indicadores) continua papel branco mesmo no tema escuro, e os
+  tokens usados dentro dele resolvem para os valores claros.
 */
-:root {
+:root,
+.papel {
   --radius: 0.65rem;
   /* controles NATIVOS (select, date, scrollbar) seguem o tema */
   color-scheme: light;

@@ -70,16 +70,16 @@ const friendlyCollection = (c: string) => FRIENDLY_COLLECTIONS[c] || c;
 function ActionBadge({ action }: { action: string }) {
   switch (action) {
     case "create":
-      return <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50">Criação</Badge>;
+      return <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800 dark:hover:bg-emerald-950/40">Criação</Badge>;
     case "update":
-      return <Badge className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50">Edição</Badge>;
+      return <Badge className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800 dark:hover:bg-blue-950/40">Edição</Badge>;
     case "delete":
-      return <Badge className="bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-50">Exclusão</Badge>;
+      return <Badge className="bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-50 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800 dark:hover:bg-rose-950/40">Exclusão</Badge>;
     case "login":
     case "authenticate":
-      return <Badge className="bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-50">Autenticação</Badge>;
+      return <Badge className="bg-muted/50 text-foreground border-border hover:bg-muted/50">Autenticação</Badge>;
     default:
-      return <Badge className="bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-50">{action}</Badge>;
+      return <Badge className="bg-muted/50 text-foreground border-border hover:bg-muted/50">{action}</Badge>;
   }
 }
 
@@ -191,11 +191,11 @@ export function PerfilClient({ perfil, initialLogs, initialMeta }: PerfilClientP
     <div className="space-y-6 p-6">
       {/* Cabeçalho do perfil */}
       <div className="flex items-center gap-4">
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 text-purple-800 font-bold text-xl border border-purple-200/50 shadow-sm">
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 text-purple-800 font-bold text-xl border border-purple-200/50 shadow-sm dark:from-purple-900/40 dark:to-indigo-900/40 dark:text-purple-200 dark:border-purple-800">
           {getInitials(perfil.first_name, perfil.last_name)}
         </div>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{nomeCompleto}</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">{nomeCompleto}</h1>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Shield className="h-3.5 w-3.5" />
             {perfil.role?.name || "Sem perfil"}
@@ -255,14 +255,14 @@ export function PerfilClient({ perfil, initialLogs, initialMeta }: PerfilClientP
                     ) : (
                       logs.map((log) => (
                         <TableRow key={log.id} className={loadingLogs ? "opacity-60" : ""}>
-                          <TableCell className="text-sm text-slate-600 whitespace-nowrap">
+                          <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                             {fmtDate(log.timestamp)}
                           </TableCell>
                           <TableCell><ActionBadge action={log.action} /></TableCell>
-                          <TableCell className="text-sm font-medium text-slate-800">
+                          <TableCell className="text-sm font-medium text-foreground">
                             {friendlyCollection(log.collection)}
                           </TableCell>
-                          <TableCell className="text-sm text-slate-500 font-mono">
+                          <TableCell className="text-sm text-muted-foreground font-mono">
                             {log.item ? `#${log.item}` : "—"}
                           </TableCell>
                         </TableRow>
@@ -357,7 +357,7 @@ export function PerfilClient({ perfil, initialLogs, initialMeta }: PerfilClientP
                     disabled={!notificarWhats}
                   />
                   {notificarWhats && telefoneNotif.length > 0 && telefoneNotif.length < 10 && (
-                    <p className="text-xs text-amber-600">
+                    <p className="text-xs text-amber-600 dark:text-amber-400">
                       Informe o número completo, com DDD.
                     </p>
                   )}
@@ -446,12 +446,12 @@ function InfoRow({
 }) {
   return (
     <div className="flex items-start gap-3">
-      <div className="rounded-lg bg-slate-100 p-2 text-slate-500">
+      <div className="rounded-lg bg-muted p-2 text-muted-foreground">
         <Icon className="h-4 w-4" />
       </div>
       <div className="min-w-0">
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{label}</p>
-        <p className="text-sm font-medium text-slate-800 break-words">{value}</p>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{label}</p>
+        <p className="text-sm font-medium text-foreground break-words">{value}</p>
       </div>
     </div>
   );

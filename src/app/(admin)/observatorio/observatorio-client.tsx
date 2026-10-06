@@ -170,18 +170,18 @@ export function ObservatorioClient({
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Observatório</h1>
-          <p className="text-slate-500 dark:text-slate-400">Gerenciamento de coleções e indicadores do observatório.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Observatório</h1>
+          <p className="text-muted-foreground">Gerenciamento de coleções e indicadores do observatório.</p>
         </div>
         <Button onClick={handleCreate} className="bg-primary hover:bg-primary/90 text-primary-foreground">
           <Plus className="mr-2 h-4 w-4" /> Novo Registro
         </Button>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+      <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
         <Tabs defaultValue={activeTab} onValueChange={(v) => setActiveTab(v as ObserCollection)}>
-          <div className="border-b border-slate-200 dark:border-slate-800 px-4 pt-4">
-            <TabsList className="bg-slate-100 dark:bg-slate-800 mb-[-1px] rounded-b-none h-12">
+          <div className="border-b border-border px-4 pt-4">
+            <TabsList className="bg-muted mb-[-1px] rounded-b-none h-12">
               {COLLECTIONS_CONFIG.map(config => (
                 <TabsTrigger 
                   key={config.name} 
@@ -194,12 +194,12 @@ export function ObservatorioClient({
             </TabsList>
           </div>
 
-          <div className="p-4 bg-slate-50/50 dark:bg-slate-950/20 border-b border-slate-200 dark:border-slate-800">
+          <div className="p-4 bg-slate-50/50 dark:bg-slate-950/20 border-b border-border">
             <div className="relative max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 
                 placeholder="Buscar registros..." 
-                className="pl-10 bg-white dark:bg-slate-900"
+                className="pl-10 bg-card"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -210,16 +210,16 @@ export function ObservatorioClient({
             {loading ? (
               <div className="flex flex-col items-center justify-center p-20 space-y-4">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-sm text-slate-500">Buscando dados no Directus...</p>
+                <p className="text-sm text-muted-foreground">Buscando dados no Directus...</p>
               </div>
             ) : data.length === 0 ? (
               <div className="p-20 text-center">
-                <p className="text-slate-500">Nenhum registro encontrado.</p>
+                <p className="text-muted-foreground">Nenhum registro encontrado.</p>
               </div>
             ) : (
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-slate-50 dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-900">
+                  <TableRow className="bg-muted/50 hover:bg-muted/50">
                     <TableHead className="w-[80px]">ID</TableHead>
                     {currentConfig.fields.map(f => (
                       <TableHead key={f.key}>{f.label}</TableHead>
@@ -230,7 +230,7 @@ export function ObservatorioClient({
                 <TableBody>
                   {data.map((item) => (
                     <TableRow key={item.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                      <TableCell className="font-mono text-xs text-slate-400">{item.id}</TableCell>
+                      <TableCell className="font-mono text-xs text-muted-foreground">{item.id}</TableCell>
                       {currentConfig.fields.map(f => (
                         <TableCell key={f.key}>
                           {f.type === 'relation' ? (
@@ -244,10 +244,10 @@ export function ObservatorioClient({
                       ))}
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => handleEdit(item)} className="h-8 w-8 text-slate-600 dark:text-slate-400">
+                          <Button variant="ghost" size="icon" onClick={() => handleEdit(item)} className="h-8 w-8 text-muted-foreground">
                             <Pencil className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)} className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)} className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>

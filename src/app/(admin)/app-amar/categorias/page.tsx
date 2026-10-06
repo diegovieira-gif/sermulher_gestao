@@ -13,7 +13,7 @@ export default async function CategoriasPage() {
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Gerenciar Categorias</h2>
+        <h2 className="text-3xl font-bold tracking-tight text-foreground">Gerenciar Categorias</h2>
       </div>
       <CategoriasClient initialData={categorias as any[]} />
     </div>

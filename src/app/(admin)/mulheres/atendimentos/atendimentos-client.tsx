@@ -222,7 +222,7 @@ export function AtendimentosClient({
       <div className="mb-4 flex flex-wrap gap-3">
         {/* Filtro de Status */}
         <Select value={statusFilter} onValueChange={(v) => setFiltro("status", v)}>
-          <SelectTrigger className="w-[180px] bg-white">
+          <SelectTrigger className="w-[180px] bg-card">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -236,7 +236,7 @@ export function AtendimentosClient({
 
         {/* Filtro de Origem */}
         <Select value={origemFilter} onValueChange={(v) => setFiltro("origem", v)}>
-          <SelectTrigger className="w-[200px] bg-white">
+          <SelectTrigger className="w-[200px] bg-card">
             <SelectValue placeholder="Origem" />
           </SelectTrigger>
           <SelectContent>
@@ -251,7 +251,7 @@ export function AtendimentosClient({
 
         {/* Filtro de Prioridade */}
         <Select value={prioridadeFilter} onValueChange={(v) => setFiltro("prioridade", v)}>
-          <SelectTrigger className="w-[200px] bg-white">
+          <SelectTrigger className="w-[200px] bg-card">
             <SelectValue placeholder="Prioridade" />
           </SelectTrigger>
           <SelectContent>
@@ -266,7 +266,7 @@ export function AtendimentosClient({
 
         {/* Filtro de Encaminhamento */}
         <Select value={encaminhamentoFilter} onValueChange={(v) => setFiltro("encaminhamento", v)}>
-          <SelectTrigger className="w-[220px] bg-white">
+          <SelectTrigger className="w-[220px] bg-card">
             <SelectValue placeholder="Encaminhamento" />
           </SelectTrigger>
           <SelectContent>
@@ -281,7 +281,7 @@ export function AtendimentosClient({
 
         {/* Filtro de Tipo de Violência */}
         <Select value={tipoViolenciaFilter} onValueChange={(v) => setFiltro("violencia", v)}>
-          <SelectTrigger className="w-[240px] bg-white">
+          <SelectTrigger className="w-[240px] bg-card">
             <SelectValue placeholder="Tipo de Violência" />
           </SelectTrigger>
           <SelectContent>

@@ -145,8 +145,8 @@ export function CampanhaForm({ initialData, onSuccess, onCancel }: CampanhaFormP
       </div>
 
       {previewUrl && (
-        <div className="w-full md:w-[320px] bg-slate-50 border rounded-lg p-4 flex flex-col items-center justify-center">
-          <p className="text-sm font-medium text-slate-500 mb-2">Pré-visualização</p>
+        <div className="w-full md:w-[320px] bg-muted/50 border rounded-lg p-4 flex flex-col items-center justify-center">
+          <p className="text-sm font-medium text-muted-foreground mb-2">Pré-visualização</p>
           <iframe
             src={previewUrl}
             className="w-[300px] h-[400px] border-none overflow-hidden rounded-md"
