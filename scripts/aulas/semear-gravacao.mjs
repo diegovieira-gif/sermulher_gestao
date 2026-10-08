@@ -101,6 +101,107 @@ const ALEM_DAS_FICHAS = {
     const criada = await api("/items/tramitacoes", { method: "POST", body: JSON.stringify(t) });
     console.log(`+ tramitação #${criada.id} no atendimento #${atend.id}`);
   },
+
+  // 3.2 e 3.5: o Agosto Lilás já existe, com vários dias, a partir de hoje.
+  // (A Roda de Conversa NÃO é semeada: a 3.1 a cria.)
+  modulo3: async () => {
+    const ev = elenco.eventos.find((e) => e.chave === "agosto");
+    const ja = await api(`/items/eventos_campanhas?fields=id&limit=1&filter=${encodeURIComponent(JSON.stringify({ nome: { _eq: ev.titulo } }))}`);
+    if (ja.length) { console.log(`= ${ev.titulo} já existe`); return; }
+    const tipo = (await api(`/items/config_tipos_evento?fields=id,nome&limit=-1`)).find((t) => /campanha/i.test(t.nome));
+    const dia = (n, h) => { const d = new Date(); d.setDate(d.getDate() + n); d.setHours(h, 0, 0, 0); return d.toISOString(); };
+    const e = {
+      nome: ev.titulo, local: ev.local, tipo: "campanha", tipo_id: tipo?.id ?? null, recorrencia: "nao_recorrente",
+      data_inicio: dia(0, 8), data_fim: dia(2, 17),
+      descricao: "Ação de conscientização (evento fictício de vídeo-aula).",
+    };
+    if (!APLICAR) { console.log(`+ ${ev.titulo} (simulação)`); return; }
+    const criado = await api("/items/eventos_campanhas", { method: "POST", body: JSON.stringify(e) });
+    console.log(`+ evento #${criado.id} ${ev.titulo}`);
+  },
+
+  // Escola (5.1–5.4): curso e turma do elenco; Rita já matriculada (a 5.2
+  // matricula a Ana).
+  modulo5: async () => {
+    const e = elenco.escola;
+    const um = async (col, filtro) => (await api(`/items/${col}?fields=id&limit=1&filter=${encodeURIComponent(JSON.stringify(filtro))}`))[0];
+    const hoje = new Date();
+    const data = (n) => { const d = new Date(hoje); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+    let curso = await um("escola_cursos", { nome: { _eq: e.curso } });
+    if (!curso && APLICAR) curso = await api("/items/escola_cursos", { method: "POST", body: JSON.stringify({
+      nome: e.curso, area_atuacao: "tecnologia", carga_horaria: 40, status: "ativo",
+      descricao: "Curso fictício de vídeo-aula.", ementa: "Uso do celular, e-mail e serviços públicos digitais." }) });
+    console.log(`${curso ? "=" : "+"} curso ${e.curso}${curso?.id ? ` #${curso.id}` : " (simulação)"}`);
+    let turma = await um("escola_turmas", { nome: { _eq: e.turma } });
+    if (!turma && APLICAR) turma = await api("/items/escola_turmas", { method: "POST", body: JSON.stringify({
+      nome: e.turma, curso: curso.id, instrutor: e.instrutor, status: "em_andamento", turno: "Manhã",
+      vagas: 20, capacidade_maxima: 20, sala_aula: "Sala 1", data_inicio: data(-30), data_fim: data(30) }) });
+    console.log(`${turma ? "=" : "+"} turma ${e.turma}${turma?.id ? ` #${turma.id}` : " (simulação)"}`);
+    const rita = await um("beneficiarias", { cpf: { _eq: pessoa("rita").cpf } });
+    if (!rita) throw new Error("Rita não existe: semeie o módulo 1 antes");
+    if (turma?.id && !(await um("escola_matriculas", { _and: [{ turma: { _eq: turma.id } }, { beneficiaria: { _eq: rita.id } }] }))) {
+      if (APLICAR) await api("/items/escola_matriculas", { method: "POST", body: JSON.stringify({
+        turma: turma.id, beneficiaria: rita.id, status: "ativa", data_matricula: data(-30) }) });
+      console.log(`+ matrícula da Rita${APLICAR ? "" : " (simulação)"}`);
+    }
+  },
+
+  // Depois da 5.2 (que matricula a Ana): Ana aprovada, para a 5.4.
+  modulo5b: async () => {
+    const turma = (await api(`/items/escola_turmas?fields=id&limit=1&filter=${encodeURIComponent(JSON.stringify({ nome: { _eq: elenco.escola.turma } }))}`))[0];
+    const ana = (await api(`/items/beneficiarias?fields=id&limit=1&filter=${encodeURIComponent(JSON.stringify({ cpf: { _eq: pessoa("ana").cpf } }))}`))[0];
+    const mat = turma && ana && (await api(`/items/escola_matriculas?fields=id&limit=1&filter=${encodeURIComponent(JSON.stringify({ _and: [{ turma: { _eq: turma.id } }, { beneficiaria: { _eq: ana.id } }] }))}`))[0];
+    if (!mat) throw new Error("a Ana não está matriculada: grave a 5.2 antes");
+    if (APLICAR) await api(`/items/escola_matriculas/${mat.id}`, { method: "PATCH", body: JSON.stringify({ status: "aprovada", frequencia_percentual: 92, nota_final: 9 }) });
+    console.log(`~ matrícula #${mat.id} da Ana: aprovada${APLICAR ? "" : " (simulação)"}`);
+  },
+
+  // Sala Azul (6.1–6.4): João e Pedro, o ciclo, as participações e duas
+  // sessões passadas com chamada (a 6.3 cria a terceira, "Masculinidades").
+  modulo6: async () => {
+    const um = async (col, filtro) => (await api(`/items/${col}?fields=id&limit=1&filter=${encodeURIComponent(JSON.stringify(filtro))}`))[0];
+    const niveis = await api(`/items/config_niveis_periculosidade?fields=id,nome&limit=-1`);
+    const status = (await api(`/items/config_status_legal?fields=id,nome&limit=-1`)).find((s) => /cumprimento/i.test(s.nome));
+    const hoje = new Date();
+    const dia = (n) => { const d = new Date(hoje); d.setDate(d.getDate() + n); return d; };
+    const ids = {};
+    for (const p of elenco.participantes_sala_azul) {
+      let inf = await um("infratores", { cpf: { _eq: p.cpf } });
+      if (!inf && APLICAR) inf = await api("/items/infratores", { method: "POST", body: JSON.stringify({
+        nome_completo: p.nome, cpf: p.cpf, numero_processo: p.processo,
+        nivel_id: niveis.find((n) => n.nome === p.nivel_risco)?.id ?? null, status_legal_id: status?.id ?? null,
+        data_nascimento: "1985-01-01" }) });
+      ids[p.chave] = inf?.id;
+      console.log(`${inf ? "=" : "+"} participante ${p.nome}${inf?.id ? ` #${inf.id}` : " (simulação)"}`);
+    }
+    const c = elenco.sala_azul;
+    let ciclo = await um("salas_azul", { nome_ciclo: { _eq: c.ciclo } });
+    if (!ciclo && APLICAR) ciclo = await api("/items/salas_azul", { method: "POST", body: JSON.stringify({
+      nome_ciclo: c.ciclo, facilitador: c.facilitador, status: "Em Andamento",
+      data_inicio: dia(-21).toISOString().slice(0, 10), data_termino: dia(35).toISOString().slice(0, 10) }) });
+    console.log(`${ciclo ? "=" : "+"} ciclo ${c.ciclo}${ciclo?.id ? ` #${ciclo.id}` : " (simulação)"}`);
+    if (!APLICAR || !ciclo?.id) return;
+    const part = {};
+    for (const [chave, inf] of Object.entries(ids)) {
+      part[chave] = (await um("participacoes_sala_azul", { _and: [{ sala: { _eq: ciclo.id } }, { infrator: { _eq: inf } }] }))
+        ?? await api("/items/participacoes_sala_azul", { method: "POST", body: JSON.stringify({ sala: ciclo.id, infrator: inf, status_participacao: "Cursando", frequencia_percentual: 0 }) });
+    }
+    const temas = [["Violência e cultura", -14, { joao: true, pedro: true }], ["Lei Maria da Penha", -7, { joao: true, pedro: false }]];
+    for (const [tema, n, presenca] of temas) {
+      let s = await um("ciclo_sessoes", { _and: [{ sala_id: { _eq: ciclo.id } }, { tema: { _eq: tema } }] });
+      if (!s) {
+        const d = dia(n); d.setHours(18, 0, 0, 0);
+        s = await api("/items/ciclo_sessoes", { method: "POST", body: JSON.stringify({ sala_id: ciclo.id, tema, data: d.toISOString(), relatorio: "Sessão fictícia de vídeo-aula." }) });
+        for (const [chave, presente] of Object.entries(presenca)) {
+          await api("/items/sessoes_presenca", { method: "POST", body: JSON.stringify({ sessao_id: s.id, participacao_id: part[chave].id, presente }) });
+        }
+        console.log(`+ sessão "${tema}" #${s.id} com chamada`);
+      }
+    }
+    // frequência gravada igual à calculada (2 de 2 e 1 de 2)
+    await api(`/items/participacoes_sala_azul/${part.joao.id}`, { method: "PATCH", body: JSON.stringify({ frequencia_percentual: 100 }) });
+    await api(`/items/participacoes_sala_azul/${part.pedro.id}`, { method: "PATCH", body: JSON.stringify({ frequencia_percentual: 50 }) });
+  },
 };
 
 if (ALEM_DAS_FICHAS[etapa]) {

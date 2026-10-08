@@ -21,7 +21,7 @@
       "narracao": "Abra o instrumental pela lista do CRAM e escolha a aba Plano Individual.",
       "acao": [
         { "tipo": "navegar", "url": "/cram" },
-        { "tipo": "clicar", "seletor": "[title=\"Abrir\"]" },
+        { "tipo": "clicar", "seletor": "tr:has-text(\"Marta Souza Lima\") [title=\"Abrir\"]" },
         { "tipo": "clicar", "seletor": "role=tab[name=\"Plano Individual (PIA)\"]" }
       ],
       "foco": { "seletor": "text=Plano Individual de Atendimento", "zoom": 1.5 }

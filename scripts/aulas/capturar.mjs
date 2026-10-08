@@ -147,8 +147,10 @@ async function mascarar(page, cena) {
     for (const el of extras.flatMap((sel) => [...document.querySelectorAll(sel)])) el.style.filter = "blur(8px)";
     // linhas de tabela, opções de listas (busca de beneficiária) e cartões
     // do quadro de demandas (colunas .custom-scrollbar do kanban)
-    const ITENS = "tbody tr, [role=row], [role=option], [role=listbox] > *, .bg-popover button, .custom-scrollbar > *";
-    for (const linha of linhas ? document.querySelectorAll(ITENS) : []) {
+    const ITENS = "tbody tr, [role=row], [role=option], [role=listbox] > *, .bg-popover button, .custom-scrollbar > *:not(:has(table)):not(:has(input))";
+    for (const linha of document.querySelectorAll(ITENS)) {
+      // cena sem máscara: desfaz o borrão que uma cena anterior deixou
+      if (!linhas) { if ((linha.style.filter || "").includes("blur")) linha.style.filter = ""; continue; }
       if (linha.closest("thead")) continue;
       // linha de célula única = aviso da tabela ("nenhum registro"), não pessoa
       if (linha.querySelectorAll("td").length === 1) continue;
@@ -181,6 +183,15 @@ async function executar(page, acao, onde) {
         // Link interno: espera a rota mudar. O Next mantém a tela antiga até
         // a nova chegar, e o print saía da página anterior.
         const href = await alvo.getAttribute("href", { timeout: ESPERA_MS }).catch(() => null);
+        // link que abre em outra aba (relatórios, certificados): abre aqui
+        const novaAba = await alvo.evaluate((el) => {
+          const a = el.closest("a");
+          return a && a.target === "_blank" && a.getAttribute("href")?.startsWith("/") ? a.getAttribute("href") : null;
+        }).catch(() => null);
+        if (novaAba) {
+          await page.goto(BASE_URL + novaAba, { waitUntil: "domcontentloaded" });
+          break;
+        }
         await alvo.click({ timeout: ESPERA_MS });
         if (href && href.startsWith("/")) {
           await page.waitForURL((u) => u.pathname === href.split(/[?#]/)[0], { timeout: 30000 });
@@ -194,9 +205,11 @@ async function executar(page, acao, onde) {
         // automático, por exemplo, não grava).
         {
           const texto = substituir(acao.texto);
-          const resto = Math.min(3, texto.length);
+          // data/hora não aceitam valor parcial: vão inteiros
+          const tipoCampo = await alvo.getAttribute("type", { timeout: ESPERA_MS }).catch(() => null);
+          const resto = /^(date|datetime-local|time|month|week)$/.test(tipoCampo ?? "") ? 0 : Math.min(3, texto.length);
           await alvo.fill(texto.slice(0, texto.length - resto), { timeout: ESPERA_MS });
-          await alvo.pressSequentially(texto.slice(texto.length - resto), { delay: 60, timeout: ESPERA_MS });
+          if (resto) await alvo.pressSequentially(texto.slice(texto.length - resto), { delay: 60, timeout: ESPERA_MS });
         }
         // busca com espera (debounce): o filtro só dispara depois de uma
         // pausa na digitação, e o print saía com a lista antiga carregando

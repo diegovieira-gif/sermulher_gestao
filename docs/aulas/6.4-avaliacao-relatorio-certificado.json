@@ -29,12 +29,14 @@
     },
     {
       "id": "c03",
+      "mascara": false,
       "narracao": "Comece pelo relatório. Imprimir relatório individual monta o Relatório de Acompanhamento do Grupo Reflexivo: os dados do participante e do processo, o ciclo, o resumo de frequência e o detalhamento sessão por sessão.",
       "acao": { "tipo": "clicar", "seletor": "[title=\"Imprimir relatório individual\"]" },
       "foco": { "seletor": "text=Resumo de Frequência", "zoom": 1.7 }
     },
     {
       "id": "c04",
+      "mascara": false,
       "narracao": "A frequência do relatório é calculada pela lista de presença das sessões. Por isso, confira se todas as chamadas foram lançadas antes de imprimir. Para arquivar ou enviar, escolha Salvar como PDF na janela de impressão.",
       "acao": { "tipo": "nenhuma" },
       "foco": { "seletor": "text=Detalhamento de Sessões", "zoom": 1.6 }
@@ -52,7 +54,10 @@
     {
       "id": "c06",
       "narracao": "Escolha o status da participação e escreva o parecer psicológico: como o participante se envolveu no grupo e o que a equipe observou. Clique em Salvar Avaliação.",
-      "acao": { "tipo": "nenhuma" },
+      "acao": [
+        { "tipo": "selecionar", "seletor": "#status", "opcao": "Concluído com Êxito" },
+        { "tipo": "digitar", "seletor": "[placeholder=\"Digite o parecer psicológico do participante...\"]", "texto": "Participou de todas as sessões e refletiu sobre as próprias atitudes. (Parecer fictício.)" }
+      ],
       "foco": { "seletor": "[placeholder=\"Digite o parecer psicológico do participante...\"]", "zoom": 1.7 }
     },
     {

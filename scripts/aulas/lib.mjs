@@ -207,11 +207,21 @@ export function nomesDoElenco(elenco, chaves = null) {
     if (Array.isArray(v)) v.forEach(visitar);
     else if (v && typeof v === "object") {
       const daAula = !chaves || (v.chave && chaves.includes(v.chave));
-      if (daAula && typeof v.nome === "string" && v.nome.trim().split(/\s+/).length >= 2) nomes.add(v.nome.trim());
+      for (const campo of ["nome", "titulo"]) {
+        if (daAula && typeof v[campo] === "string" && v[campo].trim().split(/\s+/).length >= 2) nomes.add(v[campo].trim());
+      }
       Object.values(v).forEach(visitar);
     }
   };
   visitar(elenco);
+  // blocos sem `chave` (escola, sala_azul): pela chave de topo do elenco
+  for (const [topo, bloco] of Object.entries(elenco ?? {})) {
+    if (!bloco || typeof bloco !== "object" || Array.isArray(bloco)) continue;
+    if (chaves && !chaves.includes(topo)) continue;
+    for (const v of Object.values(bloco)) {
+      if (typeof v === "string" && v.trim().split(/\s+/).length >= 2) nomes.add(v.trim());
+    }
+  }
   return [...nomes];
 }
 

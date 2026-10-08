@@ -22,12 +22,14 @@
     },
     {
       "id": "c02",
+      "borrar": ["div.bg-purple-50.rounded-xl.p-3"],
       "narracao": "No menu, em Marketing e Comunicação, abra Campanhas WhatsApp. O painel mostra o total de campanhas, quantas mulheres podem receber mensagens e os disparos recentes.",
       "acao": { "tipo": "navegar", "url": "/marketing/whatsapp" },
       "foco": { "seletor": "text=Mulheres Elegíveis", "zoom": 1.8 }
     },
     {
       "id": "c03",
+      "borrar": ["div.bg-purple-50.rounded-xl.p-3"],
       "narracao": "Mulheres elegíveis são as que têm telefone na ficha e não pediram para deixar de receber mensagens. Quem não tem telefone, ou fez esse pedido, fica de fora de toda campanha. É por isso que, lá no módulo um, o telefone pesa tanto na completude.",
       "acao": { "tipo": "nenhuma" },
       "foco": { "seletor": "text=Mulheres Elegíveis", "zoom": 2.0 }
@@ -43,24 +45,28 @@
     },
     {
       "id": "c05",
-      "narracao": "Em Modelos de Campanhas WhatsApp, clique em Nova Campanha WhatsApp. Dê um nome e um objetivo, para a equipe saber do que se trata.",
-      "acao": { "tipo": "clicar", "seletor": "text=Nova Campanha WhatsApp" },
+      "borrar": ["div.bg-purple-50.rounded-xl.p-3"],
+      "narracao": "Em Modelos de Campanhas WhatsApp, clique em Criar Campanha. Dê um nome e um objetivo, para a equipe saber do que se trata.",
+      "acao": { "tipo": "clicar", "seletor": "role=button[name=\"Criar Campanha\"]" },
       "foco": { "seletor": "[placeholder=\"Ex: Informativo Outubro Rosa\"]", "zoom": 1.8 }
     },
     {
       "id": "c06",
+      "borrar": ["div.bg-purple-50.rounded-xl.p-3"],
       "narracao": "Na mensagem, a marcação primeiro nome, entre chaves, é trocada pelo primeiro nome de cada destinatária. Uma mensagem que chama a pessoa pelo nome é lida. A barra do editor aplica negrito, itálico e emojis, e permite anexar uma imagem.",
       "acao": { "tipo": "nenhuma" },
       "foco": { "seletor": "text=Mensagem do WhatsApp", "zoom": 1.7 }
     },
     {
       "id": "c07",
+      "borrar": ["div.bg-purple-50.rounded-xl.p-3"],
       "narracao": "Agora o mais importante: o público. Os filtros recortam quem vai receber, por idade, número de filhos e situação cadastral. Confira a lista que aparece. Se a campanha é sobre exames para mulheres de quarenta anos ou mais, ela não deve chegar a uma jovem de dezoito.",
       "acao": { "tipo": "nenhuma" },
       "foco": { "seletor": "text=Idade", "zoom": 1.7 }
     },
     {
       "id": "c08",
+      "borrar": ["div.bg-purple-50.rounded-xl.p-3"],
       "narracao": "Em Tipo de envio, a campanha pode ser disparada uma vez ou repetida nos dias da semana e no horário que você escolher. Salve a campanha. Ela aparece entre os modelos, com os botões Editar, Excluir e Disparar Campanha.",
       "acao": { "tipo": "nenhuma" },
       "foco": { "seletor": "text=Tipo de envio", "zoom": 1.7 }

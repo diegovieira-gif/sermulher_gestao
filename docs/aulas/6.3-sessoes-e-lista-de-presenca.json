@@ -18,6 +18,7 @@
     },
     {
       "id": "c02",
+      "mascara": false,
       "narracao": "Na tela do ciclo, abra a aba Sessões e clique em Nova Sessão.",
       "acao": [
         { "tipo": "navegar", "url": "/sala-azul/ciclos" },
@@ -31,18 +32,21 @@
       "narracao": "Informe a data e o tema da sessão, como Masculinidades ou Violência Patrimonial. O campo Relatório guarda as observações da equipe sobre o encontro.",
       "acao": [
         { "tipo": "clicar", "seletor": "role=button[name=\"Nova Sessão\"]" },
+        { "tipo": "digitar", "seletor": "[role=dialog] input[type=date]", "texto": "{proxima_semana}" },
         { "tipo": "digitar", "seletor": "[placeholder=\"Ex: Lei Maria da Penha\"]", "texto": "Masculinidades" }
       ],
       "foco": { "seletor": "role=dialog", "zoom": 1.4 }
     },
     {
       "id": "c04",
+      "mascara": false,
       "narracao": "Salve. A sessão entra na lista do ciclo e aparece no calendário da Agenda, em azul.",
       "acao": { "tipo": "clicar", "seletor": "role=button[name=\"Salvar\"]" },
       "foco": null
     },
     {
       "id": "c05",
+      "mascara": false,
       "narracao": "Depois do encontro, clique em Lista de presença, na linha da sessão. Marque quem esteve presente e clique em Salvar Chamada.",
       "acao": { "tipo": "nenhuma" },
       "foco": { "seletor": "[title=\"Lista de presença\"]", "zoom": 2.2 }
@@ -58,6 +62,7 @@
     },
     {
       "id": "c07",
+      "mascara": false,
       "narracao": "Errou a data ou o tema? Use Editar sessão. Excluir sessão apaga o encontro e a chamada dele, então use só quando a sessão não aconteceu.",
       "acao": { "tipo": "nenhuma" },
       "foco": { "seletor": "[title=\"Editar sessão\"]", "zoom": 2.2 }
