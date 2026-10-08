@@ -22,6 +22,7 @@ import {
 import { calcularCompletude } from "./completude";
 import { assertAccess } from "@/lib/permissions";
 import { getDirectusAdmin } from "@/lib/directus";
+import { configSiged, SIGED_TIMEOUT_MS } from "@/lib/siged";
 
 // URL da API (Fallback seguro para localhost)
 const API_URL = process.env.DIRECTUS_API_URL || "http://192.168.0.118:8055";
@@ -612,13 +613,21 @@ export async function findBeneficiariaByCPF(cpf: string) {
       return { success: false, error: "CPF inválido. Deve conter 11 dígitos numéricos." };
     }
 
-    const response = await fetch("https://homolog.siged.educacao.aju.br/webservice/users/findByCPF", {
+    // URL e token vêm do ambiente — ver lib/siged.ts. Sem token, a consulta
+    // fica desligada e o formulário segue sem o preenchimento automático.
+    const siged = configSiged();
+    if (!siged) {
+      return { success: false, error: "Consulta à rede municipal não configurada." };
+    }
+
+    const response = await fetch(siged.url, {
       method: "POST",
       headers: {
-        "Authorization": "Bearer 0ed9b204df3f68caeb3deca2301872c9",
+        "Authorization": `Bearer ${siged.token}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ userCPF: cleanCpf })
+      body: JSON.stringify({ userCPF: cleanCpf }),
+      signal: AbortSignal.timeout(SIGED_TIMEOUT_MS),
     });
 
     if (!response.ok) {
