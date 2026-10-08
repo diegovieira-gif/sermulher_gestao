@@ -292,9 +292,11 @@ cru em vez do objeto — foi o que quebrou a coluna "Registrado por" e exigiu o
 
 > [!IMPORTANT]
 > `git push` **não** atualiza o ambiente de produção. O repositório não tem
-> automação de deploy — o único workflow (`test-runner.yml`) roda apenas
-> typecheck e smoke tests. Sem o passo abaixo, o código fica no GitHub e o
-> servidor continua servindo a versão anterior.
+> automação de deploy nem de testes no GitHub. Sem o passo abaixo, o código
+> fica no GitHub e o servidor continua servindo a versão anterior.
+>
+> Os testes rodam **só na máquina local**, antes do commit:
+> `npx tsc --noEmit`, `npm run test:unit` e `npm run lint`.
 
 A publicação é feita pelo **Coolify**, manualmente ou via API:
 
