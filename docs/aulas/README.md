@@ -184,6 +184,5 @@ um WAF que bloqueia navegador automatizado.
 | Aula | Pendência |
 |---|---|
 | 7.2 | Configuração de Integração (credenciais) fica fora do vídeo |
-| 7.2 | Campanhas de WhatsApp não pedem autorização da beneficiária |
 | 7.3 | Campos de UUID do App Amar ficam fora do vídeo |
 | 8.3 | Os dados aparecem no site público dados-sermulher.aracaju.se.gov.br; o editor do SIGMA usa campos diferentes dos que o site lê — conferir o esquema antes de gravar as cenas c03 e c04 |

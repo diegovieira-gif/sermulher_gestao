@@ -98,9 +98,23 @@ type DispatchLogRecord = {
   } | null;
 };
 
-// Filtro base de elegibilidade: beneficiária com telefone preenchido.
+// Quem pediu para não receber mensagens da Secretaria fica fora de TODA
+// campanha, inclusive da seleção manual. Nulo conta como "aceita": as fichas
+// antigas não têm o campo preenchido.
+const ACEITA_MENSAGENS = {
+  _or: [
+    { nao_receber_mensagens: { _null: true } },
+    { nao_receber_mensagens: { _eq: false } },
+  ],
+};
+
+// Filtro base de elegibilidade: telefone preenchido e sem pedido de não
+// receber mensagens. Em `_and` para que um `_or` acrescentado ao lado (busca
+// por nome/telefone) não substitua a regra.
 // Observação: o Directus rejeita `_neq: ""`; usar `_nempty` (cobre nulo e vazio).
-const ELIGIBLE_FILTER = { telefone: { _nempty: true } } as const;
+const ELIGIBLE_FILTER = {
+  _and: [{ telefone: { _nempty: true } }, ACEITA_MENSAGENS],
+};
 
 // Considera elegível quem tem ao menos 8 dígitos no telefone.
 function temTelefoneValido(b: { telefone?: string | null }): boolean {
@@ -831,7 +845,7 @@ async function dispatchCampaignWithClient(
       beneficiariesRaw = await client.request(
         readItems("beneficiarias", {
           fields: ["id", "nome_completo", "nome_social", "telefone"],
-          filter: { id: { _in: target.ids } },
+          filter: { _and: [{ id: { _in: target.ids } }, ACEITA_MENSAGENS] },
           limit: -1,
         })
       );

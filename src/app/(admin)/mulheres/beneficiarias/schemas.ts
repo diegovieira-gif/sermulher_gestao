@@ -48,6 +48,9 @@ export const beneficiariaSchema = z.object({
 
   telefone: z.string().optional().nullable(),
   telefone_validado: z.coerce.boolean().optional(),
+  // Pedido da beneficiária para não receber mensagens da Secretaria: tira a
+  // ficha de toda campanha de WhatsApp (marketing/whatsapp/actions.ts).
+  nao_receber_mensagens: z.coerce.boolean().optional(),
   email: z
     .string()
     .refine(

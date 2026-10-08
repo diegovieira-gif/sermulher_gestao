@@ -65,6 +65,7 @@ import {
   ArrowUp as LucideArrowUp,
   ArrowDown as LucideArrowDown,
   BadgeCheck as LucideBadgeCheck,
+  BellOff as LucideBellOff,
   Link2 as LucideLink2,
   GraduationCap as LucideGraduationCap,
 } from "lucide-react";
@@ -624,6 +625,14 @@ export function BeneficiariasClient({
                           >
                             <title>Telefone validado</title>
                           </LucideBadgeCheck>
+                        )}
+                        {b.nao_receber_mensagens && (
+                          <LucideBellOff
+                            className="h-4 w-4 text-muted-foreground shrink-0"
+                            aria-label="Não recebe mensagens da Secretaria"
+                          >
+                            <title>Não recebe mensagens da Secretaria</title>
+                          </LucideBellOff>
                         )}
                       </span>
                       {b.email && (

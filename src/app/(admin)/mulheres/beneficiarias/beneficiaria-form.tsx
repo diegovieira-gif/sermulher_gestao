@@ -68,6 +68,7 @@ const ABA_POR_CAMPO: Record<string, string> = {
   estado_civil_id: "Dados Pessoais",
   telefone: "Endereço e Contato",
   telefone_validado: "Endereço e Contato",
+  nao_receber_mensagens: "Endereço e Contato",
   email: "Endereço e Contato",
   contato: "Endereço e Contato",
   endereco: "Endereço e Contato",
@@ -139,6 +140,7 @@ export function BeneficiariaForm({
       quantidade_filhos: 0,
       telefone: "",
       telefone_validado: false,
+      nao_receber_mensagens: false,
       email: "",
       contato: {
         melhor_turno_contato: null,
@@ -303,6 +305,7 @@ export function BeneficiariaForm({
         // Garante que telefone e email sejam strings
         telefone: beneficiaria.telefone || "",
         telefone_validado: beneficiaria.telefone_validado || false,
+        nao_receber_mensagens: beneficiaria.nao_receber_mensagens || false,
         email: beneficiaria.email || "",
         nome_social: beneficiaria.nome_social || "",
         raca_cor_id: beneficiaria.raca_cor_id,
@@ -343,6 +346,7 @@ export function BeneficiariaForm({
         quantidade_filhos: 0,
         telefone: "",
         telefone_validado: false,
+        nao_receber_mensagens: false,
         email: "",
         contato: {
           melhor_turno_contato: null,
@@ -713,6 +717,26 @@ export function BeneficiariaForm({
                         </div>
                         <FormControl>
                           <Switch checked={!!field.value} onCheckedChange={field.onChange} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="nao_receber_mensagens"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">Não receber mensagens da Secretaria</FormLabel>
+                          <InfoTooltip text="Marque quando a beneficiária pedir para não receber mais mensagens. Ela sai de todas as campanhas de WhatsApp, inclusive das enviadas por seleção manual." />
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={!!field.value}
+                            onCheckedChange={field.onChange}
+                            aria-label="Não receber mensagens da Secretaria"
+                          />
                         </FormControl>
                       </FormItem>
                     )}

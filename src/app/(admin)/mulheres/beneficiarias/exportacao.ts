@@ -33,6 +33,7 @@ export const COLUNAS_EXPORT: ColunaExport[] = [
 
   { cabecalho: "telefone", caminho: "telefone" },
   { cabecalho: "telefone_validado", caminho: "telefone_validado" },
+  { cabecalho: "nao_receber_mensagens", caminho: "nao_receber_mensagens" },
   { cabecalho: "email", caminho: "email" },
   { cabecalho: "melhor_turno_contato", caminho: "contato.melhor_turno_contato" },
 
