@@ -44,7 +44,49 @@ const ESPERA_MS = 10000;
 const PRODUCAO = argv.includes("--producao");
 const elenco = lerJson(join(PASTA_AULAS, "elenco.json"));
 const TROCAS = PRODUCAO ? trocasDeSessao(process.env.NOME_SESSAO || "", elenco.usuaria_demo.nome) : null;
+if (TROCAS && process.env.EMAIL_SESSAO) TROCAS.parciais.push([process.env.EMAIL_SESSAO, elenco.usuaria_demo.email]);
 let MASCARA = null; // por aula: só os personagens dela ficam legíveis
+
+/*
+  TRAVA DE VAZAMENTO (modo produção): os nomes das beneficiárias reais são
+  lidos do Directus e ficam SÓ na memória — nunca em arquivo nem na tela.
+  Antes de cada print, se algum deles aparece em texto visível e não borrado,
+  a cena falha e o print não é gravado. A máscara pode deixar escapar um
+  componente novo; a trava não deixa o vazamento virar vídeo.
+*/
+let NOMES_REAIS = [];
+if (PRODUCAO) {
+  const url = (process.env.DIRECTUS_API_URL || "").replace(/\/$/, "");
+  const tok = process.env.DIRECTUS_ADMIN_TOKEN_ARQUIVO ? readFileSync(process.env.DIRECTUS_ADMIN_TOKEN_ARQUIVO, "utf8").trim() : "";
+  if (!url || !tok) { console.error("--producao exige DIRECTUS_API_URL e DIRECTUS_ADMIN_TOKEN_ARQUIVO para a trava de vazamento."); process.exit(1); }
+  const r = await fetch(`${url}/items/beneficiarias?fields=nome_completo,nome_social&limit=-1`, { headers: { Authorization: `Bearer ${tok}` } });
+  if (!r.ok) { console.error(`trava de vazamento: não consegui ler os nomes (${r.status})`); process.exit(1); }
+  const doElenco = nomesDoElenco(elenco);
+  const norm = (t) => String(t ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+  const elencoNorm = doElenco.map(norm);
+  NOMES_REAIS = [...new Set((await r.json()).data.flatMap((b) => [b.nome_completo, b.nome_social]).map(norm))]
+    .filter((n) => n.split(" ").length >= 2 && n.length >= 8)
+    .filter((n) => !elencoNorm.some((e) => e.includes(n)));
+  console.log(`trava de vazamento: ${NOMES_REAIS.length} nomes reais carregados (só em memória)`);
+}
+
+/** Quantos nomes reais estão visíveis e sem borrão na tela (0 = seguro). */
+async function nomesReaisVisiveis(page) {
+  if (!NOMES_REAIS.length) return 0;
+  return page.evaluate((nomes) => {
+    const norm = (t) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ");
+    const borrado = (el) => { for (let e = el; e; e = e.parentElement) if ((e.style?.filter || "").includes("blur")) return true; return false; };
+    let achados = 0;
+    const andar = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    for (let no; (no = andar.nextNode()); ) {
+      const el = no.parentElement;
+      if (!el || borrado(el) || !el.getClientRects().length) continue;
+      const t = norm(no.nodeValue);
+      if (t.length >= 8 && nomes.some((n) => t.includes(n))) achados++;
+    }
+    return achados;
+  }, NOMES_REAIS);
+}
 if (PRODUCAO && (!process.env.SESSAO_TOKEN_ARQUIVO || !process.env.NOME_SESSAO)) {
   console.error("--producao exige SESSAO_TOKEN_ARQUIVO (token estático da conta) e NOME_SESSAO (nome dela, para trocar pelo da usuária demo).");
   process.exit(1);
@@ -61,14 +103,15 @@ if (!hostEhLocal(BASE_URL) && !argv.includes("--host-demo-confirmado")) {
 
 function substituir(texto) {
   return String(texto)
-    .replaceAll("{senha_demo}", process.env.TEST_USER_PASSWORD ?? "")
+    .replaceAll("{senha_demo}", PRODUCAO ? "senha-ficticia" : (process.env.TEST_USER_PASSWORD ?? ""))
     .replaceAll("{proxima_semana}", proximaSemana());
 }
 
 /** `rotulo=X` é pelo rótulo do campo; o resto é seletor do Playwright. */
 function localizar(page, seletor) {
   if (seletor.startsWith("rotulo=")) return page.getByLabel(seletor.slice(7)).first();
-  return page.locator(seletor).first();
+  // só o que está visível: janelas fechadas continuam no DOM, escondidas
+  return page.locator(`${seletor} >> visible=true`).first();
 }
 
 async function esperarTela(page) {
@@ -91,11 +134,23 @@ async function esperarTela(page) {
  * Modo produção: borra toda linha de tabela que não cite alguém do elenco e
  * troca o nome da conta que grava pelo da usuária de demonstração.
  */
-async function mascarar(page) {
+/**
+ * Por cena, no roteiro:
+ *   "mascara": false   → tabelas desta tela não têm dado pessoal (conferido
+ *                        num print): não borra linhas. A troca de nome segue.
+ *   "borrar": [css…]   → borra também estes elementos (ex.: notificações).
+ */
+async function mascarar(page, cena) {
   if (!MASCARA) return;
-  await page.evaluate(({ permitidos, parciais, exatas }) => {
+  await page.evaluate(({ permitidos, parciais, exatas, linhas, extras }) => {
     const doElenco = (t) => permitidos.some((n) => t.includes(n));
-    for (const linha of document.querySelectorAll("tbody tr, [role=row]")) {
+    for (const el of extras.flatMap((sel) => [...document.querySelectorAll(sel)])) el.style.filter = "blur(8px)";
+    // linhas de tabela, opções de listas (busca de beneficiária) e cartões
+    // do quadro de demandas (colunas .custom-scrollbar do kanban)
+    const ITENS = "tbody tr, [role=row], [role=option], [role=listbox] > *, .bg-popover button, .custom-scrollbar > *:not(:has(table)):not(:has(input))";
+    for (const linha of document.querySelectorAll(ITENS)) {
+      // cena sem máscara: desfaz o borrão que uma cena anterior deixou
+      if (!linhas) { if ((linha.style.filter || "").includes("blur")) linha.style.filter = ""; continue; }
       if (linha.closest("thead")) continue;
       // linha de célula única = aviso da tabela ("nenhum registro"), não pessoa
       if (linha.querySelectorAll("td").length === 1) continue;
@@ -108,7 +163,7 @@ async function mascarar(page) {
       for (const [de, para] of exatas) if (de && v.trim() === de) v = para;
       if (v !== no.nodeValue) no.nodeValue = v;
     }
-  }, MASCARA);
+  }, { ...MASCARA, linhas: cena?.mascara !== false, extras: cena?.borrar ?? [] });
 }
 
 async function executar(page, acao, onde) {
@@ -120,9 +175,23 @@ async function executar(page, acao, onde) {
         await page.goto(BASE_URL + acao.url, { waitUntil: "domcontentloaded" });
         break;
       case "clicar": {
+        if (PRODUCAO && /Entrar no Sistema/.test(acao.seletor ?? "")) {
+          await entrarPorToken(page.context());
+          await page.goto(BASE_URL + "/dashboard", { waitUntil: "domcontentloaded" });
+          break;
+        }
         // Link interno: espera a rota mudar. O Next mantém a tela antiga até
         // a nova chegar, e o print saía da página anterior.
         const href = await alvo.getAttribute("href", { timeout: ESPERA_MS }).catch(() => null);
+        // link que abre em outra aba (relatórios, certificados): abre aqui
+        const novaAba = await alvo.evaluate((el) => {
+          const a = el.closest("a");
+          return a && a.target === "_blank" && a.getAttribute("href")?.startsWith("/") ? a.getAttribute("href") : null;
+        }).catch(() => null);
+        if (novaAba) {
+          await page.goto(BASE_URL + novaAba, { waitUntil: "domcontentloaded" });
+          break;
+        }
         await alvo.click({ timeout: ESPERA_MS });
         if (href && href.startsWith("/")) {
           await page.waitForURL((u) => u.pathname === href.split(/[?#]/)[0], { timeout: 30000 });
@@ -131,7 +200,17 @@ async function executar(page, acao, onde) {
       }
       case "digitar":
         // Captura é imagem parada: o que importa é o campo preenchido.
-        await alvo.fill(substituir(acao.texto), { timeout: ESPERA_MS });
+        // Quase tudo de uma vez e as últimas letras teclada a tecla: com poucos eventos
+        // de mudança o formulário ainda não se considera alterado (o rascunho
+        // automático, por exemplo, não grava).
+        {
+          const texto = substituir(acao.texto);
+          // data/hora não aceitam valor parcial: vão inteiros
+          const tipoCampo = await alvo.getAttribute("type", { timeout: ESPERA_MS }).catch(() => null);
+          const resto = /^(date|datetime-local|time|month|week)$/.test(tipoCampo ?? "") ? 0 : Math.min(3, texto.length);
+          await alvo.fill(texto.slice(0, texto.length - resto), { timeout: ESPERA_MS });
+          if (resto) await alvo.pressSequentially(texto.slice(texto.length - resto), { delay: 60, timeout: ESPERA_MS });
+        }
         // busca com espera (debounce): o filtro só dispara depois de uma
         // pausa na digitação, e o print saía com a lista antiga carregando
         await page.waitForTimeout(1200);
@@ -160,6 +239,12 @@ async function executar(page, acao, onde) {
   await esperarTela(page);
 }
 
+/** Sessão por token estático: o cookie que o login gravaria. Sem senha. */
+async function entrarPorToken(contexto) {
+  const token = readFileSync(process.env.SESSAO_TOKEN_ARQUIVO, "utf8").trim();
+  await contexto.addCookies([{ name: "directus_token", value: token, url: BASE_URL, httpOnly: true, sameSite: "Lax" }]);
+}
+
 async function capturarAula(navegador, id) {
   const aula = plano(id);
   if (PRODUCAO) MASCARA = { permitidos: nomesDoElenco(elenco, aula.elenco ?? []), ...TROCAS };
@@ -182,9 +267,7 @@ async function capturarAula(navegador, id) {
   }, cfg.video.tema_captura);
 
   if (aula.sessao !== "deslogada" && PRODUCAO) {
-    // Sessão por token estático: o cookie que o login gravaria. Sem senha.
-    const token = readFileSync(process.env.SESSAO_TOKEN_ARQUIVO, "utf8").trim();
-    await contexto.addCookies([{ name: "directus_token", value: token, url: BASE_URL, httpOnly: true, sameSite: "Lax" }]);
+    await entrarPorToken(contexto);
   } else if (aula.sessao !== "deslogada") {
     const email = process.env.TEST_USER_EMAIL;
     const senha = process.env.TEST_USER_PASSWORD;
@@ -202,7 +285,7 @@ async function capturarAula(navegador, id) {
       const acoes = cena.acao ? (Array.isArray(cena.acao) ? cena.acao : [cena.acao]) : [];
       for (const acao of acoes) await executar(page, acao, onde);
 
-      await mascarar(page);
+      await mascarar(page, cena);
       let foco = null;
       if (cena.foco?.seletor) {
         const alvo = localizar(page, cena.foco.seletor);
@@ -221,12 +304,21 @@ async function capturarAula(navegador, id) {
           zoom: cena.foco.zoom ?? cfg.video.zoom_padrao,
         };
       }
-      await mascarar(page); // o scroll até o foco pode ter carregado linhas novas
+      await mascarar(page, cena); // o scroll até o foco pode ter carregado linhas novas
+      const vazando = await nomesReaisVisiveis(page);
+      if (vazando) throw new Error(`${onde}: ${vazando} nome(s) de beneficiária REAL visível(is) sem borrão — print NÃO gravado`);
       const arquivo = `telas/${cena.id}.png`;
       await page.screenshot({ path: join(pastaDaAula(id), arquivo) });
       capturas[cena.id] = { arquivo, foco };
       console.log(`  ${onde} ✔${foco ? ` foco ${cena.foco.seletor}` : ""}`);
     }
+  } catch (e) {
+    // print do estado da falha (mascarado) para diagnóstico: <aula>/falha.png
+    await mascarar(page, null).catch(() => {});
+    if (!(await nomesReaisVisiveis(page).catch(() => 1))) {
+      await page.screenshot({ path: join(pastaDaAula(id), "falha.png") }).catch(() => {});
+    }
+    throw e;
   } finally {
     await contexto.close();
   }

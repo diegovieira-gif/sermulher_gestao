@@ -21,7 +21,7 @@
       "narracao": "Abra o prontuário do atendimento pela lista de Atendimentos, no botão Ver detalhes.",
       "acao": [
         { "tipo": "navegar", "url": "/mulheres/atendimentos" },
-        { "tipo": "clicar", "seletor": "[title=\"Ver detalhes / Prontuário\"]" }
+        { "tipo": "clicar", "seletor": "tr:has-text(\"Joana Ribeiro da Silva\") [title=\"Ver detalhes / Prontuário\"]" }
       ],
       "foco": null
     },

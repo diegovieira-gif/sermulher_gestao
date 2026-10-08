@@ -24,13 +24,13 @@
         { "tipo": "clicar", "seletor": "role=tab[name=\"Gestão de Eventos (Lista)\"]" },
         { "tipo": "digitar", "seletor": "[placeholder=\"Buscar por título ou local...\"]", "texto": "Roda de Conversa" }
       ],
-      "foco": { "seletor": "[title=\"Participantes\"]", "zoom": 2.2 }
+      "foco": { "seletor": "tr:has-text(\"Roda de Conversa — Autonomia Financeira\") [title=\"Participantes\"]", "zoom": 2.2 }
     },
     {
       "id": "c03",
       "narracao": "A janela mostra o total e a lista de quem já participou. Para incluir alguém, busque pelo nome ou pelo CPF.",
       "acao": [
-        { "tipo": "clicar", "seletor": "[title=\"Participantes\"]" },
+        { "tipo": "clicar", "seletor": "tr:has-text(\"Roda de Conversa — Autonomia Financeira\") [title=\"Participantes\"]" },
         { "tipo": "digitar", "seletor": "[placeholder=\"Buscar por nome ou CPF...\"]", "texto": "Ana Paula" }
       ],
       "foco": { "seletor": "[placeholder=\"Buscar por nome ou CPF...\"]", "zoom": 1.8 }
@@ -38,7 +38,7 @@
     {
       "id": "c04",
       "narracao": "Escolha a pessoa, confira a data e clique em Registrar. Repita para cada participante. Quem já está na lista não aparece mais nas sugestões, então não há como lançar a mesma pessoa duas vezes.",
-      "acao": { "tipo": "clicar", "seletor": "text=Ana Paula Ferreira" },
+      "acao": { "tipo": "clicar", "seletor": "button:has-text(\"987.654.321-00\")" },
       "foco": { "seletor": "role=button[name=\"Registrar\"]", "zoom": 2.0 }
     },
     {
@@ -66,7 +66,7 @@
         { "tipo": "clicar", "seletor": "role=button[name=\"Registrar Participação\"]" },
         { "tipo": "clicar", "seletor": "text=Selecione o evento" }
       ],
-      "foco": { "seletor": "role=dialog", "zoom": 1.4 }
+      "foco": { "seletor": "[role=dialog]", "zoom": 1.4 }
     },
     {
       "id": "c08",

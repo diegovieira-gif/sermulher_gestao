@@ -50,7 +50,7 @@
       "id": "c06",
       "narracao": "Para tirar uma aluna da turma, use o menu de ações da linha e escolha Remover Matrícula. Isso desfaz só a matrícula. O cadastro dela continua intacto.",
       "acao": [
-        { "tipo": "clicar", "seletor": "text=Ana Paula Ferreira" },
+        { "tipo": "clicar", "seletor": ".bg-popover button:has-text(\"Ana Paula Ferreira\")" },
         { "tipo": "clicar", "seletor": "role=button[name=\"Confirmar Matrícula\"]" }
       ],
       "foco": { "seletor": "[aria-label=\"Ações da matrícula\"]", "zoom": 2.2 }

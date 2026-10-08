@@ -42,7 +42,11 @@ const corpus = arquivos(SRC).map((p) => readFileSync(p, "utf8")).join("\n");
 // porque a instância de demonstração é povoada com eles, não porque estão no código.
 const doElenco = new Set();
 (function coletar(v) {
-  if (typeof v === "string") doElenco.add(v);
+  if (typeof v === "string") {
+    doElenco.add(v);
+    // CPF do elenco aparece na tela com máscara (123.456.789-09)
+    if (/^\d{11}$/.test(v)) doElenco.add(v.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4"));
+  }
   else if (v && typeof v === "object") Object.values(v).forEach(coletar);
 })(JSON.parse(readFileSync(join(PASTA, "elenco.json"), "utf8")));
 

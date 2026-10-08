@@ -34,7 +34,7 @@
     {
       "id": "c04",
       "narracao": "Escolha o tipo de evento e a categoria. As opções vêm das configurações do sistema, e são elas que permitem filtrar e contar os eventos depois.",
-      "acao": { "tipo": "nenhuma" },
+      "acao": { "tipo": "selecionar", "seletor": "rotulo=Tipo de Evento", "opcao": "Roda de Conversa" },
       "foco": { "seletor": "rotulo=Tipo de Evento", "zoom": 1.7 }
     },
     {

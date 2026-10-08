@@ -21,7 +21,7 @@
       "narracao": "Abra o instrumental pela lista do CRAM e vá à aba Parte um, Socioassistencial. Ela cobre o imóvel e o saneamento, deficiência, saúde, renda e benefícios, os serviços que ela frequenta, a caracterização da violência e a identificação do autor.",
       "acao": [
         { "tipo": "navegar", "url": "/cram" },
-        { "tipo": "clicar", "seletor": "[title=\"Abrir\"]" },
+        { "tipo": "clicar", "seletor": "tr:has-text(\"Marta Souza Lima\") [title=\"Abrir\"]" },
         { "tipo": "clicar", "seletor": "role=tab[name=\"I · Socioassistencial\"]" }
       ],
       "foco": { "seletor": "role=tabpanel", "zoom": 1.3 }

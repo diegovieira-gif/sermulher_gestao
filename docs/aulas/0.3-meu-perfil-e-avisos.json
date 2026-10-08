@@ -28,7 +28,7 @@
     {
       "id": "c03",
       "narracao": "A aba Dados mostra o seu nome, o e-mail e o perfil de acesso. É o perfil que define quais módulos aparecem no seu menu.",
-      "acao": { "tipo": "clicar", "seletor": "text=Meu Perfil" },
+      "acao": { "tipo": "clicar", "seletor": "role=menuitem[name=\"Meu Perfil\"]" },
       "foco": { "seletor": "role=tab[name=\"Dados\"]", "zoom": 1.6 }
     },
     {
@@ -45,6 +45,7 @@
     },
     {
       "id": "c06",
+      "borrar": ["[role=menu] > *:not(:first-child)"],
       "narracao": "Agora, os avisos. Quando você é escalada para um evento, ou quando um evento seu muda de data ou de local, o sistema avisa você. O aviso chega neste sino. O número em vermelho mostra quantos você ainda não leu. Clique num aviso para ir direto ao assunto, e ele fica marcado como lido.",
       "acao": { "tipo": "clicar", "seletor": "button[aria-label^=\"Notificações\"]" },
       "foco": { "seletor": "text=Notificações", "zoom": 1.6 }
@@ -60,7 +61,7 @@
       "narracao": "Já o WhatsApp depende de você. Ele é um aparelho pessoal, então o sistema só envia mensagem para quem autorizou. Em Meu Perfil, abra a aba Notificações.",
       "acao": [
         { "tipo": "clicar", "seletor": "[data-testid=\"menu-usuario\"]" },
-        { "tipo": "clicar", "seletor": "text=Meu Perfil" },
+        { "tipo": "clicar", "seletor": "role=menuitem[name=\"Meu Perfil\"]" },
         { "tipo": "clicar", "seletor": "role=tab[name=\"Notificações\"]" }
       ],
       "foco": { "seletor": "text=Como você quer ser avisada", "zoom": 1.6 }

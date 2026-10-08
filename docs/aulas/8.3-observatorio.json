@@ -22,18 +22,21 @@
     },
     {
       "id": "c02",
+      "mascara": false,
       "narracao": "No menu, abra Observatório. Cada aba é uma coleção de dados: Períodos, o Consolidado do mês e as séries. Esses dados alimentam o site público do Observatório, em dados-sermulher.aracaju.se.gov.br, que qualquer pessoa pode abrir.",
       "acao": { "tipo": "navegar", "url": "/observatorio" },
       "foco": null
     },
     {
       "id": "c03",
+      "mascara": false,
       "narracao": "Tudo começa pelo período. Em Períodos, cada registro é um mês: o nome, como abril de dois mil e vinte e seis, a data de referência, que é o primeiro dia do mês, e a ordem, ano e mês juntos, como dois zero dois seis zero quatro. Só o período marcado como ativo aparece no site.",
       "acao": { "tipo": "clicar", "seletor": "text=Períodos" },
       "foco": { "seletor": "role=button[name=\"Novo Registro\"]", "zoom": 1.9 }
     },
     {
       "id": "c04",
+      "mascara": false,
       "narracao": "Depois, abra Consolidado do mês e clique em Novo Registro. Escolha o período e preencha os números do CRAM e da Secretaria. Cada mês tem um consolidado só: se ele já existir, edite em vez de criar outro.",
       "acao": [
         { "tipo": "clicar", "seletor": "text=Consolidado do mês" },

@@ -41,7 +41,7 @@
       "id": "c05",
       "narracao": "E a ordenação muda a sequência da lista: pela data do evento, do mais recente ou do mais antigo, pelo título, pelo local, ou pelos cadastrados por último, que é útil para conferir o que entrou recentemente.",
       "acao": { "tipo": "nenhuma" },
-      "foco": { "seletor": "text=Ordenar por", "zoom": 1.7 }
+      "foco": { "seletor": "text=Data do evento (mais recente)", "zoom": 1.7 }
     },
     {
       "id": "c06",

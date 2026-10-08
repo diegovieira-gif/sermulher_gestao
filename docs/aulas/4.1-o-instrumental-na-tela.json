@@ -46,7 +46,7 @@
     {
       "id": "c06",
       "narracao": "O papel virou quatro abas. Atendimento. Parte um, Socioassistencial. Parte dois, Jurídico. E parte três, Psicológico.",
-      "acao": { "tipo": "clicar", "seletor": "text=Marta Souza Lima" },
+      "acao": { "tipo": "clicar", "seletor": "button:has-text(\"111.444.777-35\")" },
       "foco": { "seletor": "role=tablist", "zoom": 1.6 }
     },
     {
@@ -77,7 +77,7 @@
         { "tipo": "clicar", "seletor": "role=button[name=\"Registrar atendimento\"]" },
         { "tipo": "navegar", "url": "/cram" }
       ],
-      "foco": { "seletor": "[title=\"Abrir\"]", "zoom": 2.2 }
+      "foco": { "seletor": "tr:has-text(\"Marta Souza Lima\") [title=\"Abrir\"]", "zoom": 2.2 }
     },
     {
       "id": "c11",

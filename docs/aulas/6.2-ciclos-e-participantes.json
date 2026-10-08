@@ -40,7 +40,7 @@
     {
       "id": "c05",
       "narracao": "Para incluir participantes, clique em Gerenciar Participantes na linha do ciclo. A tela do ciclo tem duas abas: Participantes e Sessões.",
-      "acao": { "tipo": "clicar", "seletor": "[title=\"Gerenciar Participantes\"]" },
+      "acao": [{ "tipo": "tecla", "tecla": "Escape" }, { "tipo": "clicar", "seletor": "[title=\"Gerenciar Participantes\"]" }],
       "foco": { "seletor": "role=tablist", "zoom": 1.7 }
     },
     {

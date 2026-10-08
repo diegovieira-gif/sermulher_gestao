@@ -24,12 +24,12 @@
         { "tipo": "clicar", "seletor": "role=tab[name=\"Gestão de Eventos (Lista)\"]" },
         { "tipo": "digitar", "seletor": "[placeholder=\"Buscar por título ou local...\"]", "texto": "Roda de Conversa" }
       ],
-      "foco": { "seletor": "[title=\"Equipe\"]", "zoom": 2.2 }
+      "foco": { "seletor": "tr:has-text(\"Roda de Conversa — Autonomia Financeira\") [title=\"Equipe\"]", "zoom": 2.2 }
     },
     {
       "id": "c03",
       "narracao": "Escolha a pessoa no campo Servidora ou servidor e clique em Adicionar. A lista vem das contas de usuário do próprio sistema: quem tem acesso ao SIGMA já aparece aqui, pelo nome. Não existe um cadastro separado de funcionários.",
-      "acao": { "tipo": "clicar", "seletor": "[title=\"Equipe\"]" },
+      "acao": { "tipo": "clicar", "seletor": "tr:has-text(\"Roda de Conversa — Autonomia Financeira\") [title=\"Equipe\"]" },
       "foco": { "seletor": "rotulo=Servidora ou servidor", "zoom": 1.8 }
     },
     {
@@ -58,6 +58,7 @@
     },
     {
       "id": "c07",
+      "borrar": ["[role=menu] > *:not(:first-child)"],
       "narracao": "Os avisos chegam no sino de cada pessoa, no e-mail institucional e, para quem autorizou em Meu Perfil, também no WhatsApp.",
       "acao": [
         { "tipo": "tecla", "tecla": "Escape" },
