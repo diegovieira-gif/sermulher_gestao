@@ -53,7 +53,7 @@
         { "tipo": "clicar", "seletor": ".bg-popover button:has-text(\"Ana Paula Ferreira\")" },
         { "tipo": "clicar", "seletor": "role=button[name=\"Confirmar Matrícula\"]" }
       ],
-      "foco": { "seletor": "[aria-label=\"Ações da matrícula\"]", "zoom": 2.2 }
+      "foco": { "seletor": "tr:has-text(\"Ana Paula Ferreira\") [aria-label=\"Ações da matrícula\"]", "zoom": 2.2 }
     },
     {
       "id": "c07",

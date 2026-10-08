@@ -7,7 +7,7 @@
   "objetivo": "Ao final, a participante lê a aba Resultados, entende por que um certificado fica bloqueado e imprime o certificado de uma aluna aprovada.",
   "tarefa_final": "Imprima em PDF o certificado de uma aluna aprovada da turma Inclusão Digital — Manhã A e confira o curso na ficha dela.",
   "duracao_alvo_seg": 120,
-  "elenco": ["escola", "ana"],
+  "elenco": ["escola", "ana", "rita"],
 
   "cenas": [
     {
@@ -36,28 +36,28 @@
       "id": "c04",
       "narracao": "Para a aluna aprovada, clique em Imprimir certificado. Ele abre em outra aba, já com o nome dela, o curso e a carga horária.",
       "acao": { "tipo": "nenhuma" },
-      "foco": { "seletor": "text=Imprimir certificado", "zoom": 2.0 }
+      "foco": { "seletor": "tr:has-text(\"Ana Paula Ferreira\") [title=\"Imprimir certificado\"]", "zoom": 2.0 }
     },
     {
       "id": "c05",
       "narracao": "Para a aluna que não atingiu a frequência, o botão fica bloqueado, com o aviso de que ela não atingiu setenta e cinco por cento. Não é um defeito: é a regra do curso.",
       "acao": { "tipo": "nenhuma" },
-      "foco": { "seletor": "text=Certificado", "zoom": 1.8 }
+      "foco": { "seletor": "tr:has-text(\"Rita de Cássia Nunes\") [title=\"Aluna não atingiu 75% de frequência\"]", "zoom": 1.8 }
     },
     {
       "id": "c06",
       "narracao": "Na aba do certificado, use o botão de impressão. Para guardar no computador, escolha Salvar como PDF na janela de impressão do navegador.",
-      "acao": { "tipo": "clicar", "seletor": "text=Imprimir certificado" },
+      "acao": { "tipo": "clicar", "seletor": "tr:has-text(\"Ana Paula Ferreira\") [title=\"Imprimir certificado\"]" },
       "foco": null
     },
     {
       "id": "c07",
-      "narracao": "E o curso não fica só na Escola. Na ficha completa da aluna, a aba Cursos mostra a matrícula, e a Linha do Tempo também. Quem atender essa mulher em qualquer setor vai saber que ela concluiu o curso.",
+      "narracao": "E o curso não fica só na Escola. Na ficha completa da aluna, a Linha do Tempo mostra a matrícula na Escola da Mulher e a situação dela. Quem atender essa mulher em qualquer setor vai saber que ela concluiu o curso.",
       "acao": [
         { "tipo": "navegar", "url": "/mulheres/beneficiarias" },
         { "tipo": "digitar", "seletor": "[placeholder=\"Buscar por nome, CPF ou telefone...\"]", "texto": "Ana Paula" },
         { "tipo": "clicar", "seletor": "[title=\"Abrir ficha completa\"]" },
-        { "tipo": "clicar", "seletor": "role=tab[name=\"Cursos\"]" }
+        { "tipo": "clicar", "seletor": "role=tab[name=\"Linha do Tempo\"]" }
       ],
       "foco": { "seletor": "role=tabpanel", "zoom": 1.4 }
     },

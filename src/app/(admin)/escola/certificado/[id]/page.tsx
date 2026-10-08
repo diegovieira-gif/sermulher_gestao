@@ -4,7 +4,7 @@ import { readItems } from "@directus/sdk";
 import CertificadoClient from "./certificado-client";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { FecharJanelaButton } from "./fechar-janela-button";
 
 interface CertificadoPageProps {
   params: Promise<{
@@ -42,8 +42,10 @@ export default async function CertificadoPage({
           "beneficiaria.*", // Traz nome e CPF da aluna
           "turma.id",
           "turma.status",
+          "turma.data_inicio",
+          "turma.data_fim",
+          "turma.instrutor",
           "turma.curso.*", // Traz nome do curso e carga horária
-          // REMOVIDOS: instrutor_nome, data_inicio, data_fim (não existem no banco ainda)
         ],
         limit: 1,
       }),
@@ -95,9 +97,7 @@ export default async function CertificadoPage({
                 turma pelo instrutor.
               </AlertDescription>
             </Alert>
-            <Button variant="outline" onClick={() => window.close()}>
-              Fechar Janela
-            </Button>
+            <FecharJanelaButton />
           </div>
         </div>
       );
@@ -118,15 +118,13 @@ export default async function CertificadoPage({
                 <strong>"Aprovada"</strong> na lista de alunas.
               </AlertDescription>
             </Alert>
-            <Button variant="outline" onClick={() => window.close()}>
-              Fechar Janela
-            </Button>
+            <FecharJanelaButton />
           </div>
         </div>
       );
     }
 
-    // Renderiza o cliente (que usará data de hoje e instrutor genérico como fallback)
+    // Renderiza o cliente (sem datas na turma, usa a de hoje)
     return (
       <CertificadoClient
         matricula={matricula}

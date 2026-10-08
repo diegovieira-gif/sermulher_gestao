@@ -831,11 +831,12 @@ export type EventoLinhaDoTempo = {
 
 /**
  * Tudo que aconteceu com a beneficiária, em ordem cronológica: atendimentos,
- * instrumentais do CRAM, benefícios entregues, eventos e cursos. É a visão que
+ * instrumentais do CRAM, benefícios entregues, eventos, cursos e matrículas na
+ * Escola da Mulher. É a visão que
  * uma técnica precisa antes de um atendimento — os dados já existiam, mas
  * espalhados em cinco abas/módulos.
  *
- * As cinco consultas rodam com `allSettled`: se uma coleção falhar (ex.: perfil
+ * As consultas rodam com `allSettled`: se uma coleção falhar (ex.: perfil
  * sem acesso ao CRAM no Directus), a linha do tempo mostra o que conseguiu.
  */
 export async function getLinhaDoTempo(beneficiariaId: string) {
@@ -895,6 +896,15 @@ export async function getLinhaDoTempo(beneficiariaId: string) {
         limit: -1,
       }),
     ),
+    client.request(
+      readItems("escola_matriculas", {
+        filter: { beneficiaria: { _eq: beneficiariaId } },
+        // @ts-ignore
+        fields: ["id", "data_matricula", "status", "turma.nome", "turma.curso.nome"],
+        sort: ["-data_matricula"],
+        limit: -1,
+      }),
+    ),
   ]);
 
   const dado = (i: number): any[] =>
@@ -940,6 +950,12 @@ export async function getLinhaDoTempo(beneficiariaId: string) {
       tipo: "curso" as const,
       titulo: `Inscrita no curso: ${i.curso?.nome ?? i.curso?.titulo ?? "—"}`,
       detalhe: i.status || undefined,
+    })),
+    ...dado(5).map((m: any) => ({
+      data: m.data_matricula ?? "",
+      tipo: "curso" as const,
+      titulo: `Escola da Mulher: ${m.turma?.curso?.nome ?? "curso"} (${m.turma?.nome ?? "turma"})`,
+      detalhe: m.status || undefined,
     })),
   ]
     .filter((e) => e.data)

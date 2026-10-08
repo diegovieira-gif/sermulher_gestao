@@ -146,7 +146,8 @@ const ALEM_DAS_FICHAS = {
     }
   },
 
-  // Depois da 5.2 (que matricula a Ana): Ana aprovada, para a 5.4.
+  // Depois da 5.2 (que matricula a Ana) e da 5.3: turma concluída, Ana
+  // aprovada e o diário lançado, para a 5.4.
   modulo5b: async () => {
     const turma = (await api(`/items/escola_turmas?fields=id&limit=1&filter=${encodeURIComponent(JSON.stringify({ nome: { _eq: elenco.escola.turma } }))}`))[0];
     const ana = (await api(`/items/beneficiarias?fields=id&limit=1&filter=${encodeURIComponent(JSON.stringify({ cpf: { _eq: pessoa("ana").cpf } }))}`))[0];
@@ -154,6 +155,19 @@ const ALEM_DAS_FICHAS = {
     if (!mat) throw new Error("a Ana não está matriculada: grave a 5.2 antes");
     if (APLICAR) await api(`/items/escola_matriculas/${mat.id}`, { method: "PATCH", body: JSON.stringify({ status: "aprovada", frequencia_percentual: 92, nota_final: 9 }) });
     console.log(`~ matrícula #${mat.id} da Ana: aprovada${APLICAR ? "" : " (simulação)"}`);
+    // o certificado só sai de turma concluída
+    if (APLICAR) await api(`/items/escola_turmas/${turma.id}`, { method: "PATCH", body: JSON.stringify({ status: "concluida", data_fim: new Date(Date.now() - 864e5).toISOString().slice(0, 10) }) });
+    // diário com 4 aulas passadas: Ana 4 de 4 (aprovada), Rita 2 de 4 (reprovada)
+    const rita = (await api(`/items/beneficiarias?fields=id&limit=1&filter=${encodeURIComponent(JSON.stringify({ cpf: { _eq: pessoa("rita").cpf } }))}`))[0];
+    const ja = await api(`/items/escola_frequencia?fields=id&limit=1&filter=${encodeURIComponent(JSON.stringify({ turma: { _eq: turma.id } }))}`);
+    if (ja.length) { console.log("= diário da turma já lançado"); return; }
+    const dia = (n) => { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); };
+    for (const [n, ritaPresente] of [[28, true], [21, false], [14, true], [7, false]]) {
+      for (const [b, presente] of [[ana.id, true], [rita.id, ritaPresente]]) {
+        if (APLICAR) await api("/items/escola_frequencia", { method: "POST", body: JSON.stringify({ turma: turma.id, beneficiaria: b, data: dia(n), presente }) });
+      }
+      console.log(`+ chamada de ${dia(n)}${APLICAR ? "" : " (simulação)"}`);
+    }
   },
 
   // Sala Azul (6.1–6.4): João e Pedro, o ciclo, as participações e duas

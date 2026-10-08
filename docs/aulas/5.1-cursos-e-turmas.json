@@ -56,7 +56,7 @@
       "id": "c07",
       "narracao": "As datas de início e de fim aparecem no calendário da Agenda Institucional, em verde, junto com os outros compromissos da Secretaria. O status diz em que fase a turma está: aberta, em andamento, concluída ou cancelada.",
       "acao": { "tipo": "nenhuma" },
-      "foco": { "seletor": "[placeholder=\"Selecione o status\"]", "zoom": 1.8 }
+      "foco": { "seletor": "[role=dialog] button[role=combobox]:has-text(\"Aberta\")", "zoom": 1.8 }
     },
     {
       "id": "c08",
