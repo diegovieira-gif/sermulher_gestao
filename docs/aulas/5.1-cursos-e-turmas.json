@@ -1,0 +1,77 @@
+{
+  "id": "5.1",
+  "modulo": "5 — Escola da Mulher",
+  "titulo": "Cursos e turmas",
+  "publico": "Equipe da Escola da Mulher",
+  "pre_requisitos": ["0.2"],
+  "objetivo": "Ao final, a participante distingue curso de turma, mantém o catálogo de cursos e cria uma turma com datas, instrutora e vagas.",
+  "tarefa_final": "Crie a turma Inclusão Digital — Manhã A, do curso Inclusão Digital, com vinte vagas e datas de início e fim.",
+  "duracao_alvo_seg": 120,
+  "elenco": ["escola"],
+
+  "cenas": [
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "Cursos e turmas", "subtitulo": "Módulo cinco · Escola da Mulher" },
+      "narracao": "Este módulo é para a equipe da Escola da Mulher, que cuida da qualificação profissional e da autonomia financeira. Neste vídeo você vai entender a diferença entre curso e turma e criar uma turma nova."
+    },
+    {
+      "id": "c02",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Curso e turma",
+        "linhas": ["Curso: o que se ensina. Nome, área, carga horária e ementa", "Turma: o curso acontecendo. Datas, instrutora, vagas e alunas"]
+      },
+      "narracao": "Primeiro, a diferença. O curso é o que se ensina: nome, área, carga horária e ementa. Ele é cadastrado uma vez só. A turma é o curso acontecendo, com datas, instrutora, vagas e alunas. Um mesmo curso pode ter muitas turmas ao longo do ano."
+    },
+    {
+      "id": "c03",
+      "narracao": "O Painel da Escola resume tudo: total de alunas, turmas ativas, certificados emitidos e as últimas turmas.",
+      "acao": { "tipo": "navegar", "url": "/escola" },
+      "foco": null
+    },
+    {
+      "id": "c04",
+      "narracao": "Em Cursos fica o catálogo. Para incluir um curso, clique em Novo e informe o nome, a área de atuação, a carga horária em horas e a ementa, com os tópicos principais. Antes de criar, confira se ele já não está no catálogo.",
+      "acao": { "tipo": "navegar", "url": "/escola/cursos" },
+      "foco": { "seletor": "role=button[name=\"Novo\"]", "zoom": 2.0 }
+    },
+    {
+      "id": "c05",
+      "narracao": "Agora, a turma. Em Turmas, clique em Novo.",
+      "acao": [
+        { "tipo": "navegar", "url": "/escola/turmas" },
+        { "tipo": "clicar", "seletor": "role=button[name=\"Novo\"]" }
+      ],
+      "foco": { "seletor": "role=dialog", "zoom": 1.4 }
+    },
+    {
+      "id": "c06",
+      "narracao": "Dê um nome que distinga a turma das outras do mesmo curso, como o turno e uma letra. Escolha o curso, informe a instrutora e o número de vagas.",
+      "acao": { "tipo": "digitar", "seletor": "[placeholder=\"Ex: Manhã A\"]", "texto": "Inclusão Digital — Manhã A" },
+      "foco": { "seletor": "[placeholder=\"Ex: Manhã A\"]", "zoom": 1.8 }
+    },
+    {
+      "id": "c07",
+      "narracao": "As datas de início e de fim aparecem no calendário da Agenda Institucional, em verde, junto com os outros compromissos da Secretaria. O status diz em que fase a turma está: aberta, em andamento, concluída ou cancelada.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "[placeholder=\"Selecione o status\"]", "zoom": 1.8 }
+    },
+    {
+      "id": "c08",
+      "narracao": "Clique em Cadastrar. A turma entra na lista, e o botão Ver detalhes leva à tela dela, onde ficam as alunas, a frequência e os resultados.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "role=button[name=\"Cadastrar\"]", "zoom": 2.0 }
+    },
+    {
+      "id": "c09",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sua vez",
+        "linhas": ["Crie a turma Inclusão Digital — Manhã A", "Curso Inclusão Digital, vinte vagas", "Informe início e fim"]
+      },
+      "narracao": "Agora é com você. Crie a turma Inclusão Digital, Manhã A, do curso Inclusão Digital, com vinte vagas e as datas de início e de fim."
+    }
+  ]
+}

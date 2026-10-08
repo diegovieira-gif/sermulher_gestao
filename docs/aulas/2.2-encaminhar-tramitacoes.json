@@ -1,0 +1,83 @@
+{
+  "id": "2.2",
+  "modulo": "2 — Atendimentos e demandas",
+  "titulo": "Encaminhar: tramitações entre setores",
+  "publico": "Atendimento, psicossocial e jurídico",
+  "pre_requisitos": ["2.1"],
+  "objetivo": "Ao final, a participante registra uma tramitação, entende a Evolução do Caso como histórico e imprime o relatório técnico do atendimento.",
+  "tarefa_final": "No atendimento de Joana Ribeiro da Silva, registre uma tramitação encaminhando o caso para o setor jurídico.",
+  "duracao_alvo_seg": 120,
+  "elenco": ["joana"],
+
+  "cenas": [
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "Tramitações entre setores", "subtitulo": "Módulo dois · Atendimentos e demandas" },
+      "narracao": "Um atendimento raramente termina num setor só. A psicóloga encaminha para o jurídico, o jurídico pede um benefício ao socioassistencial. No SIGMA, cada passo desses é uma tramitação. Neste vídeo você vai registrar uma."
+    },
+    {
+      "id": "c02",
+      "narracao": "Abra o prontuário do atendimento pela lista de Atendimentos, no botão Ver detalhes.",
+      "acao": [
+        { "tipo": "navegar", "url": "/mulheres/atendimentos" },
+        { "tipo": "clicar", "seletor": "[title=\"Ver detalhes / Prontuário\"]" }
+      ],
+      "foco": null
+    },
+    {
+      "id": "c03",
+      "narracao": "O prontuário tem duas partes. Mapa de Risco e Contexto reúne o que foi registrado na abertura. Evoluções mostra a Evolução do Caso: cada passo, em ordem.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "role=tablist", "zoom": 1.6 }
+    },
+    {
+      "id": "c04",
+      "narracao": "Abra Evoluções e clique em Nova Tramitação.",
+      "acao": { "tipo": "clicar", "seletor": "role=tab[name=\"Evoluções (Timeline)\"]" },
+      "foco": { "seletor": "role=button[name=\"Nova Tramitação\"]", "zoom": 2.0 }
+    },
+    {
+      "id": "c05",
+      "narracao": "Escolha o tipo de demanda, o setor responsável e o status da etapa. O setor é quem vai receber o caso: é na fila dele que a demanda vai aparecer.",
+      "acao": { "tipo": "clicar", "seletor": "role=button[name=\"Nova Tramitação\"]" },
+      "foco": { "seletor": "role=dialog", "zoom": 1.4 }
+    },
+    {
+      "id": "c06",
+      "narracao": "No relato técnico, escreva o que foi feito e o que se espera do outro setor. Escreva para quem vai ler sem ter estado no atendimento: o colega do outro setor não ouviu a conversa.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "[placeholder=\"Descreva a evolução, o atendimento realizado, ou a tramitação...\"]", "zoom": 1.7 }
+    },
+    {
+      "id": "c07",
+      "narracao": "Clique em Registrar Tramitação. Ela entra na Evolução do Caso, com data e autoria.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "role=button[name=\"Registrar Tramitação\"]", "zoom": 2.0 }
+    },
+    {
+      "id": "c08",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Histórico, não rascunho",
+        "linhas": ["Cada tramitação é um registro novo", "Nada é sobrescrito", "Mudou algo? Registre uma nova evolução"]
+      },
+      "narracao": "Repare que cada tramitação é um registro novo. Nenhuma apaga a anterior. Se o caso mudar, você não corrige o que foi escrito: registra uma nova evolução. É isso que permite reconstituir a história do atendimento, se um dia ela for pedida."
+    },
+    {
+      "id": "c09",
+      "narracao": "Precisa do documento em papel? O botão Ver Relatório monta o relatório técnico do atendimento, pronto para imprimir ou salvar em PDF.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "text=Ver Relatório", "zoom": 2.0 }
+    },
+    {
+      "id": "c10",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sua vez",
+        "linhas": ["Abra o prontuário do atendimento de Joana", "Registre uma Nova Tramitação para o jurídico", "Confira na Evolução do Caso"]
+      },
+      "narracao": "Agora é com você. No atendimento de Joana Ribeiro da Silva, registre uma tramitação encaminhando o caso para o setor jurídico e confira que ela aparece na Evolução do Caso."
+    }
+  ]
+}

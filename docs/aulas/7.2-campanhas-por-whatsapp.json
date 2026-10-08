@@ -1,0 +1,88 @@
+{
+  "id": "7.2",
+  "modulo": "7 — Comunicação",
+  "titulo": "Campanhas por WhatsApp",
+  "publico": "Equipe de comunicação",
+  "pre_requisitos": ["1.2"],
+  "objetivo": "Ao final, a participante monta uma campanha com mensagem personalizada, confere o público antes de disparar e redige sem expor o atendimento de ninguém.",
+  "tarefa_final": "Monte uma campanha informativa, filtre o público e confira quem vai receber — sem disparar.",
+  "duracao_alvo_seg": 180,
+  "elenco": ["joana", "claudia"],
+
+  "pendencias": [
+    "O sistema NÃO registra autorização da beneficiária para receber WhatsApp: é elegível quem tem telefone com pelo menos oito dígitos (ELIGIBLE_FILTER em marketing/whatsapp/actions.ts). Para mulheres em situação de violência, uma mensagem institucional pode ser vista pelo agressor. Recomendado: um campo de autorização (e de 'contato seguro') na ficha, e o filtro de elegibilidade respeitando-o. Se for criado, reescrever as cenas c04 e c07.",
+    "A 'Configuração de Integração' (URL do GoWA, webhook do n8n, usuário e senha) fica FORA do vídeo: é tarefa de TI e mostraria credenciais. A captura não deve rolar até essa seção."
+  ],
+
+  "cenas": [
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "Campanhas por WhatsApp", "subtitulo": "Módulo sete · Comunicação" },
+      "narracao": "O SIGMA envia campanhas por WhatsApp para as beneficiárias: avisos de mutirão, de exames, de cursos com vagas abertas. Neste vídeo você vai montar uma campanha e, principalmente, conferir para quem ela vai antes de enviar."
+    },
+    {
+      "id": "c02",
+      "narracao": "No menu, em Marketing e Comunicação, abra Campanhas WhatsApp. O painel mostra o total de campanhas, quantas mulheres podem receber mensagens e os disparos recentes.",
+      "acao": { "tipo": "navegar", "url": "/marketing/whatsapp" },
+      "foco": { "seletor": "text=Mulheres Elegíveis", "zoom": 1.8 }
+    },
+    {
+      "id": "c03",
+      "narracao": "Mulheres elegíveis são as que têm telefone na ficha. Quem não tem telefone fica de fora de toda campanha. É por isso que, lá no módulo um, o telefone pesa tanto na completude.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "text=Mulheres Elegíveis", "zoom": 2.0 }
+    },
+    {
+      "id": "c04",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Antes de escrever: segurança",
+        "linhas": ["O celular dela pode estar nas mãos de quem a agride", "Nunca cite atendimento, violência, processo ou medida protetiva", "Escreva como um aviso geral da Prefeitura"]
+      },
+      "narracao": "Antes de escrever, pense em quem pode ler. Muitas dessas mulheres vivem ou viveram com quem as agride, e o celular delas pode estar nas mãos dessa pessoa. Por isso, uma campanha nunca cita atendimento, violência, processo ou medida protetiva. Escreva como um aviso geral da Prefeitura, que qualquer pessoa poderia receber."
+    },
+    {
+      "id": "c05",
+      "narracao": "Em Modelos de Campanhas WhatsApp, clique em Nova Campanha WhatsApp. Dê um nome e um objetivo, para a equipe saber do que se trata.",
+      "acao": { "tipo": "clicar", "seletor": "text=Nova Campanha WhatsApp" },
+      "foco": { "seletor": "[placeholder=\"Ex: Informativo Outubro Rosa\"]", "zoom": 1.8 }
+    },
+    {
+      "id": "c06",
+      "narracao": "Na mensagem, a marcação primeiro nome, entre chaves, é trocada pelo primeiro nome de cada destinatária. Uma mensagem que chama a pessoa pelo nome é lida. A barra do editor aplica negrito, itálico e emojis, e permite anexar uma imagem.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "text=Mensagem do WhatsApp", "zoom": 1.7 }
+    },
+    {
+      "id": "c07",
+      "narracao": "Agora o mais importante: o público. Os filtros recortam quem vai receber, por idade, número de filhos e situação cadastral. Confira a lista que aparece. Se a campanha é sobre exames para mulheres de quarenta anos ou mais, ela não deve chegar a uma jovem de dezoito.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "text=Idade", "zoom": 1.7 }
+    },
+    {
+      "id": "c08",
+      "narracao": "Em Tipo de envio, a campanha pode ser disparada uma vez ou repetida nos dias da semana e no horário que você escolher. Salve a campanha. Ela aparece entre os modelos, com os botões Editar, Excluir e Disparar Campanha.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "text=Tipo de envio", "zoom": 1.7 }
+    },
+    {
+      "id": "c09",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Disparo não se desfaz",
+        "linhas": ["Mensagem enviada não volta", "Releia o texto e confira o público", "Na dúvida, peça a uma colega para revisar"]
+      },
+      "narracao": "Disparar Campanha envia de verdade, e mensagem enviada não volta. Antes de clicar, releia o texto, confira o público e, na dúvida, peça a uma colega para revisar. Cada disparo fica registrado na Linha do Tempo de Disparos."
+    },
+    {
+      "id": "c10",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sua vez",
+        "linhas": ["Monte uma campanha informativa", "Use o primeiro nome na mensagem", "Filtre e confira o público", "Não dispare: só confira"]
+      },
+      "narracao": "Agora é com você. Monte uma campanha informativa usando o primeiro nome na mensagem, filtre o público e confira quem vai receber. Neste exercício, não dispare: só confira."
+    }
+  ]
+}

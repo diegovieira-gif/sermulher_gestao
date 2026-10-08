@@ -1,0 +1,92 @@
+{
+  "id": "4.1",
+  "modulo": "4 — CRAM",
+  "titulo": "O Instrumental na tela",
+  "publico": "Equipe do CRAM",
+  "pre_requisitos": ["1.1", "1.5"],
+  "objetivo": "Ao final, a participante abre um Instrumental de Atendimento para uma assistida já cadastrada, preenche a aba Atendimento e salva para completar nos próximos encontros.",
+  "tarefa_final": "Abra um instrumental para Marta Souza Lima, preencha a aba Atendimento e salve com o status Em preenchimento.",
+  "duracao_alvo_seg": 150,
+  "elenco": ["marta"],
+
+  "cenas": [
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "O Instrumental na tela", "subtitulo": "Módulo quatro · CRAM" },
+      "narracao": "Este módulo é para a equipe do CRAM, o Centro de Referência de Atendimento à Mulher. O Instrumental de Atendimento, aquele formulário longo de papel do acolhimento, agora está no SIGMA. Neste vídeo você vai abrir um e entender como ele se organiza."
+    },
+    {
+      "id": "c02",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Duas coisas diferentes",
+        "linhas": ["Gestão de Mulheres: quem ela é", "CRAM: a história do atendimento"]
+      },
+      "narracao": "Primeiro, uma distinção. Os dados pessoais da mulher, como nome, CPF e endereço, ficam no cadastro de Gestão de Mulheres. O instrumental do CRAM guarda outra coisa: a história do atendimento. Por isso a assistida precisa estar cadastrada antes."
+    },
+    {
+      "id": "c03",
+      "narracao": "No menu, abra CRAM. A lista mostra os instrumentais, com a assistida, a data, o turno, o status e um selo de risco, que você vai entender no próximo vídeo.",
+      "acao": { "tipo": "navegar", "url": "/cram" },
+      "foco": { "seletor": "[placeholder=\"Buscar por nome ou CPF da assistida...\"]", "zoom": 1.6 }
+    },
+    {
+      "id": "c04",
+      "narracao": "Para começar um novo, use Novo Atendimento, no menu do CRAM.",
+      "acao": { "tipo": "navegar", "url": "/cram/novo" },
+      "foco": null
+    },
+    {
+      "id": "c05",
+      "narracao": "Busque a assistida pelo nome ou pelo CPF e informe a data e o turno. Só a assistida e a data são obrigatórias.",
+      "acao": { "tipo": "digitar", "seletor": "[placeholder=\"Buscar por nome ou CPF...\"]", "texto": "Marta" },
+      "foco": { "seletor": "text=Assistida *", "zoom": 1.7 }
+    },
+    {
+      "id": "c06",
+      "narracao": "O papel virou quatro abas. Atendimento. Parte um, Socioassistencial. Parte dois, Jurídico. E parte três, Psicológico.",
+      "acao": { "tipo": "clicar", "seletor": "text=Marta Souza Lima" },
+      "foco": { "seletor": "role=tablist", "zoom": 1.6 }
+    },
+    {
+      "id": "c07",
+      "narracao": "A aba Atendimento registra como ela chegou ao serviço, se de forma espontânea ou encaminhada, e por qual instituição. Também registra se há medida protetiva, qual serviço ela buscou, e os números do RG e do Cartão SUS.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "text=Como chegou ao serviço", "zoom": 1.6 }
+    },
+    {
+      "id": "c08",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Preencha ao longo dos encontros",
+        "linhas": ["Ninguém conta tudo no primeiro encontro", "Salve como Em preenchimento", "Mude para Concluído quando terminar"]
+      },
+      "narracao": "Ninguém conta toda a história no primeiro encontro, e o instrumental respeita isso. Preencha o que tiver, deixe o status como Em preenchimento e volte nos próximos encontros. Quando tudo estiver registrado, mude o status para Concluído."
+    },
+    {
+      "id": "c09",
+      "narracao": "Clique em Registrar atendimento. Se a sessão cair no meio, o rascunho automático guarda o que você digitou, como no cadastro de beneficiária.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "role=button[name=\"Registrar atendimento\"]", "zoom": 2.0 }
+    },
+    {
+      "id": "c10",
+      "narracao": "Para continuar depois, encontre o instrumental na lista do CRAM e use Abrir. As alterações são gravadas com Salvar alterações.",
+      "acao": [
+        { "tipo": "clicar", "seletor": "role=button[name=\"Registrar atendimento\"]" },
+        { "tipo": "navegar", "url": "/cram" }
+      ],
+      "foco": { "seletor": "[title=\"Abrir\"]", "zoom": 2.2 }
+    },
+    {
+      "id": "c11",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sua vez",
+        "linhas": ["Abra um instrumental para Marta Souza Lima", "Preencha a aba Atendimento", "Salve como Em preenchimento"]
+      },
+      "narracao": "Agora é com você. Abra um instrumental para Marta Souza Lima, preencha a aba Atendimento e salve com o status Em preenchimento."
+    }
+  ]
+}

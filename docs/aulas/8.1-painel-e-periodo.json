@@ -1,0 +1,65 @@
+{
+  "id": "8.1",
+  "modulo": "8 — Coordenação",
+  "titulo": "O painel e o período de referência",
+  "publico": "Coordenação e administradores",
+  "pre_requisitos": ["0.2"],
+  "objetivo": "Ao final, a participante lê os blocos do Dashboard, muda o período de referência e sabe quais números mudam com ele e quais não mudam.",
+  "tarefa_final": "Compare os atendimentos de dois meses diferentes no Dashboard.",
+  "duracao_alvo_seg": 120,
+  "elenco": [],
+
+  "cenas": [
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "O painel da coordenação", "subtitulo": "Módulo oito · Coordenação" },
+      "narracao": "Este módulo é para a coordenação. Começamos pelo Dashboard, a primeira tela do sistema, e por uma pergunta que toda gestão faz: como foi o mês?"
+    },
+    {
+      "id": "c02",
+      "narracao": "O Dashboard se organiza em blocos. A Visão Geral traz o total de beneficiárias, os atendimentos do mês, os eventos próximos e as demandas em aberto.",
+      "acao": { "tipo": "navegar", "url": "/dashboard" },
+      "foco": { "seletor": "text=Visão Geral", "zoom": 1.4 }
+    },
+    {
+      "id": "c03",
+      "narracao": "Depois vêm o Perfil das Beneficiárias, a Escola da Mulher, a Sala Azul e os encaminhamentos. Mais abaixo, o gráfico do Fluxo de Atendimentos e a Agenda Rápida.",
+      "acao": { "tipo": "rolar", "seletor": "text=Fluxo de Atendimentos" },
+      "foco": { "seletor": "text=Fluxo de Atendimentos", "zoom": 1.4 }
+    },
+    {
+      "id": "c04",
+      "narracao": "O seletor de Referência muda o mês e o ano. O padrão é sempre o mês corrente.",
+      "acao": { "tipo": "rolar", "seletor": "text=Referência" },
+      "foco": { "seletor": "text=Referência", "zoom": 2.0 }
+    },
+    {
+      "id": "c05",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "O que muda com o período",
+        "linhas": ["Mudam: atendimentos, encaminhamentos, benefícios e o gráfico", "Não mudam: totais acumulados, como beneficiárias cadastradas e turmas ativas"]
+      },
+      "narracao": "Atenção ao que muda. Os números mensais, como atendimentos, encaminhamentos, benefícios e o gráfico, passam a mostrar o mês escolhido. Já os totais acumulados, como beneficiárias cadastradas e turmas ativas, continuam iguais, porque não são do mês. Não estranhe se eles não mudarem."
+    },
+    {
+      "id": "c06",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Os números vêm dos registros",
+        "linhas": ["Cada atendimento lançado conta aqui", "Atendimento não registrado não existe para o painel"]
+      },
+      "narracao": "E um lembrete para toda a equipe: o painel só conta o que foi registrado. Um atendimento feito e não lançado no SIGMA não existe para estes números, nem para os relatórios que saem deles."
+    },
+    {
+      "id": "c07",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sua vez",
+        "linhas": ["Abra o Dashboard", "Mude a Referência para o mês passado", "Compare os atendimentos com o mês atual"]
+      },
+      "narracao": "Agora é com você. No Dashboard, mude a referência para o mês passado e compare os atendimentos com os do mês atual."
+    }
+  ]
+}

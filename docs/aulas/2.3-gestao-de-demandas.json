@@ -1,0 +1,68 @@
+{
+  "id": "2.3",
+  "modulo": "2 — Atendimentos e demandas",
+  "titulo": "Gestão de Demandas: o que está com cada setor",
+  "publico": "Atendimento, psicossocial e jurídico",
+  "pre_requisitos": ["2.2"],
+  "objetivo": "Ao final, a participante encontra as demandas do seu setor no Quadro e na Lista, avança a etapa de uma demanda e abre o prontuário a partir dela.",
+  "tarefa_final": "Encontre a demanda de Joana Ribeiro da Silva, filtrando pelo setor jurídico, e abra o prontuário por ela.",
+  "duracao_alvo_seg": 120,
+  "elenco": ["joana"],
+
+  "cenas": [
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "Gestão de Demandas", "subtitulo": "Módulo dois · Atendimentos e demandas" },
+      "narracao": "No vídeo anterior, você encaminhou um caso para outro setor. Mas como o outro setor fica sabendo? Pela Gestão de Demandas: a fila de trabalho de cada equipe."
+    },
+    {
+      "id": "c02",
+      "narracao": "No menu, abra Gestão de Demandas. Cada coluna do Quadro é uma etapa, e cada cartão é uma demanda, com o nome da beneficiária, o setor e o tipo.",
+      "acao": { "tipo": "navegar", "url": "/tramitacoes" },
+      "foco": null
+    },
+    {
+      "id": "c03",
+      "narracao": "Para ver só o que é da sua equipe, use Filtrar por Setor. E a busca encontra uma demanda pelo nome ou pelo CPF da beneficiária.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "[placeholder=\"Buscar por nome ou CPF...\"]", "zoom": 1.8 }
+    },
+    {
+      "id": "c04",
+      "narracao": "As setas de cada cartão avançam ou voltam a etapa. Quando você começar a trabalhar numa demanda, avance o cartão: assim a equipe sabe que alguém já está cuidando dela, e ninguém faz o mesmo trabalho duas vezes.",
+      "acao": { "tipo": "digitar", "seletor": "[placeholder=\"Buscar por nome ou CPF...\"]", "texto": "Joana" },
+      "foco": { "seletor": "text=Abrir Prontuário", "zoom": 1.7 }
+    },
+    {
+      "id": "c05",
+      "narracao": "Prefere uma tabela? Clique em Lista. São as mesmas demandas, uma por linha, com beneficiária, CPF, setor e tipo. Para voltar ao Quadro, é só clicar em Quadro.",
+      "acao": { "tipo": "clicar", "seletor": "role=button[name=\"Lista\"]" },
+      "foco": null
+    },
+    {
+      "id": "c06",
+      "narracao": "Em qualquer uma das duas visões, Abrir Prontuário leva ao atendimento de origem, com a evolução completa do caso. É de lá que você registra a próxima tramitação.",
+      "acao": { "tipo": "clicar", "seletor": "role=button[name=\"Quadro\"]" },
+      "foco": { "seletor": "text=Abrir Prontuário", "zoom": 2.0 }
+    },
+    {
+      "id": "c07",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Cada perfil vê as suas demandas",
+        "linhas": ["Quais tipos de demanda você vê depende do seu perfil", "Não encontrou uma demanda? Fale com a coordenação"]
+      },
+      "narracao": "Um detalhe importante: quais tipos de demanda aparecem para você depende do seu perfil. O jurídico vê as demandas jurídicas, por exemplo. Se você sabe que uma demanda existe e ela não aparece, não é erro seu: fale com a coordenação, que configura esse acesso."
+    },
+    {
+      "id": "c08",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sua vez",
+        "linhas": ["Abra a Gestão de Demandas", "Filtre pelo setor jurídico", "Encontre a demanda de Joana", "Abra o prontuário por ela"]
+      },
+      "narracao": "Agora é com você. Na Gestão de Demandas, filtre pelo setor jurídico, encontre a demanda de Joana Ribeiro da Silva e abra o prontuário a partir dela."
+    }
+  ]
+}

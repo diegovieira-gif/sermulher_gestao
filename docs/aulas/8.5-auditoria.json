@@ -1,0 +1,62 @@
+{
+  "id": "8.5",
+  "modulo": "8 — Coordenação",
+  "titulo": "Auditoria: quem fez o quê",
+  "publico": "Coordenação e administradores",
+  "pre_requisitos": ["1.1"],
+  "objetivo": "Ao final, a participante encontra uma operação na Auditoria por usuário, coleção ou registro, e lê o detalhe do que mudou.",
+  "tarefa_final": "Encontre na Auditoria quem alterou a ficha de Joana Ribeiro da Silva, e o que foi alterado.",
+  "duracao_alvo_seg": 90,
+  "elenco": ["joana"],
+
+  "cenas": [
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "Auditoria", "subtitulo": "Módulo oito · Coordenação" },
+      "narracao": "Quem apagou esse registro? Quando esse telefone mudou? Num sistema com dados sensíveis, essas perguntas precisam de resposta. Neste vídeo você vai encontrá-las na Auditoria."
+    },
+    {
+      "id": "c02",
+      "narracao": "No menu, abra Auditoria. Cada linha é uma operação: quem fez, a ação, a coleção, o registro, a data e a hora.",
+      "acao": { "tipo": "navegar", "url": "/auditoria" },
+      "foco": null
+    },
+    {
+      "id": "c03",
+      "narracao": "A busca encontra por usuário, e-mail, coleção ou número do registro. Os filtros recortam por coleção e por ação: criação, edição, exclusão ou autenticação.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "[placeholder=\"Buscar por usuário, email, coleção ou ID do registro...\"]", "zoom": 1.7 }
+    },
+    {
+      "id": "c04",
+      "narracao": "Para ver o detalhe, use Visualizar Alterações na linha. A janela mostra as Alterações Realizadas, campo a campo, com o valor de antes e o de depois.",
+      "acao": { "tipo": "clicar", "seletor": "[title=\"Visualizar Alterações\"]" },
+      "foco": { "seletor": "role=tab[name=\"Alterações Realizadas\"]", "zoom": 1.7 }
+    },
+    {
+      "id": "c05",
+      "narracao": "A aba Dispositivo e Rede mostra de onde a operação veio: o endereço de rede e o navegador. É o que ajuda a separar um erro de uma colega de um acesso indevido.",
+      "acao": { "tipo": "clicar", "seletor": "role=tab[name=\"Dispositivo & Rede\"]" },
+      "foco": { "seletor": "role=tabpanel", "zoom": 1.5 }
+    },
+    {
+      "id": "c06",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "A Auditoria também é sigilosa",
+        "linhas": ["Ela mostra dados de antes e depois", "Use para esclarecer, não para vigiar", "Cada pessoa vê as próprias operações em Meu Perfil"]
+      },
+      "narracao": "Lembre que a Auditoria mostra dados sensíveis, inclusive valores antigos. Use para esclarecer um problema, não para vigiar colegas. E cada pessoa da equipe pode ver as próprias operações em Meu Perfil, na aba Atividade."
+    },
+    {
+      "id": "c07",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sua vez",
+        "linhas": ["Abra a Auditoria", "Encontre a alteração na ficha de Joana", "Veja quem alterou e o que mudou"]
+      },
+      "narracao": "Agora é com você. Encontre na Auditoria quem alterou a ficha de Joana Ribeiro da Silva, e o que foi alterado."
+    }
+  ]
+}

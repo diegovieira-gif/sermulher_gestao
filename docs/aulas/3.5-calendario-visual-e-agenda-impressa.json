@@ -1,0 +1,71 @@
+{
+  "id": "3.5",
+  "modulo": "3 — Agenda Institucional",
+  "titulo": "Calendário visual: legenda que filtra e agenda impressa",
+  "publico": "Quem organiza ações, eventos e campanhas",
+  "pre_requisitos": ["3.1"],
+  "objetivo": "Ao final, a participante lê o calendário pelas cores, usa a legenda para filtrar as origens e gera a agenda impressa do mês em PDF.",
+  "tarefa_final": "Gere em PDF a agenda do mês só com os compromissos da Escola da Mulher.",
+  "duracao_alvo_seg": 120,
+  "elenco": ["agosto", "roda"],
+
+  "cenas": [
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "Calendário visual", "subtitulo": "Módulo três · Agenda Institucional" },
+      "narracao": "O Calendário Visual mostra o mês inteiro de uma vez, reunindo a agenda de toda a Secretaria. Neste vídeo você vai ler o calendário, filtrar pelo que interessa e imprimir a agenda do mês."
+    },
+    {
+      "id": "c02",
+      "narracao": "Na Agenda Institucional, abra a aba Calendário Visual. Ele junta três origens, cada uma com a sua cor: os eventos e campanhas cadastrados aqui, as turmas da Escola da Mulher e as sessões da Sala Azul.",
+      "acao": [
+        { "tipo": "navegar", "url": "/eventos" },
+        { "tipo": "clicar", "seletor": "role=tab[name=\"Calendário Visual\"]" }
+      ],
+      "foco": null
+    },
+    {
+      "id": "c03",
+      "narracao": "A legenda não é só enfeite: ela é um filtro. O número ao lado de cada origem mostra quantos compromissos ela tem no mês. Clique numa origem para escondê-la do calendário, e clique de novo para trazê-la de volta.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "[title^=\"Ocultar Escola\"]", "zoom": 2.0 }
+    },
+    {
+      "id": "c04",
+      "narracao": "Por exemplo, para ver só a agenda da Escola, esconda os Eventos e a Sala Azul.",
+      "acao": [
+        { "tipo": "clicar", "seletor": "[title^=\"Ocultar Eventos\"]" },
+        { "tipo": "clicar", "seletor": "[title^=\"Ocultar Sala Azul\"]" }
+      ],
+      "foco": null
+    },
+    {
+      "id": "c05",
+      "narracao": "Agora, o botão Imprimir. Ele não tira uma foto da tela: gera um documento próprio, porque a grade do calendário corta os títulos e não mostra local nem descrição.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "[title=\"Gerar documento da agenda do mês\"]", "zoom": 2.0 }
+    },
+    {
+      "id": "c06",
+      "narracao": "O documento traz o cabeçalho da Secretaria e o mês, um quadro com a quantidade de compromissos por origem e a lista em ordem, dia a dia, com horário, título e descrição completa. No fim, campos para a assinatura da responsável e da coordenação.",
+      "acao": { "tipo": "clicar", "seletor": "[title=\"Gerar documento da agenda do mês\"]" },
+      "foco": null
+    },
+    {
+      "id": "c07",
+      "narracao": "O documento respeita o mês que está na tela e a legenda. Se você escondeu uma origem, ela não sai no papel, e o próprio documento avisa que há categorias ocultas. Para arquivar, escolha Salvar como PDF na janela de impressão.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": null
+    },
+    {
+      "id": "c08",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sua vez",
+        "linhas": ["Abra o Calendário Visual", "Deixe só a Escola na legenda", "Imprima e salve como PDF"]
+      },
+      "narracao": "Agora é com você. Abra o Calendário Visual, deixe só a Escola da Mulher ligada na legenda e salve em PDF a agenda do mês."
+    }
+  ]
+}

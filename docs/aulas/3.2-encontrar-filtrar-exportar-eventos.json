@@ -1,0 +1,71 @@
+{
+  "id": "3.2",
+  "modulo": "3 — Agenda Institucional",
+  "titulo": "Encontrar, filtrar e exportar eventos",
+  "publico": "Quem organiza ações, eventos e campanhas",
+  "pre_requisitos": ["3.1"],
+  "objetivo": "Ao final, a participante encontra eventos por busca, filtros e ordenação, compartilha uma consulta pelo endereço e exporta o recorte inteiro.",
+  "tarefa_final": "Liste os eventos encerrados de uma categoria, do mais antigo para o mais recente, e exporte o resultado.",
+  "duracao_alvo_seg": 120,
+  "elenco": ["agosto", "roda"],
+
+  "cenas": [
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "Encontrar e exportar eventos", "subtitulo": "Módulo três · Agenda Institucional" },
+      "narracao": "Com o tempo, a agenda acumula centenas de eventos. Neste vídeo você vai encontrar exatamente os que procura e levar a lista para uma planilha."
+    },
+    {
+      "id": "c02",
+      "narracao": "Na Agenda Institucional, abra a aba Gestão de Eventos. A lista mostra vinte eventos por página, e o total aparece ao lado.",
+      "acao": [
+        { "tipo": "navegar", "url": "/eventos" },
+        { "tipo": "clicar", "seletor": "role=tab[name=\"Gestão de Eventos (Lista)\"]" }
+      ],
+      "foco": null
+    },
+    {
+      "id": "c03",
+      "narracao": "A busca procura pelo título ou pelo local, em toda a base, e não só na página aberta. Experimente o nome de um lugar.",
+      "acao": { "tipo": "digitar", "seletor": "[placeholder=\"Buscar por título ou local...\"]", "texto": "Mercado Central" },
+      "foco": { "seletor": "[placeholder=\"Buscar por título ou local...\"]", "zoom": 1.8 }
+    },
+    {
+      "id": "c04",
+      "narracao": "Os filtros refinam por tipo, por categoria e por situação: em breve, em andamento ou encerrado. Quando algum filtro está ligado, aparece o botão Limpar filtros, com a contagem de quantos estão ativos.",
+      "acao": { "tipo": "clicar", "seletor": "[placeholder=\"Buscar por título ou local...\"]" },
+      "foco": { "seletor": "text=Todas as situações", "zoom": 1.7 }
+    },
+    {
+      "id": "c05",
+      "narracao": "E a ordenação muda a sequência da lista: pela data do evento, do mais recente ou do mais antigo, pelo título, pelo local, ou pelos cadastrados por último, que é útil para conferir o que entrou recentemente.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "text=Ordenar por", "zoom": 1.7 }
+    },
+    {
+      "id": "c06",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "A consulta mora no endereço",
+        "linhas": ["Busca, filtros e ordenação ficam no link da página", "Salve como favorito ou envie a uma colega"]
+      },
+      "narracao": "Um recurso que poupa tempo: a busca, os filtros e a ordenação ficam guardados no endereço da página. Se você monta uma consulta que usa toda semana, salve como favorito. Se precisa mostrar a uma colega, envie o link."
+    },
+    {
+      "id": "c07",
+      "narracao": "Para levar a lista para uma planilha, clique em Exportar CSV. O arquivo traz todos os eventos do recorte, e não só a página que está na tela: título, período, local, categoria, tipo, recorrência, situação e descrição.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "role=button[name=\"Exportar CSV\"]", "zoom": 2.0 }
+    },
+    {
+      "id": "c08",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sua vez",
+        "linhas": ["Filtre os eventos encerrados de uma categoria", "Ordene do mais antigo para o mais recente", "Exporte o resultado"]
+      },
+      "narracao": "Agora é com você. Liste os eventos encerrados de uma categoria, do mais antigo para o mais recente, e exporte o resultado para uma planilha."
+    }
+  ]
+}

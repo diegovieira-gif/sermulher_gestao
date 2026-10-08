@@ -1,0 +1,62 @@
+{
+  "id": "7.1",
+  "modulo": "7 — Comunicação",
+  "titulo": "Mídias sociais: registrar publicações",
+  "publico": "Equipe de comunicação",
+  "pre_requisitos": ["0.2"],
+  "objetivo": "Ao final, a participante registra uma publicação com canal, formato e alcance, e lê o painel de mídias sociais.",
+  "tarefa_final": "Registre as publicações da semana, com canal, formato e alcance estimado.",
+  "duracao_alvo_seg": 90,
+  "elenco": [],
+
+  "cenas": [
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "Mídias sociais", "subtitulo": "Módulo sete · Comunicação" },
+      "narracao": "O que a Secretaria publica nas redes também é trabalho, e entra nos relatórios de gestão. Neste vídeo você vai registrar uma publicação no SIGMA."
+    },
+    {
+      "id": "c02",
+      "narracao": "No menu, em Marketing e Comunicação, abra Mídias Sociais. O painel mostra o total de publicações, o alcance acumulado, as campanhas ativas e as publicações por canal.",
+      "acao": { "tipo": "navegar", "url": "/marketing" },
+      "foco": null
+    },
+    {
+      "id": "c03",
+      "narracao": "Para registrar, clique em Novo Registro.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "role=button[name=\"Novo Registro\"]", "zoom": 2.0 }
+    },
+    {
+      "id": "c04",
+      "narracao": "Informe o título ou a pauta, a data, o canal, como Instagram ou Facebook, e o formato. O alcance é uma estimativa: use o número que a própria rede social informa. E guarde o link da publicação, para quem precisar conferir depois.",
+      "acao": { "tipo": "clicar", "seletor": "role=button[name=\"Novo Registro\"]" },
+      "foco": { "seletor": "role=dialog", "zoom": 1.4 }
+    },
+    {
+      "id": "c05",
+      "narracao": "Clique em Salvar Registro. Ele entra no Histórico Recente e soma nos números do painel.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "role=button[name=\"Salvar Registro\"]", "zoom": 2.0 }
+    },
+    {
+      "id": "c06",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Registre toda semana",
+        "linhas": ["O alcance muda nos primeiros dias", "Registre depois de uma semana, com o número estável", "Publicação sem registro não aparece nos relatórios"]
+      },
+      "narracao": "Uma dica de rotina: o alcance de uma publicação cresce nos primeiros dias. Registre depois de uma semana, quando o número já estabilizou. E lembre que publicação sem registro não aparece em relatório nenhum."
+    },
+    {
+      "id": "c07",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sua vez",
+        "linhas": ["Registre as publicações da semana", "Canal, formato e alcance estimado"]
+      },
+      "narracao": "Agora é com você. Registre as publicações da semana, com canal, formato e alcance estimado."
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "id": "5.2",
+  "modulo": "5 — Escola da Mulher",
+  "titulo": "Matricular alunas",
+  "publico": "Equipe da Escola da Mulher",
+  "pre_requisitos": ["5.1", "1.1"],
+  "objetivo": "Ao final, a participante matricula alunas já cadastradas numa turma, remove uma matrícula sem apagar o cadastro e consulta a visão geral de matrículas.",
+  "tarefa_final": "Matricule Ana Paula Ferreira e Rita de Cássia Nunes na turma Inclusão Digital — Manhã A.",
+  "duracao_alvo_seg": 90,
+  "elenco": ["escola", "ana", "rita"],
+
+  "cenas": [
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "Matricular alunas", "subtitulo": "Módulo cinco · Escola da Mulher" },
+      "narracao": "A turma está criada. Agora você vai colocar alunas nela."
+    },
+    {
+      "id": "c02",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Aluna é beneficiária",
+        "linhas": ["Toda aluna precisa estar cadastrada em Gestão de Mulheres", "Assim o curso aparece na ficha dela"]
+      },
+      "narracao": "Uma regra antes de começar: toda aluna precisa estar cadastrada como beneficiária, em Gestão de Mulheres. Não existe cadastro separado de aluna. É isso que faz o curso aparecer na ficha dela, junto com os atendimentos e os eventos."
+    },
+    {
+      "id": "c03",
+      "narracao": "Em Turmas, encontre a turma e clique em Ver detalhes.",
+      "acao": { "tipo": "navegar", "url": "/escola/turmas" },
+      "foco": { "seletor": "[title=\"Ver detalhes e gerenciar matrículas\"]", "zoom": 2.1 }
+    },
+    {
+      "id": "c04",
+      "narracao": "A tela da turma mostra o curso, a instrutora, as vagas e a Lista de Alunas. Clique em Nova Matrícula.",
+      "acao": { "tipo": "clicar", "seletor": "[title=\"Ver detalhes e gerenciar matrículas\"]" },
+      "foco": { "seletor": "role=button[name=\"Nova Matrícula\"]", "zoom": 2.0 }
+    },
+    {
+      "id": "c05",
+      "narracao": "Busque a aluna pelo nome, escolha na lista e clique em Confirmar Matrícula. Se ela não aparecer na busca, ainda não foi cadastrada: cadastre primeiro em Gestão de Mulheres.",
+      "acao": [
+        { "tipo": "clicar", "seletor": "role=button[name=\"Nova Matrícula\"]" },
+        { "tipo": "digitar", "seletor": "[placeholder=\"Buscar beneficiária...\"]", "texto": "Ana Paula" }
+      ],
+      "foco": { "seletor": "role=dialog", "zoom": 1.5 }
+    },
+    {
+      "id": "c06",
+      "narracao": "Para tirar uma aluna da turma, use o menu de ações da linha e escolha Remover Matrícula. Isso desfaz só a matrícula. O cadastro dela continua intacto.",
+      "acao": [
+        { "tipo": "clicar", "seletor": "text=Ana Paula Ferreira" },
+        { "tipo": "clicar", "seletor": "role=button[name=\"Confirmar Matrícula\"]" }
+      ],
+      "foco": { "seletor": "[aria-label=\"Ações da matrícula\"]", "zoom": 2.2 }
+    },
+    {
+      "id": "c07",
+      "narracao": "A tela de Matrículas, no menu da Escola, mostra as matrículas de todas as turmas, com aluna, CPF, turma e data. Ela exibe as cem mais recentes; para uma turma específica, use a tela da própria turma.",
+      "acao": { "tipo": "navegar", "url": "/escola/matriculas" },
+      "foco": null
+    },
+    {
+      "id": "c08",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sua vez",
+        "linhas": ["Abra a turma Inclusão Digital — Manhã A", "Matricule Ana Paula Ferreira", "Matricule Rita de Cássia Nunes"]
+      },
+      "narracao": "Agora é com você. Matricule Ana Paula Ferreira e Rita de Cássia Nunes na turma Inclusão Digital, Manhã A."
+    }
+  ]
+}

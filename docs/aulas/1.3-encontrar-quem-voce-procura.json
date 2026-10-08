@@ -1,0 +1,98 @@
+{
+  "id": "1.3",
+  "modulo": "1 — Beneficiárias, o coração do sistema",
+  "titulo": "Encontrar quem você procura",
+  "publico": "Todas as profissionais que atendem",
+  "pre_requisitos": ["1.1"],
+  "objetivo": "Ao final, a participante encontra uma beneficiária pela busca e pelos filtros, e sabe o que cada ícone da linha abre — em especial a diferença entre editar e abrir a ficha completa.",
+  "tarefa_final": "Encontre Marta Souza Lima e abra a aba Eventos da ficha dela por dois caminhos: pela ficha completa e pelo botão de vínculos.",
+  "duracao_alvo_seg": 180,
+  "elenco": ["marta", "joana"],
+
+  "cenas": [
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "Encontrar quem você procura", "subtitulo": "Módulo um · Beneficiárias" },
+      "narracao": "Com centenas de mulheres cadastradas, achar a pessoa certa rápido faz diferença no atendimento. Neste vídeo você vai usar a busca, os filtros e os ícones de cada linha da lista."
+    },
+    {
+      "id": "c02",
+      "narracao": "O campo de busca procura por nome, por CPF ou por telefone. Não precisa digitar o nome inteiro: parte dele já basta.",
+      "acao": [
+        { "tipo": "navegar", "url": "/mulheres/beneficiarias" },
+        { "tipo": "digitar", "seletor": "[placeholder=\"Buscar por nome, CPF ou telefone...\"]", "texto": "Marta" }
+      ],
+      "foco": { "seletor": "[placeholder=\"Buscar por nome, CPF ou telefone...\"]", "zoom": 1.9 }
+    },
+    {
+      "id": "c03",
+      "narracao": "Para apagar a busca e voltar à lista inteira, use o botão Limpar busca, dentro do próprio campo.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "[aria-label=\"Limpar busca\"]", "zoom": 2.2 }
+    },
+    {
+      "id": "c04",
+      "narracao": "Quando você não sabe o nome, os Filtros ajudam. Dá para ver só as mulheres de um bairro, mudar a ordem da lista e marcar quem tem medida protetiva, quem recebe Bolsa Família ou quem recebe BPC.",
+      "acao": [
+        { "tipo": "clicar", "seletor": "[aria-label=\"Limpar busca\"]" },
+        { "tipo": "clicar", "seletor": "role=button[name=\"Filtros\"]" }
+      ],
+      "foco": { "seletor": "text=Medida Protetiva", "zoom": 1.6 }
+    },
+    {
+      "id": "c05",
+      "narracao": "Cada filtro ligado vira uma etiqueta logo acima da lista. Para tirar um filtro, clique no xis da etiqueta. Assim você nunca esquece um filtro ligado e acha que a lista está incompleta.",
+      "acao": { "tipo": "clicar", "seletor": "text=Medida Protetiva" },
+      "foco": { "seletor": "text=Filtros ativos:", "zoom": 1.8 }
+    },
+    {
+      "id": "c06",
+      "narracao": "Agora, os ícones de cada linha. O olho, Visualizar Resumo, abre um resumo rápido, sem sair da lista.",
+      "acao": [
+        { "tipo": "clicar", "seletor": "[aria-label=\"Remover filtro Medida Protetiva\"]" },
+        { "tipo": "digitar", "seletor": "[placeholder=\"Buscar por nome, CPF ou telefone...\"]", "texto": "Marta" }
+      ],
+      "foco": { "seletor": "[title=\"Visualizar Resumo\"]", "zoom": 2.2 }
+    },
+    {
+      "id": "c07",
+      "narracao": "O documento, Ficha completa, abre a ficha inteira, com todas as abas: dados, linha do tempo, benefícios, eventos e cursos. Clicar no nome dela faz a mesma coisa.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "[title=\"Ficha completa\"]", "zoom": 2.2 }
+    },
+    {
+      "id": "c08",
+      "narracao": "E aqui está o ponto que mais confunde. O lápis, Editar, abre só o formulário de dados cadastrais: nome, endereço, contato. As abas de eventos, cursos e benefícios não estão lá. Para elas, use a ficha completa.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "[aria-label=\"Editar\"]", "zoom": 2.2 }
+    },
+    {
+      "id": "c09",
+      "narracao": "O elo, Vínculos, é um atalho. Ele abre um menu com Benefícios, Eventos e Cursos, e leva direto para a aba escolhida da ficha.",
+      "acao": { "tipo": "clicar", "seletor": "[title=\"Vínculos: benefícios, eventos e cursos\"]" },
+      "foco": { "seletor": "text=Vínculos", "zoom": 1.9 }
+    },
+    {
+      "id": "c10",
+      "narracao": "Escolha Eventos. A ficha abre já na aba certa. E o endereço desta página é fixo: dá para salvar como favorito ou mandar para uma colega que também tenha acesso.",
+      "acao": { "tipo": "clicar", "seletor": "role=menuitem[name=\"Eventos\"]" },
+      "foco": { "seletor": "role=tab[name=\"Eventos\"]", "zoom": 1.7 }
+    },
+    {
+      "id": "c11",
+      "narracao": "Por fim, a lixeira, Excluir. Use com muito cuidado: excluir uma beneficiária apaga o cadastro do qual dependem os atendimentos e a história dela. Na dúvida, não exclua. Pergunte à coordenação.",
+      "acao": { "tipo": "navegar", "url": "/mulheres/beneficiarias" },
+      "foco": { "seletor": "[aria-label=\"Excluir\"]", "zoom": 2.2 }
+    },
+    {
+      "id": "c12",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sua vez",
+        "linhas": ["Encontre Marta Souza Lima", "Abra a aba Eventos pela ficha completa", "Abra a mesma aba pelo botão de vínculos"]
+      },
+      "narracao": "Agora é com você. Encontre Marta Souza Lima e abra a aba Eventos da ficha dela por dois caminhos: primeiro pela ficha completa, depois pelo botão de vínculos."
+    }
+  ]
+}

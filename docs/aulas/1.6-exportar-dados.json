@@ -1,0 +1,69 @@
+{
+  "id": "1.6",
+  "modulo": "1 — Beneficiárias, o coração do sistema",
+  "titulo": "Exportar dados",
+  "publico": "Todas as profissionais que atendem",
+  "pre_requisitos": ["1.3"],
+  "objetivo": "Ao final, a participante exporta a lista inteira ou só as linhas marcadas, abre o arquivo no Excel e entende por que exportar não é fazer backup.",
+  "tarefa_final": "Marque três beneficiárias, exporte o arquivo e confira as colunas no Excel.",
+  "duracao_alvo_seg": 120,
+  "elenco": ["joana", "marta", "ana"],
+
+  "cenas": [
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "Exportar dados", "subtitulo": "Módulo um · Beneficiárias" },
+      "narracao": "Às vezes você precisa dos dados fora do sistema: para conferir uma lista, montar um levantamento ou responder a um pedido. Neste vídeo você vai exportar as beneficiárias para uma planilha."
+    },
+    {
+      "id": "c02",
+      "narracao": "O botão Exportar CSV baixa a lista que está na tela. Se houver uma busca ou um filtro ligado, o arquivo respeita esse recorte.",
+      "acao": { "tipo": "navegar", "url": "/mulheres/beneficiarias" },
+      "foco": { "seletor": "role=button[name=\"Exportar CSV\"]", "zoom": 2.0 }
+    },
+    {
+      "id": "c03",
+      "narracao": "Para levar só algumas, marque a caixa de cada linha. O sistema mostra quantas estão selecionadas, e a exportação passa a cobrir só elas. A caixa do cabeçalho, Selecionar todos, marca a página inteira.",
+      "acao": [
+        { "tipo": "marcar", "seletor": "[aria-label=\"Selecionar Joana Ribeiro da Silva\"]" },
+        { "tipo": "marcar", "seletor": "[aria-label=\"Selecionar Marta Souza Lima\"]" },
+        { "tipo": "marcar", "seletor": "[aria-label=\"Selecionar Ana Paula Ferreira\"]" }
+      ],
+      "foco": { "seletor": "text=selecionada(s)", "zoom": 1.9 }
+    },
+    {
+      "id": "c04",
+      "narracao": "O arquivo traz todos os campos gravados: identificação, contato, endereço, dados sociais, os marcadores, e também quem criou e quem alterou cada registro. Ele abre no Excel com os acentos certos.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "role=button[name=\"Exportar CSV\"]", "zoom": 1.8 }
+    },
+    {
+      "id": "c05",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "O arquivo leva dados sensíveis",
+        "linhas": ["Guarde em pasta da Secretaria, nunca no computador pessoal", "Não envie por WhatsApp nem e-mail pessoal", "Apague quando terminar o uso"]
+      },
+      "narracao": "Lembre o que está nesse arquivo: nome, CPF, endereço e telefone de mulheres em situação de violência. Fora do sistema, não há perfil de acesso que proteja ninguém. Guarde o arquivo em pasta da Secretaria, nunca envie por aplicativo de mensagem ou e-mail pessoal, e apague quando terminar o uso."
+    },
+    {
+      "id": "c06",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Exportar não é backup",
+        "linhas": ["O arquivo tem só as beneficiárias", "Atendimentos, CRAM e tramitações não vão nele", "Backup é feito no servidor, pela equipe de TI"]
+      },
+      "narracao": "E um engano comum: exportar não é fazer backup. O arquivo leva só o cadastro das beneficiárias. Atendimentos, instrumentais do CRAM, tramitações e as ligações entre eles não estão lá. O backup de verdade é feito no servidor, pela equipe de TI."
+    },
+    {
+      "id": "c07",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sua vez",
+        "linhas": ["Marque três beneficiárias", "Clique em Exportar CSV", "Confira as colunas no Excel", "Apague o arquivo depois"]
+      },
+      "narracao": "Agora é com você. Marque três beneficiárias, exporte o arquivo e confira as colunas no Excel. Quando terminar, apague o arquivo."
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "id": "1.5",
+  "modulo": "1 — Beneficiárias, o coração do sistema",
+  "titulo": "Não perca o preenchimento: o rascunho automático",
+  "publico": "Todas as profissionais que atendem",
+  "pre_requisitos": ["1.1"],
+  "objetivo": "Ao final, a participante recupera um preenchimento interrompido, sabe onde o rascunho fica guardado e o descarta em computador compartilhado.",
+  "tarefa_final": "Comece um cadastro, feche a aba sem salvar, reabra o formulário e recupere o que foi digitado.",
+  "duracao_alvo_seg": 120,
+  "elenco": ["claudia"],
+
+  "cenas": [
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "O rascunho automático", "subtitulo": "Módulo um · Beneficiárias" },
+      "narracao": "A sessão expirou, a aba fechou sem querer, faltou energia. Quem nunca perdeu um formulário inteiro no meio do preenchimento? Neste vídeo você vai ver como o SIGMA evita isso."
+    },
+    {
+      "id": "c02",
+      "narracao": "Os formulários grandes guardam um rascunho sozinhos, enquanto você digita: o cadastro de beneficiária, o atendimento e o instrumental do CRAM. Vamos começar um cadastro.",
+      "acao": [
+        { "tipo": "navegar", "url": "/mulheres/beneficiarias" },
+        { "tipo": "clicar", "seletor": "role=button[name=\"Nova Beneficiária\"]" },
+        { "tipo": "digitar", "seletor": "[placeholder=\"Maria Silva\"]", "texto": "Cláudia Menezes Santos" }
+      ],
+      "foco": { "seletor": "[placeholder=\"Maria Silva\"]", "zoom": 1.9 }
+    },
+    {
+      "id": "c03",
+      "narracao": "Se você tentar fechar a aba agora, o navegador avisa que há alterações não salvas. É a primeira proteção.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": null
+    },
+    {
+      "id": "c04",
+      "narracao": "Mas digamos que a aba fechou mesmo. Ao abrir o formulário de novo, aparece uma faixa amarela: há um preenchimento não salvo. Clique em Recuperar e tudo volta como estava.",
+      "acao": [
+        { "tipo": "navegar", "url": "/mulheres/beneficiarias" },
+        { "tipo": "clicar", "seletor": "role=button[name=\"Nova Beneficiária\"]" }
+      ],
+      "foco": { "seletor": "text=Há um preenchimento não salvo deste formulário", "zoom": 1.7 }
+    },
+    {
+      "id": "c05",
+      "narracao": "Se aquele preenchimento não serve mais, clique em Descartar e comece do zero.",
+      "acao": { "tipo": "clicar", "seletor": "role=button[name=\"Recuperar\"]" },
+      "foco": { "seletor": "[placeholder=\"Maria Silva\"]", "zoom": 1.8 }
+    },
+    {
+      "id": "c06",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Onde fica o rascunho",
+        "linhas": ["Neste navegador, neste computador", "Some quando o cadastro é salvo", "Expira sozinho em vinte e quatro horas"]
+      },
+      "narracao": "Atenção a um detalhe. O rascunho fica guardado no navegador do computador onde você digitou. Ele não aparece em outro computador, e some quando o cadastro é salvo ou depois de vinte e quatro horas."
+    },
+    {
+      "id": "c07",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Computador compartilhado",
+        "linhas": ["O rascunho guarda dados sensíveis", "Antes de sair, salve ou descarte"]
+      },
+      "narracao": "Por isso, em computador compartilhado, não saia deixando um rascunho para trás. Ele guarda dados sensíveis de uma mulher atendida. Antes de levantar, salve o cadastro ou clique em Descartar."
+    },
+    {
+      "id": "c08",
+      "narracao": "Mais uma ajuda. Se você clicar em Cadastrar e faltar algum dado obrigatório em outra aba, o sistema avisa em qual aba está a pendência. Assim você não fica procurando o erro.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "role=tablist", "zoom": 1.6 }
+    },
+    {
+      "id": "c09",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sua vez",
+        "linhas": ["Comece um cadastro", "Feche a aba sem salvar", "Reabra e recupere", "Depois, salve ou descarte"]
+      },
+      "narracao": "Agora é com você. Comece um cadastro, feche a aba sem salvar, reabra o formulário e recupere o que tinha digitado. No fim, salve ou descarte: não deixe o rascunho para trás."
+    }
+  ]
+}

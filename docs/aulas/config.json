@@ -1,0 +1,29 @@
+{
+  "_sobre": "Configuração comum a todas as aulas. Uma voz só para o curso inteiro: trocar a voz numa aula isolada é a primeira coisa que quem assiste nota.",
+
+  "voz": {
+    "provedor": "gemini",
+    "modelo": "gemini-2.5-flash-preview-tts",
+    "voz": "Kore",
+    "formato_saida": "pcm_s16le_24000_mono",
+    "direcao": "Português do Brasil, sotaque neutro. Tom instrutivo, acolhedor e pausado, de quem ensina uma colega de trabalho. É treinamento para servidoras públicas que atendem mulheres em situação de violência: nada de entusiasmo publicitário, nada de dramatização.",
+    "pedaco_max_caracteres": 1800,
+    "observacao": "Valores herdados do curso_inteligente (modelo, pedaços de ~1.800 caracteres). A voz é feminina, ao contrário de lá (Charon): o público aqui é a equipe da Secretaria. Ouvir duas ou três vozes numa aula-piloto antes de fixar."
+  },
+
+  "video": {
+    "largura": 1920,
+    "altura": 1080,
+    "fps": 30,
+    "rodape_livre_legenda": 0.15,
+    "zoom_padrao": 1.6,
+    "zoom_maximo": 2.5,
+    "viewport_captura": { "largura": 1440, "altura": 900 },
+    "tema_captura": "claro"
+  },
+
+  "producao": {
+    "base_url_demo": "http://localhost:3000",
+    "regra": "Capturar SOMENTE contra a instância de demonstração povoada com elenco.json. Nunca contra a produção."
+  }
+}

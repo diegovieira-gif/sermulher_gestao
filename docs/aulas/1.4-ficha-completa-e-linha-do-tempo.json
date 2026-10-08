@@ -1,0 +1,86 @@
+{
+  "id": "1.4",
+  "modulo": "1 — Beneficiárias, o coração do sistema",
+  "titulo": "A ficha completa e a linha do tempo",
+  "publico": "Todas as profissionais que atendem",
+  "pre_requisitos": ["1.3"],
+  "objetivo": "Ao final, a participante navega pelas abas da ficha, usa a Linha do Tempo para se preparar para um atendimento e registra uma entrega de benefício.",
+  "tarefa_final": "Registre uma entrega de benefício para Marta Souza Lima e confira que ela aparece na Linha do Tempo.",
+  "duracao_alvo_seg": 120,
+  "elenco": ["marta"],
+
+  "cenas": [
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "A ficha completa", "subtitulo": "Módulo um · Beneficiárias" },
+      "narracao": "A ficha completa é onde a história de cada mulher se junta. Neste vídeo você vai conhecer as abas da ficha, usar a linha do tempo e registrar a entrega de um benefício."
+    },
+    {
+      "id": "c02",
+      "narracao": "Na lista de beneficiárias, encontre Marta Souza Lima e clique no nome dela.",
+      "acao": [
+        { "tipo": "navegar", "url": "/mulheres/beneficiarias" },
+        { "tipo": "digitar", "seletor": "[placeholder=\"Buscar por nome, CPF ou telefone...\"]", "texto": "Marta" }
+      ],
+      "foco": { "seletor": "[title=\"Abrir ficha completa\"]", "zoom": 2.0 }
+    },
+    {
+      "id": "c03",
+      "narracao": "A ficha tem cinco abas. Dados, com o cadastro. Linha do Tempo. Benefícios. Eventos. E Cursos.",
+      "acao": { "tipo": "clicar", "seletor": "[title=\"Abrir ficha completa\"]" },
+      "foco": { "seletor": "role=tablist", "zoom": 1.6 }
+    },
+    {
+      "id": "c04",
+      "narracao": "A Linha do Tempo reúne, em ordem de data, tudo o que aconteceu com ela no SIGMA: atendimentos, instrumentais do CRAM, benefícios entregues, eventos e cursos. É a primeira coisa a olhar antes de um atendimento. Em um minuto você sabe por onde ela já passou, sem precisar perguntar de novo o que ela já contou.",
+      "acao": { "tipo": "clicar", "seletor": "role=tab[name=\"Linha do Tempo\"]" },
+      "foco": { "seletor": "role=tabpanel", "zoom": 1.4 }
+    },
+    {
+      "id": "c05",
+      "narracao": "Os itens que têm tela própria, como um atendimento ou um instrumental do CRAM, podem ser clicados e abrem o registro completo.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "role=tabpanel", "zoom": 1.7 }
+    },
+    {
+      "id": "c06",
+      "narracao": "Agora, um registro. Abra a aba Benefícios e clique em Registrar Entrega.",
+      "acao": { "tipo": "clicar", "seletor": "role=tab[name=\"Benefícios\"]" },
+      "foco": { "seletor": "role=button[name=\"Registrar Entrega\"]", "zoom": 2.0 }
+    },
+    {
+      "id": "c07",
+      "narracao": "Escolha o benefício e informe a data da entrega. Quantidade e observação são opcionais. A lista de benefícios vem das configurações do sistema: se faltar algum, quem cuida dessas tabelas pode incluir.",
+      "acao": [
+        { "tipo": "clicar", "seletor": "role=button[name=\"Registrar Entrega\"]" },
+        { "tipo": "clicar", "seletor": "text=Selecione o benefício" }
+      ],
+      "foco": { "seletor": "role=dialog", "zoom": 1.5 }
+    },
+    {
+      "id": "c08",
+      "narracao": "Clique em Salvar entrega. Ela entra na lista da aba.",
+      "acao": [
+        { "tipo": "tecla", "tecla": "Enter" },
+        { "tipo": "clicar", "seletor": "role=button[name=\"Salvar entrega\"]" }
+      ],
+      "foco": { "seletor": "role=tabpanel", "zoom": 1.4 }
+    },
+    {
+      "id": "c09",
+      "narracao": "Volte à Linha do Tempo: a entrega já está lá, na data em que aconteceu. As abas Eventos e Cursos funcionam do mesmo jeito, e você vai vê-las de perto nos módulos da Agenda e da Escola.",
+      "acao": { "tipo": "clicar", "seletor": "role=tab[name=\"Linha do Tempo\"]" },
+      "foco": { "seletor": "role=tabpanel", "zoom": 1.5 }
+    },
+    {
+      "id": "c10",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sua vez",
+        "linhas": ["Abra a ficha de Marta Souza Lima", "Registre uma entrega de benefício", "Confira na Linha do Tempo"]
+      },
+      "narracao": "Agora é com você. Abra a ficha de Marta Souza Lima, registre uma entrega de benefício e confira que ela aparece na Linha do Tempo."
+    }
+  ]
+}

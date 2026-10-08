@@ -1,0 +1,86 @@
+{
+  "id": "2.1",
+  "modulo": "2 — Atendimentos e demandas",
+  "titulo": "Registrar um atendimento",
+  "publico": "Atendimento, psicossocial e jurídico",
+  "pre_requisitos": ["1.1", "1.5"],
+  "objetivo": "Ao final, a participante abre um atendimento para uma beneficiária, percorre as quatro abas e sabe onde encontrar o atendimento depois.",
+  "tarefa_final": "Registre um atendimento para Joana Ribeiro da Silva, preenchendo a Triagem Inicial e a Avaliação de Risco.",
+  "duracao_alvo_seg": 150,
+  "elenco": ["joana"],
+
+  "cenas": [
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "Registrar um atendimento", "subtitulo": "Módulo dois · Atendimentos e demandas" },
+      "narracao": "A beneficiária já está cadastrada. Agora você vai registrar o que aconteceu no encontro com ela: o atendimento. É ele que abre o prontuário e permite encaminhar o caso para outros setores."
+    },
+    {
+      "id": "c02",
+      "narracao": "No menu, em Gestão de Mulheres, abra Atendimentos. A lista mostra todos os atendimentos, com filtros por status, origem, prioridade, encaminhamento e tipo de violência.",
+      "acao": { "tipo": "navegar", "url": "/mulheres/atendimentos" },
+      "foco": null
+    },
+    {
+      "id": "c03",
+      "narracao": "Clique em Novo Atendimento.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "role=button[name=\"Novo Atendimento\"]", "zoom": 2.0 }
+    },
+    {
+      "id": "c04",
+      "narracao": "O primeiro campo é a beneficiária. Digite parte do nome e escolha na lista. Se ela não aparecer, é porque ainda não foi cadastrada: cadastre primeiro, como no módulo um.",
+      "acao": [
+        { "tipo": "clicar", "seletor": "role=button[name=\"Novo Atendimento\"]" },
+        { "tipo": "digitar", "seletor": "[placeholder=\"Buscar beneficiária...\"]", "texto": "Joana" }
+      ],
+      "foco": { "seletor": "[placeholder=\"Buscar beneficiária...\"]", "zoom": 1.9 }
+    },
+    {
+      "id": "c05",
+      "narracao": "Ainda na Triagem Inicial, informe a origem, ou seja, como ela chegou ao serviço, a prioridade, a data de abertura, o status e, se houver, o encaminhamento.",
+      "acao": { "tipo": "clicar", "seletor": "text=Joana Ribeiro da Silva" },
+      "foco": { "seletor": "role=tabpanel", "zoom": 1.4 }
+    },
+    {
+      "id": "c06",
+      "narracao": "A aba Socioassistencial registra se ela é gestante ou puérpera e as necessidades sociais que você identificou.",
+      "acao": { "tipo": "clicar", "seletor": "role=tab[name=\"Socioassistencial\"]" },
+      "foco": { "seletor": "role=tabpanel", "zoom": 1.5 }
+    },
+    {
+      "id": "c07",
+      "narracao": "A aba Jurídico traz o boletim de ocorrência, a medida protetiva, os tipos de violência e as necessidades jurídicas. Marque todos os tipos de violência relatados: uma mesma situação costuma envolver mais de um.",
+      "acao": { "tipo": "clicar", "seletor": "role=tab[name=\"Jurídico\"]" },
+      "foco": { "seletor": "text=Tipos de Violência", "zoom": 1.6 }
+    },
+    {
+      "id": "c08",
+      "narracao": "A Avaliação de Risco tem perguntas diretas: se a violência está aumentando, se o agressor persegue, se tem arma, se já ameaçou de morte. As respostas ajudam a priorizar o caso. Elas não substituem a escuta e a avaliação técnica da equipe.",
+      "acao": { "tipo": "clicar", "seletor": "role=tab[name=\"Avaliação de Risco\"]" },
+      "foco": { "seletor": "text=O agressor ameaçou de morte?", "zoom": 1.5 }
+    },
+    {
+      "id": "c09",
+      "narracao": "Clique em Criar Atendimento. Se algum campo obrigatório ficou vazio, o sistema avisa em qual aba ele está. E se a sessão cair no meio do caminho, o rascunho automático guarda o que você digitou.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "role=button[name=\"Criar Atendimento\"]", "zoom": 2.0 }
+    },
+    {
+      "id": "c10",
+      "narracao": "O atendimento aparece na lista. Para abrir o prontuário dele, use o botão Ver detalhes. É lá que o caso vai evoluir, como você vai ver no próximo vídeo.",
+      "acao": { "tipo": "clicar", "seletor": "role=button[name=\"Criar Atendimento\"]" },
+      "foco": { "seletor": "[title=\"Ver detalhes / Prontuário\"]", "zoom": 2.1 }
+    },
+    {
+      "id": "c11",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sua vez",
+        "linhas": ["Abra um atendimento para Joana Ribeiro da Silva", "Preencha a Triagem Inicial", "Responda a Avaliação de Risco", "Abra o prontuário pela lista"]
+      },
+      "narracao": "Agora é com você. Registre um atendimento para Joana Ribeiro da Silva, preenchendo a Triagem Inicial e a Avaliação de Risco. Depois, abra o prontuário dele pela lista."
+    }
+  ]
+}

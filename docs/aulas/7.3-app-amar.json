@@ -1,0 +1,78 @@
+{
+  "id": "7.3",
+  "modulo": "7 — Comunicação",
+  "titulo": "App Amar: o conteúdo do aplicativo",
+  "publico": "Equipe de comunicação",
+  "pre_requisitos": ["0.2"],
+  "objetivo": "Ao final, a participante sabe onde se mantém cada parte do conteúdo do App Amar e cadastra um serviço numa categoria existente.",
+  "tarefa_final": "Cadastre um serviço numa categoria existente do App Amar, com horário de atendimento e documentos necessários.",
+  "duracao_alvo_seg": 120,
+  "elenco": [],
+
+  "pendencias": [
+    "Os campos 'Imagem de Capa (UUID)' e 'Áudio (UUID)' pedem o identificador interno de um arquivo do Directus colado à mão. Ficam FORA do vídeo; a captura não deve focar neles. Quando houver upload, acrescentar uma cena."
+  ],
+
+  "cenas": [
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "App Amar", "subtitulo": "Módulo sete · Comunicação" },
+      "narracao": "O App Amar é o aplicativo e o site público da Secretaria, onde qualquer mulher encontra serviços, cursos e campanhas. Tudo o que aparece lá é mantido aqui, no SIGMA. Neste vídeo você vai ver onde fica cada parte."
+    },
+    {
+      "id": "c02",
+      "narracao": "No menu, abra App Amar. Cada cartão leva a uma parte do conteúdo.",
+      "acao": { "tipo": "navegar", "url": "/app-amar" },
+      "foco": null
+    },
+    {
+      "id": "c03",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "O que fica em cada lugar",
+        "linhas": ["Categorias: os grandes temas", "Serviços: o que a mulher pode buscar", "Campanhas, Cursos e Projetos", "Sonhos: metas e arrecadações", "Contatos: as mensagens recebidas"]
+      },
+      "narracao": "Categorias são os grandes temas, como Educação ou Saúde. Serviços são o que a mulher pode buscar, cada um dentro de uma categoria. Campanhas, Cursos e Projetos são as ações divulgadas. Sonhos acompanha metas e arrecadações. E Contatos guarda as mensagens que chegam pelo site público."
+    },
+    {
+      "id": "c04",
+      "narracao": "Vamos cadastrar um serviço. Abra Serviços e clique em Novo Serviço.",
+      "acao": { "tipo": "navegar", "url": "/app-amar/servicos" },
+      "foco": { "seletor": "role=button[name=\"Novo Serviço\"]", "zoom": 2.0 }
+    },
+    {
+      "id": "c05",
+      "narracao": "Informe o título do serviço e escolha a categoria. A descrição curta é o que aparece primeiro no aplicativo, então seja direta: o que é e para quem é.",
+      "acao": { "tipo": "clicar", "seletor": "role=button[name=\"Novo Serviço\"]" },
+      "foco": { "seletor": "[placeholder=\"Ex: Atendimento Psicológico\"]", "zoom": 1.8 }
+    },
+    {
+      "id": "c06",
+      "narracao": "Os documentos necessários e o horário de atendimento são o que evita uma viagem perdida. Uma mulher que chega sem o documento certo pode não voltar. Preencha com cuidado e mantenha atualizado.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "[placeholder=\"Ex: Seg a Sex, 08h às 17h\"]", "zoom": 1.8 }
+    },
+    {
+      "id": "c07",
+      "narracao": "Salve. O serviço passa a aparecer no aplicativo, dentro da categoria escolhida.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": null
+    },
+    {
+      "id": "c08",
+      "narracao": "Por fim, Contatos. Aqui chegam as mensagens enviadas pelo site público, com nome e telefone de quem escreveu. Responda com a mesma atenção de um atendimento, porque às vezes é o primeiro contato de alguém com a Secretaria.",
+      "acao": { "tipo": "navegar", "url": "/app-amar/contatos" },
+      "foco": null
+    },
+    {
+      "id": "c09",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sua vez",
+        "linhas": ["Cadastre um serviço numa categoria existente", "Inclua horário e documentos necessários"]
+      },
+      "narracao": "Agora é com você. Cadastre um serviço numa categoria existente do App Amar, com o horário de atendimento e os documentos necessários."
+    }
+  ]
+}
