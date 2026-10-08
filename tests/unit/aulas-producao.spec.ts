@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import {
   aplicarPronuncia, blocosDeLegenda, duracaoDaCena, enquadramento, hostEhLocal,
-  marca, proximaSemana, srt,
+  marca, nomesDoElenco, proximaSemana, srt, trocasDeSessao,
 } from "../../scripts/aulas/lib.mjs";
 
 /**
@@ -99,4 +99,34 @@ test.describe("trava da captura", () => {
 
 test("proximaSemana devolve a data de daqui a sete dias", () => {
   expect(proximaSemana(new Date(2026, 9, 8, 12))).toBe("2026-10-15");
+});
+
+test.describe("máscara da captura em produção", () => {
+  const elenco = {
+    usuaria_demo: { nome: "Paula Demonstração" },
+    beneficiarias: [
+      { chave: "joana", nome: "Joana Ribeiro da Silva" },
+      { chave: "marta", nome: "Marta Souza Lima" },
+    ],
+    equipe: [{ chave: "lucia", nome: "Lúcia Exemplo" }, { chave: "x", nome: "Sóumnome" }],
+  };
+
+  test("sem chaves, todos os nomes compostos do elenco", () => {
+    expect(nomesDoElenco(elenco).sort()).toEqual(
+      ["Joana Ribeiro da Silva", "Lúcia Exemplo", "Marta Souza Lima", "Paula Demonstração"],
+    );
+  });
+
+  test("com as chaves da aula, só os personagens dela ficam legíveis", () => {
+    expect(nomesDoElenco(elenco, ["joana"])).toEqual(["Joana Ribeiro da Silva"]);
+    expect(nomesDoElenco(elenco, [])).toEqual([]);
+  });
+
+  test("troca nome completo, saudação e iniciais da conta que grava", () => {
+    const t = trocasDeSessao("Diego Vieira", "Paula Demonstração");
+    expect(t.parciais).toContainEqual(["Diego Vieira", "Paula Demonstração"]);
+    expect(t.parciais).toContainEqual(["Olá, Diego", "Olá, Paula"]);
+    expect(t.exatas).toContainEqual(["DV", "PD"]);
+    expect(t.exatas).toContainEqual(["Diego", "Paula"]);
+  });
 });

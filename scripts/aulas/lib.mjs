@@ -194,6 +194,49 @@ export function proximaSemana(hoje = new Date()) {
 }
 
 /**
+ * Todos os nomes de pessoa do elenco (qualquer campo `nome`, em qualquer
+ * nível). Na captura em produção, linha de tabela sem um desses nomes é
+ * borrada: o que não é do elenco é gente de verdade. Com `chaves`, só os
+ * personagens daquela aula — em produção pode existir uma pessoa real com o
+ * nome de um personagem que a aula nem usa.
+ */
+/** @param {unknown} elenco @param {string[] | null} [chaves] */
+export function nomesDoElenco(elenco, chaves = null) {
+  const nomes = new Set();
+  const visitar = (v) => {
+    if (Array.isArray(v)) v.forEach(visitar);
+    else if (v && typeof v === "object") {
+      const daAula = !chaves || (v.chave && chaves.includes(v.chave));
+      if (daAula && typeof v.nome === "string" && v.nome.trim().split(/\s+/).length >= 2) nomes.add(v.nome.trim());
+      Object.values(v).forEach(visitar);
+    }
+  };
+  visitar(elenco);
+  return [...nomes];
+}
+
+/**
+ * Trocas de texto para a conta que grava aparecer como a usuária de
+ * demonstração: nome completo, saudação pelo primeiro nome e iniciais do
+ * avatar. `exatas` só trocam um nó de texto inteiro igual (iniciais "DV"
+ * não podem virar "PD" no meio de outra palavra).
+ */
+export function trocasDeSessao(nomeReal, nomeDemo) {
+  const real = String(nomeReal).trim().split(/\s+/);
+  const demo = String(nomeDemo).trim().split(/\s+/);
+  const iniciais = (p) => (p[0][0] + (p.length > 1 ? p[p.length - 1][0] : "")).toUpperCase();
+  return {
+    parciais: [
+      [real.join(" "), demo.join(" ")],
+      [`Olá, ${real[0]}`, `Olá, ${demo[0]}`],
+    ],
+    // o React parte "Olá, {nome}!" em nós separados: o primeiro nome sozinho
+    // também é trocado, mas só quando é o nó inteiro
+    exatas: [[iniciais(real), iniciais(demo)], [real[0], demo[0]]],
+  };
+}
+
+/**
  * A captura só pode rodar contra uma instância de DEMONSTRAÇÃO. Esta é a
  * trava: aceita apenas endereços locais. Uma instância de demonstração em
  * outra máquina exige confirmação explícita na linha de comando.
