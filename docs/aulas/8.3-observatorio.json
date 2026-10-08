@@ -10,7 +10,7 @@
   "elenco": [],
 
   "pendencias": [
-    "As séries (atendimentos psicológicos, orientações jurídicas, ouvidoria, serviços) ficam gravadas por periodo_id/serie_nome, mas o site público as procura por dashboard_id e outros nomes de campo: hoje o site mostra os gráficos de série com os dados fixos do próprio código. Por isso a aula ensina períodos e o consolidado do mês, que aparecem no site. Quando o site ler as séries, acrescentar uma cena."
+    "As séries (atendimentos psicológicos, orientações jurídicas, ouvidoria, serviços) passaram a aparecer no site em 08/10/2026 (sermulher_observatorio#1), mas só para períodos que têm consolidado do mês. Se a coordenação quiser, acrescentar uma cena ensinando a lançar uma série."
   ],
 
   "cenas": [
