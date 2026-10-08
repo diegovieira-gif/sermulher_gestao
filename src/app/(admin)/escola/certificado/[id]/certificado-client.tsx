@@ -17,16 +17,15 @@ export default function CertificadoClient({
   turma,
   curso,
 }: CertificadoClientProps) {
-  // Fallbacks seguros para dados que podem não existir no banco ainda
-  const fallbackStart = turma?.data_inicio
-    ? new Date(turma.data_inicio)
-    : new Date();
+  // Campo "date" vem como "AAAA-MM-DD": lido como meio-dia local, para o
+  // fuso não puxar a data para o dia anterior.
+  const dia = (v?: string | null) =>
+    v ? new Date(v.length === 10 ? `${v}T12:00:00` : v) : null;
+  const fallbackStart = dia(turma?.data_inicio) ?? new Date();
+  const fallbackEnd = dia(turma?.data_fim) ?? fallbackStart;
 
-  const fallbackEnd = turma?.data_fim
-    ? new Date(turma.data_fim)
-    : fallbackStart;
-
-  const fallbackInstructor = turma?.instrutor_nome || "Coordenação Pedagógica";
+  const fallbackInstructor =
+    turma?.instrutor || turma?.instrutor_nome || "Coordenação Pedagógica";
 
   const certificateData = {
     studentName: beneficiaria.nome_completo,

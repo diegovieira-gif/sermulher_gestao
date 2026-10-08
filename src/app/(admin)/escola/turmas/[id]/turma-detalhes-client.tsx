@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -150,6 +150,8 @@ export function TurmaDetalhesClient({
   const [statusUpdatingId, setStatusUpdatingId] = useState<number | null>(null);
   const [currentMatriculas, setCurrentMatriculas] =
     useState<Matricula[]>(matriculas);
+  // router.refresh() traz novas props; sem isto a lista ficava a da 1ª carga
+  useEffect(() => setCurrentMatriculas(matriculas), [matriculas]);
   const [performanceData, setPerformanceData] = useState<any[]>([]);
   const [isLoadingPerformance, setIsLoadingPerformance] = useState(false);
 

@@ -192,7 +192,11 @@ async function executar(page, acao, onde) {
           await page.goto(BASE_URL + novaAba, { waitUntil: "domcontentloaded" });
           break;
         }
+        // botão que abre outra aba por window.open (certificado): abre aqui
+        const antes = page.url();
+        await page.evaluate(() => { window.open = (u) => { location.href = u; return null; }; });
         await alvo.click({ timeout: ESPERA_MS });
+        await page.waitForURL((u) => u.href !== antes, { timeout: 1500 }).then(() => page.waitForLoadState("domcontentloaded")).catch(() => {});
         if (href && href.startsWith("/")) {
           await page.waitForURL((u) => u.pathname === href.split(/[?#]/)[0], { timeout: 30000 });
         }
