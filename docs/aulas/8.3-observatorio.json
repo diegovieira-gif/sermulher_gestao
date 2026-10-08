@@ -1,0 +1,63 @@
+{
+  "id": "8.3",
+  "modulo": "8 — Coordenação",
+  "titulo": "Observatório",
+  "publico": "Coordenação e administradores",
+  "pre_requisitos": ["8.2"],
+  "objetivo": "Ao final, a participante cadastra um período e lança o valor de uma série do Observatório.",
+  "tarefa_final": "Lance o valor de uma série do Observatório para o período corrente.",
+  "duracao_alvo_seg": 90,
+  "elenco": [],
+
+  "pendencias": [
+    "Confirmar com a coordenação onde os dados do Observatório são exibidos (os 'Dashboards' cadastrados apontam para URLs externas). A cena c02 afirma que alimentam painéis públicos; ajustar se não for o caso."
+  ],
+
+  "cenas": [
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "Observatório", "subtitulo": "Módulo oito · Coordenação" },
+      "narracao": "O Observatório reúne indicadores que não nascem dos registros do dia a dia, como números da Ouvidoria e séries consolidadas do CRAM. Eles são lançados à mão, e neste vídeo você vai ver como."
+    },
+    {
+      "id": "c02",
+      "narracao": "No menu, abra Observatório. Cada botão com nome é uma coleção de dados: Períodos, Dashboards, as séries do CRAM, da Ouvidoria e a Distribuição de Serviços. Esses dados alimentam os painéis do Observatório.",
+      "acao": { "tipo": "navegar", "url": "/observatorio" },
+      "foco": null
+    },
+    {
+      "id": "c03",
+      "narracao": "Tudo começa pelo período. Em Períodos, cada registro é um mês, com um nome como janeiro de dois mil e vinte e seis e uma ordem. Antes de lançar os números de um mês, confira se o período dele já existe.",
+      "acao": { "tipo": "clicar", "seletor": "text=Períodos" },
+      "foco": { "seletor": "role=button[name=\"Novo Registro\"]", "zoom": 1.9 }
+    },
+    {
+      "id": "c04",
+      "narracao": "Depois, abra a série que vai alimentar, por exemplo, Orientações Jurídicas do CRAM, e clique em Novo Registro. Informe o nome da série, o valor e escolha o período.",
+      "acao": [
+        { "tipo": "clicar", "seletor": "text=Orientações Jurídicas (CRAM)" },
+        { "tipo": "clicar", "seletor": "role=button[name=\"Novo Registro\"]" }
+      ],
+      "foco": { "seletor": "role=dialog", "zoom": 1.4 }
+    },
+    {
+      "id": "c05",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Lançado à mão, conferido duas vezes",
+        "linhas": ["Estes números não vêm de registro nenhum", "Confira com a fonte antes de salvar", "Um valor errado aparece no painel público"]
+      },
+      "narracao": "Como esses números são digitados, e não calculados, o cuidado é redobrado. Confira com a fonte antes de salvar. Um valor errado aqui aparece direto no painel, sem nenhum registro por trás para corrigi-lo."
+    },
+    {
+      "id": "c06",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sua vez",
+        "linhas": ["Confira se o período corrente existe", "Lance o valor de uma série para ele"]
+      },
+      "narracao": "Agora é com você. Confira se o período corrente existe no Observatório e lance o valor de uma série para ele."
+    }
+  ]
+}

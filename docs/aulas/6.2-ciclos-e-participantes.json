@@ -1,0 +1,68 @@
+{
+  "id": "6.2",
+  "modulo": "6 — Sala Azul",
+  "titulo": "Ciclos reflexivos e participantes",
+  "publico": "Equipe da Sala Azul",
+  "pre_requisitos": ["6.1"],
+  "objetivo": "Ao final, a participante cria um ciclo reflexivo com período, local e facilitador, e inclui participantes já cadastrados.",
+  "tarefa_final": "Crie o ciclo Grupo Reflexivo 2026.2 e inclua João Exemplo Santos e Pedro Exemplo Costa.",
+  "duracao_alvo_seg": 90,
+  "elenco": ["sala_azul", "joao", "pedro"],
+
+  "cenas": [
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "Ciclos e participantes", "subtitulo": "Módulo seis · Sala Azul" },
+      "narracao": "O grupo reflexivo acontece em ciclos: um conjunto de sessões, com começo e fim, para uma turma de participantes. Neste vídeo você vai criar um ciclo e colocar participantes nele."
+    },
+    {
+      "id": "c02",
+      "narracao": "No menu da Sala Azul, abra Ciclos Reflexivos e clique em Novo Ciclo.",
+      "acao": { "tipo": "navegar", "url": "/sala-azul/ciclos" },
+      "foco": { "seletor": "role=button[name=\"Novo Ciclo\"]", "zoom": 2.0 }
+    },
+    {
+      "id": "c03",
+      "narracao": "Dê um nome que identifique o período, como o ano e o semestre. Informe as datas de início e de término, o local e o facilitador, ou seja, o técnico que conduz o grupo.",
+      "acao": [
+        { "tipo": "clicar", "seletor": "role=button[name=\"Novo Ciclo\"]" },
+        { "tipo": "digitar", "seletor": "[placeholder=\"Ex: Ciclo 2024.1\"]", "texto": "Grupo Reflexivo 2026.2" }
+      ],
+      "foco": { "seletor": "role=dialog", "zoom": 1.4 }
+    },
+    {
+      "id": "c04",
+      "narracao": "Salve o ciclo. Ele aparece na lista, e as sessões dele vão aparecer em azul no calendário da Agenda Institucional.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": null
+    },
+    {
+      "id": "c05",
+      "narracao": "Para incluir participantes, clique em Gerenciar Participantes na linha do ciclo. A tela do ciclo tem duas abas: Participantes e Sessões.",
+      "acao": { "tipo": "clicar", "seletor": "[title=\"Gerenciar Participantes\"]" },
+      "foco": { "seletor": "role=tablist", "zoom": 1.7 }
+    },
+    {
+      "id": "c06",
+      "narracao": "Em Participantes, use Adicionar Participante, escolha o infrator na lista e clique em Adicionar à Turma. Só aparece quem já foi cadastrado em Infratores.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "text=Adicionar Participante", "zoom": 1.8 }
+    },
+    {
+      "id": "c07",
+      "narracao": "Para tirar alguém do ciclo, use Remover da turma, na linha dele. O cadastro do participante continua, e só a participação neste ciclo é desfeita.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "[title=\"Remover da turma\"]", "zoom": 2.2 }
+    },
+    {
+      "id": "c08",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sua vez",
+        "linhas": ["Crie o ciclo Grupo Reflexivo 2026.2", "Inclua João Exemplo Santos", "Inclua Pedro Exemplo Costa"]
+      },
+      "narracao": "Agora é com você. Crie o ciclo Grupo Reflexivo dois mil e vinte e seis ponto dois e inclua João Exemplo Santos e Pedro Exemplo Costa."
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "id": "3.4",
+  "modulo": "3 — Agenda Institucional",
+  "titulo": "A equipe do evento e os avisos de escala",
+  "publico": "Quem organiza ações, eventos e campanhas",
+  "pre_requisitos": ["3.1", "0.3"],
+  "objetivo": "Ao final, a participante escala servidoras para um evento e sabe quais avisos o sistema envia sozinho, e quando.",
+  "tarefa_final": "Escale duas colegas para a Roda de Conversa e peça a uma delas para conferir o aviso no sino.",
+  "duracao_alvo_seg": 150,
+  "elenco": ["roda", "equipe"],
+
+  "cenas": [
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "A equipe do evento", "subtitulo": "Módulo três · Agenda Institucional" },
+      "narracao": "Participantes são as mulheres atendidas na ação. A equipe é outra coisa: são as servidoras e os servidores que trabalharam nela. Neste vídeo você vai escalar a equipe de um evento e conhecer os avisos que o sistema manda sozinho."
+    },
+    {
+      "id": "c02",
+      "narracao": "Na aba Gestão de Eventos, encontre o evento e clique em Equipe, o ícone de maleta na linha.",
+      "acao": [
+        { "tipo": "navegar", "url": "/eventos" },
+        { "tipo": "clicar", "seletor": "role=tab[name=\"Gestão de Eventos (Lista)\"]" },
+        { "tipo": "digitar", "seletor": "[placeholder=\"Buscar por título ou local...\"]", "texto": "Roda de Conversa" }
+      ],
+      "foco": { "seletor": "[title=\"Equipe\"]", "zoom": 2.2 }
+    },
+    {
+      "id": "c03",
+      "narracao": "Escolha a pessoa no campo Servidora ou servidor e clique em Adicionar. A lista vem das contas de usuário do próprio sistema: quem tem acesso ao SIGMA já aparece aqui, pelo nome. Não existe um cadastro separado de funcionários.",
+      "acao": { "tipo": "clicar", "seletor": "[title=\"Equipe\"]" },
+      "foco": { "seletor": "rotulo=Servidora ou servidor", "zoom": 1.8 }
+    },
+    {
+      "id": "c04",
+      "narracao": "Quem já está na equipe some do campo, então não dá para escalar a mesma pessoa duas vezes. Para tirar alguém, use Remover da equipe, ao lado do nome. Isso desfaz só a escala, e a conta da pessoa continua como estava.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "role=button[name=\"Adicionar\"]", "zoom": 2.0 }
+    },
+    {
+      "id": "c05",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Os avisos automáticos",
+        "linhas": ["Escalada: você foi escalada, com data e local", "Véspera, às oito da manhã: amanhã tem evento", "Retirada: você não está mais escalada", "Mudou data ou local: toda a equipe é reavisada"]
+      },
+      "narracao": "E aqui está a vantagem. Ninguém precisa mandar recado à parte. Quem entra na equipe recebe um aviso com a data e o local. Na véspera, às oito da manhã, chega um lembrete. Quem sai da equipe é avisado, e o lembrete é cancelado. E se o evento mudar de data ou de local, a equipe inteira é reavisada com o que mudou."
+    },
+    {
+      "id": "c06",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Por que avisar a mudança",
+        "linhas": ["Quem foi avisado confia no aviso", "Sem o reaviso, iria no dia ou no lugar errado"]
+      },
+      "narracao": "Esse último aviso existe por um motivo prático. Quem foi avisada antes confia no sistema. Sem o reaviso, ela iria no dia ou no lugar errado. Por isso, quando um evento mudar, mude no SIGMA: é isso que dispara o aviso."
+    },
+    {
+      "id": "c07",
+      "narracao": "Os avisos chegam no sino de cada pessoa, no e-mail institucional e, para quem autorizou em Meu Perfil, também no WhatsApp.",
+      "acao": [
+        { "tipo": "tecla", "tecla": "Escape" },
+        { "tipo": "clicar", "seletor": "button[aria-label^=\"Notificações\"]" }
+      ],
+      "foco": { "seletor": "text=Notificações", "zoom": 1.6 }
+    },
+    {
+      "id": "c08",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sua vez",
+        "linhas": ["Escale duas colegas para a Roda de Conversa", "Peça a uma delas para conferir o sino"]
+      },
+      "narracao": "Agora é com você. Escale duas colegas para a Roda de Conversa e peça a uma delas para conferir o aviso no sino."
+    }
+  ]
+}

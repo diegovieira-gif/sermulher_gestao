@@ -1,0 +1,110 @@
+{
+  "aviso": "Elenco FICTÍCIO de todas as aulas. Nenhum dado real, nunca. Os CPFs são sequências artificiais com dígito verificador válido; os telefones usam o prefixo 9 0000, que não é atribuído a linhas reais. A instância de demonstração é povoada com este arquivo antes da captura.",
+
+  "usuaria_demo": {
+    "nome": "Paula Demonstração",
+    "email": "demo@sigma.local",
+    "perfil": "Administrator",
+    "observacao": "Conta da instância de demonstração. A senha fica no .env.local da máquina que grava (TEST_USER_PASSWORD), nunca aqui."
+  },
+
+  "equipe": [
+    { "nome": "Lúcia Exemplo", "perfil": "Atendimento" },
+    { "nome": "Renata Exemplo", "perfil": "Psicossocial" },
+    { "nome": "Sílvia Exemplo", "perfil": "Jurídico" }
+  ],
+
+  "beneficiarias": [
+    {
+      "chave": "joana",
+      "nome": "Joana Ribeiro da Silva",
+      "cpf": "12345678909",
+      "nascimento": "1988-04-12",
+      "telefone": "(79) 90000-0001",
+      "bairro": "Centro",
+      "papel": "Protagonista do módulo 1: é cadastrada no 1.1 e acompanhada até o 2.3."
+    },
+    {
+      "chave": "marta",
+      "nome": "Marta Souza Lima",
+      "cpf": "11144477735",
+      "nascimento": "1975-09-30",
+      "telefone": "(79) 90000-0002",
+      "bairro": "Siqueira Campos",
+      "papel": "Já cadastrada e completa; aparece nas buscas, eventos e CRAM."
+    },
+    {
+      "chave": "ana",
+      "nome": "Ana Paula Ferreira",
+      "cpf": "98765432100",
+      "nascimento": "1996-01-22",
+      "telefone": "(79) 90000-0003",
+      "bairro": "Santos Dumont",
+      "papel": "Aluna da Escola da Mulher (módulo 5) e participante de evento."
+    },
+    {
+      "chave": "rita",
+      "nome": "Rita de Cássia Nunes",
+      "cpf": "24681357928",
+      "nascimento": "1982-06-05",
+      "telefone": "(79) 90000-0004",
+      "bairro": "Bugio",
+      "papel": "Aluna da Escola e participante de evento."
+    },
+    {
+      "chave": "claudia",
+      "nome": "Cláudia Menezes Santos",
+      "cpf": "13579246828",
+      "nascimento": "1990-11-17",
+      "telefone": null,
+      "bairro": null,
+      "papel": "Ficha incompleta de propósito: mostra a completude baixa (1.2) e a ausência no público do WhatsApp (7.2)."
+    }
+  ],
+
+  "participantes_sala_azul": [
+    {
+      "chave": "joao",
+      "nome": "João Exemplo Santos",
+      "cpf": "36925814755",
+      "processo": "0000001-00.2026.8.25.0001",
+      "nivel_risco": "Médio",
+      "papel": "Participante do ciclo do módulo 6."
+    },
+    {
+      "chave": "pedro",
+      "nome": "Pedro Exemplo Costa",
+      "cpf": "10203040570",
+      "processo": "0000002-00.2026.8.25.0001",
+      "nivel_risco": "Alto",
+      "papel": "Segundo participante; aciona o alerta de risco do painel."
+    }
+  ],
+
+  "eventos": [
+    {
+      "chave": "roda",
+      "titulo": "Roda de Conversa — Autonomia Financeira",
+      "local": "Auditório da Secretaria",
+      "papel": "Evento criado no 3.1 e usado em 3.3 e 3.4."
+    },
+    {
+      "chave": "agosto",
+      "titulo": "Agosto Lilás — Ação no Mercado Central",
+      "local": "Mercado Central",
+      "papel": "Evento de vários dias, já existente; aparece no calendário e na busca."
+    }
+  ],
+
+  "escola": {
+    "curso": "Inclusão Digital",
+    "turma": "Inclusão Digital — Manhã A",
+    "instrutor": "Instrutora Exemplo"
+  },
+
+  "sala_azul": {
+    "ciclo": "Grupo Reflexivo 2026.2",
+    "local": "Sala Azul — Sede",
+    "facilitador": "Facilitador Exemplo"
+  }
+}

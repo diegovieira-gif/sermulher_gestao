@@ -1,0 +1,90 @@
+{
+  "id": "3.3",
+  "modulo": "3 — Agenda Institucional",
+  "titulo": "Quem participou: os dois caminhos",
+  "publico": "Quem organiza ações, eventos e campanhas",
+  "pre_requisitos": ["3.1", "1.4"],
+  "objetivo": "Ao final, a participante registra participantes pelo evento e pela ficha da beneficiária, e sabe que os dois caminhos geram o mesmo registro.",
+  "tarefa_final": "Lance Ana Paula Ferreira, Rita de Cássia Nunes e Marta Souza Lima na Roda de Conversa pelo evento, e confira na ficha de uma delas.",
+  "duracao_alvo_seg": 150,
+  "elenco": ["roda", "ana", "rita", "marta"],
+
+  "cenas": [
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "Quem participou", "subtitulo": "Módulo três · Agenda Institucional" },
+      "narracao": "Depois do evento, é preciso registrar quem participou. Isso alimenta a ficha de cada mulher e os relatórios. O SIGMA oferece dois caminhos, e neste vídeo você vai conhecer os dois."
+    },
+    {
+      "id": "c02",
+      "narracao": "O primeiro é pelo evento, o melhor caminho para lançar a lista de presença de uma ação inteira. Na aba Gestão de Eventos, encontre o evento e clique em Participantes, o ícone de pessoas na linha.",
+      "acao": [
+        { "tipo": "navegar", "url": "/eventos" },
+        { "tipo": "clicar", "seletor": "role=tab[name=\"Gestão de Eventos (Lista)\"]" },
+        { "tipo": "digitar", "seletor": "[placeholder=\"Buscar por título ou local...\"]", "texto": "Roda de Conversa" }
+      ],
+      "foco": { "seletor": "[title=\"Participantes\"]", "zoom": 2.2 }
+    },
+    {
+      "id": "c03",
+      "narracao": "A janela mostra o total e a lista de quem já participou. Para incluir alguém, busque pelo nome ou pelo CPF.",
+      "acao": [
+        { "tipo": "clicar", "seletor": "[title=\"Participantes\"]" },
+        { "tipo": "digitar", "seletor": "[placeholder=\"Buscar por nome ou CPF...\"]", "texto": "Ana Paula" }
+      ],
+      "foco": { "seletor": "[placeholder=\"Buscar por nome ou CPF...\"]", "zoom": 1.8 }
+    },
+    {
+      "id": "c04",
+      "narracao": "Escolha a pessoa, confira a data e clique em Registrar. Repita para cada participante. Quem já está na lista não aparece mais nas sugestões, então não há como lançar a mesma pessoa duas vezes.",
+      "acao": { "tipo": "clicar", "seletor": "text=Ana Paula Ferreira" },
+      "foco": { "seletor": "role=button[name=\"Registrar\"]", "zoom": 2.0 }
+    },
+    {
+      "id": "c05",
+      "narracao": "Errou? O ícone de lixeira ao lado do nome, Remover participação, desfaz o lançamento. Ele apaga só a participação naquele evento, nunca o cadastro da beneficiária.",
+      "acao": { "tipo": "clicar", "seletor": "role=button[name=\"Registrar\"]" },
+      "foco": { "seletor": "[title=\"Remover participação\"]", "zoom": 2.2 }
+    },
+    {
+      "id": "c06",
+      "narracao": "O segundo caminho é pela beneficiária, o mais prático durante um atendimento. Na ficha completa dela, abra a aba Eventos e clique em Registrar Participação.",
+      "acao": [
+        { "tipo": "tecla", "tecla": "Escape" },
+        { "tipo": "navegar", "url": "/mulheres/beneficiarias" },
+        { "tipo": "digitar", "seletor": "[placeholder=\"Buscar por nome, CPF ou telefone...\"]", "texto": "Marta" },
+        { "tipo": "clicar", "seletor": "[title=\"Abrir ficha completa\"]" },
+        { "tipo": "clicar", "seletor": "role=tab[name=\"Eventos\"]" }
+      ],
+      "foco": { "seletor": "role=button[name=\"Registrar Participação\"]", "zoom": 2.0 }
+    },
+    {
+      "id": "c07",
+      "narracao": "Por este caminho, ao escolher o evento, o sistema sugere a data. Se hoje está dentro do período do evento, sugere hoje. Se não, sugere o dia em que o evento começou. E se você informar uma data fora do período, aparece um aviso. É só um alerta: registrar depois do evento pode ser legítimo.",
+      "acao": [
+        { "tipo": "clicar", "seletor": "role=button[name=\"Registrar Participação\"]" },
+        { "tipo": "clicar", "seletor": "text=Selecione o evento" }
+      ],
+      "foco": { "seletor": "role=dialog", "zoom": 1.4 }
+    },
+    {
+      "id": "c08",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Dois caminhos, um registro",
+        "linhas": ["Pelo evento: a lista de uma ação inteira", "Pela beneficiária: durante o atendimento", "É o mesmo registro, visto dos dois lados"]
+      },
+      "narracao": "Os dois caminhos gravam a mesma coisa. Quem você lançar pelo evento aparece na ficha da beneficiária, e quem você lançar pela ficha aparece na lista do evento. Use o que for mais prático no momento."
+    },
+    {
+      "id": "c09",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sua vez",
+        "linhas": ["Lance três participantes pela Roda de Conversa", "Abra a ficha de uma delas", "Confira o evento na aba Eventos"]
+      },
+      "narracao": "Agora é com você. Lance Ana Paula Ferreira, Rita de Cássia Nunes e Marta Souza Lima na Roda de Conversa, pelo evento. Depois abra a ficha de uma delas e confira o evento na aba Eventos."
+    }
+  ]
+}

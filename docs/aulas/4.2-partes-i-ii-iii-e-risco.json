@@ -1,0 +1,81 @@
+{
+  "id": "4.2",
+  "modulo": "4 — CRAM",
+  "titulo": "Partes I, II e III, e o nível de risco",
+  "publico": "Equipe do CRAM",
+  "pre_requisitos": ["4.1"],
+  "objetivo": "Ao final, a participante preenche as partes Socioassistencial, Jurídica e Psicológica, inclusive a composição domiciliar, e interpreta o selo de risco sem confundi-lo com diagnóstico.",
+  "tarefa_final": "Complete as três partes do instrumental de Marta Souza Lima e confira o selo de risco na lista.",
+  "duracao_alvo_seg": 150,
+  "elenco": ["marta"],
+
+  "cenas": [
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "Partes um, dois e três", "subtitulo": "Módulo quatro · CRAM" },
+      "narracao": "No vídeo anterior você abriu o instrumental e preencheu a aba Atendimento. Agora vem o corpo dele: as partes socioassistencial, jurídica e psicológica. E, no fim, o selo de risco."
+    },
+    {
+      "id": "c02",
+      "narracao": "Abra o instrumental pela lista do CRAM e vá à aba Parte um, Socioassistencial. Ela cobre o imóvel e o saneamento, deficiência, saúde, renda e benefícios, os serviços que ela frequenta, a caracterização da violência e a identificação do autor.",
+      "acao": [
+        { "tipo": "navegar", "url": "/cram" },
+        { "tipo": "clicar", "seletor": "[title=\"Abrir\"]" },
+        { "tipo": "clicar", "seletor": "role=tab[name=\"I · Socioassistencial\"]" }
+      ],
+      "foco": { "seletor": "role=tabpanel", "zoom": 1.3 }
+    },
+    {
+      "id": "c03",
+      "narracao": "A composição domiciliar é uma tabela. Cada pessoa que mora com ela é uma linha: nome, parentesco, idade, escolaridade, ocupação e renda, e se recebe algum benefício. Use Adicionar membro para cada pessoa da casa.",
+      "acao": { "tipo": "rolar", "seletor": "text=Composição domiciliar" },
+      "foco": { "seletor": "role=button[name=\"Adicionar membro\"]", "zoom": 1.9 }
+    },
+    {
+      "id": "c04",
+      "narracao": "A Parte dois, Jurídico, registra se ela precisa de orientação jurídica, o boletim de ocorrência, inclusive se foi feito pela própria equipe durante o atendimento, e o órgão para onde o caso foi encaminhado.",
+      "acao": { "tipo": "clicar", "seletor": "role=tab[name=\"II · Jurídico\"]" },
+      "foco": { "seletor": "role=tabpanel", "zoom": 1.3 }
+    },
+    {
+      "id": "c05",
+      "narracao": "A Parte três, Psicológico, traz as seis perguntas padronizadas de risco e o resumo da psicóloga.",
+      "acao": { "tipo": "clicar", "seletor": "role=tab[name=\"III · Psicológico\"]" },
+      "foco": { "seletor": "role=tabpanel", "zoom": 1.3 }
+    },
+    {
+      "id": "c06",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "O selo de risco",
+        "linhas": ["Conta as respostas Sim entre as seis perguntas", "Alto: quatro ou mais", "Médio: duas ou três", "Baixo: uma", "Sem sinais: nenhuma"]
+      },
+      "narracao": "Dessas seis perguntas sai o selo que aparece na lista do CRAM. A conta é simples: quantas respostas foram sim. Quatro ou mais, risco alto. Duas ou três, médio. Uma, baixo. Nenhuma, sem sinais."
+    },
+    {
+      "id": "c07",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "O que o selo NÃO é",
+        "linhas": ["Não é diagnóstico", "Não define conduta", "Serve para ordenar a fila de atenção"]
+      },
+      "narracao": "E aqui está o mais importante deste vídeo. O selo não é diagnóstico e não define o que fazer. Ele é uma contagem, e serve só para ordenar a fila de atenção. Um caso sem sinais nas seis perguntas pode ser grave por outros motivos, e só a avaliação da equipe diz isso."
+    },
+    {
+      "id": "c08",
+      "narracao": "Na lista, a coluna Risco mostra o selo de cada instrumental. Use para decidir quem olhar primeiro, nunca para decidir quem não precisa ser olhada.",
+      "acao": { "tipo": "navegar", "url": "/cram" },
+      "foco": { "seletor": "text=Risco", "zoom": 1.7 }
+    },
+    {
+      "id": "c09",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sua vez",
+        "linhas": ["Complete as partes I, II e III de Marta", "Inclua a composição domiciliar", "Confira o selo de risco na lista"]
+      },
+      "narracao": "Agora é com você. Complete as três partes do instrumental de Marta Souza Lima, incluindo a composição domiciliar, e confira o selo de risco na lista."
+    }
+  ]
+}

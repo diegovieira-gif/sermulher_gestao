@@ -1,0 +1,98 @@
+{
+  "id": "1.2",
+  "modulo": "1 — Beneficiárias, o coração do sistema",
+  "titulo": "Completude: por que a ficha \"pede mais\"",
+  "publico": "Todas as profissionais que atendem",
+  "pre_requisitos": ["1.1"],
+  "objetivo": "Ao final, a participante lê o resumo de completude, sabe quais dados pesam mais e por quê, e completa a ficha sem criar um segundo cadastro.",
+  "tarefa_final": "Abra a ficha de Joana Ribeiro da Silva e leve a completude acima de setenta e cinco por cento, preenchendo primeiro o que vale mais.",
+  "duracao_alvo_seg": 210,
+  "elenco": ["joana", "claudia"],
+
+  "cenas": [
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "Completude da ficha", "subtitulo": "Módulo um · Beneficiárias" },
+      "narracao": "No vídeo anterior, você cadastrou a Joana só com o nome e o CPF. Ao salvar, apareceu uma janela dizendo que a ficha estava incompleta. Neste vídeo você vai entender o que essa janela mede e por que vale a pena dar atenção a ela."
+    },
+    {
+      "id": "c02",
+      "narracao": "Toda vez que você salva um cadastro, o sistema mostra este resumo. O número é a completude: quanto da ficha está preenchido, levando em conta que alguns dados valem mais do que outros.",
+      "acao": [
+        { "tipo": "navegar", "url": "/mulheres/beneficiarias" },
+        { "tipo": "digitar", "seletor": "[placeholder=\"Buscar por nome, CPF ou telefone...\"]", "texto": "Joana Ribeiro" },
+        { "tipo": "clicar", "seletor": "[aria-label=\"Editar\"]" },
+        { "tipo": "clicar", "seletor": "role=button[name=\"Atualizar\"]" }
+      ],
+      "foco": { "seletor": "[aria-label=\"Completude da ficha\"]", "zoom": 1.8 }
+    },
+    {
+      "id": "c03",
+      "narracao": "A faixa diz em que ponto a ficha está: ficha iniciada, ficha em construção, quase completa ou completa. Logo abaixo vem a lista do que falta, já em ordem: o que mais faz diferença aparece primeiro, com a aba onde o campo fica.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "role=dialog", "zoom": 1.4 }
+    },
+    {
+      "id": "c04",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "O que pesa mais",
+        "linhas": ["Telefone e bairro: sem eles, ela fica fora das campanhas e do mapa", "CPF e data de nascimento: identificação e faixa etária", "Raça/cor, escolaridade, trabalho: alimentam os relatórios oficiais"]
+      },
+      "narracao": "Por que esses pesos? Porque eles vêm do uso real dos dados no próprio sistema. Sem telefone, a beneficiária não recebe nenhuma campanha. Sem bairro, ela some do recorte por território. CPF e data de nascimento identificam a pessoa e dizem a faixa etária. E raça ou cor, escolaridade e situação de trabalho alimentam os relatórios que a Secretaria entrega. Ficha incompleta vira relatório incompleto."
+    },
+    {
+      "id": "c05",
+      "narracao": "Se você tiver os dados agora, clique em Completar agora. O formulário volta aberto na mesma ficha. O cadastro já foi salvo: continuar preenchendo atualiza o mesmo registro, e não cria um segundo.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "role=button[name=\"Completar agora\"]", "zoom": 2.0 }
+    },
+    {
+      "id": "c06",
+      "narracao": "Comece pelo que vale mais. Na aba Endereço e Contato, informe o telefone.",
+      "acao": [
+        { "tipo": "clicar", "seletor": "role=button[name=\"Completar agora\"]" },
+        { "tipo": "clicar", "seletor": "role=tab[name=\"Endereço e Contato\"]" },
+        { "tipo": "digitar", "seletor": "[placeholder=\"(79) 99999-9999\"]", "texto": "79900000001" }
+      ],
+      "foco": { "seletor": "[placeholder=\"(79) 99999-9999\"]", "zoom": 1.9 }
+    },
+    {
+      "id": "c07",
+      "narracao": "Repare na caixa Telefone validado. Telefone preenchido não é o mesmo que telefone confirmado. Marque essa caixa só depois de confirmar o número com a própria beneficiária. Se ela não estiver na sua frente, deixe desmarcada: o sistema vai lembrar você de confirmar depois.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "rotulo=Telefone validado", "zoom": 2.0 }
+    },
+    {
+      "id": "c08",
+      "narracao": "Agora o bairro. Ele também está na aba Endereço e Contato.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "rotulo=Bairro", "zoom": 1.8 }
+    },
+    {
+      "id": "c09",
+      "narracao": "Clique em Atualizar. O resumo volta, agora com outro número. Cada campo preenchido aparece somando pontos, e você vê na hora o que o seu trabalho mudou.",
+      "acao": { "tipo": "clicar", "seletor": "role=button[name=\"Atualizar\"]" },
+      "foco": { "seletor": "[aria-label=\"Completude da ficha\"]", "zoom": 1.8 }
+    },
+    {
+      "id": "c10",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Completar é um processo",
+        "linhas": ["Preencha o que tiver, quando tiver", "Comece pelo que vale mais", "Não invente dado para subir o número"]
+      },
+      "narracao": "Um último cuidado. A completude é um lembrete, não uma meta a bater a qualquer custo. Preencha o que você sabe, quando souber. Um dado inventado para subir o número é pior do que um campo em branco, porque ele engana os relatórios e quem atender essa mulher depois de você."
+    },
+    {
+      "id": "c11",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sua vez",
+        "linhas": ["Abra a ficha de Joana Ribeiro da Silva", "Preencha primeiro telefone e bairro", "Leve a ficha acima de setenta e cinco por cento"]
+      },
+      "narracao": "Agora é com você. Abra a ficha de Joana Ribeiro da Silva e leve a completude acima de setenta e cinco por cento, começando pelo que vale mais: telefone e bairro."
+    }
+  ]
+}

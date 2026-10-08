@@ -1,0 +1,99 @@
+{
+  "id": "0.2",
+  "modulo": "0 — Antes de começar",
+  "titulo": "Entrar, se localizar e sair",
+  "publico": "Todas as pessoas da Secretaria",
+  "pre_requisitos": ["0.1"],
+  "objetivo": "Ao final, a participante entra no sistema, encontra os módulos e o Manual do Usuário, escolhe o tema da tela e sai com segurança.",
+  "tarefa_final": "Entre no SIGMA, escolha o tema que preferir, abra o Manual do Usuário e saia do sistema.",
+  "duracao_alvo_seg": 150,
+  "sessao": "deslogada",
+  "elenco": ["usuaria_demo"],
+
+  "cenas": [
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "Entrar, se localizar e sair", "subtitulo": "Módulo zero · Antes de começar" },
+      "narracao": "Neste vídeo você vai entrar no SIGMA, encontrar o caminho no menu, ajustar a tela do seu jeito e sair do sistema com segurança."
+    },
+    {
+      "id": "c02",
+      "narracao": "Esta é a tela de entrada. Use o seu e-mail institucional e a sua senha. O acesso é pessoal: cada registro que você fizer fica guardado com o seu nome.",
+      "acao": { "tipo": "navegar", "url": "/login" },
+      "foco": { "seletor": "text=Acesso ao Sistema", "zoom": 1.5 }
+    },
+    {
+      "id": "c03",
+      "narracao": "Digite o e-mail.",
+      "acao": { "tipo": "digitar", "seletor": "rotulo=Email institucional", "texto": "demo@sigma.local" },
+      "foco": { "seletor": "rotulo=Email institucional", "zoom": 1.9 }
+    },
+    {
+      "id": "c04",
+      "narracao": "Depois, a senha. O ícone de olho ao lado mostra o que você digitou, caso queira conferir.",
+      "acao": { "tipo": "digitar", "seletor": "rotulo=Senha", "texto": "{senha_demo}" },
+      "foco": { "seletor": "[aria-label=\"Mostrar senha\"]", "zoom": 2.0 }
+    },
+    {
+      "id": "c05",
+      "narracao": "Um cuidado: depois de cinco senhas erradas na mesma conta, o sistema pede para esperar cerca de quinze minutos antes de tentar de novo. O bloqueio vale só para aquela conta. O erro de uma colega não impede você de entrar.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "role=button[name=\"Entrar no Sistema\"]", "zoom": 1.8 }
+    },
+    {
+      "id": "c06",
+      "narracao": "Clique em Entrar no Sistema. Você chega ao Dashboard.",
+      "acao": { "tipo": "clicar", "seletor": "role=button[name=\"Entrar no Sistema\"]" },
+      "foco": null
+    },
+    {
+      "id": "c07",
+      "narracao": "O menu reúne os módulos. Os que têm uma setinha abrem uma lista de telas. Clique em Gestão de Mulheres e veja as opções que aparecem.",
+      "acao": { "tipo": "clicar", "seletor": "role=button[name=\"Gestão de Mulheres\"]" },
+      "foco": { "seletor": "role=button[name=\"Gestão de Mulheres\"]", "zoom": 1.7 }
+    },
+    {
+      "id": "c08",
+      "narracao": "Precisa de mais espaço na tela? O botão Abrir ou fechar o menu recolhe o menu e deixa só os ícones. Clique de novo para trazê-lo de volta.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "role=button[name=\"Abrir ou fechar o menu\"]", "zoom": 2.2 }
+    },
+    {
+      "id": "c09",
+      "narracao": "No fim do menu fica o Manual do Usuário, com o passo a passo de cada módulo por escrito. Vale guardar esse caminho.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "text=Manual do Usuário", "zoom": 1.8 }
+    },
+    {
+      "id": "c10",
+      "narracao": "Ao lado do sino ficam três botões de tema: Claro, Escuro e Sistema. Sistema acompanha o que o seu computador ou celular já usa. Escolha o que for mais confortável para os seus olhos. A escolha fica guardada neste navegador.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "[aria-label=\"Tema da página\"]", "zoom": 2.2 }
+    },
+    {
+      "id": "c11",
+      "narracao": "Veja como fica o tema escuro.",
+      "acao": { "tipo": "clicar", "seletor": "[aria-label=\"Usar o tema escuro\"]" },
+      "foco": null
+    },
+    {
+      "id": "c12",
+      "narracao": "Para sair, clique no seu nome e escolha Sair do Sistema. Saia sempre ao terminar, principalmente em computador compartilhado: quem sentar depois de você não pode encontrar o sistema aberto.",
+      "acao": [
+        { "tipo": "clicar", "seletor": "[aria-label=\"Usar o tema claro\"]" },
+        { "tipo": "clicar", "seletor": "[data-testid=\"menu-usuario\"]" }
+      ],
+      "foco": { "seletor": "text=Sair do Sistema", "zoom": 1.9 }
+    },
+    {
+      "id": "c13",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sua vez",
+        "linhas": ["Entre no SIGMA", "Escolha o seu tema", "Abra o Manual do Usuário", "Saia do sistema"]
+      },
+      "narracao": "Agora é com você. Entre no SIGMA, escolha o tema que preferir, abra o Manual do Usuário e, no fim, saia do sistema pelo seu nome."
+    }
+  ]
+}

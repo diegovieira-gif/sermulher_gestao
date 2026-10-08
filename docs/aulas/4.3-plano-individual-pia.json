@@ -1,0 +1,78 @@
+{
+  "id": "4.3",
+  "modulo": "4 — CRAM",
+  "titulo": "Plano Individual (PIA)",
+  "publico": "Equipe do CRAM",
+  "pre_requisitos": ["4.2"],
+  "objetivo": "Ao final, a participante salva o Plano Individual de Atendimento com pactuações e formas de participação, e registra evoluções do acompanhamento.",
+  "tarefa_final": "Abra o PIA do instrumental de Marta Souza Lima, salve o plano com uma pactuação e registre duas evoluções.",
+  "duracao_alvo_seg": 120,
+  "elenco": ["marta"],
+
+  "cenas": [
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "Plano Individual de Atendimento", "subtitulo": "Módulo quatro · CRAM" },
+      "narracao": "O instrumental registra o que aconteceu. O Plano Individual de Atendimento, o PIA, registra o que vai acontecer: o que foi combinado com a usuária e como o acompanhamento evolui."
+    },
+    {
+      "id": "c02",
+      "narracao": "Abra o instrumental pela lista do CRAM e escolha a aba Plano Individual.",
+      "acao": [
+        { "tipo": "navegar", "url": "/cram" },
+        { "tipo": "clicar", "seletor": "[title=\"Abrir\"]" },
+        { "tipo": "clicar", "seletor": "role=tab[name=\"Plano Individual (PIA)\"]" }
+      ],
+      "foco": { "seletor": "text=Plano Individual de Atendimento", "zoom": 1.5 }
+    },
+    {
+      "id": "c03",
+      "narracao": "Comece pela data de abertura, o status e o histórico da demanda: em poucas linhas, o que trouxe essa mulher até o serviço.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "text=Histórico da demanda", "zoom": 1.7 }
+    },
+    {
+      "id": "c04",
+      "narracao": "As pactuações com a usuária são os combinados. Cada uma tem a demanda identificada, o serviço ofertado e a ação realizada. Use Adicionar pactuação para cada combinado.",
+      "acao": { "tipo": "rolar", "seletor": "text=Pactuações com a usuária" },
+      "foco": { "seletor": "role=button[name=\"Adicionar pactuação\"]", "zoom": 1.9 }
+    },
+    {
+      "id": "c05",
+      "narracao": "Em Formas de participação da assistida, marque como ela está participando do acompanhamento: se atende às convocações, se está presente nas rodas, se providenciou a documentação.",
+      "acao": { "tipo": "rolar", "seletor": "text=Formas de participação da assistida" },
+      "foco": { "seletor": "text=Formas de participação da assistida", "zoom": 1.6 }
+    },
+    {
+      "id": "c06",
+      "narracao": "Clique em Salvar plano individual. Atenção: as evoluções só ficam liberadas depois que o plano é salvo pela primeira vez.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "role=button[name=\"Salvar plano individual\"]", "zoom": 2.0 }
+    },
+    {
+      "id": "c07",
+      "narracao": "A Evolução do acompanhamento técnico funciona como um diário. Cada registro tem a data, a descrição do que foi observado ou realizado, e o técnico responsável. Clique em Registrar e ele entra na lista, em ordem.",
+      "acao": [
+        { "tipo": "clicar", "seletor": "role=button[name=\"Salvar plano individual\"]" },
+        { "tipo": "rolar", "seletor": "text=Evolução do acompanhamento técnico" }
+      ],
+      "foco": { "seletor": "[placeholder=\"O que foi observado ou realizado neste acompanhamento\"]", "zoom": 1.7 }
+    },
+    {
+      "id": "c08",
+      "narracao": "Escreva cada evolução como se outra técnica fosse continuar o caso amanhã, porque às vezes vai. Data, o que foi feito e o próximo passo.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "role=button[name=\"Registrar\"]", "zoom": 2.0 }
+    },
+    {
+      "id": "c09",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sua vez",
+        "linhas": ["Abra o PIA do instrumental de Marta", "Salve o plano com uma pactuação", "Registre duas evoluções"]
+      },
+      "narracao": "Agora é com você. Abra o Plano Individual do instrumental de Marta Souza Lima, salve o plano com uma pactuação e registre duas evoluções."
+    }
+  ]
+}

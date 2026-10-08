@@ -59,6 +59,7 @@ export function Header({
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
+              data-testid="menu-usuario"
               className="group h-auto gap-3 rounded-full border border-transparent py-1.5 pl-3 pr-2 transition-all hover:border-border hover:bg-muted/60 hover:shadow-sm data-[state=open]:border-border data-[state=open]:bg-muted/60"
             >
               <div className="hidden text-right sm:block">

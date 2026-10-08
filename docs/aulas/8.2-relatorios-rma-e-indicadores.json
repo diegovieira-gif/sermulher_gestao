@@ -1,0 +1,68 @@
+{
+  "id": "8.2",
+  "modulo": "8 — Coordenação",
+  "titulo": "Relatórios: RMA e indicadores",
+  "publico": "Coordenação e administradores",
+  "pre_requisitos": ["8.1", "1.2"],
+  "objetivo": "Ao final, a participante gera o RMA e os Indicadores de um mês, imprime em PDF, exporta o CSV e sabe que a qualidade do relatório depende da ficha das beneficiárias.",
+  "tarefa_final": "Gere o RMA do mês passado, salve em PDF e exporte o CSV.",
+  "duracao_alvo_seg": 120,
+  "elenco": [],
+
+  "cenas": [
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "Relatórios oficiais", "subtitulo": "Módulo oito · Coordenação" },
+      "narracao": "Todo mês a Secretaria presta contas: para a rede SUAS, para a gestão municipal, para os parceiros. Neste vídeo você vai gerar os dois relatórios mensais do SIGMA."
+    },
+    {
+      "id": "c02",
+      "narracao": "No menu, em Relatórios, abra RMA. É o Relatório Mensal de Atendimento: o movimento do mês, o detalhamento por setor e os tipos de violência dos novos casos.",
+      "acao": { "tipo": "navegar", "url": "/relatorios/rma" },
+      "foco": { "seletor": "text=Relatório Mensal de Atendimento (RMA)", "zoom": 1.5 }
+    },
+    {
+      "id": "c03",
+      "narracao": "Escolha o mês de referência e o ano e aplique os filtros. O documento abaixo é montado com os números do período.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "text=Mês de Referência", "zoom": 1.8 }
+    },
+    {
+      "id": "c04",
+      "narracao": "Imprimir Relatório gera o documento formatado, com cabeçalho e assinatura. Para arquivar, escolha Salvar como PDF na janela de impressão.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "role=button[name=\"Imprimir Relatório\"]", "zoom": 2.0 }
+    },
+    {
+      "id": "c05",
+      "narracao": "Exportar CSV baixa os mesmos números numa planilha, com o nome do arquivo já padronizado pelo mês. Isso elimina a redigitação na hora de consolidar ou de enviar para a rede SUAS.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "role=button[name=\"Exportar CSV\"]", "zoom": 2.0 }
+    },
+    {
+      "id": "c06",
+      "narracao": "Os Indicadores Gerais funcionam do mesmo jeito: identificação, ações, comunicação e perfil demográfico do mês, com as mesmas opções de imprimir e exportar.",
+      "acao": { "tipo": "navegar", "url": "/relatorios/indicadores" },
+      "foco": { "seletor": "text=Painel de Indicadores", "zoom": 1.5 }
+    },
+    {
+      "id": "c07",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "De onde vêm os números",
+        "linhas": ["Raça/cor, escolaridade e nascimento vêm da ficha", "Ficha incompleta é relatório incompleto", "Lembra da completude do módulo um?"]
+      },
+      "narracao": "E de onde vêm esses números? Da ficha de cada beneficiária e de cada atendimento. O perfil por raça ou cor, escolaridade e faixa etária sai do que foi preenchido no cadastro. É aqui que a completude do módulo um faz sentido: ficha incompleta vira relatório incompleto."
+    },
+    {
+      "id": "c08",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sua vez",
+        "linhas": ["Gere o RMA do mês passado", "Salve em PDF", "Exporte o CSV"]
+      },
+      "narracao": "Agora é com você. Gere o RMA do mês passado, salve em PDF e exporte o CSV."
+    }
+  ]
+}

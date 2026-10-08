@@ -4,87 +4,107 @@
   "titulo": "Cadastrar uma beneficiária",
   "publico": "Todas as profissionais que atendem",
   "pre_requisitos": ["0.2"],
-  "objetivo": "Ao final, a participante cadastra uma beneficiária no sistema e entende por que o cadastro pode começar incompleto.",
-  "tarefa_final": "Cadastre uma beneficiária fictícia informando nome completo e CPF. Confira que ela aparece na listagem.",
-  "duracao_alvo_seg": 300,
+  "objetivo": "Ao final, a participante cadastra uma beneficiária, sabe que pode começar com poucos dados e confere antes se ela já existe.",
+  "tarefa_final": "Procure Joana Ribeiro da Silva na lista. Como ela ainda não existe, cadastre-a com nome completo e CPF, e confira que ela aparece na listagem.",
+  "duracao_alvo_seg": 180,
+  "elenco": ["joana"],
 
-  "voz": {
-    "modelo": "gpt-4o-mini-tts",
-    "voz": "nova",
-    "velocidade": 1.0,
-    "instrucao": "Tom instrutivo, acolhedor e pausado. Português do Brasil. Trata-se de treinamento para servidoras públicas que atendem mulheres em situação de violência — evite entusiasmo publicitário."
-  },
-
-  "dados_demo": {
-    "aviso": "Nomes e documentos fictícios. NUNCA gravar com dados reais.",
-    "nome": "Joana Ribeiro da Silva",
-    "cpf": "52998224725"
-  },
+  "pendencias": [
+    "O rótulo 'Data de Nascimento *' tem asterisco, mas o campo NÃO é obrigatório (schemas.ts: data_nascimento optional). Corrigir o rótulo antes de capturar, ou a tela contradiz a fala da cena c07.",
+    "Confirmar no Directus se o campo cpf tem restrição de unicidade. A aula não promete bloqueio de duplicidade porque o app não o faz; se o banco fizer, a cena c05 pode mencioná-lo."
+  ],
 
   "cenas": [
     {
       "id": "c01",
-      "narracao": "Neste vídeo você vai cadastrar uma beneficiária no SIGMA. É o cadastro mais importante do sistema: tudo o que a Secretaria registra sobre uma mulher — atendimentos, cursos, participação em eventos — se conecta a ele.",
-      "acao": { "tipo": "navegar", "url": "/dashboard" }
+      "tipo": "cartao",
+      "cartao": { "titulo": "Cadastrar uma beneficiária", "subtitulo": "Módulo um · Beneficiárias" },
+      "narracao": "Neste vídeo você vai cadastrar uma beneficiária no SIGMA. É o cadastro mais importante do sistema: tudo o que a Secretaria registra sobre uma mulher, os atendimentos, os cursos, a participação em eventos, se liga a ele."
     },
     {
       "id": "c02",
-      "narracao": "No menu lateral, abra Gestão de Mulheres e clique em Beneficiárias.",
-      "acao": { "tipo": "clicar", "seletor": "text=Gestão de Mulheres" }
+      "narracao": "No menu, abra Gestão de Mulheres e escolha Beneficiárias.",
+      "acao": [
+        { "tipo": "navegar", "url": "/dashboard" },
+        { "tipo": "clicar", "seletor": "role=button[name=\"Gestão de Mulheres\"]" }
+      ],
+      "foco": { "seletor": "a[href='/mulheres/beneficiarias']", "zoom": 1.8 }
     },
     {
       "id": "c03",
-      "narracao": "Esta é a listagem. Aqui ficam todas as mulheres já cadastradas, e é por ela que você vai passar sempre que precisar encontrar alguém.",
-      "acao": { "tipo": "clicar", "seletor": "a[href='/mulheres/beneficiarias']" }
+      "narracao": "Esta é a lista de beneficiárias. É por ela que você vai passar sempre que precisar encontrar alguém.",
+      "acao": { "tipo": "clicar", "seletor": "a[href='/mulheres/beneficiarias']" },
+      "foco": null
     },
     {
       "id": "c04",
-      "narracao": "Para incluir uma nova, use o botão Nova Beneficiária, no topo à direita.",
-      "acao": { "tipo": "destacar", "seletor": "button:has-text('Nova Beneficiária')" }
+      "narracao": "Antes de cadastrar, procure. Digite o nome ou o CPF no campo de busca. Se ela já estiver na lista, não cadastre de novo: abra a ficha que já existe. Duas fichas da mesma mulher dividem a história dela em duas, e nenhuma das duas fica completa.",
+      "acao": { "tipo": "digitar", "seletor": "[placeholder=\"Buscar por nome, CPF ou telefone...\"]", "texto": "Joana Ribeiro" },
+      "foco": { "seletor": "[placeholder=\"Buscar por nome, CPF ou telefone...\"]", "zoom": 1.9 }
     },
     {
       "id": "c05",
-      "narracao": "O formulário abre em três abas: Dados Pessoais, Endereço e Contato, e Dados Sociais. Não se preocupe em preencher tudo agora.",
-      "acao": { "tipo": "clicar", "seletor": "button:has-text('Nova Beneficiária')" }
+      "narracao": "A busca não encontrou ninguém. Agora sim, clique em Nova Beneficiária.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "role=button[name=\"Nova Beneficiária\"]", "zoom": 2.0 }
     },
     {
       "id": "c06",
-      "narracao": "Só o Nome Completo é obrigatório. Isso é proposital: no acolhimento, quase nunca há tempo ou clima para levantar todos os dados. Cadastre com o que você tem e complete depois.",
-      "acao": { "tipo": "destacar", "seletor": "input[name='nome_completo']" }
+      "narracao": "O formulário tem três abas: Dados Pessoais, Endereço e Contato, e Dados Sociais. Você não precisa preencher tudo agora.",
+      "acao": { "tipo": "clicar", "seletor": "role=button[name=\"Nova Beneficiária\"]" },
+      "foco": { "seletor": "role=tablist", "zoom": 1.6 }
     },
     {
       "id": "c07",
-      "narracao": "Vou usar um nome fictício, Joana Ribeiro da Silva. Nos seus atendimentos, use sempre o nome real da assistida.",
-      "acao": {
-        "tipo": "digitar",
-        "seletor": "input[name='nome_completo']",
-        "texto": "Joana Ribeiro da Silva"
-      }
+      "narracao": "O único campo exigido para salvar é o Nome Completo. Isso é proposital. No acolhimento quase nunca há tempo, nem clima, para levantar todos os dados de uma vez. Cadastre com o que você tem e complete nos próximos encontros.",
+      "acao": { "tipo": "digitar", "seletor": "[placeholder=\"Maria Silva\"]", "texto": "Joana Ribeiro da Silva" },
+      "foco": { "seletor": "[placeholder=\"Maria Silva\"]", "zoom": 1.9 }
     },
     {
       "id": "c08",
-      "narracao": "Agora o CPF. Ele não é obrigatório, mas é o campo que evita o problema mais caro do sistema: a mesma mulher cadastrada duas vezes, com o histórico dela partido ao meio.",
-      "acao": { "tipo": "digitar", "seletor": "input[name='cpf']", "texto": "52998224725" }
+      "narracao": "Se você tiver o CPF, digite também. Assim que os onze dígitos estiverem completos, o sistema consulta a base da rede municipal. Se encontrar a pessoa, ele mesmo preenche o nome, a data de nascimento e o telefone. Confira o que veio antes de seguir: dado preenchido sozinho também pode estar desatualizado.",
+      "acao": { "tipo": "digitar", "seletor": "[placeholder=\"000.000.000-00\"]", "texto": "12345678909" },
+      "foco": { "seletor": "[placeholder=\"000.000.000-00\"]", "zoom": 1.9 }
     },
     {
       "id": "c09",
-      "narracao": "Ao informar o CPF, o sistema verifica sozinho se já existe alguém com aquele número. Se existir, ele avisa antes de você criar a duplicata.",
-      "acao": { "tipo": "esperar", "ms": 2500 }
+      "narracao": "As outras abas ficam para depois. Endereço e Contato guarda o telefone e o bairro, que são os dados que mais fazem falta. No próximo vídeo você vai ver por quê.",
+      "acao": { "tipo": "clicar", "seletor": "role=tab[name=\"Endereço e Contato\"]" },
+      "foco": { "seletor": "role=tab[name=\"Endereço e Contato\"]", "zoom": 1.8 }
     },
     {
       "id": "c10",
-      "narracao": "Com o nome preenchido, já dá para salvar. Clique em Cadastrar.",
-      "acao": { "tipo": "clicar", "seletor": "button[type='submit']:has-text('Cadastrar')" }
+      "narracao": "Para salvar, clique em Cadastrar.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "role=button[name=\"Cadastrar\"]", "zoom": 2.0 }
     },
     {
       "id": "c11",
-      "narracao": "Repare no que aparece: o sistema mostra o quanto a ficha está completa e lista o que falta. Não é cobrança — é um lembrete do que ainda pode ser levantado nos próximos encontros. O próximo vídeo explica esse resumo em detalhe.",
-      "acao": { "tipo": "esperar", "ms": 3000 }
+      "narracao": "O cadastro foi realizado. A janela que aparece mostra o quanto a ficha está completa e o que ainda falta. Por enquanto, feche. Ela é o assunto do próximo vídeo.",
+      "acao": { "tipo": "clicar", "seletor": "role=button[name=\"Cadastrar\"]" },
+      "foco": { "seletor": "role=dialog", "zoom": 1.4 }
     },
     {
       "id": "c12",
-      "narracao": "Feche o aviso e veja: Joana já está na listagem. Agora é sua vez. Cadastre uma beneficiária fictícia com nome e CPF, e confirme que ela aparece na lista.",
-      "acao": { "tipo": "clicar", "seletor": "button:has-text('Fechar')" }
+      "narracao": "Pronto. Joana Ribeiro da Silva já aparece na lista, e a partir de agora tudo o que a Secretaria fizer com ela vai se ligar a este cadastro.",
+      "acao": [
+        { "tipo": "tecla", "tecla": "Escape" },
+        { "tipo": "digitar", "seletor": "[placeholder=\"Buscar por nome, CPF ou telefone...\"]", "texto": "Joana Ribeiro" }
+      ],
+      "foco": { "seletor": "role=table", "zoom": 1.3 }
+    },
+    {
+      "id": "c13",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sua vez",
+        "linhas": [
+          "Procure Joana Ribeiro da Silva na lista",
+          "Se ela não existir, cadastre com nome e CPF",
+          "Confira que ela aparece na listagem"
+        ]
+      },
+      "narracao": "Agora é a sua vez. Procure Joana Ribeiro da Silva na lista. Se ela não existir, cadastre com o nome completo e o CPF, e confira que ela aparece na listagem. Lembre: procurar antes de cadastrar é o que mantém uma ficha só para cada mulher."
     }
   ]
 }

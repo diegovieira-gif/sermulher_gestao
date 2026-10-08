@@ -1,0 +1,86 @@
+{
+  "id": "8.4",
+  "modulo": "8 — Coordenação",
+  "titulo": "Controle de acesso por perfil",
+  "publico": "Coordenação e administradores",
+  "pre_requisitos": ["0.1"],
+  "objetivo": "Ao final, a participante configura as Permissões de Menu e o Acesso a Demandas de um perfil e reconhece as duas armadilhas: perfil sem política e perfil sem menu configurado.",
+  "tarefa_final": "Libere dois módulos para um perfil de teste, salve e entre com uma conta desse perfil para conferir o menu.",
+  "duracao_alvo_seg": 150,
+  "elenco": ["equipe"],
+
+  "cenas": [
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "Controle de acesso", "subtitulo": "Módulo oito · Coordenação" },
+      "narracao": "Lá no primeiro vídeo, você viu que cada pessoa enxerga uma parte diferente do sistema. Neste vídeo você vai ver de onde isso vem e como configurar. É uma tarefa de administração, e um erro aqui expõe dados ou esconde trabalho."
+    },
+    {
+      "id": "c02",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Perfil",
+        "linhas": ["Cada usuária pertence a um perfil", "Atendimento, Psicossocial, Jurídico, Gabinete, CRAM…", "O perfil é atribuído no Directus, pela equipe de TI"]
+      },
+      "narracao": "Tudo gira em torno do perfil. Cada usuária pertence a um, como Atendimento, Psicossocial, Jurídico ou CRAM. Criar perfis e atribuí-los às pessoas é feito pela equipe de TI. Aqui no SIGMA você decide o que cada perfil enxerga."
+    },
+    {
+      "id": "c03",
+      "narracao": "Em Configurações, na seção Acesso e Segurança, abra Permissões de Menu. Escolha o perfil na lista.",
+      "acao": [
+        { "tipo": "navegar", "url": "/configuracoes" },
+        { "tipo": "clicar", "seletor": "text=Permissões de Menu" }
+      ],
+      "foco": { "seletor": "text=Permissões de Menu", "zoom": 1.8 }
+    },
+    {
+      "id": "c04",
+      "narracao": "Marque os módulos que o perfil pode ver, ou ligue Acesso total. Clique em Salvar permissões. A mudança vale a partir do próximo carregamento de página das pessoas daquele perfil.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "role=button[name=\"Salvar permissões\"]", "zoom": 2.0 }
+    },
+    {
+      "id": "c05",
+      "narracao": "Ao lado fica Acesso a Demandas: quais tipos de demanda o perfil pode tratar na Gestão de Demandas. O Jurídico vê as demandas jurídicas, por exemplo. Marque os tipos, ou Acesso a todos os tipos, e salve.",
+      "acao": { "tipo": "clicar", "seletor": "text=Acesso a Demandas" },
+      "foco": { "seletor": "text=Acesso a todos os tipos", "zoom": 1.8 }
+    },
+    {
+      "id": "c06",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Armadilha um: perfil sem política",
+        "linhas": ["Todo perfil comum precisa da política App Padrão, no Directus", "Sem ela, a pessoa entra e vê as telas vazias"]
+      },
+      "narracao": "Agora, as duas armadilhas. A primeira: todo perfil que não é de administração precisa da política App Padrão, configurada no Directus. Sem ela, a pessoa entra no sistema e encontra todas as telas vazias. Se alguém relatar isso, é a primeira coisa a conferir com a TI."
+    },
+    {
+      "id": "c07",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Armadilha dois: perfil sem menu",
+        "linhas": ["Perfil que nunca teve o menu configurado vê TODOS os módulos", "Configure o menu antes de liberar as primeiras contas"]
+      },
+      "narracao": "A segunda é o contrário, e é mais perigosa. Um perfil que nunca teve as Permissões de Menu salvas enxerga todos os módulos. Por isso, ao criar um perfil novo, configure o menu dele antes de liberar as primeiras contas."
+    },
+    {
+      "id": "c08",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "O bloqueio é de verdade",
+        "linhas": ["Quem acessa um módulo fora do perfil vê: Acesso não permitido", "Vale também para links diretos e para o servidor"]
+      },
+      "narracao": "E o bloqueio não é só esconder o menu. Quem tenta abrir um módulo fora do seu perfil, mesmo por um link direto, vê a página Acesso não permitido, com orientação para pedir a liberação. O servidor também recusa as operações daquele módulo."
+    },
+    {
+      "id": "c09",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sua vez",
+        "linhas": ["Libere dois módulos para um perfil de teste", "Salve as permissões", "Entre com uma conta do perfil e confira o menu"]
+      },
+      "narracao": "Agora é com você. Libere dois módulos para um perfil de teste, salve, e entre com uma conta desse perfil para conferir que o menu mostra só aqueles módulos."
+    }
+  ]
+}

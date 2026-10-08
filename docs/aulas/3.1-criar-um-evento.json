@@ -1,0 +1,86 @@
+{
+  "id": "3.1",
+  "modulo": "3 — Agenda Institucional",
+  "titulo": "Criar um evento com data e horário",
+  "publico": "Quem organiza ações, eventos e campanhas",
+  "pre_requisitos": ["0.2"],
+  "objetivo": "Ao final, a participante cria um evento com data, horário e local, e lê a coluna Período da lista.",
+  "tarefa_final": "Crie a Roda de Conversa — Autonomia Financeira para a semana que vem, das catorze às dezesseis horas, no Auditório da Secretaria.",
+  "duracao_alvo_seg": 120,
+  "elenco": ["roda", "agosto"],
+
+  "cenas": [
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "Criar um evento", "subtitulo": "Módulo três · Agenda Institucional" },
+      "narracao": "A Agenda Institucional reúne as ações da Secretaria: palestras, rodas de conversa, reuniões, campanhas. Neste vídeo você vai criar um evento com dia, hora e local."
+    },
+    {
+      "id": "c02",
+      "narracao": "No menu, abra Agenda Institucional e clique em Novo Evento.",
+      "acao": { "tipo": "navegar", "url": "/eventos" },
+      "foco": { "seletor": "role=button[name=\"Novo Evento\"]", "zoom": 2.0 }
+    },
+    {
+      "id": "c03",
+      "narracao": "Dê ao evento um nome que qualquer pessoa entenda fora do contexto. Roda de Conversa sobre Autonomia Financeira diz muito mais do que Roda de outubro.",
+      "acao": [
+        { "tipo": "clicar", "seletor": "role=button[name=\"Novo Evento\"]" },
+        { "tipo": "digitar", "seletor": "rotulo=Nome do Evento", "texto": "Roda de Conversa — Autonomia Financeira" }
+      ],
+      "foco": { "seletor": "rotulo=Nome do Evento", "zoom": 1.8 }
+    },
+    {
+      "id": "c04",
+      "narracao": "Escolha o tipo de evento e a categoria. As opções vêm das configurações do sistema, e são elas que permitem filtrar e contar os eventos depois.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "rotulo=Tipo de Evento", "zoom": 1.7 }
+    },
+    {
+      "id": "c05",
+      "narracao": "Agora o mais importante: Início e Fim aceitam data e hora. Informe o horário de verdade da ação. É ele que aparece no calendário e na lista, e é por ele que a equipe vai se organizar.",
+      "acao": [
+        { "tipo": "digitar", "seletor": "rotulo=Início", "texto": "{proxima_semana}T14:00" },
+        { "tipo": "digitar", "seletor": "rotulo=Fim (Término)", "texto": "{proxima_semana}T16:00" }
+      ],
+      "foco": { "seletor": "rotulo=Início", "zoom": 1.8 }
+    },
+    {
+      "id": "c06",
+      "narracao": "Um detalhe: se o horário ficar em meia-noite, o sistema entende que a hora não foi informada e mostra só a data. Então, sempre que souber, preencha a hora.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "rotulo=Fim (Término)", "zoom": 1.8 }
+    },
+    {
+      "id": "c07",
+      "narracao": "Por fim, o local e a descrição. A descrição aparece na agenda impressa, então vale escrever ali o que alguém de fora precisa saber.",
+      "acao": { "tipo": "digitar", "seletor": "rotulo=Local", "texto": "Auditório da Secretaria" },
+      "foco": { "seletor": "rotulo=Descrição", "zoom": 1.7 }
+    },
+    {
+      "id": "c08",
+      "narracao": "Clique em Salvar Evento.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "role=button[name=\"Salvar Evento\"]", "zoom": 2.0 }
+    },
+    {
+      "id": "c09",
+      "narracao": "Na aba Gestão de Eventos, a coluna Período resume as datas. Evento de um dia só, com horário, aparece como a data, de tal hora às tal hora. Evento de vários dias aparece de uma data a outra.",
+      "acao": [
+        { "tipo": "clicar", "seletor": "role=button[name=\"Salvar Evento\"]" },
+        { "tipo": "clicar", "seletor": "role=tab[name=\"Gestão de Eventos (Lista)\"]" }
+      ],
+      "foco": { "seletor": "role=table", "zoom": 1.4 }
+    },
+    {
+      "id": "c10",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sua vez",
+        "linhas": ["Crie a Roda de Conversa — Autonomia Financeira", "Semana que vem, das catorze às dezesseis horas", "Auditório da Secretaria", "Confira a coluna Período"]
+      },
+      "narracao": "Agora é com você. Crie a Roda de Conversa sobre Autonomia Financeira para a semana que vem, das catorze às dezesseis horas, no Auditório da Secretaria. Depois, confira como ela aparece na coluna Período."
+    }
+  ]
+}

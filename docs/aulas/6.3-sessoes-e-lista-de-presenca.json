@@ -1,0 +1,75 @@
+{
+  "id": "6.3",
+  "modulo": "6 — Sala Azul",
+  "titulo": "Sessões e lista de presença",
+  "publico": "Equipe da Sala Azul",
+  "pre_requisitos": ["6.2"],
+  "objetivo": "Ao final, a participante cria sessões com data e tema e lança a lista de presença de cada uma.",
+  "tarefa_final": "Crie duas sessões no ciclo Grupo Reflexivo 2026.2 e lance a presença das duas.",
+  "duracao_alvo_seg": 120,
+  "elenco": ["sala_azul", "joao", "pedro"],
+
+  "cenas": [
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "Sessões e presença", "subtitulo": "Módulo seis · Sala Azul" },
+      "narracao": "O ciclo tem participantes. Agora vêm os encontros. Neste vídeo você vai criar as sessões e lançar a presença de cada uma, que é o que comprova o cumprimento perante a Justiça."
+    },
+    {
+      "id": "c02",
+      "narracao": "Na tela do ciclo, abra a aba Sessões e clique em Nova Sessão.",
+      "acao": [
+        { "tipo": "navegar", "url": "/sala-azul/ciclos" },
+        { "tipo": "clicar", "seletor": "[title=\"Gerenciar Participantes\"]" },
+        { "tipo": "clicar", "seletor": "role=tab[name=\"Sessões\"]" }
+      ],
+      "foco": { "seletor": "role=button[name=\"Nova Sessão\"]", "zoom": 2.0 }
+    },
+    {
+      "id": "c03",
+      "narracao": "Informe a data e o tema da sessão, como Masculinidades ou Violência Patrimonial. O campo Relatório guarda as observações da equipe sobre o encontro.",
+      "acao": [
+        { "tipo": "clicar", "seletor": "role=button[name=\"Nova Sessão\"]" },
+        { "tipo": "digitar", "seletor": "[placeholder=\"Ex: Lei Maria da Penha\"]", "texto": "Masculinidades" }
+      ],
+      "foco": { "seletor": "role=dialog", "zoom": 1.4 }
+    },
+    {
+      "id": "c04",
+      "narracao": "Salve. A sessão entra na lista do ciclo e aparece no calendário da Agenda, em azul.",
+      "acao": { "tipo": "clicar", "seletor": "role=button[name=\"Salvar\"]" },
+      "foco": null
+    },
+    {
+      "id": "c05",
+      "narracao": "Depois do encontro, clique em Lista de presença, na linha da sessão. Marque quem esteve presente e clique em Salvar Chamada.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "[title=\"Lista de presença\"]", "zoom": 2.2 }
+    },
+    {
+      "id": "c06",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "A presença vai para o Judiciário",
+        "linhas": ["O relatório individual conta sessão por sessão", "Chamada não lançada aparece como ausência", "Lance no dia do encontro"]
+      },
+      "narracao": "Este registro tem peso. O relatório individual de acompanhamento, que vai ao Judiciário, lista sessão por sessão, com presente ou ausente. Uma chamada esquecida aparece lá como ausência. Por isso, lance a presença no próprio dia do encontro."
+    },
+    {
+      "id": "c07",
+      "narracao": "Errou a data ou o tema? Use Editar sessão. Excluir sessão apaga o encontro e a chamada dele, então use só quando a sessão não aconteceu.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "[title=\"Editar sessão\"]", "zoom": 2.2 }
+    },
+    {
+      "id": "c08",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sua vez",
+        "linhas": ["Crie duas sessões no ciclo", "Lance a lista de presença de cada uma"]
+      },
+      "narracao": "Agora é com você. Crie duas sessões no ciclo Grupo Reflexivo dois mil e vinte e seis ponto dois e lance a lista de presença das duas."
+    }
+  ]
+}

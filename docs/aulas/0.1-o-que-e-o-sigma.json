@@ -1,0 +1,83 @@
+{
+  "id": "0.1",
+  "modulo": "0 — Antes de começar",
+  "titulo": "O que é o SIGMA e o que ele resolve",
+  "publico": "Todas as pessoas da Secretaria",
+  "pre_requisitos": [],
+  "objetivo": "Ao final, a participante entende para que serve o SIGMA, por que o cadastro da beneficiária é único e por que cada pessoa vê uma parte diferente do sistema.",
+  "tarefa_final": "Nenhuma. É o único vídeo expositivo da trilha.",
+  "duracao_alvo_seg": 180,
+  "elenco": [],
+
+  "cenas": [
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "O que é o SIGMA", "subtitulo": "Módulo zero · Antes de começar" },
+      "narracao": "Bem-vinda ao SIGMA, o sistema de gestão da Secretaria Municipal do Respeito às Políticas para as Mulheres. Neste primeiro vídeo você não vai clicar em nada. A ideia é entender o que o sistema resolve, antes de aprender a usá-lo."
+    },
+    {
+      "id": "c02",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "O problema",
+        "linhas": ["Um caderno no acolhimento", "Uma planilha na Escola", "Uma lista na Sala Azul", "E a memória de quem atendeu"]
+      },
+      "narracao": "Pense em como era antes. A mesma mulher passava pelo acolhimento, fazia um curso na Escola da Mulher, participava de uma ação da Agenda. E cada setor anotava num lugar diferente: um caderno, uma planilha, a memória de quem atendeu. Ninguém enxergava a história inteira dela."
+    },
+    {
+      "id": "c03",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Um cadastro, uma história",
+        "linhas": ["A beneficiária existe uma vez só", "Atendimentos, cursos, eventos e benefícios se ligam a ela"]
+      },
+      "narracao": "O SIGMA resolve isso com uma regra simples: cada mulher tem um cadastro só. Atendimentos, cursos, participação em eventos e benefícios entregues se ligam a esse cadastro. Por isso, quando você abre a ficha de uma beneficiária, vê tudo o que a Secretaria já fez com ela, venha de que setor vier."
+    },
+    {
+      "id": "c04",
+      "narracao": "Ao entrar, a primeira tela é o Dashboard: um resumo do mês, com atendimentos, eventos próximos e demandas em aberto.",
+      "acao": { "tipo": "navegar", "url": "/dashboard" },
+      "foco": null
+    },
+    {
+      "id": "c05",
+      "narracao": "No menu ficam os módulos. Gestão de Mulheres, com o cadastro das beneficiárias e os atendimentos. Gestão de Demandas, onde os casos passam de um setor para outro. A Agenda Institucional, com eventos e campanhas.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "role=button[name=\"Gestão de Mulheres\"]", "zoom": 1.5 }
+    },
+    {
+      "id": "c06",
+      "narracao": "E os módulos de cada equipe: o CRAM, a Escola da Mulher, a Sala Azul, a Comunicação e o App Amar. Por fim, os Relatórios, que juntam os números de todos eles.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "role=button[name=\"Escola da Mulher\"]", "zoom": 1.5 }
+    },
+    {
+      "id": "c07",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Cada pessoa vê o que precisa",
+        "linhas": ["O menu depende do seu perfil", "O que não aparece para você está protegido, não quebrado"]
+      },
+      "narracao": "Talvez o seu menu seja menor do que este. É de propósito. O que cada pessoa vê depende do perfil dela: a equipe do CRAM vê o CRAM, a Escola vê a Escola. Se um módulo não aparece para você, ele não está quebrado. Está protegido."
+    },
+    {
+      "id": "c08",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sigilo",
+        "linhas": ["Aqui estão dados de mulheres em situação de violência", "Não fotografe a tela", "Não compartilhe o seu acesso", "Não comente casos fora do serviço"]
+      },
+      "narracao": "E o mais importante. O SIGMA guarda dados de mulheres em situação de violência. Um nome, um endereço ou um telefone fora do lugar pode colocar uma pessoa em risco. Não fotografe a tela, não empreste o seu acesso e não comente casos fora do serviço. O sigilo é parte do atendimento."
+    },
+    {
+      "id": "c09",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Próximo vídeo",
+        "linhas": ["Entrar, se localizar e sair"]
+      },
+      "narracao": "No próximo vídeo você vai entrar no sistema, se localizar no menu e escolher como prefere ver a tela. Até lá."
+    }
+  ]
+}

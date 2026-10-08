@@ -1,0 +1,84 @@
+{
+  "id": "0.3",
+  "modulo": "0 — Antes de começar",
+  "titulo": "Meu Perfil e os avisos do sistema",
+  "publico": "Todas as pessoas da Secretaria",
+  "pre_requisitos": ["0.2"],
+  "objetivo": "Ao final, a participante troca a própria senha, sabe onde chegam os avisos do sistema e decide se quer recebê-los também por WhatsApp.",
+  "tarefa_final": "Troque a sua senha em Meu Perfil e decida se quer receber os avisos por WhatsApp.",
+  "duracao_alvo_seg": 150,
+  "elenco": ["usuaria_demo"],
+
+  "cenas": [
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "Meu Perfil e os avisos", "subtitulo": "Módulo zero · Antes de começar" },
+      "narracao": "Neste vídeo você vai conhecer Meu Perfil, trocar a sua senha e entender como o sistema avisa você quando algo muda."
+    },
+    {
+      "id": "c02",
+      "narracao": "Clique no seu nome e escolha Meu Perfil.",
+      "acao": [
+        { "tipo": "navegar", "url": "/dashboard" },
+        { "tipo": "clicar", "seletor": "[data-testid=\"menu-usuario\"]" }
+      ],
+      "foco": { "seletor": "text=Meu Perfil", "zoom": 1.9 }
+    },
+    {
+      "id": "c03",
+      "narracao": "A aba Dados mostra o seu nome, o e-mail e o perfil de acesso. É o perfil que define quais módulos aparecem no seu menu.",
+      "acao": { "tipo": "clicar", "seletor": "text=Meu Perfil" },
+      "foco": { "seletor": "role=tab[name=\"Dados\"]", "zoom": 1.6 }
+    },
+    {
+      "id": "c04",
+      "narracao": "A aba Atividade lista o que você fez no sistema: o que criou, o que alterou e o que excluiu. Serve para conferir o próprio trabalho, por exemplo, se aquele cadastro de ontem foi mesmo salvo.",
+      "acao": { "tipo": "clicar", "seletor": "role=tab[name=\"Atividade\"]" },
+      "foco": { "seletor": "text=Minhas operações no sistema", "zoom": 1.6 }
+    },
+    {
+      "id": "c05",
+      "narracao": "Em Segurança você troca a senha. Informe a senha atual, depois a nova senha duas vezes. Ela precisa ter pelo menos oito caracteres. A senha é a mesma do login: ao trocar aqui, é a nova que vale para entrar.",
+      "acao": { "tipo": "clicar", "seletor": "role=tab[name=\"Segurança\"]" },
+      "foco": { "seletor": "rotulo=Senha atual", "zoom": 1.6 }
+    },
+    {
+      "id": "c06",
+      "narracao": "Agora, os avisos. Quando você é escalada para um evento, ou quando um evento seu muda de data ou de local, o sistema avisa você. O aviso chega neste sino. O número em vermelho mostra quantos você ainda não leu. Clique num aviso para ir direto ao assunto, e ele fica marcado como lido.",
+      "acao": { "tipo": "clicar", "seletor": "button[aria-label^=\"Notificações\"]" },
+      "foco": { "seletor": "text=Notificações", "zoom": 1.6 }
+    },
+    {
+      "id": "c07",
+      "narracao": "Os mesmos avisos chegam também no seu e-mail institucional. Isso não precisa de configuração.",
+      "acao": { "tipo": "tecla", "tecla": "Escape" },
+      "foco": null
+    },
+    {
+      "id": "c08",
+      "narracao": "Já o WhatsApp depende de você. Ele é um aparelho pessoal, então o sistema só envia mensagem para quem autorizou. Em Meu Perfil, abra a aba Notificações.",
+      "acao": [
+        { "tipo": "clicar", "seletor": "[data-testid=\"menu-usuario\"]" },
+        { "tipo": "clicar", "seletor": "text=Meu Perfil" },
+        { "tipo": "clicar", "seletor": "role=tab[name=\"Notificações\"]" }
+      ],
+      "foco": { "seletor": "text=Como você quer ser avisada", "zoom": 1.6 }
+    },
+    {
+      "id": "c09",
+      "narracao": "Ligue Receber também por WhatsApp, informe o seu celular com DDD e clique em Salvar preferências. Para deixar de receber, é só desligar e salvar de novo. A decisão é sempre sua.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "rotulo=Receber também por WhatsApp", "zoom": 1.8 }
+    },
+    {
+      "id": "c10",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sua vez",
+        "linhas": ["Troque a sua senha em Meu Perfil", "Decida se quer avisos por WhatsApp"]
+      },
+      "narracao": "Agora é com você. Troque a sua senha em Meu Perfil e decida se quer receber os avisos também por WhatsApp. Com isso, você está pronta para o módulo um, sobre as beneficiárias."
+    }
+  ]
+}

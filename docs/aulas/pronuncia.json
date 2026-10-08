@@ -1,0 +1,23 @@
+{
+  "_como_usar": "Aplicado à narração ANTES de enviar à voz sintética, palavra inteira e respeitando maiúsculas. O roteiro continua legível ('o CPF'), e a voz recebe a forma falada ('o cê pê éfe'). Acrescente aqui toda sigla nova; a conferência dos roteiros acusa sigla em maiúsculas que não esteja no glossário.",
+
+  "SIGMA": "Sigma",
+  "CRAM": "Cram",
+  "CPF": "cê pê éfe",
+  "RG": "erre gê",
+  "SUS": "sus",
+  "SUAS": "Suas",
+  "RMA": "erre eme á",
+  "PIA": "pê i á",
+  "UBS": "u bê esse",
+  "NIS": "nis",
+  "CEP": "cep",
+  "CSV": "cê esse vê",
+  "PDF": "pê dê éfe",
+  "DDD": "dê dê dê",
+  "LGPD": "ele gê pê dê",
+  "CRAS": "Cras",
+  "CREAS": "Creas",
+  "BPC": "bê pê cê",
+  "TI": "tê í"
+}

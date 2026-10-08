@@ -1,0 +1,71 @@
+{
+  "id": "6.1",
+  "modulo": "6 — Sala Azul",
+  "titulo": "Cadastrar um participante (infrator)",
+  "publico": "Equipe da Sala Azul",
+  "pre_requisitos": ["0.2"],
+  "objetivo": "Ao final, a participante cadastra um autor de violência com processo, nível de risco e status legal, e lê o alerta de risco do painel.",
+  "tarefa_final": "Cadastre João Exemplo Santos com o número do processo, o nível de risco e o status legal.",
+  "duracao_alvo_seg": 120,
+  "elenco": ["joao", "pedro"],
+
+  "cenas": [
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "A Sala Azul", "subtitulo": "Módulo seis · Sala Azul" },
+      "narracao": "Este módulo é para a equipe da Sala Azul, que acompanha homens autores de violência nos grupos reflexivos previstos na Lei Maria da Penha. Neste vídeo você vai cadastrar um participante."
+    },
+    {
+      "id": "c02",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Cadastros que nunca se misturam",
+        "linhas": ["Beneficiárias: as mulheres atendidas", "Infratores: os autores acompanhados na Sala Azul", "São bases separadas, de propósito"]
+      },
+      "narracao": "Atenção a um ponto: aqui o cadastro é de autores de violência, e não de beneficiárias. São duas bases separadas, de propósito. Nunca cadastre um autor como beneficiária, nem procure uma mulher atendida aqui."
+    },
+    {
+      "id": "c03",
+      "narracao": "O Painel Sala Azul resume os ciclos ativos, o total de participantes e o Alerta de Risco, que conta quantos estão em nível alto ou crítico. É o primeiro número a olhar.",
+      "acao": { "tipo": "navegar", "url": "/sala-azul" },
+      "foco": { "seletor": "text=Alerta de Risco", "zoom": 1.8 }
+    },
+    {
+      "id": "c04",
+      "narracao": "No menu da Sala Azul, abra Infratores e clique em Novo Infrator.",
+      "acao": { "tipo": "navegar", "url": "/sala-azul/infratores" },
+      "foco": { "seletor": "role=button[name=\"Novo Infrator\"]", "zoom": 2.0 }
+    },
+    {
+      "id": "c05",
+      "narracao": "Informe o nome completo e o CPF, só com números. O número do processo é o que liga este cadastro à determinação judicial, então copie com cuidado.",
+      "acao": [
+        { "tipo": "clicar", "seletor": "role=button[name=\"Novo Infrator\"]" },
+        { "tipo": "digitar", "seletor": "[placeholder=\"Nome do infrator\"]", "texto": "João Exemplo Santos" }
+      ],
+      "foco": { "seletor": "role=dialog", "zoom": 1.4 }
+    },
+    {
+      "id": "c06",
+      "narracao": "O nível de risco e o status legal são obrigatórios. O nível de risco alimenta o alerta do painel, e o status legal mostra em que pé está a situação dele na Justiça. Atualize os dois sempre que mudarem.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "text=Nível de Risco *", "zoom": 1.8 }
+    },
+    {
+      "id": "c07",
+      "narracao": "Clique em Cadastrar. Na lista, a busca encontra o participante pelo nome, pelo CPF ou pelo número do processo, e Ver Detalhes abre a ficha dele, com o histórico de ciclos.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "role=button[name=\"Cadastrar\"]", "zoom": 2.0 }
+    },
+    {
+      "id": "c08",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sua vez",
+        "linhas": ["Cadastre João Exemplo Santos", "Informe processo, nível de risco e status legal"]
+      },
+      "narracao": "Agora é com você. Cadastre João Exemplo Santos com o número do processo, o nível de risco e o status legal."
+    }
+  ]
+}

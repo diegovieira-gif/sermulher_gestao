@@ -1,112 +1,160 @@
-# Vídeo-aulas — pipeline de produção
+# Vídeo-aulas — roteiros e produção
 
-Automatiza a gravação das aulas de [`../trilha-videos.md`](../trilha-videos.md).
-Cada aula é um JSON de cenas que serve a dois propósitos ao mesmo tempo:
-roteiro de narração e script de navegação. Um arquivo só — não há dois textos
-para manter em sincronia.
+Os roteiros das aulas de [`../trilha-videos.md`](../trilha-videos.md). Cada aula é
+um JSON de cenas que serve a dois propósitos ao mesmo tempo: **texto da
+narração** e **instrução de captura de tela**. Um arquivo só — não há dois
+textos para manter em sincronia.
 
-## Como funciona
+## Pipeline
+
+Decidido em 10/2026, a partir do que o `curso_inteligente` já aprendeu fazendo:
 
 ```
-plano.json  (cenas: narração + ação)
+roteiro.json  (cenas: narração + ação na tela + foco do zoom)
      │
-     ├─ 1. gerar-narracao.mjs → audio/<aula>/c01.mp3 … + tempos.json
-     │                          (TTS da OpenAI, mede a duração real)
-     │
-     ├─ 2. gravar-aula.mjs    → video/<aula>.webm
-     │                          (Playwright; cada cena dura o tempo do seu áudio)
-     │
-     └─ 3. ffmpeg             → <aula>.mp4 com áudio embutido
+     ├─ 0. conferir-roteiros.mjs   regras, âncoras no código, duração      ✅ pronto
+     ├─ 1. revisão                 equipe da Secretaria lê antes de gastar  ⏳ processo
+     ├─ 2. narração (Gemini TTS)   pedaços com cache + guardas de qualidade ⏳ a construir
+     ├─ 3. captura (Playwright)    uma imagem por cena + caixa do foco      ⏳ a construir
+     ├─ 4. cena em vídeo           zoom/pan sobre o foco, cartões em HTML   ⏳ a construir
+     └─ 5. montagem (ffmpeg)       cenas + narração + legendas → .mp4       ⏳ a construir
 ```
 
-**O áudio é o relógio.** A narração é gerada primeiro, a duração real de cada
-trecho é medida, e o Playwright ajusta o tempo de cada cena a ela. O caminho
-inverso — gravar solto e depois esticar o áudio — desmonta a cada mudança de
-tela.
+**Captura + zoom, e não gravação contínua.** A tela de cada cena é capturada
+como imagem, e o vídeo da cena é um zoom suave sobre o elemento citado. Corrigir
+uma frase refaz só aquela cena, em segundos — a tela não precisa "acompanhar" o
+áudio, e o zoom aponta exatamente o campo de que a fala trata. O ponto do zoom
+sai do **próprio elemento na página** (a caixa do seletor de `foco`), e não de
+coordenadas marcadas à mão.
 
-## Executar
+**A narração é a última coisa a ser gerada.** Só com o roteiro estável e
+revisado: narrar cedo deixa o áudio para trás a cada ajuste, e gerar tudo de uma
+vez deixa a voz homogênea entre as aulas.
+
+**Não confie no "ok" do TTS.** O `curso_inteligente` publicou aula com o modelo
+lendo a instrução de direção em voz alta, com trecho mudo e com frase repetida —
+todas com status "ok". As guardas a construir: silêncio longo no meio,
+leitura em dobro (ritmo muito abaixo do esperado), variação de altura da voz
+entre pedaços, e uma **escuta** (transcrever o áudio gerado e comparar com o
+texto).
+
+> Os scripts `gerar-narracao.mjs` (TTS da OpenAI) e `gravar-aula.mjs` (gravação
+> contínua) são do pipeline anterior e serão substituídos pelos passos 2 a 5.
+
+## Conferir os roteiros
 
 ```bash
-# 1. Ensaiar sem gastar API: estima durações pelo tamanho do texto
-node scripts/gerar-narracao.mjs docs/aulas/1.1-cadastrar-beneficiaria.json --estimar
-
-# 2. Gerar a narração de verdade
-OPENAI_API_KEY=... node scripts/gerar-narracao.mjs docs/aulas/1.1-cadastrar-beneficiaria.json
-
-# 3. Gravar (contra instância LOCAL — ver abaixo)
-BASE_URL=http://localhost:3000 \
-TEST_USER_EMAIL=demo@exemplo.local TEST_USER_PASSWORD=... \
-node scripts/gravar-aula.mjs docs/aulas/1.1-cadastrar-beneficiaria.json
-
-# 4. Juntar áudio e vídeo
-ffmpeg -i video/1.1-*.webm -i audio/1.1/narracao.mp3 -c:v libx264 -c:a aac 1.1.mp4
+node scripts/conferir-roteiros.mjs          # todas as aulas
+node scripts/conferir-roteiros.mjs 1.1 2.3  # só estas
 ```
 
-O passo 1 permite ensaiar a aula inteira — inclusive a gravação — sem chave da
-OpenAI. Use-o para ajustar o roteiro antes de gerar áudio.
+Roda sem servidor e sem API, e reprova (código 1) quando:
 
-## Grave contra instância local, nunca produção
+- falta campo obrigatório, o id se repete ou a aula não está na trilha;
+- um **texto citado num seletor não existe no código** (`src/`) nem no elenco —
+  seletor que não existe é cena que não captura;
+- uma rota de `navegar` não tem `page.tsx`;
+- a **narração tem algarismo** (o texto vai direto à voz: escreva por extenso);
+- a aula passa de seis minutos.
 
-Duas razões, e a segunda é a que importa de verdade:
+E avisa (sem reprovar) quando a fala ancora pela **posição** ("à direita",
+"no topo"), quando uma sigla não está em [`pronuncia.json`](pronuncia.json) e
+quando a duração foge do alvo.
 
-**O WAF bloqueia navegador automatizado.** Apontar para
-`sigma-sermulher.aracaju.se.gov.br` devolve *"Web Page Blocked — Attack ID"*
-com HTTP 500. O `curl` passa; o Chrome do Playwright não.
-
-**Dados reais não podem ser gravados.** O sistema guarda informação de mulheres
-em situação de violência. Um vídeo institucional com o nome verdadeiro de uma
-delas é um vazamento permanente e irreversível — não há como "despublicar" um
-arquivo que circulou. Use um ambiente de demonstração com dados fictícios e uma
-conta `demo@`, jamais a credencial de uma servidora.
-
-## Estrutura do plano de aula
+## Formato do roteiro
 
 ```json
 {
   "id": "1.1",
+  "modulo": "1 — Beneficiárias, o coração do sistema",
   "titulo": "Cadastrar uma beneficiária",
+  "publico": "Todas as profissionais que atendem",
+  "pre_requisitos": ["0.2"],
   "objetivo": "O que a participante saberá fazer ao final.",
-  "tarefa_final": "O que ela deve executar no sistema depois de assistir.",
-  "duracao_alvo_seg": 300,
-  "voz": { "modelo": "gpt-4o-mini-tts", "voz": "nova", "instrucao": "..." },
+  "tarefa_final": "O que ela executa no sistema depois de assistir.",
+  "duracao_alvo_seg": 180,
+  "elenco": ["joana"],
+  "sessao": "deslogada",
+  "pendencias": ["O que precisa ser resolvido antes de capturar."],
   "cenas": [
-    { "id": "c01", "narracao": "texto falado", "acao": { "tipo": "clicar", "seletor": "..." } }
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "…", "subtitulo": "…", "linhas": ["…"] },
+      "narracao": "Texto falado."
+    },
+    {
+      "id": "c02",
+      "narracao": "Texto falado enquanto a tela aparece.",
+      "acao": [{ "tipo": "navegar", "url": "/mulheres/beneficiarias" }],
+      "foco": { "seletor": "role=button[name=\"Nova Beneficiária\"]", "zoom": 2.0 }
+    }
   ]
 }
 ```
 
-### Tipos de ação
+| Campo | Significado |
+|---|---|
+| `tipo` | `tela` (padrão: captura da página) ou `cartao` (tela de texto gerada em HTML — abertura, conceito, "sua vez") |
+| `acao` | Uma ação ou uma lista, executadas **antes** da captura da cena |
+| `foco` | Elemento que o zoom enquadra; `null` mostra a tela inteira. `zoom` de 1 a 2,5 |
+| `elenco` | Chaves de [`elenco.json`](elenco.json) usadas na aula |
+| `sessao` | `"deslogada"` para começar sem login (só a aula 0.2) |
+| `pendencias` | Problemas do **sistema** que impedem a captura fiel. Aula com pendência não vai para a narração definitiva |
+
+### Ações
 
 | Tipo | Campos | Uso |
 |---|---|---|
-| `navegar` | `url` | Abre uma rota (relativa ao `BASE_URL`) |
-| `clicar` | `seletor` | Move o mouse até o elemento e clica |
-| `digitar` | `seletor`, `texto` | Digita caractere a caractere, visível |
-| `destacar` | `seletor` | Circunda o elemento e escurece o resto |
+| `navegar` | `url` | Abre uma rota (relativa à instância de demonstração) |
+| `clicar` | `seletor` | Clica no elemento |
+| `digitar` | `seletor`, `texto` | Preenche o campo. Em campos de data, `{proxima_semana}` é trocado pela data |
+| `selecionar` | `seletor`, `opcao` | Abre uma lista e escolhe a opção pelo texto |
+| `marcar` | `seletor` | Marca uma caixa de seleção |
 | `rolar` | `seletor` | Traz o elemento para a tela |
-| `esperar` | `ms` | Deixa a tela parada (para narração sobre o que já está visível) |
-| `nenhuma` | — | Só narração, sem mexer na tela |
+| `tecla` | `tecla` | Pressiona uma tecla (`Escape`, `Enter`) |
+| `nenhuma` | — | Só narração; a tela da cena anterior continua |
 
-### Detalhes que a gravação resolve por baixo
+### Seletores
 
-**Cursor.** O Playwright não desenha o ponteiro no vídeo. Sem tratamento, o
-espectador vê campos preenchendo sozinhos. Um cursor é injetado via
-`addInitScript`, segue as coordenadas reais e pulsa no clique.
+Sempre pelo que a pessoa **vê**, nunca por classe CSS ou posição:
 
-**Digitação.** `fill()` preencheria o campo instantaneamente; a aula usa
-`pressSequentially` para que se veja o que está sendo escrito.
+| Forma | Exemplo |
+|---|---|
+| Papel e nome | `role=button[name="Nova Beneficiária"]`, `role=tab[name="Eventos"]` |
+| Rótulo do campo | `rotulo=Email institucional` |
+| Texto visível | `text=Alerta de Risco` |
+| Placeholder, title, aria-label | `[placeholder="Buscar por título ou local..."]`, `[title="Equipe"]` |
+| Gancho de teste | `[data-testid="menu-usuario"]` — só quando o elemento não tem nome estável |
 
-**Cena que estoura.** Se a ação demora mais que o áudio, o script avisa no log
-com quantos segundos passou — sinal de que o texto daquela cena precisa crescer
-ou a ação precisa ser dividida.
+A senha da conta de demonstração nunca aparece no roteiro: use `{senha_demo}`,
+trocado na hora da captura pelo valor do `.env.local`.
 
-## Escrevendo uma aula nova
+## Arquivos de apoio
 
-1. Copie um plano existente e ajuste `id`, `titulo` e `cenas`.
-2. **Confira os seletores no código-fonte**, não de memória. Seletor errado é
-   vídeo que não grava.
-3. Rode com `--estimar` e veja se a duração cabe no alvo.
-4. Grave e assista antes de gerar o áudio definitivo.
+- [`elenco.json`](elenco.json) — os personagens fictícios de todas as aulas, com
+  CPFs artificiais e telefones de prefixo não atribuído. A instância de
+  demonstração é povoada com eles.
+- [`pronuncia.json`](pronuncia.json) — como a voz fala cada sigla.
+- [`config.json`](config.json) — voz, resolução, viewport e tema da captura;
+  uma configuração só para o curso inteiro.
 
-Use dados fictícios evidentes nos exemplos — nomes que ninguém confunda com
-pessoas reais.
+## Captura: só na instância de demonstração
+
+**Dados reais não podem ser gravados.** O sistema guarda informação de mulheres
+em situação de violência. Um vídeo com o nome verdadeiro de uma delas é um
+vazamento permanente e irreversível. A captura roda contra uma instância local,
+povoada com o elenco, com a conta `demo@`. A produção, além disso, fica atrás de
+um WAF que bloqueia navegador automatizado.
+
+## Pendências registradas nos roteiros
+
+| Aula | Pendência |
+|---|---|
+| 1.1 | Rótulo "Data de Nascimento \*" marca como obrigatório um campo que não é |
+| 1.1 | Confirmar se o banco impede CPF duplicado (o app não impede) |
+| 6.4 | Frequência da avaliação é digitada e pode divergir da lista de presença usada no relatório ao Judiciário |
+| 7.2 | Campanhas de WhatsApp não pedem autorização da beneficiária |
+| 7.2 | Configuração de Integração (credenciais) fica fora do vídeo |
+| 7.3 | Campos de UUID do App Amar ficam fora do vídeo |
+| 8.3 | Confirmar onde os dados do Observatório são exibidos |
