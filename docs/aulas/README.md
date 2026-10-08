@@ -17,7 +17,8 @@ roteiro.json  (cenas: narração + ação na tela + foco do zoom)
      ├─ 1. revisão                 equipe da Secretaria lê antes de gastar
      ├─ 2. aulas/narrar.mjs        voz ElevenLabs, um mp3 por cena + guardas
      ├─ 3. aulas/capturar.mjs      uma imagem por cena + caixa do foco
-     └─ 4. aulas/montar.mjs        zoom no foco, cartões, legendas → .mp4
+     ├─ 4. aulas/montar.mjs        zoom no foco, cartões, legendas → .mp4
+     └─ 5. aulas/publicar-curso.mjs aula aprovada → menu Sistema → Curso Sigma
 ```
 
 **Captura + zoom, e não gravação contínua.** A tela de cada cena é capturada
@@ -72,6 +73,23 @@ sessão do terminal, na hora de narrar (PowerShell: `$env:ELEVENLABS_API_KEY = "
 Tudo sai em `docs/aulas/saida/<aula>/` (fora do Git): o `.mp4`, as
 `legendas.srt` e a `conferencia.jpg` — miniaturas a cada cinco segundos, para
 revisar a aula inteira sem assistir. `--todas` no lugar do id roda o curso.
+
+## Publicar no Curso Sigma
+
+O SIGMA tem um player das aulas em **Sistema → Curso Sigma**, com o progresso
+de cada usuária (o que ela de fato assistiu, não até onde arrastou a barra) e,
+para administradoras, a aba **Progresso da equipe**. O vídeo e a capa (o
+cartão de abertura) ficam na pasta "Curso Sigma" da biblioteca do Directus.
+
+```bash
+node scripts/aulas/curso-esquema.mjs --aplicar          # uma vez: coleções e pasta
+node scripts/aulas/publicar-curso.mjs 1.3 1.4           # simula
+node scripts/aulas/publicar-curso.mjs 1.3 1.4 --aplicar # publica
+```
+
+**Só publique aula aprovada**: ela aparece na hora para todas as usuárias.
+Republicar a mesma aula troca o vídeo e mantém o progresso de quem já assistiu.
+Usa `DIRECTUS_API_URL` e `DIRECTUS_ADMIN_TOKEN_ARQUIVO` do `.env.local`.
 
 ## Conferir os roteiros
 

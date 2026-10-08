@@ -24,6 +24,11 @@ const directusUrl =
   "http://192.168.0.118";
 
 const directusToken = process.env.DIRECTUS_TOKEN || "";
+
+/** Endereço do Directus e token administrativo, para rotas que fazem streaming direto. */
+export function directusAdminConfig() {
+  return { url: directusUrl.replace(/\/$/, ""), token: directusToken };
+}
 const directusTimeoutMs = Number(
   process.env.NEXT_PUBLIC_DIRECTUS_FETCH_TIMEOUT_MS ||
     process.env.DIRECTUS_FETCH_TIMEOUT_MS ||
