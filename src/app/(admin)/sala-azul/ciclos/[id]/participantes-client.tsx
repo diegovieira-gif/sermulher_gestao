@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -78,7 +77,10 @@ interface Participante {
       nome: string;
     } | null;
   } | null;
+  // calculada pela lista de presença (actions.ts → src/lib/frequencia.ts)
   frequencia_percentual: number | null;
+  total_sessoes?: number;
+  presencas?: number;
   status_participacao: string | null;
   parecer_psicologico: string | null;
 }
@@ -170,7 +172,6 @@ export function ParticipantesClient({
   const [avaliacaoDialogOpen, setAvaliacaoDialogOpen] = useState(false);
   const [participanteEmAvaliacao, setParticipanteEmAvaliacao] =
     useState<Participante | null>(null);
-  const [frequenciaInput, setFrequenciaInput] = useState<string>("");
   const [statusInput, setStatusInput] = useState<string>("");
   const [parecerInput, setParecerInput] = useState<string>("");
   const [isSaving, startSaveTransition] = useTransition();
@@ -203,7 +204,6 @@ export function ParticipantesClient({
 
   const handleOpenAvaliacao = (participante: Participante) => {
     setParticipanteEmAvaliacao(participante);
-    setFrequenciaInput(String(participante.frequencia_percentual || 0));
     setStatusInput(participante.status_participacao || StatusParticipacao.CURSANDO);
     setParecerInput(participante.parecer_psicologico || "");
     setAvaliacaoDialogOpen(true);
@@ -214,11 +214,6 @@ export function ParticipantesClient({
 
     startSaveTransition(async () => {
       const updateData: any = {};
-
-      const frequencia = parseInt(frequenciaInput, 10);
-      if (!isNaN(frequencia) && frequencia >= 0 && frequencia <= 100) {
-        updateData.frequencia_percentual = frequencia;
-      }
 
       if (statusInput) {
         updateData.status_participacao = statusInput;
@@ -498,21 +493,20 @@ export function ParticipantesClient({
               Avaliar Participante - {participanteEmAvaliacao?.infrator?.nome_completo}
             </DialogTitle>
             <DialogDescription>
-              Atualize a frequência, status e parecer psicológico do participante
+              Registre o status e o parecer psicológico do participante
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="frequencia">Frequência Percentual (0-100%)</Label>
-              <Input
-                id="frequencia"
-                type="number"
-                min="0"
-                max="100"
-                value={frequenciaInput}
-                onChange={(e) => setFrequenciaInput(e.target.value)}
-                placeholder="Ex: 85"
-              />
+            <div className="grid gap-1" data-testid="frequencia-calculada">
+              <span className="text-sm font-medium">Frequência</span>
+              <p className="text-2xl font-semibold">
+                {participanteEmAvaliacao?.frequencia_percentual ?? 0}%
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {participanteEmAvaliacao?.presencas ?? 0} de{" "}
+                {participanteEmAvaliacao?.total_sessoes ?? 0} sessões, pela lista de
+                presença. É o mesmo valor do relatório individual.
+              </p>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="status">Status da Participação</Label>

@@ -9,7 +9,8 @@
 //   node scripts/aulas/narrar.mjs --todas         (curso inteiro)
 //   … --forcar                                    (regera mesmo o que não mudou)
 //
-// Credencial: ELEVENLABS_API_KEY no .env.local (fora do Git). Lida só quando
+// Credencial: ELEVENLABS_API_KEY na sessão do terminal — não é configuração do
+// sistema, não vai no .env.local nem no Coolify. Lida só quando
 // há narração de verdade — o modo --estimar roda sem ela.
 //
 // ┌─ O QUE APRENDEMOS COM OS OUTROS PROJETOS ────────────────────────────────┐
@@ -69,7 +70,7 @@ function conferirAudio(arquivo, texto) {
 async function falarEleven(texto, anterior, seguinte, destino) {
   const chave = process.env.ELEVENLABS_API_KEY;
   if (!chave) {
-    throw new Error("falta ELEVENLABS_API_KEY no .env.local (ou rode com --estimar para ensaiar sem custo)");
+    throw new Error("falta ELEVENLABS_API_KEY na sessão do terminal (ou rode com --estimar para ensaiar sem custo)");
   }
   const url = `https://api.elevenlabs.io/v1/text-to-speech/${voz.voz_id}?output_format=${voz.formato}`;
   const r = await fetch(url, {

@@ -9,7 +9,7 @@ import {
   type Beneficiaria,
   type BeneficiariaFormValues,
 } from "./schemas";
-import { saveBeneficiaria, findBeneficiariaByCPF } from "./actions";
+import { saveBeneficiaria, findBeneficiariaByCPF, verificarCpfCadastrado } from "./actions";
 import { CompletudeDialog } from "./completude-dialog";
 import type { ResumoCompletude } from "./completude";
 import {
@@ -179,6 +179,17 @@ export function BeneficiariaForm({
         setIsSearchingCPF(true);
         setLastSearchedCpf(cleanCpf);
         try {
+          // Antes da rede municipal: este CPF já tem ficha aqui? O salvamento
+          // recusa a duplicata; o aviso só evita preencher tudo à toa.
+          const existente = await verificarCpfCadastrado(cleanCpf);
+          if (existente.ficha) {
+            toast.warning(
+              `Este CPF já está na ficha de ${existente.ficha.nome_completo} (nº ${existente.ficha.id}). Abra essa ficha em vez de criar outra.`,
+              { duration: 10000 },
+            );
+            return;
+          }
+
           const res = await findBeneficiariaByCPF(cleanCpf);
           if (res.success && res.data) {
             const data = res.data;
@@ -526,7 +537,7 @@ export function BeneficiariaForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Data de Nascimento *
+                          Data de Nascimento
                         </FormLabel>
                         <FormControl>
                           <Input type="date" {...field} value={field.value || ""} />
@@ -748,7 +759,7 @@ export function BeneficiariaForm({
                       name="endereco.logradouro"
                       render={({ field }) => (
                         <FormItem className="md:col-span-3">
-                          <FormLabel>Logradouro *</FormLabel>
+                          <FormLabel>Logradouro</FormLabel>
                           <FormControl>
                             <Input placeholder="Rua das Flores" {...field} value={field.value || ""} />
                           </FormControl>
@@ -764,7 +775,7 @@ export function BeneficiariaForm({
                       name="endereco.numero"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Número *</FormLabel>
+                          <FormLabel>Número</FormLabel>
                           <FormControl>
                             <Input placeholder="123" {...field} value={field.value || ""} />
                           </FormControl>
@@ -790,7 +801,7 @@ export function BeneficiariaForm({
 
                         return (
                           <FormItem>
-                            <FormLabel>Bairro *</FormLabel>
+                            <FormLabel>Bairro</FormLabel>
                             <FormControl>
                               <Combobox
                                 options={bairroOptions}
@@ -817,7 +828,7 @@ export function BeneficiariaForm({
                       name="endereco.cidade"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Cidade *</FormLabel>
+                          <FormLabel>Cidade</FormLabel>
                           <FormControl>
                             <Input placeholder="Aracaju" {...field} value={field.value || ""} />
                           </FormControl>

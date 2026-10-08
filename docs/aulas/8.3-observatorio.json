@@ -10,7 +10,8 @@
   "elenco": [],
 
   "pendencias": [
-    "Confirmar com a coordenação onde os dados do Observatório são exibidos (os 'Dashboards' cadastrados apontam para URLs externas). A cena c02 afirma que alimentam painéis públicos; ajustar se não for o caso."
+    "CONFIRMADO onde aparece: as coleções obser_* alimentam o site público do Observatório, dados-sermulher.aracaju.se.gov.br (repositório sermulher_observatorio), que lê o Directus a cada acesso. A cena c02 já diz isso.",
+    "BLOQUEIA c03 e c04: o editor do SIGMA (observatorio/types.ts) grava campos que o site não lê. O site espera obser_periodos{nome_periodo, ordem, ativo}, obser_dashboards como o consolidado do mês (periodo_id, period_label e os números do CRAM) e as séries ligadas por dashboard_id; o SIGMA usa nome/status, titulo/url e serie_nome/periodo_id. Conferir o esquema real no Directus e alinhar o editor antes de gravar essas cenas."
   ],
 
   "cenas": [
@@ -22,7 +23,7 @@
     },
     {
       "id": "c02",
-      "narracao": "No menu, abra Observatório. Cada botão com nome é uma coleção de dados: Períodos, Dashboards, as séries do CRAM, da Ouvidoria e a Distribuição de Serviços. Esses dados alimentam os painéis do Observatório.",
+      "narracao": "No menu, abra Observatório. Cada botão com nome é uma coleção de dados: Períodos, Dashboards, as séries do CRAM, da Ouvidoria e a Distribuição de Serviços. Esses dados alimentam o site público do Observatório, em dados-sermulher.aracaju.se.gov.br, que qualquer pessoa pode abrir.",
       "acao": { "tipo": "navegar", "url": "/observatorio" },
       "foco": null
     },
@@ -46,9 +47,9 @@
       "tipo": "cartao",
       "cartao": {
         "titulo": "Lançado à mão, conferido duas vezes",
-        "linhas": ["Estes números não vêm de registro nenhum", "Confira com a fonte antes de salvar", "Um valor errado aparece no painel público"]
+        "linhas": ["Estes números não vêm de registro nenhum", "Confira com a fonte antes de salvar", "Um valor errado aparece no site público"]
       },
-      "narracao": "Como esses números são digitados, e não calculados, o cuidado é redobrado. Confira com a fonte antes de salvar. Um valor errado aqui aparece direto no painel, sem nenhum registro por trás para corrigi-lo."
+      "narracao": "Como esses números são digitados, e não calculados, o cuidado é redobrado. Confira com a fonte antes de salvar. Um valor errado aqui aparece direto no site público, sem nenhum registro por trás para corrigi-lo."
     },
     {
       "id": "c06",

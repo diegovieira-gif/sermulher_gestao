@@ -9,10 +9,7 @@
   "duracao_alvo_seg": 180,
   "elenco": ["joana"],
 
-  "pendencias": [
-    "Cinco rótulos têm asterisco de obrigatório sem ser: 'Data de Nascimento *' (Dados Pessoais) e 'Logradouro *', 'Número *', 'Bairro *', 'Cidade *' (Endereço e Contato) — o schema aceita todos vazios (beneficiarias/schemas.ts). Corrigir os rótulos antes de capturar, ou a tela contradiz a fala das cenas c07 e c09.",
-    "Confirmar no Directus se o campo cpf tem restrição de unicidade. A aula não promete bloqueio de duplicidade porque o app não o faz; se o banco fizer, a cena c05 pode mencioná-lo."
-  ],
+  "pendencias": [],
 
   "cenas": [
     {
@@ -62,7 +59,7 @@
     },
     {
       "id": "c08",
-      "narracao": "Se você tiver o CPF, digite também. Assim que os onze dígitos estiverem completos, o sistema consulta a base da rede municipal. Se encontrar a pessoa, ele mesmo preenche o nome, a data de nascimento e o telefone. Confira o que veio antes de seguir: dado preenchido sozinho também pode estar desatualizado.",
+      "narracao": "Se você tiver o CPF, digite também. Assim que os onze dígitos estiverem completos, o sistema consulta a base da rede municipal. Se encontrar a pessoa, ele mesmo preenche o nome, a data de nascimento e o telefone. Confira o que veio antes de seguir: dado preenchido sozinho também pode estar desatualizado. E se esse CPF já estiver em outra ficha, o sistema avisa e não deixa salvar a segunda.",
       "acao": { "tipo": "digitar", "seletor": "[placeholder=\"000.000.000-00\"]", "texto": "12345678909" },
       "foco": { "seletor": "[placeholder=\"000.000.000-00\"]", "zoom": 1.9 }
     },

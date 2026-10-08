@@ -23,6 +23,7 @@ import { calcularCompletude } from "./completude";
 import { assertAccess } from "@/lib/permissions";
 import { getDirectusAdmin } from "@/lib/directus";
 import { configSiged, SIGED_TIMEOUT_MS } from "@/lib/siged";
+import { mascararCpf, somenteDigitos } from "@/lib/utils";
 
 // URL da API (Fallback seguro para localhost)
 const API_URL = process.env.DIRECTUS_API_URL || "http://192.168.0.118:8055";
@@ -467,6 +468,43 @@ export async function getHistoricoBeneficios(beneficiariaId: string) {
   }
 }
 
+/**
+ * Ficha que já usa este CPF, se houver. Compara só-dígitos e com máscara: as
+ * fichas antigas foram gravadas nos dois formatos. `ignorarId` é a própria
+ * ficha, ao editar.
+ */
+async function fichaComCpf(
+  client: Awaited<ReturnType<typeof getAuthenticatedClient>>["client"],
+  cpf: string,
+  ignorarId?: number,
+): Promise<{ id: number; nome_completo: string } | null> {
+  const digitos = somenteDigitos(cpf);
+  if (digitos.length !== 11) return null;
+  const filtro: Record<string, unknown>[] = [{ cpf: { _in: [digitos, mascararCpf(digitos)] } }];
+  if (ignorarId) filtro.push({ id: { _neq: ignorarId } });
+  const achadas = await client.request(
+    readItems("beneficiarias", {
+      fields: ["id", "nome_completo"],
+      filter: { _and: filtro },
+      limit: 1,
+    }),
+  );
+  const ficha = achadas?.[0];
+  return ficha ? { id: Number(ficha.id), nome_completo: String(ficha.nome_completo ?? "") } : null;
+}
+
+/** Aviso antecipado no formulário: o CPF digitado já tem ficha? */
+export async function verificarCpfCadastrado(cpf: string, ignorarId?: number) {
+  await assertAccess("mulheres");
+  try {
+    const { client } = await getAuthenticatedClient();
+    return { success: true, ficha: await fichaComCpf(client, cpf, ignorarId) };
+  } catch (error) {
+    console.error("Erro ao verificar CPF:", error);
+    return { success: false, ficha: null };
+  }
+}
+
 // --- Ações de Escrita (Mutations) ---
 
 export async function saveBeneficiaria(input: any) {
@@ -499,6 +537,24 @@ export async function saveBeneficiaria(input: any) {
 
     const { client, token } = await getAuthenticatedClient();
     if (!token) throw new Error("Usuário não autenticado.");
+
+    // Uma mulher, uma ficha: o CPF não pode estar em outra ficha. Só se checa
+    // CPF novo ou alterado — uma duplicata antiga já na base não pode impedir
+    // que as duas fichas continuem sendo editadas até alguém uni-las.
+    let cpfMudou = !!payload.cpf;
+    if (payload.cpf && id) {
+      const atual = await client.request(readItem("beneficiarias", id, { fields: ["cpf"] }));
+      cpfMudou = somenteDigitos(atual?.cpf) !== somenteDigitos(payload.cpf);
+    }
+    if (payload.cpf && cpfMudou) {
+      const outra = await fichaComCpf(client, payload.cpf, id);
+      if (outra) {
+        return {
+          success: false,
+          error: `Este CPF já está na ficha de ${outra.nome_completo} (nº ${outra.id}). Abra essa ficha em vez de criar outra.`,
+        };
+      }
+    }
 
     let salvo: unknown;
     if (id) {

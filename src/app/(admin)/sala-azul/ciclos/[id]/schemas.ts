@@ -17,16 +17,12 @@ export const addParticipanteSchema = z.object({
     .default(StatusParticipacao.CURSANDO),
 });
 
-// Schema para atualizar participação
+// Schema para atualizar participação. Sem frequência: ela é calculada pela
+// lista de presença (src/lib/frequencia.ts), nunca digitada.
 export const updateParticipacaoSchema = z.object({
-  frequencia_percentual: z
-    .number()
-    .int("Frequência deve ser um número inteiro")
-    .min(0, "Frequência não pode ser negativa")
-    .max(100, "Frequência não pode ser maior que 100")
-    .optional(),
   status_participacao: z.nativeEnum(StatusParticipacao).optional(),
-  parecer_psicologico: z.string().optional(),
+  // null = parecer apagado (o formulário envia null quando o campo fica vazio)
+  parecer_psicologico: z.string().nullable().optional(),
 });
 
 // Schema para criar/editar sessão

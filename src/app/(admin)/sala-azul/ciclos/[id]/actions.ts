@@ -18,6 +18,73 @@ import {
   type SessaoData,
 } from "./schemas";
 import { assertAccess } from "@/lib/permissions";
+import { frequenciasPorParticipacao, type FrequenciaCalculada } from "@/lib/frequencia";
+
+/**
+ * Frequência de cada participação do ciclo, calculada pela lista de presença
+ * (mesma conta do relatório ao Judiciário).
+ */
+async function calcularFrequencias(
+  salaId: number,
+  participacaoIds: number[]
+): Promise<Map<number, FrequenciaCalculada>> {
+  if (participacaoIds.length === 0) return new Map();
+  const sessoes = await directus.request(
+    readItems("ciclo_sessoes", {
+      fields: ["id"],
+      filter: { sala_id: { _eq: salaId } },
+      limit: -1,
+    })
+  );
+  const sessaoIds = sessoes.map((s) => Number(s.id));
+  const registros = sessaoIds.length
+    ? await directus.request(
+        readItems("sessoes_presenca", {
+          fields: ["sessao_id", "participacao_id", "presente"],
+          filter: {
+            sessao_id: { _in: sessaoIds },
+            participacao_id: { _in: participacaoIds },
+          },
+          limit: -1,
+        })
+      )
+    : [];
+  return frequenciasPorParticipacao(sessaoIds, registros, participacaoIds);
+}
+
+/**
+ * Grava em `frequencia_percentual` a frequência calculada de cada participação
+ * do ciclo. Roda depois de toda mudança em chamada ou sessão, para a lista do
+ * ciclo e o histórico do infrator nunca divergirem do relatório.
+ */
+async function sincronizarFrequencias(salaId: number): Promise<void> {
+  const participacoes = await directus.request(
+    readItems("participacoes_sala_azul", {
+      fields: ["id", "frequencia_percentual"],
+      filter: { sala: { _eq: salaId } },
+      limit: -1,
+    })
+  );
+  const ids = participacoes.map((p) => Number(p.id));
+  const calculadas = await calcularFrequencias(salaId, ids);
+  for (const p of participacoes) {
+    const percentual = calculadas.get(Number(p.id))?.percentual ?? 0;
+    if (p.frequencia_percentual !== percentual) {
+      await directus.request(
+        updateItem("participacoes_sala_azul", p.id, { frequencia_percentual: percentual })
+      );
+    }
+  }
+}
+
+/** Sincroniza sem derrubar a operação principal: a tela recalcula ao ler. */
+async function sincronizarFrequenciasSemFalhar(salaId: number): Promise<void> {
+  try {
+    await sincronizarFrequencias(salaId);
+  } catch (error) {
+    console.error("Erro ao sincronizar frequências do ciclo:", error);
+  }
+}
 
 /**
  * Busca detalhes da sala e lista de participantes
@@ -71,11 +138,27 @@ export async function getSalaDetails(id: string | number) {
       })
     );
 
+    // A frequência exibida é sempre a calculada pela lista de presença,
+    // mesmo para participações antigas cuja frequência foi digitada à mão.
+    const frequencias = await calcularFrequencias(
+      salaId,
+      participacoes.map((p) => Number(p.id))
+    );
+    const participacoesComFrequencia = participacoes.map((p) => {
+      const f = frequencias.get(Number(p.id));
+      return {
+        ...p,
+        frequencia_percentual: f?.percentual ?? 0,
+        total_sessoes: f?.totalSessoes ?? 0,
+        presencas: f?.presencas ?? 0,
+      };
+    });
+
     return {
       success: true,
       data: {
         sala,
-        participacoes,
+        participacoes: participacoesComFrequencia,
       },
     };
   } catch (error) {
@@ -230,8 +313,17 @@ export async function updateParticipante(
       })
     );
 
+    // A frequência não vem do formulário: é a da lista de presença.
+    const salaId = Number(participacao.sala);
+    const frequencia = (await calcularFrequencias(salaId, [participacaoId])).get(
+      participacaoId
+    );
+
     await directus.request(
-      updateItem("participacoes_sala_azul", participacaoId, validatedData)
+      updateItem("participacoes_sala_azul", participacaoId, {
+        ...validatedData,
+        frequencia_percentual: frequencia?.percentual ?? 0,
+      })
     );
 
     revalidatePath(`/sala-azul/ciclos/${participacao.sala}`);
@@ -341,6 +433,7 @@ export async function saveSessao(data: unknown) {
         updateItem("ciclo_sessoes", validatedData.id, directusData)
       );
 
+      await sincronizarFrequenciasSemFalhar(validatedData.sala_id);
       revalidatePath(`/sala-azul/ciclos/${validatedData.sala_id}`);
       return {
         success: true,
@@ -350,6 +443,7 @@ export async function saveSessao(data: unknown) {
       // Cria nova sessão
       await directus.request(createItem("ciclo_sessoes", directusData));
 
+      await sincronizarFrequenciasSemFalhar(validatedData.sala_id);
       revalidatePath(`/sala-azul/ciclos/${validatedData.sala_id}`);
       return {
         success: true,
@@ -388,6 +482,7 @@ export async function deleteSessao(id: number) {
     );
 
     await directus.request(deleteItem("ciclo_sessoes", id));
+    await sincronizarFrequenciasSemFalhar(Number(sessao.sala_id));
 
     revalidatePath(`/sala-azul/ciclos/${sessao.sala_id}`);
     return {
@@ -528,6 +623,7 @@ export async function saveChamada(
       }
     }
 
+    await sincronizarFrequenciasSemFalhar(Number(sessao.sala_id));
     revalidatePath(`/sala-azul/ciclos/${sessao.sala_id}`);
     return {
       success: true,
