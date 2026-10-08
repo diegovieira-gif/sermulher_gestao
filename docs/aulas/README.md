@@ -53,7 +53,6 @@ chromium`) e a **instância de demonstração** rodando, povoada com o
 TEST_USER_EMAIL=demo@sigma.local      # conta da instância de demonstração
 TEST_USER_PASSWORD=...
 BASE_URL=http://localhost:3000        # a captura RECUSA endereço não local
-ELEVENLABS_API_KEY=...                # só para a narração de verdade
 ```
 
 ```bash
@@ -62,9 +61,13 @@ npm run aulas:narrar -- 1.1 --estimar       # ensaio: silêncio, sem custo
 npm run aulas:capturar -- 1.1               # telas da demonstração
 npm run aulas:montar -- 1.1                 # vídeo de ensaio
 # revisou e aprovou? narração de verdade e montagem final:
-npm run aulas:narrar -- 1.1
+npm run aulas:narrar -- 1.1                 # com ELEVENLABS_API_KEY na sessão (ver abaixo)
 npm run aulas:montar -- 1.1                 # --legendas-queimadas para WhatsApp
 ```
+
+A chave da ElevenLabs **não** fica no `.env.local` nem no Coolify: não é
+configuração do sistema, só da produção dos vídeos. Informe-a na própria
+sessão do terminal, na hora de narrar (PowerShell: `$env:ELEVENLABS_API_KEY = "..."`).
 
 Tudo sai em `docs/aulas/saida/<aula>/` (fora do Git): o `.mp4`, as
 `legendas.srt` e a `conferencia.jpg` — miniaturas a cada cinco segundos, para
@@ -180,10 +183,7 @@ um WAF que bloqueia navegador automatizado.
 
 | Aula | Pendência |
 |---|---|
-| 1.1 | Cinco rótulos ("Data de Nascimento", "Logradouro", "Número", "Bairro", "Cidade") marcam com \* campos que não são obrigatórios |
-| 1.1 | Confirmar se o banco impede CPF duplicado (o app não impede) |
-| 6.4 | Frequência da avaliação é digitada e pode divergir da lista de presença usada no relatório ao Judiciário |
-| 7.2 | Campanhas de WhatsApp não pedem autorização da beneficiária |
 | 7.2 | Configuração de Integração (credenciais) fica fora do vídeo |
+| 7.2 | Campanhas de WhatsApp não pedem autorização da beneficiária |
 | 7.3 | Campos de UUID do App Amar ficam fora do vídeo |
-| 8.3 | Confirmar onde os dados do Observatório são exibidos |
+| 8.3 | Os dados aparecem no site público dados-sermulher.aracaju.se.gov.br; o editor do SIGMA usa campos diferentes dos que o site lê — conferir o esquema antes de gravar as cenas c03 e c04 |
