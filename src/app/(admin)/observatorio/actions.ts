@@ -1,95 +1,115 @@
-
 "use server";
 
 import { getDirectusAdmin } from "@/lib/directus";
 import { assertAccess } from "@/lib/permissions";
 import { readItems, createItem, updateItem, deleteItem } from "@directus/sdk";
 import { revalidatePath } from "next/cache";
-import { ObserCollection } from "./types";
+import { configDa, type ObserCollection, type ObserId } from "./types";
+import { montarRegistro } from "./registro";
+
+/** Mensagem do Directus, quando houver — "Erro ao salvar" sozinho não ajuda ninguém. */
+function mensagemDirectus(error: unknown): string | null {
+  const e = error as { errors?: { message?: string }[] };
+  return e?.errors?.[0]?.message ?? null;
+}
 
 export async function getCollectionData(collection: ObserCollection, search?: string) {
   await assertAccess("observatorio");
   try {
-    const filter: any = {};
-    
-    if (search) {
-      if (collection === "obser_dashboards") {
-        filter._or = [
-          { period_label: { _contains: search } },
-          { cram_periodo: { _contains: search } },
-        ];
-      } else {
-        filter._or = [
-          { nome: { _contains: search } },
-          { titulo: { _contains: search } },
-          { serie_nome: { _contains: search } },
-        ];
-      }
+    const config = configDa(collection);
+    const filter: Record<string, unknown> = {};
+    const termo = (search || "").trim();
+    if (termo) {
+      // Só campos que existem nesta coleção: o Directus recusa a consulta
+      // inteira se o filtro citar um campo que ela não tem.
+      filter._or = config.busca.map((campo) => ({ [campo]: { _icontains: termo } }));
     }
 
-    const sort = collection === "obser_dashboards" ? ["-id"] : ["ordem", "-id"];
-    const adminDirectus = getDirectusAdmin();
+    // Relações expandidas para a tabela mostrar o nome do período.
+    const fields = ["*", ...config.fields
+      .filter((f) => f.type === "relation")
+      .flatMap((f) => [`${f.key}.id`, `${f.key}.nome_periodo`])];
 
-    const items = await adminDirectus.request(
-      readItems(collection as any, {
-        filter,
-        sort,
-        limit: 100,
-        fields: ['*']
-      })
+    const items = await getDirectusAdmin().request(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      readItems(collection as any, { filter, sort: config.sort, limit: 200, fields })
     );
 
     return { success: true, data: items };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`Error fetching ${collection}:`, error);
-    if (error.response?.status === 403) {
+    if ((error as { response?: { status?: number } })?.response?.status === 403) {
       return { success: false, error: "Você não tem permissão para acessar esta coleção.", status: 403 };
     }
     return { success: false, error: "Erro ao carregar dados do Directus." };
   }
 }
 
-export async function saveItem(collection: ObserCollection, data: any, id?: number) {
+export async function saveItem(
+  collection: ObserCollection,
+  data: Record<string, unknown>,
+  id?: ObserId
+) {
   await assertAccess("observatorio");
   try {
-    let result;
-    const adminDirectus = getDirectusAdmin();
-    if (id) {
-      result = await adminDirectus.request(updateItem(collection as any, id, data));
-    } else {
-      result = await adminDirectus.request(createItem(collection as any, data));
+    const config = configDa(collection);
+    const { payload, faltando } = montarRegistro(config, data);
+    if (faltando.length) {
+      return { success: false, error: `Preencha: ${faltando.join(", ")}.` };
     }
+
+    const directus = getDirectusAdmin();
+
+    // O site público mostra UM consolidado por período (o último lido
+    // venceria em silêncio). Um segundo para o mesmo mês é recusado.
+    if (collection === "obser_dashboards") {
+      const filtro: Record<string, unknown>[] = [{ periodo_id: { _eq: payload.periodo_id } }];
+      if (id) filtro.push({ id: { _neq: id } });
+      const existentes = await directus.request(
+        readItems("obser_dashboards", { filter: { _and: filtro }, fields: ["id"], limit: 1 })
+      );
+      if (existentes.length) {
+        return {
+          success: false,
+          error: "Este período já tem um consolidado. Edite o existente em vez de criar outro.",
+        };
+      }
+    }
+
+    const result = id
+      ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await directus.request(updateItem(collection as any, id as any, payload))
+      : // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await directus.request(createItem(collection as any, payload));
     revalidatePath("/observatorio");
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`Error saving ${collection}:`, error);
-    return { success: false, error: "Erro ao salvar item." };
+    const msg = mensagemDirectus(error);
+    return { success: false, error: msg ? `Erro ao salvar: ${msg}` : "Erro ao salvar item." };
   }
 }
 
-export async function removeItem(collection: ObserCollection, id: number) {
+export async function removeItem(collection: ObserCollection, id: ObserId) {
   await assertAccess("observatorio");
   try {
-    const adminDirectus = getDirectusAdmin();
-    await adminDirectus.request(deleteItem(collection as any, id));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await getDirectusAdmin().request(deleteItem(collection as any, id as any));
     revalidatePath("/observatorio");
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`Error deleting from ${collection}:`, error);
-    return { success: false, error: "Erro ao excluir item." };
+    const msg = mensagemDirectus(error);
+    return { success: false, error: msg ? `Erro ao excluir: ${msg}` : "Erro ao excluir item." };
   }
 }
 
-export async function getRelationData(collection: string) {
+/** Períodos para os seletores, do mais recente ao mais antigo. */
+export async function getRelationData(collection: "obser_periodos") {
   await assertAccess("observatorio");
   try {
-    const fields = collection === 'obser_periodos' ? ['id', 'nome'] : ['id', 'nome', 'titulo'];
-    const adminDirectus = getDirectusAdmin();
-    const items = await adminDirectus.request(
-      readItems(collection as any, {
-        limit: -1,
-        fields: fields as any[]
-      })
+    const items = await getDirectusAdmin().request(
+      readItems(collection, { limit: -1, fields: ["id", "nome_periodo", "ordem"], sort: ["-ordem"] })
     );
     return { success: true, data: items };
   } catch (error) {

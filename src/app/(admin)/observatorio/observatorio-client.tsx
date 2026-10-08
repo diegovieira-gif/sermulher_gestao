@@ -1,80 +1,87 @@
-
 "use client";
 
-import { useState, useEffect } from "react";
-import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
+import { useState, useEffect, Fragment } from "react";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger
 } from "@/components/ui/tabs";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
+import { Switch } from "@/components/ui/switch";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
 } from "@/components/ui/dialog";
-import { 
-  Plus, 
-  Pencil, 
-  Trash2, 
-  Search, 
-  Loader2, 
-  AlertCircle 
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Search,
+  Loader2,
+  AlertCircle
 } from "lucide-react";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { 
-  getCollectionData, 
-  saveItem, 
-  removeItem 
+import {
+  getCollectionData,
+  getRelationData,
+  saveItem,
+  removeItem
 } from "./actions";
-import { 
-  COLLECTIONS_CONFIG, 
-  ObserCollection, 
-  CollectionConfig 
+import {
+  COLLECTIONS_CONFIG,
+  type CampoConfig,
+  type CollectionConfig,
+  type ObserCollection,
+  type ObserId,
 } from "./types";
+import { exibirValor } from "./registro";
 import { Label } from "@/components/ui/label";
 
+type Registro = Record<string, unknown> & { id: ObserId };
+type Periodo = { id: string; nome_periodo: string | null };
+
 interface ObservatorioClientProps {
-  initialData: any[];
+  initialData: Registro[];
   initialError: { message: string; status?: number } | null;
-  periodos: any[];
+  periodos: Periodo[];
 }
 
-export function ObservatorioClient({ 
-  initialData, 
+export function ObservatorioClient({
+  initialData,
   initialError,
-  periodos
+  periodos: periodosIniciais
 }: ObservatorioClientProps) {
   const [activeTab, setActiveTab] = useState<ObserCollection>(COLLECTIONS_CONFIG[0].name);
-  const [data, setData] = useState<any[]>(initialData);
+  const [data, setData] = useState<Registro[]>(initialData);
+  const [periodos, setPeriodos] = useState<Periodo[]>(periodosIniciais);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<{ message: string; status?: number } | null>(initialError);
   const [searchTerm, setSearchTerm] = useState("");
-  
+
   // Form State
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [formData, setFormData] = useState<any>({});
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [formData, setFormData] = useState<Record<string, unknown>>({});
+  const [editingId, setEditingId] = useState<ObserId | null>(null);
   const [saving, setSaving] = useState(false);
 
   // Load data when tab or search changes
@@ -83,13 +90,13 @@ export function ObservatorioClient({
         // Skip first load if we already have initialData for the first tab
         return;
     }
-    
+
     const fetchData = async () => {
       setLoading(true);
       setError(null);
       const result = await getCollectionData(activeTab, searchTerm);
       if (result.success) {
-        setData(result.data as any[]);
+        setData(result.data as Registro[]);
       } else {
         setError({ message: result.error || "Erro ao carregar dados", status: result.status });
         setData([]);
@@ -102,39 +109,44 @@ export function ObservatorioClient({
   }, [activeTab, searchTerm, initialData, error]);
 
   const currentConfig = COLLECTIONS_CONFIG.find(c => c.name === activeTab) as CollectionConfig;
+  const colunas = currentConfig.fields.filter((f) => f.listar);
+  const nomeDoPeriodo = (id: unknown) =>
+    periodos.find((p) => p.id === id)?.nome_periodo ?? String(id ?? "-");
 
   const handleCreate = () => {
     setEditingId(null);
-    // Initialize with default values if any
-    const initialForm: any = {};
+    const initialForm: Record<string, unknown> = {};
     currentConfig.fields.forEach(f => {
-      if (f.key === 'status') initialForm[f.key] = 'published';
+      // período novo já entra no site; desmarque para preparar sem publicar
+      if (f.type === 'boolean' && f.key === 'ativo') initialForm[f.key] = true;
     });
     setFormData(initialForm);
     setIsDialogOpen(true);
   };
 
-  const handleEdit = (item: any) => {
+  const handleEdit = (item: Registro) => {
     setEditingId(item.id);
-    const cleanedData = { ...item };
-    // If it's a relation, we might need just the ID for the form
+    const cleanedData: Record<string, unknown> = { ...item };
     currentConfig.fields.forEach(f => {
-      if (f.type === 'relation' && typeof item[f.key] === 'object' && item[f.key] !== null) {
-        cleanedData[f.key] = item[f.key].id;
+      const valor = item[f.key];
+      if (f.type === 'relation' && typeof valor === 'object' && valor !== null) {
+        cleanedData[f.key] = (valor as { id?: unknown }).id;
       }
+      if (f.type === 'date' && typeof valor === 'string') cleanedData[f.key] = valor.slice(0, 10);
     });
     setFormData(cleanedData);
     setIsDialogOpen(true);
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: ObserId) => {
     if (!confirm("Tem certeza que deseja excluir este item?")) return;
-    
+
     setLoading(true);
     const result = await removeItem(activeTab, id);
     if (result.success) {
       toast.success("Item removido com sucesso!");
       setData(prev => prev.filter(item => item.id !== id));
+      if (activeTab === 'obser_periodos') setPeriodos(prev => prev.filter(p => p.id !== id));
     } else {
       toast.error(result.error);
     }
@@ -143,18 +155,70 @@ export function ObservatorioClient({
 
   const onSave = async () => {
     setSaving(true);
-    const result = await saveItem(activeTab, formData, editingId || undefined);
+    const result = await saveItem(activeTab, formData, editingId ?? undefined);
     if (result.success) {
       toast.success(editingId ? "Item atualizado!" : "Item criado!");
       setIsDialogOpen(false);
       // Refresh data
       const refreshed = await getCollectionData(activeTab, searchTerm);
-      if (refreshed.success) setData(refreshed.data as any[]);
+      if (refreshed.success) setData(refreshed.data as Registro[]);
+      if (activeTab === 'obser_periodos') {
+        const novos = await getRelationData('obser_periodos');
+        if (novos.success) setPeriodos(novos.data as Periodo[]);
+      }
     } else {
       toast.error(result.error);
     }
     setSaving(false);
   };
+
+  const celula = (f: CampoConfig, item: Registro) => {
+    const valor = item[f.key];
+    if (f.type === 'relation' && (typeof valor !== 'object' || valor === null)) return nomeDoPeriodo(valor);
+    return exibirValor(f.type, valor);
+  };
+
+  const campoDoFormulario = (f: CampoConfig) => {
+    const valor = formData[f.key];
+    const definir = (v: unknown) => setFormData({ ...formData, [f.key]: v });
+    if (f.type === 'relation') {
+      return (
+        <Select value={valor ? String(valor) : ""} onValueChange={definir}>
+          <SelectTrigger id={f.key}>
+            <SelectValue placeholder="Selecione um período" />
+          </SelectTrigger>
+          <SelectContent>
+            {periodos.map(p => (
+              <SelectItem key={p.id} value={String(p.id)}>{p.nome_periodo || p.id}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      );
+    }
+    if (f.type === 'boolean') {
+      // o Directus (SQLite) devolve booleano como 1/0
+      return <Switch id={f.key} checked={valor === true || valor === 1} onCheckedChange={definir} />;
+    }
+    return (
+      <Input
+        id={f.key}
+        type={f.type === 'number' ? 'number' : f.type === 'date' ? 'date' : 'text'}
+        inputMode={f.type === 'number' ? 'numeric' : undefined}
+        min={f.type === 'number' ? 0 : undefined}
+        value={valor === null || valor === undefined ? "" : String(valor)}
+        onChange={(e) => definir(e.target.value)}
+      />
+    );
+  };
+
+  // Campos do formulário agrupados por seção (o consolidado tem 26 campos).
+  const secoes: { titulo: string | null; campos: CampoConfig[] }[] = [];
+  for (const f of currentConfig.fields) {
+    const titulo = f.secao ?? null;
+    const ultima = secoes[secoes.length - 1];
+    if (ultima && ultima.titulo === titulo) ultima.campos.push(f);
+    else secoes.push({ titulo, campos: [f] });
+  }
 
   if (error && error.status === 403) {
     return (
@@ -171,7 +235,9 @@ export function ObservatorioClient({
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Observatório</h1>
-          <p className="text-muted-foreground">Gerenciamento de coleções e indicadores do observatório.</p>
+          <p className="text-muted-foreground">
+            Indicadores publicados no site público do Observatório (dados-sermulher.aracaju.se.gov.br).
+          </p>
         </div>
         <Button onClick={handleCreate} className="bg-primary hover:bg-primary/90 text-primary-foreground">
           <Plus className="mr-2 h-4 w-4" /> Novo Registro
@@ -180,11 +246,11 @@ export function ObservatorioClient({
 
       <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
         <Tabs defaultValue={activeTab} onValueChange={(v) => setActiveTab(v as ObserCollection)}>
-          <div className="border-b border-border px-4 pt-4">
+          <div className="border-b border-border px-4 pt-4 overflow-x-auto">
             <TabsList className="bg-muted mb-[-1px] rounded-b-none h-12">
               {COLLECTIONS_CONFIG.map(config => (
-                <TabsTrigger 
-                  key={config.name} 
+                <TabsTrigger
+                  key={config.name}
                   value={config.name}
                   className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 border-x border-t border-transparent data-[state=active]:border-slate-200 dark:data-[state=active]:border-slate-800 rounded-t-lg px-6"
                 >
@@ -197,8 +263,8 @@ export function ObservatorioClient({
           <div className="p-4 bg-slate-50/50 dark:bg-slate-950/20 border-b border-border">
             <div className="relative max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Buscar registros..." 
+              <Input
+                placeholder="Buscar registros..."
                 className="pl-10 bg-card"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -220,8 +286,7 @@ export function ObservatorioClient({
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50 hover:bg-muted/50">
-                    <TableHead className="w-[80px]">ID</TableHead>
-                    {currentConfig.fields.map(f => (
+                    {colunas.map(f => (
                       <TableHead key={f.key}>{f.label}</TableHead>
                     ))}
                     <TableHead className="text-right">Ações</TableHead>
@@ -229,25 +294,16 @@ export function ObservatorioClient({
                 </TableHeader>
                 <TableBody>
                   {data.map((item) => (
-                    <TableRow key={item.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                      <TableCell className="font-mono text-xs text-muted-foreground">{item.id}</TableCell>
-                      {currentConfig.fields.map(f => (
-                        <TableCell key={f.key}>
-                          {f.type === 'relation' ? (
-                            typeof item[f.key] === 'object' && item[f.key] !== null 
-                              ? item[f.key].nome || item[f.key].titulo || item[f.key].id
-                              : item[f.key]
-                          ) : (
-                            String(item[f.key] ?? '-')
-                          )}
-                        </TableCell>
+                    <TableRow key={String(item.id)} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                      {colunas.map(f => (
+                        <TableCell key={f.key}>{celula(f, item)}</TableCell>
                       ))}
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => handleEdit(item)} className="h-8 w-8 text-muted-foreground">
+                          <Button variant="ghost" size="icon" onClick={() => handleEdit(item)} className="h-8 w-8 text-muted-foreground" title="Editar">
                             <Pencil className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)} className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400">
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)} className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400" title="Excluir">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -262,47 +318,27 @@ export function ObservatorioClient({
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingId ? "Editar Registro" : "Novo Registro"}</DialogTitle>
             <DialogDescription>
-              Preencha os campos abaixo para a coleção {currentConfig.label}.
+              {currentConfig.label}. Campos com * são obrigatórios. O que for salvo aparece no site público.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            {currentConfig.fields.map(f => (
-              <div key={f.key} className="grid gap-2">
-                <Label htmlFor={f.key}>{f.label}</Label>
-                {f.type === 'relation' && f.relationCollection === 'obser_periodos' ? (
-                  <Select 
-                    value={String(formData[f.key] || "")} 
-                    onValueChange={(v) => setFormData({...formData, [f.key]: parseInt(v)})}
-                  >
-                    <SelectTrigger id={f.key}>
-                      <SelectValue placeholder="Selecione um período" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {periodos.map(p => (
-                        <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : f.type === 'number' ? (
-                  <Input 
-                    id={f.key} 
-                    type="number"
-                    value={formData[f.key] ?? ""} 
-                    onChange={(e) => setFormData({...formData, [f.key]: parseFloat(e.target.value)})}
-                  />
-                ) : (
-                  <Input 
-                    id={f.key} 
-                    type={f.type === 'url' ? 'url' : 'text'}
-                    value={formData[f.key] ?? ""} 
-                    onChange={(e) => setFormData({...formData, [f.key]: e.target.value})}
-                  />
-                )}
-              </div>
+            {secoes.map((s, i) => (
+              <Fragment key={s.titulo ?? `s${i}`}>
+                {s.titulo && <h3 className="text-sm font-semibold pt-2 border-t border-border">{s.titulo}</h3>}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {s.campos.map(f => (
+                    <div key={f.key} className={f.type === 'boolean' ? "flex items-center justify-between gap-2 rounded-lg border p-3 sm:col-span-2" : "grid gap-2"}>
+                      <Label htmlFor={f.key}>{f.label}{f.required ? " *" : ""}</Label>
+                      {campoDoFormulario(f)}
+                      {f.dica && <p className="text-xs text-muted-foreground">{f.dica}</p>}
+                    </div>
+                  ))}
+                </div>
+              </Fragment>
             ))}
           </div>
           <DialogFooter>

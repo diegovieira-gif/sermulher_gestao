@@ -185,4 +185,4 @@ um WAF que bloqueia navegador automatizado.
 |---|---|
 | 7.2 | Configuração de Integração (credenciais) fica fora do vídeo |
 | 7.3 | Campos de UUID do App Amar ficam fora do vídeo |
-| 8.3 | Os dados aparecem no site público dados-sermulher.aracaju.se.gov.br; o editor do SIGMA usa campos diferentes dos que o site lê — conferir o esquema antes de gravar as cenas c03 e c04 |
+| 8.3 | O site público ainda não lê as séries gravadas pelo SIGMA (procura `dashboard_id`); a aula ensina períodos e o consolidado do mês |
