@@ -88,7 +88,13 @@ SIGED_API_TOKEN="token_fornecido_pela_equipe_do_siged"
 > O token do SIGED ficou escrito no código, num repositório público, de
 > 15/06/2026 a 10/2026. Ele continua no histórico do git e precisa ser
 > **rotacionado pela equipe do SIGED** — tirá-lo do código não desfaz o
-> vazamento. Configure no Coolify o token NOVO, nunca o antigo.
+> vazamento.
+>
+> **Ordem do deploy:** cadastre `SIGED_API_TOKEN` no Coolify (só em tempo de
+> execução) ANTES de publicar esta versão, senão o preenchimento automático
+> para. Até a rotação, use o token atual — ele já é público, então guardá-lo
+> no Coolify não aumenta a exposição. Quando o SIGED fornecer o novo, troque o
+> valor no Coolify e faça um novo deploy.
 
 > [!IMPORTANT]
 > A integração antiga com webhooks n8n para captação de formulários externos foi removida. O sistema funciona de forma 100% interna e direta sobre a API do Directus.
