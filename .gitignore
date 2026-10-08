@@ -65,3 +65,6 @@ docs/aulas/video/
 # Listas de usuárias e senhas iniciais do scripts/cadastrar-usuarios.mjs —
 # dados pessoais e credenciais, nunca versionar
 /scripts/dados/
+
+# Saída da produção das vídeo-aulas (áudio, telas, vídeos) — artefato, não fonte
+docs/aulas/saida/

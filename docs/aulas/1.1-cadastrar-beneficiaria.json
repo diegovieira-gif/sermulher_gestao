@@ -10,7 +10,7 @@
   "elenco": ["joana"],
 
   "pendencias": [
-    "O rótulo 'Data de Nascimento *' tem asterisco, mas o campo NÃO é obrigatório (schemas.ts: data_nascimento optional). Corrigir o rótulo antes de capturar, ou a tela contradiz a fala da cena c07.",
+    "Cinco rótulos têm asterisco de obrigatório sem ser: 'Data de Nascimento *' (Dados Pessoais) e 'Logradouro *', 'Número *', 'Bairro *', 'Cidade *' (Endereço e Contato) — o schema aceita todos vazios (beneficiarias/schemas.ts). Corrigir os rótulos antes de capturar, ou a tela contradiz a fala das cenas c07 e c09.",
     "Confirmar no Directus se o campo cpf tem restrição de unicidade. A aula não promete bloqueio de duplicidade porque o app não o faz; se o banco fizer, a cena c05 pode mencioná-lo."
   ],
 
