@@ -12,7 +12,11 @@
     "test:unit": "node --conditions=react-server node_modules/playwright/cli.js test -c playwright.unit.config.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "aulas:conferir": "node scripts/conferir-roteiros.mjs",
+    "aulas:narrar": "node scripts/aulas/narrar.mjs",
+    "aulas:capturar": "node scripts/aulas/capturar.mjs",
+    "aulas:montar": "node scripts/aulas/montar.mjs"
   },
   "dependencies": {
     "@directus/sdk": "^18.0.3",

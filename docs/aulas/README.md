@@ -7,39 +7,68 @@ textos para manter em sincronia.
 
 ## Pipeline
 
-Decidido em 10/2026, a partir do que o `curso_inteligente` já aprendeu fazendo:
+Decidido em 10/2026, a partir do que o `curso_inteligente` e as novelinhas
+(`criativos-sci`) já aprenderam fazendo:
 
 ```
 roteiro.json  (cenas: narração + ação na tela + foco do zoom)
      │
-     ├─ 0. conferir-roteiros.mjs   regras, âncoras no código, duração      ✅ pronto
-     ├─ 1. revisão                 equipe da Secretaria lê antes de gastar  ⏳ processo
-     ├─ 2. narração (Gemini TTS)   pedaços com cache + guardas de qualidade ⏳ a construir
-     ├─ 3. captura (Playwright)    uma imagem por cena + caixa do foco      ⏳ a construir
-     ├─ 4. cena em vídeo           zoom/pan sobre o foco, cartões em HTML   ⏳ a construir
-     └─ 5. montagem (ffmpeg)       cenas + narração + legendas → .mp4       ⏳ a construir
+     ├─ 0. conferir-roteiros.mjs   regras, âncoras no código, duração
+     ├─ 1. revisão                 equipe da Secretaria lê antes de gastar
+     ├─ 2. aulas/narrar.mjs        voz ElevenLabs, um mp3 por cena + guardas
+     ├─ 3. aulas/capturar.mjs      uma imagem por cena + caixa do foco
+     └─ 4. aulas/montar.mjs        zoom no foco, cartões, legendas → .mp4
 ```
 
 **Captura + zoom, e não gravação contínua.** A tela de cada cena é capturada
 como imagem, e o vídeo da cena é um zoom suave sobre o elemento citado. Corrigir
-uma frase refaz só aquela cena, em segundos — a tela não precisa "acompanhar" o
-áudio, e o zoom aponta exatamente o campo de que a fala trata. O ponto do zoom
-sai do **próprio elemento na página** (a caixa do seletor de `foco`), e não de
+uma frase refaz só aquela cena — a tela não precisa "acompanhar" o áudio, e o
+zoom aponta exatamente o campo de que a fala trata. O ponto do zoom sai do
+**próprio elemento na página** (a caixa do seletor de `foco`), e não de
 coordenadas marcadas à mão.
 
-**A narração é a última coisa a ser gerada.** Só com o roteiro estável e
-revisado: narrar cedo deixa o áudio para trás a cada ajuste, e gerar tudo de uma
-vez deixa a voz homogênea entre as aulas.
+**Voz: ElevenLabs, voz Bia** (feminina, brasileira, narrativa — ver
+[`config.json`](config.json)). A ElevenLabs não aceita instrução de locução em
+texto: o tom vem de três ajustes numéricos. Em compensação, não há risco de a
+voz "ler a instrução em voz alta", como aconteceu no `curso_inteligente`.
 
-**Não confie no "ok" do TTS.** O `curso_inteligente` publicou aula com o modelo
-lendo a instrução de direção em voz alta, com trecho mudo e com frase repetida —
-todas com status "ok". As guardas a construir: silêncio longo no meio,
-leitura em dobro (ritmo muito abaixo do esperado), variação de altura da voz
-entre pedaços, e uma **escuta** (transcrever o áudio gerado e comparar com o
-texto).
+**A narração definitiva é a última coisa a ser gerada.** Só com o roteiro
+estável e revisado. Antes disso, ensaie com `--estimar`: a narração vira
+silêncio com a duração estimada e o vídeo inteiro é montado **sem gastar
+crédito** — dá para conferir telas, zoom, cartões e ritmo.
 
-> Os scripts `gerar-narracao.mjs` (TTS da OpenAI) e `gravar-aula.mjs` (gravação
-> contínua) são do pipeline anterior e serão substituídos pelos passos 2 a 5.
+**Não confie no "ok" do TTS.** Cada mp3 passa por guardas medidas no arquivo:
+tamanho mínimo, duração muito acima da esperada (leitura em dobro), muito
+abaixo (fala cortada) e silêncio longo no meio. Reprovado, tenta mais uma vez e
+então falha apontando a cena. E cada mp3 guarda a marca do texto e da voz que o
+geraram: só a cena cuja fala mudou é narrada de novo.
+
+## Produzir uma aula
+
+Pré-requisitos: ffmpeg, o Chromium do Playwright (`npx playwright install
+chromium`) e a **instância de demonstração** rodando, povoada com o
+[`elenco`](elenco.json). No `.env.local` (fora do Git):
+
+```env
+TEST_USER_EMAIL=demo@sigma.local      # conta da instância de demonstração
+TEST_USER_PASSWORD=...
+BASE_URL=http://localhost:3000        # a captura RECUSA endereço não local
+ELEVENLABS_API_KEY=...                # só para a narração de verdade
+```
+
+```bash
+npm run aulas:conferir                      # roteiros sem erro
+npm run aulas:narrar -- 1.1 --estimar       # ensaio: silêncio, sem custo
+npm run aulas:capturar -- 1.1               # telas da demonstração
+npm run aulas:montar -- 1.1                 # vídeo de ensaio
+# revisou e aprovou? narração de verdade e montagem final:
+npm run aulas:narrar -- 1.1
+npm run aulas:montar -- 1.1                 # --legendas-queimadas para WhatsApp
+```
+
+Tudo sai em `docs/aulas/saida/<aula>/` (fora do Git): o `.mp4`, as
+`legendas.srt` e a `conferencia.jpg` — miniaturas a cada cinco segundos, para
+revisar a aula inteira sem assistir. `--todas` no lugar do id roda o curso.
 
 ## Conferir os roteiros
 
@@ -151,7 +180,7 @@ um WAF que bloqueia navegador automatizado.
 
 | Aula | Pendência |
 |---|---|
-| 1.1 | Rótulo "Data de Nascimento \*" marca como obrigatório um campo que não é |
+| 1.1 | Cinco rótulos ("Data de Nascimento", "Logradouro", "Número", "Bairro", "Cidade") marcam com \* campos que não são obrigatórios |
 | 1.1 | Confirmar se o banco impede CPF duplicado (o app não impede) |
 | 6.4 | Frequência da avaliação é digitada e pode divergir da lista de presença usada no relatório ao Judiciário |
 | 7.2 | Campanhas de WhatsApp não pedem autorização da beneficiária |
