@@ -65,6 +65,12 @@
       "foco": { "seletor": "rotulo=Telefone validado", "zoom": 2.0 }
     },
     {
+      "id": "c07b",
+      "narracao": "Logo abaixo, Não receber mensagens da Secretaria. Marque quando ela pedir para não receber mais mensagens. A partir daí, ela sai de todas as campanhas de WhatsApp, inclusive das montadas à mão. O pedido dela vale mais que qualquer aviso.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "rotulo=Não receber mensagens da Secretaria", "zoom": 2.0 }
+    },
+    {
       "id": "c08",
       "narracao": "Agora o bairro. Ele também está na aba Endereço e Contato.",
       "acao": { "tipo": "nenhuma" },

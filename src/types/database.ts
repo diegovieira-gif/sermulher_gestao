@@ -91,6 +91,7 @@ export interface MulheresBeneficiariaDB {
   rg?: string;
   telefone?: string;
   telefone_validado?: boolean;
+  nao_receber_mensagens?: boolean;
   contato: {
     telefone: string;
     email?: string;

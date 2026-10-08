@@ -10,7 +10,6 @@
   "elenco": ["joana", "claudia"],
 
   "pendencias": [
-    "O sistema NÃO registra autorização da beneficiária para receber WhatsApp: é elegível quem tem telefone com pelo menos oito dígitos (ELIGIBLE_FILTER em marketing/whatsapp/actions.ts). Para mulheres em situação de violência, uma mensagem institucional pode ser vista pelo agressor. Recomendado: um campo de autorização (e de 'contato seguro') na ficha, e o filtro de elegibilidade respeitando-o. Se for criado, reescrever as cenas c04 e c07.",
     "A 'Configuração de Integração' (URL do GoWA, webhook do n8n, usuário e senha) fica FORA do vídeo: é tarefa de TI e mostraria credenciais. A captura não deve rolar até essa seção."
   ],
 
@@ -29,7 +28,7 @@
     },
     {
       "id": "c03",
-      "narracao": "Mulheres elegíveis são as que têm telefone na ficha. Quem não tem telefone fica de fora de toda campanha. É por isso que, lá no módulo um, o telefone pesa tanto na completude.",
+      "narracao": "Mulheres elegíveis são as que têm telefone na ficha e não pediram para deixar de receber mensagens. Quem não tem telefone, ou fez esse pedido, fica de fora de toda campanha. É por isso que, lá no módulo um, o telefone pesa tanto na completude.",
       "acao": { "tipo": "nenhuma" },
       "foco": { "seletor": "text=Mulheres Elegíveis", "zoom": 2.0 }
     },

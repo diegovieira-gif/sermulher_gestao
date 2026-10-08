@@ -43,6 +43,7 @@ const BENEFICIARIA_FIELDS = [
   "quantidade_filhos",
   "telefone",
   "telefone_validado",
+  "nao_receber_mensagens",
   "email",
   "contato",
   "endereco",
@@ -73,6 +74,7 @@ type BeneficiariaRecord = {
   quantidade_filhos?: number | null;
   telefone?: string | null;
   telefone_validado?: boolean | null;
+  nao_receber_mensagens?: boolean | null;
   email?: string | null;
   contato?: string | Record<string, unknown> | null;
   endereco?: string | Record<string, unknown> | null;
