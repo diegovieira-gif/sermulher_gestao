@@ -14,12 +14,12 @@
 // Saída em docs/aulas/saida/<aula>/: <aula>-<titulo>.mp4, legendas.srt e
 // conferencia.jpg (miniaturas a cada cinco segundos, para revisar sem assistir).
 import { chromium } from "@playwright/test";
-import { existsSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync, rmSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
 import {
   blocosDeLegenda, config, duracaoDaCena, enquadramento, idsDaLinhaDeComando,
-  lerJson, pastaDaAula, plano, srt,
+  lerJson, pastaDaAula, plano, RAIZ, srt,
 } from "./lib.mjs";
 
 const argv = process.argv.slice(2);
@@ -39,16 +39,29 @@ const escapar = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<":
   Cartão no padrão visual do SIGMA (paleta clara do app). Corpo ≥ 34px e
   título ≥ 60px, e os 15% de baixo ficam livres para a legenda — regras do
   curso_inteligente, que testou isso em tela de celular.
+
+  Identidade: o selo da Prefeitura (public/logo.png, o mesmo da barra lateral
+  e do login) com "SERMULHER" e o nome da Secretaria, como no cabeçalho do
+  app. Na CAPA (o primeiro cartão da aula) o selo aparece também em destaque.
 */
-function htmlDoCartao(cartao, aula) {
+const LOGO = `data:image/png;base64,${readFileSync(join(RAIZ, "public", "logo.png")).toString("base64")}`;
+
+function htmlDoCartao(cartao, aula, ehCapa) {
   const linhas = (cartao.linhas ?? []).map((l) => `<li>${escapar(l)}</li>`).join("");
   return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><style>
     *{margin:0;box-sizing:border-box}
     body{width:${L}px;height:${A}px;font-family:"Segoe UI",system-ui,sans-serif;
       background:linear-gradient(135deg,#f7f5fa 0%,#efe9f7 100%);color:#2a2533;
-      padding:110px 150px ${Math.round(A * cfg.video.rodape_livre_legenda) + 40}px;display:flex;flex-direction:column}
-    .marca{font-size:30px;font-weight:600;color:#7b2fd6;letter-spacing:.06em;text-transform:uppercase}
+      padding:70px 150px ${Math.round(A * cfg.video.rodape_livre_legenda) + 40}px;display:flex;flex-direction:column}
+    .topo{display:flex;align-items:center;justify-content:space-between}
+    .orgao{display:flex;align-items:center;gap:22px}
+    .orgao img{width:92px;height:92px}
+    .orgao b{display:block;font-size:30px;font-weight:700;color:#1f1a29;letter-spacing:.02em}
+    .orgao span{display:block;font-size:21px;color:#6c6478;white-space:nowrap}
+    .marca{font-size:28px;font-weight:600;color:#7b2fd6;letter-spacing:.06em;text-transform:uppercase}
+    .corpo{flex:1;display:flex;align-items:center;gap:80px}
     .miolo{flex:1;display:flex;flex-direction:column;justify-content:center;gap:36px}
+    .selo{width:420px;height:420px;flex:none;filter:drop-shadow(0 18px 40px rgba(31,26,41,.12))}
     .sub{font-size:36px;color:#6c6478;font-weight:500}
     h1{font-size:${(cartao.linhas?.length ?? 0) > 3 ? 72 : 88}px;line-height:1.08;font-weight:750;color:#1f1a29;
       border-left:14px solid #7b2fd6;padding-left:36px}
@@ -56,11 +69,18 @@ function htmlDoCartao(cartao, aula) {
     li{font-size:42px;line-height:1.25;position:relative}
     li::before{content:"";position:absolute;left:-40px;top:.45em;width:16px;height:16px;border-radius:50%;background:#7b2fd6}
   </style></head><body>
-    <div class="marca">SIGMA · Aula ${escapar(aula.id)}</div>
-    <div class="miolo">
-      ${cartao.subtitulo ? `<div class="sub">${escapar(cartao.subtitulo)}</div>` : ""}
-      <h1>${escapar(cartao.titulo)}</h1>
-      ${linhas ? `<ul>${linhas}</ul>` : ""}
+    <div class="topo">
+      <div class="orgao"><img src="${LOGO}" alt="">
+        <div><b>SERMULHER</b><span>Secretaria Municipal do Respeito às Políticas para as Mulheres</span></div></div>
+      <div class="marca">SIGMA · Aula ${escapar(aula.id)}</div>
+    </div>
+    <div class="corpo">
+      <div class="miolo">
+        ${cartao.subtitulo ? `<div class="sub">${escapar(cartao.subtitulo)}</div>` : ""}
+        <h1>${escapar(cartao.titulo)}</h1>
+        ${linhas ? `<ul>${linhas}</ul>` : ""}
+      </div>
+      ${ehCapa ? `<img class="selo" src="${LOGO}" alt="">` : ""}
     </div></body></html>`;
 }
 
@@ -68,7 +88,8 @@ async function renderizarCartoes(navegador, aula, pasta) {
   const page = await navegador.newPage({ viewport: { width: L, height: A } });
   try {
     for (const cena of aula.cenas.filter((c) => c.tipo === "cartao")) {
-      await page.setContent(htmlDoCartao(cena.cartao, aula));
+      const ehCapa = cena === aula.cenas[0];
+      await page.setContent(htmlDoCartao(cena.cartao, aula, ehCapa));
       await page.screenshot({ path: join(pasta, "cartoes", `${cena.id}.png`) });
     }
   } finally {
