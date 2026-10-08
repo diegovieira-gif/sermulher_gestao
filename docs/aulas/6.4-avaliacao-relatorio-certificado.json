@@ -4,14 +4,12 @@
   "titulo": "Avaliação, relatório ao Judiciário e certificado",
   "publico": "Equipe da Sala Azul",
   "pre_requisitos": ["6.3"],
-  "objetivo": "Ao final, a participante gera o relatório individual de acompanhamento, registra a avaliação do participante com a frequência do relatório e emite o certificado.",
+  "objetivo": "Ao final, a participante gera o relatório individual de acompanhamento, registra a avaliação do participante e emite o certificado.",
   "tarefa_final": "Gere em PDF o relatório individual de João Exemplo Santos e registre a avaliação dele.",
   "duracao_alvo_seg": 150,
   "elenco": ["sala_azul", "joao"],
 
-  "pendencias": [
-    "A frequência em 'Avaliar participante' é DIGITADA à mão (frequencia_percentual) e é ela que sai no certificado e na lista do ciclo, enquanto o relatório ao Judiciário calcula a frequência pela lista de presença. Os dois podem divergir. Recomendado: o sistema calcular o campo a partir das presenças. Enquanto não, a cena c05 ensina a copiar o valor do relatório. Corrigido o sistema, reescrever c05 e c06."
-  ],
+  "pendencias": [],
 
   "cenas": [
     {
@@ -43,13 +41,13 @@
     },
     {
       "id": "c05",
-      "narracao": "Agora a avaliação. Volte ao ciclo e clique em Avaliar participante. No campo Frequência Percentual, informe a mesma frequência que aparece no relatório. Os dois documentos precisam dizer a mesma coisa.",
+      "narracao": "Agora a avaliação. Volte ao ciclo e clique em Avaliar participante. A frequência já vem calculada pela lista de presença, a mesma do relatório. Ninguém digita esse número: se ele parecer errado, corrija a chamada da sessão, não a avaliação.",
       "acao": [
         { "tipo": "navegar", "url": "/sala-azul/ciclos" },
         { "tipo": "clicar", "seletor": "[title=\"Gerenciar Participantes\"]" },
         { "tipo": "clicar", "seletor": "[title=\"Avaliar participante\"]" }
       ],
-      "foco": { "seletor": "text=Frequência Percentual (0-100%)", "zoom": 1.8 }
+      "foco": { "seletor": "[data-testid=\"frequencia-calculada\"]", "zoom": 1.8 }
     },
     {
       "id": "c06",
@@ -77,9 +75,9 @@
       "tipo": "cartao",
       "cartao": {
         "titulo": "Sua vez",
-        "linhas": ["Gere em PDF o relatório de João Exemplo Santos", "Registre a avaliação dele com a frequência do relatório"]
+        "linhas": ["Gere em PDF o relatório de João Exemplo Santos", "Registre a avaliação dele e confira a frequência"]
       },
-      "narracao": "Agora é com você. Gere em PDF o relatório individual de João Exemplo Santos e registre a avaliação dele, com a mesma frequência que aparece no relatório."
+      "narracao": "Agora é com você. Gere em PDF o relatório individual de João Exemplo Santos e registre a avaliação dele. Confira que a frequência da avaliação é a mesma do relatório."
     }
   ]
 }
