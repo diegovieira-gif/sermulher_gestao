@@ -37,24 +37,28 @@
     },
     {
       "id": "c04",
+      "mascara": false,
       "narracao": "Vamos cadastrar um serviço. Abra Serviços e clique em Novo Serviço.",
       "acao": { "tipo": "navegar", "url": "/app-amar/servicos" },
       "foco": { "seletor": "role=button[name=\"Novo Serviço\"]", "zoom": 2.0 }
     },
     {
       "id": "c05",
+      "mascara": false,
       "narracao": "Informe o título do serviço e escolha a categoria. A descrição curta é o que aparece primeiro no aplicativo, então seja direta: o que é e para quem é.",
       "acao": { "tipo": "clicar", "seletor": "role=button[name=\"Novo Serviço\"]" },
       "foco": { "seletor": "[placeholder=\"Ex: Atendimento Psicológico\"]", "zoom": 1.8 }
     },
     {
       "id": "c06",
+      "mascara": false,
       "narracao": "Os documentos necessários e o horário de atendimento são o que evita uma viagem perdida. Uma mulher que chega sem o documento certo pode não voltar. Preencha com cuidado e mantenha atualizado.",
       "acao": { "tipo": "nenhuma" },
       "foco": { "seletor": "[placeholder=\"Ex: Seg a Sex, 08h às 17h\"]", "zoom": 1.8 }
     },
     {
       "id": "c07",
+      "mascara": false,
       "narracao": "Salve. O serviço passa a aparecer no aplicativo, dentro da categoria escolhida.",
       "acao": { "tipo": "nenhuma" },
       "foco": null

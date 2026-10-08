@@ -51,15 +51,17 @@
     },
     {
       "id": "c07",
+      "mascara": false,
       "narracao": "Escolha o benefício e informe a data da entrega. Quantidade e observação são opcionais. A lista de benefícios vem das configurações do sistema: se faltar algum, quem cuida dessas tabelas pode incluir.",
       "acao": [
         { "tipo": "clicar", "seletor": "role=button[name=\"Registrar Entrega\"]" },
         { "tipo": "clicar", "seletor": "text=Selecione o benefício" }
       ],
-      "foco": { "seletor": "role=dialog", "zoom": 1.5 }
+      "foco": { "seletor": "[role=dialog]", "zoom": 1.5 }
     },
     {
       "id": "c08",
+      "mascara": false,
       "narracao": "Clique em Salvar entrega. Ela entra na lista da aba.",
       "acao": [
         { "tipo": "tecla", "tecla": "Enter" },

@@ -38,12 +38,12 @@
         { "tipo": "clicar", "seletor": "[aria-label=\"Limpar busca\"]" },
         { "tipo": "clicar", "seletor": "role=button[name=\"Filtros\"]" }
       ],
-      "foco": { "seletor": "text=Medida Protetiva", "zoom": 1.6 }
+      "foco": { "seletor": "label[for=\"filtro-medida\"]", "zoom": 1.6 }
     },
     {
       "id": "c05",
       "narracao": "Cada filtro ligado vira uma etiqueta logo acima da lista. Para tirar um filtro, clique no xis da etiqueta. Assim você nunca esquece um filtro ligado e acha que a lista está incompleta.",
-      "acao": { "tipo": "clicar", "seletor": "text=Medida Protetiva" },
+      "acao": { "tipo": "clicar", "seletor": "#filtro-medida" },
       "foco": { "seletor": "text=Filtros ativos:", "zoom": 1.8 }
     },
     {

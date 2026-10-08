@@ -18,30 +18,35 @@
     },
     {
       "id": "c02",
+      "mascara": false,
       "narracao": "No menu, em Relatórios, abra RMA. É o Relatório Mensal de Atendimento: o movimento do mês, o detalhamento por setor e os tipos de violência dos novos casos.",
       "acao": { "tipo": "navegar", "url": "/relatorios/rma" },
       "foco": { "seletor": "text=Relatório Mensal de Atendimento (RMA)", "zoom": 1.5 }
     },
     {
       "id": "c03",
+      "mascara": false,
       "narracao": "Escolha o mês de referência e o ano e aplique os filtros. O documento abaixo é montado com os números do período.",
       "acao": { "tipo": "nenhuma" },
       "foco": { "seletor": "text=Mês de Referência", "zoom": 1.8 }
     },
     {
       "id": "c04",
+      "mascara": false,
       "narracao": "Imprimir Relatório gera o documento formatado, com cabeçalho e assinatura. Para arquivar, escolha Salvar como PDF na janela de impressão.",
       "acao": { "tipo": "nenhuma" },
       "foco": { "seletor": "role=button[name=\"Imprimir Relatório\"]", "zoom": 2.0 }
     },
     {
       "id": "c05",
+      "mascara": false,
       "narracao": "Exportar CSV baixa os mesmos números numa planilha, com o nome do arquivo já padronizado pelo mês. Isso elimina a redigitação na hora de consolidar ou de enviar para a rede SUAS.",
       "acao": { "tipo": "nenhuma" },
       "foco": { "seletor": "role=button[name=\"Exportar CSV\"]", "zoom": 2.0 }
     },
     {
       "id": "c06",
+      "mascara": false,
       "narracao": "Os Indicadores Gerais funcionam do mesmo jeito: identificação, ações, comunicação e perfil demográfico do mês, com as mesmas opções de imprimir e exportar.",
       "acao": { "tipo": "navegar", "url": "/relatorios/indicadores" },
       "foco": { "seletor": "text=Painel de Indicadores", "zoom": 1.5 }

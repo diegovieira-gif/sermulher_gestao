@@ -40,7 +40,7 @@
     {
       "id": "c05",
       "narracao": "Ainda na Triagem Inicial, informe a origem, ou seja, como ela chegou ao serviço, a prioridade, a data de abertura, o status e, se houver, o encaminhamento.",
-      "acao": { "tipo": "clicar", "seletor": "text=Joana Ribeiro da Silva" },
+      "acao": { "tipo": "clicar", "seletor": ".bg-popover button:has-text(\"Joana Ribeiro da Silva\")" },
       "foco": { "seletor": "role=tabpanel", "zoom": 1.4 }
     },
     {
@@ -71,7 +71,7 @@
       "id": "c10",
       "narracao": "O atendimento aparece na lista. Para abrir o prontuário dele, use o botão Ver detalhes. É lá que o caso vai evoluir, como você vai ver no próximo vídeo.",
       "acao": { "tipo": "clicar", "seletor": "role=button[name=\"Criar Atendimento\"]" },
-      "foco": { "seletor": "[title=\"Ver detalhes / Prontuário\"]", "zoom": 2.1 }
+      "foco": { "seletor": "tr:has-text(\"Joana Ribeiro da Silva\") [title=\"Ver detalhes / Prontuário\"]", "zoom": 2.1 }
     },
     {
       "id": "c11",

@@ -18,18 +18,21 @@
     },
     {
       "id": "c02",
+      "mascara": false,
       "narracao": "No fim do menu, abra Configurações. As tabelas estão agrupadas: Estrutural, com setores, locais, endereços e unidades de saúde; Demografia; Atendimento, com origens, prioridades, tipos de violência, encaminhamentos, benefícios e tramitações; e Outros, com tipos de evento, campanhas, periculosidade e status legal.",
       "acao": { "tipo": "navegar", "url": "/configuracoes" },
       "foco": null
     },
     {
       "id": "c03",
+      "mascara": false,
       "narracao": "Vamos incluir um tipo de evento. Abra Tipos de Evento.",
       "acao": { "tipo": "clicar", "seletor": "text=Tipos de Evento" },
       "foco": { "seletor": "text=Tipos de Evento", "zoom": 1.9 }
     },
     {
       "id": "c04",
+      "mascara": false,
       "narracao": "Clique em Novo, informe o nome e cadastre. Antes de criar, procure na lista: um item quase igual a outro, como Palestra e Palestras, divide os relatórios em dois.",
       "acao": { "tipo": "nenhuma" },
       "foco": { "seletor": "role=button[name=\"Novo\"]", "zoom": 2.0 }
