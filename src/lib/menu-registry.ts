@@ -38,6 +38,8 @@ export const MENU_REGISTRY: MenuMeta[] = [
   { key: "observatorio", label: "Observatório", href: "/observatorio", group: "main" },
   { key: "app-amar", label: "App Amar", href: "/app-amar", group: "main" },
   { key: "manual", label: "Manual do Usuário", href: "/manual", group: "system" },
+  // Treinamento é para todas: não pode ser bloqueado por perfil.
+  { key: "curso-sigma", label: "Curso Sigma", href: "/curso-sigma", group: "system", alwaysOn: true },
   { key: "configuracoes", label: "Configurações", href: "/configuracoes", group: "system" },
   { key: "auditoria", label: "Auditoria", href: "/auditoria", group: "system" },
 ];

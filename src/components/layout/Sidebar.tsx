@@ -20,6 +20,7 @@ import {
   Briefcase,
   Activity,
   ClipboardList,
+  MonitorPlay,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { logout } from "@/app/actions/auth";
@@ -315,6 +316,25 @@ export function Sidebar({ allowedKeys }: SidebarProps) {
                   <Link href="/manual">
                     <Book className="size-5" />
                     <span>Manual do Usuário</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
+
+            {can("curso-sigma") && (
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  tooltip="Curso Sigma"
+                  isActive={pathname.startsWith("/curso-sigma")}
+                  className={cn(
+                    pathname.startsWith("/curso-sigma") &&
+                      "bg-sidebar-accent text-sidebar-accent-foreground font-semibold",
+                  )}
+                >
+                  <Link href="/curso-sigma">
+                    <MonitorPlay className="size-5" />
+                    <span>Curso Sigma</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
