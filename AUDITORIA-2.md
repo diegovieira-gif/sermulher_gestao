@@ -291,7 +291,7 @@ buracos nesse princípio.
 ### 10.7 🟡 Token Bearer hardcoded no código-fonte (API externa SIGED)
 - **Eixo:** 4.1 / 4.8
 - **Evidência:** `src/app/(admin)/mulheres/beneficiarias/actions.ts:517`
-  `"Authorization": "Bearer 0ed9b204df3f68caeb3deca2301872c9"` (endpoint
+  `"Authorization": "Bearer <token removido deste documento>"` (endpoint
   `homolog.siged.educacao.aju.br/.../findByCPF`).
 - **Problema:** segredo de integração versionado em código. Ambiente de homologação,
   mas é credencial fixa exposta a qualquer um com acesso ao repositório e ao
@@ -306,6 +306,13 @@ buracos nesse princípio.
   `headers.Authorization = ` + "`Bearer ${process.env.SIGED_API_TOKEN}`" + ` com
   falha explícita se ausente.`
 - **Status:** ⏸️ decisão humana
+
+- **Atualização (10/2026):** aplicada a parte de código — URL e token passam a
+  vir de `SIGED_API_URL` e `SIGED_API_TOKEN` (`src/lib/siged.ts`); sem token a
+  consulta fica desligada e o formulário segue funcionando. O repositório é
+  **público**: o token antigo está no histórico desde 15/06/2026 e **continua
+  válido até a equipe do SIGED rotacioná-lo**. Pendente: rotação, provisionar o
+  token novo no Coolify e definir o endpoint de produção.
 
 ### 10.8 🔵 Páginas `app-amar/*` — ruído "Dynamic server usage" no build
 - **Eixo:** 4.3 / 4.6
@@ -360,7 +367,7 @@ buracos nesse princípio.
 | 10.4 | Telefone não normalizado na gravação | 4.2 | 🟡 | ✅ aplicada (migração ⏸️) |
 | 10.5 | `getWhatsappConfig` logava PII do usuário | 4.4 | 🟡 | ✅ aplicada |
 | 10.6 | Proxy aceitava cookie vazio | 4.1 | 🔵 | ✅ aplicada |
-| 10.7 | Bearer token hardcoded (API SIGED) | 4.1 | 🟡 | ⏸️ decisão humana |
+| 10.7 | Bearer token hardcoded (API SIGED) | 4.1 | 🔴 | 🟡 código aplicado; rotação pendente |
 | 10.8 | Ruído de build em `app-amar/*` | 4.3 | 🔵 | 🔎 relato |
 | — | HTTPS/TLS (1.4) | 4.1 | 🟠 | ⏸️ infra |
 | — | Refresh de sessão (1.7) | 4.1 | 🟡 | ⏸️ infra |
@@ -402,7 +409,7 @@ buracos nesse princípio.
 | **Vazamento de erro interno ao usuário** — não coberto | ✅ **Corrigido.** `(admin)/error.tsx` mostrava `error.message` cru; agora exibe mensagem genérica + `digest` para o suporte. |
 | **HTTPS/TLS (1.4)** | ⏸️ **Segue pendente** — mudança de infraestrutura. |
 | **Rotação de `DIRECTUS_TOKEN`/`CRON_SECRET`** | ⏸️ **Segue pendente.** |
-| **Bearer token hardcoded — API SIGED (10.7)** | ⏸️ **Segue pendente** — decisão humana. |
+| **Bearer token hardcoded — API SIGED (10.7)** | 🟡 **Código aplicado em 10/2026** (variáveis de ambiente). **Rotação do token pendente** — repositório público. |
 | **Migração de telefones legados (10.4)** | ⏸️ **Script proposto, não executado** contra a base. |
 
 **Cobertura de teste desde então:** a suíte ganhou uma camada unitária
