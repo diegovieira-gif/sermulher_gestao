@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,8 @@ import {
 import { Checkbox } from "@/components/ui/checkbox"; // Import do Checkbox
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import { saveInfrator } from "./actions";
+import { consultarCpfAutor, saveInfrator } from "./actions";
+import { mascararCpf, mascararTelefone, somenteDigitos } from "@/lib/utils";
 import {
   insertInfratorSchema,
   type InfratorFormValues,
@@ -71,9 +72,9 @@ export function InfratorForm({
     defaultValues: {
       id: initialData?.id,
       nome_completo: initialData?.nome_completo || "",
-      cpf: initialData?.cpf || "",
+      cpf: somenteDigitos(initialData?.cpf),
       data_nascimento: initialData?.data_nascimento || "",
-      telefone: initialData?.contato?.telefone || "",
+      telefone: somenteDigitos(initialData?.contato?.telefone),
       numero_processo: initialData?.numero_processo || "",
       nivel_id: initialData?.nivel_id?.id || initialData?.nivel_id,
       status_legal_id:
@@ -81,6 +82,48 @@ export function InfratorForm({
       tipos_agressao_ids: getInitialTiposIds(), // Carrega os checkboxes marcados
     },
   });
+
+  // CPF completo → confere duplicata e busca na rede municipal, como no
+  // cadastro de beneficiária. Na edição, só quando o CPF muda.
+  const [buscandoCpf, setBuscandoCpf] = useState(false);
+  const ultimoCpf = useRef(somenteDigitos(initialData?.cpf));
+  const cpfValue = form.watch("cpf");
+  useEffect(() => {
+    const cpf = somenteDigitos(cpfValue);
+    if (cpf.length !== 11 || cpf === ultimoCpf.current) return;
+    ultimoCpf.current = cpf;
+    let vivo = true;
+    (async () => {
+      setBuscandoCpf(true);
+      try {
+        const r = await consultarCpfAutor(cpf, initialData?.id);
+        if (!vivo || !r.success) return;
+        if (r.existente) {
+          toast.warning(
+            `Este CPF já está cadastrado para ${r.existente.nome_completo} (nº ${r.existente.id}). Abra essa ficha em vez de criar outra.`,
+            { duration: 10000 },
+          );
+          return;
+        }
+        if (!r.dados) return;
+        toast.success("Dados localizados na rede municipal!");
+        // Só preenche o que está vazio: não apaga o que a pessoa já digitou.
+        const vazio = (campo: "nome_completo" | "data_nascimento" | "telefone") =>
+          !String(form.getValues(campo) ?? "").trim();
+        if (r.dados.nome_completo && vazio("nome_completo"))
+          form.setValue("nome_completo", r.dados.nome_completo, { shouldValidate: true });
+        if (r.dados.data_nascimento && vazio("data_nascimento"))
+          form.setValue("data_nascimento", r.dados.data_nascimento, { shouldValidate: true });
+        if (r.dados.telefone && vazio("telefone"))
+          form.setValue("telefone", r.dados.telefone, { shouldValidate: true });
+      } finally {
+        if (vivo) setBuscandoCpf(false);
+      }
+    })();
+    return () => {
+      vivo = false;
+    };
+  }, [cpfValue, form, initialData?.id]);
 
   async function onSubmit(data: InsertInfrator) {
     setIsSubmitting(true);
@@ -126,12 +169,28 @@ export function InfratorForm({
               <FormItem>
                 <FormLabel>CPF *</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="Apenas números"
-                    maxLength={11}
-                    {...field}
-                  />
+                  <div className="relative">
+                    <Input
+                      placeholder="000.000.000-00"
+                      {...field}
+                      // Máscara só na exibição: o valor do formulário (e o
+                      // que vai para o banco) continua sendo só dígitos.
+                      value={mascararCpf(field.value)}
+                      onChange={(e) => field.onChange(somenteDigitos(e.target.value).slice(0, 11))}
+                      inputMode="numeric"
+                      autoComplete="off"
+                      className={buscandoCpf ? "pr-10" : ""}
+                    />
+                    {buscandoCpf && (
+                      <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
+                  </div>
                 </FormControl>
+                {buscandoCpf && (
+                  <p className="text-[10px] text-muted-foreground animate-pulse mt-1">
+                    Buscando dados cadastrais...
+                  </p>
+                )}
                 <FormMessage />
               </FormItem>
             )}
@@ -161,7 +220,10 @@ export function InfratorForm({
                   <Input
                     placeholder="(79) 99999-9999"
                     {...field}
-                    value={field.value || ""}
+                    // Mesma regra do CPF: máscara na tela, dígitos no valor.
+                    value={mascararTelefone(field.value)}
+                    onChange={(e) => field.onChange(somenteDigitos(e.target.value).slice(0, 11))}
+                    inputMode="numeric"
                   />
                 </FormControl>
                 <FormMessage />
