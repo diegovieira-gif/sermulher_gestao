@@ -288,7 +288,7 @@ Público: equipe de comunicação.
 
 ---
 
-## Módulo 8 — Coordenação (6 vídeos, ~10 min)
+## Módulo 8 — Coordenação (5 vídeos, ~9 min)
 
 Público: coordenação e administradores.
 
@@ -316,11 +316,6 @@ Público: coordenação e administradores.
 - A página **Acesso não permitido**.
 - *Tarefa:* liberar dois módulos para um perfil de teste e entrar com ele.
 
-### 8.5 — Auditoria: quem fez o quê · 1 min
-- Buscar por usuário, coleção ou registro.
-- O detalhe de uma operação: o que mudou, de onde veio.
-- *Tarefa:* encontrar quem alterou a ficha da beneficiária do 1.1.
-
 ### 8.6 — Configurações e tabelas auxiliares · 2 min
 - As tabelas que alimentam os formulários: bairros, tipos de violência,
   setores, benefícios, tipos de evento.
@@ -341,8 +336,8 @@ Público: coordenação e administradores.
 | 5 — Escola da Mulher | 4 | ~6 min | Equipe da Escola |
 | 6 — Sala Azul | 4 | ~7 min | Equipe da Sala Azul |
 | 7 — Comunicação | 3 | ~6 min | Comunicação |
-| 8 — Coordenação | 6 | ~10 min | Coordenação |
-| **Total** | **37** | **~74 min** | |
+| 8 — Coordenação | 5 | ~9 min | Coordenação |
+| **Total** | **36** | **~73 min** | |
 
 **Trilha mínima para começar a trabalhar:** módulos 0 e 1 — 9 vídeos, ~21 minutos.
 
@@ -355,6 +350,7 @@ Público: coordenação e administradores.
 | **Configuração de Integração** das Campanhas WhatsApp (endereço do serviço, usuário e senha) | Tarefa de TI, feita uma vez. Mostrar credencial em vídeo seria também um risco. |
 | Campos de **UUID** no App Amar (imagem de capa, áudio) | Dívida técnica: pedem o identificador interno de um arquivo do Directus colado à mão. Ensinar isso perpetua o problema; quando houver upload, a aula ganha uma cena. |
 | Criar **perfis** e usuários no Directus | Fora do app; é procedimento de TI. A aula 8.4 trata do que se faz dentro do SIGMA. |
+| **Auditoria** (era a 8.5) | Retirada em 10/2026: a tela mostra ações reais das servidoras, com IP e navegador, e não há como gravá-la sem expor isso. Tela de uso da administração; o Manual do Usuário a descreve. |
 | Telas de detalhe do **Observatório** além de períodos e séries | Uso esporádico e restrito; entram se a coordenação pedir. |
 
 ---

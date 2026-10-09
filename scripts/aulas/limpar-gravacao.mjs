@@ -105,6 +105,8 @@ await apagarOnde("inscricoes_curso", { beneficiaria: { _in: ids } }, "inscriçõ
 await apagarOnde("disparos", { beneficiaria_id: { _in: ids } }, "disparos de WhatsApp");
 await apagarOnde("cram_pia", { beneficiaria: { _in: ids } }, "PIA");
 await apagarOnde("cram_atendimentos", { beneficiaria: { _in: ids } }, "atendimentos CRAM");
+await apagarOnde("escola_frequencia", { beneficiaria: { _in: ids } }, "chamadas da Escola");
+await apagarOnde("escola_matriculas", { beneficiaria: { _in: ids } }, "matrículas da Escola");
 
 for (const b of alvos) {
   const d = await fetch(`${URL_}/items/beneficiarias/${b.id}`, { method: "DELETE", headers: H });
