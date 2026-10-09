@@ -58,6 +58,7 @@ import {
   ExternalLink,
   SlidersHorizontal,
   RotateCcw,
+  QrCode,
 } from "lucide-react";
 import {
   getWhatsappConfig,
@@ -82,6 +83,8 @@ import {
   type FilterOptions,
 } from "./audience-filter-panel";
 import { MessageEditor } from "./message-editor";
+import { ConectarWhatsappDialog } from "./conectar-whatsapp-dialog";
+import { formatarData } from "@/lib/datas";
 
 interface Beneficiaria {
   id: string;
@@ -152,6 +155,8 @@ export function WhatsappClient() {
   const [dispatchLogs, setDispatchLogs] = useState<any[]>([]);
 
   // Dialog States
+  const [conectarOpen, setConectarOpen] = useState(false);
+  const [reenvioConfirmado, setReenvioConfirmado] = useState(false);
   const [campaignFormOpen, setCampaignFormOpen] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
   const [dispatchDialogOpen, setDispatchDialogOpen] = useState(false);
@@ -273,7 +278,7 @@ export function WhatsappClient() {
         if (res.isConnected) {
           toast.success("Conectado ao GoWA com sucesso!");
         } else {
-          toast.warning("GoWA acessível, mas nenhum WhatsApp logado. Faça o login/QR Code no painel do GoWA.");
+          toast.warning("GoWA acessível, mas nenhum WhatsApp logado. Clique em Conectar WhatsApp para ler o QR Code.");
         }
       } else {
         setConnectionState({
@@ -388,6 +393,7 @@ export function WhatsappClient() {
     // Feedback imediato no botão da linha enquanto o painel abre.
     setOpeningDispatchId(camp.id ?? null);
     setSelectedCampaignForDispatch(camp);
+    setReenvioConfirmado(false);
     setAudienceMode("all");
     setSelectedBeneficiarias([]);
     setSearchBeneficiaria("");
@@ -515,7 +521,8 @@ export function WhatsappClient() {
     try {
       const res = await triggerCampaignDispatch(
         selectedCampaignForDispatch.id!,
-        target
+        target,
+        { reenvioConfirmado },
       );
 
       if (res.success) {
@@ -599,6 +606,16 @@ export function WhatsappClient() {
             >
               {connectionState.connected ? "Conectado" : "Offline"}
             </Badge>
+          )}
+          {connectionState.tested && !connectionState.connected && config.evolution_api_url && (
+            <Button
+              size="sm"
+              className="h-8 bg-purple-600 hover:bg-purple-700 text-white"
+              onClick={() => setConectarOpen(true)}
+            >
+              <QrCode className="h-3 w-3 mr-1" />
+              Conectar WhatsApp
+            </Button>
           )}
         </div>
       </div>
@@ -939,6 +956,14 @@ export function WhatsappClient() {
       </div>
 
       {/* CAMPAIGN DIALOG FORM */}
+      <ConectarWhatsappDialog
+        open={conectarOpen}
+        onOpenChange={setConectarOpen}
+        onConectado={() =>
+          setConnectionState({ tested: true, connected: true, state: "open", loading: false })
+        }
+      />
+
       <Dialog open={campaignFormOpen} onOpenChange={setCampaignFormOpen}>
         <DialogContent className="sm:max-w-[600px] max-h-[88vh] overflow-y-auto">
           <DialogHeader>
@@ -1160,6 +1185,26 @@ export function WhatsappClient() {
                 </p>
               </div>
 
+              {selectedCampaignForDispatch.status === "completed" && (
+                <div className="rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 p-3 space-y-2">
+                  <p className="text-xs text-amber-900 dark:text-amber-200">
+                    <strong>Esta campanha já foi enviada</strong>
+                    {selectedCampaignForDispatch.data_envio
+                      ? ` em ${formatarData(selectedCampaignForDispatch.data_envio)}`
+                      : ""}
+                    . Um novo disparo manda a mensagem de novo para todo o público escolhido —
+                    inclusive para quem já recebeu.
+                  </p>
+                  <label className="flex items-center gap-2 text-xs font-medium text-amber-900 dark:text-amber-200 cursor-pointer">
+                    <Checkbox
+                      checked={reenvioConfirmado}
+                      onCheckedChange={(v) => setReenvioConfirmado(v === true)}
+                    />
+                    Confirmo que quero enviar esta campanha de novo
+                  </label>
+                </div>
+              )}
+
               {/* Seleção de público */}
               <div className="grid grid-cols-3 gap-2">
                 <button
@@ -1351,6 +1396,7 @@ export function WhatsappClient() {
                 onClick={handleTriggerDispatch}
                 disabled={
                   dispatching ||
+                  (selectedCampaignForDispatch?.status === "completed" && !reenvioConfirmado) ||
                   (audienceMode === "manual" && selectedBeneficiarias.length === 0) ||
                   (audienceMode === "all" && eligibleCount === 0) ||
                   (audienceMode === "filtered" && (countingFilter || (filteredCount ?? 0) === 0))

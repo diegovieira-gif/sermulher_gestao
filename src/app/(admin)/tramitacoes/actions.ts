@@ -6,6 +6,7 @@ import { readItem, readItems, updateItem, deleteItem } from "@directus/sdk";
 import { StatusEtapa } from "@/app/(admin)/mulheres/atendimentos/[id]/schemas";
 import { getCurrentDemandAccess, tipoDemandaPermitido } from "@/lib/demanda-permissions";
 import { assertAccess } from "@/lib/permissions";
+import { somenteDigitos } from "@/lib/utils";
 
 export type KanbanCard = {
   id: number;
@@ -24,36 +25,47 @@ export type KanbanCard = {
 export async function getKanbanData(search?: string, setorId?: string) {
   await assertAccess("tramitacoes");
   try {
-    // Construção dinâmica do filtro
-    const filter: any = {
-      status_etapa: { _neq: "Arquivado" }, // Exemplo: Não trazer lixo antigo
-    };
+    // Construção dinâmica do filtro (todas as condições em _and).
+    const condicoes: any[] = [
+      // Arquivadas ficam fora do quadro. Status vazio é "Aguardando" (o card
+      // é exibido assim) — `_neq` sozinho descarta o NULL no SQL e essas
+      // demandas sumiam do quadro.
+      {
+        _or: [
+          { status_etapa: { _neq: "Arquivado" } },
+          { status_etapa: { _null: true } },
+        ],
+      },
+    ];
 
     // Restrição por perfil: tipos de demanda permitidos (admin/sem config = todos).
     const demandAccess = await getCurrentDemandAccess();
     if (demandAccess.allowedTipos !== null) {
       // Lista vazia → _in [""] garante zero resultados (perfil sem tipos liberados).
-      filter.tipo_demanda = {
-        _in: demandAccess.allowedTipos.length > 0 ? demandAccess.allowedTipos : ["__none__"],
-      };
+      condicoes.push({
+        tipo_demanda: {
+          _in: demandAccess.allowedTipos.length > 0 ? demandAccess.allowedTipos : ["__none__"],
+        },
+      });
     }
 
     // Filtro por Setor
     if (setorId && setorId !== "all") {
-      filter.setor_responsavel = { _eq: Number(setorId) };
+      condicoes.push({ setor_responsavel: { _eq: Number(setorId) } });
     }
 
     // Filtro por Busca (Nome ou CPF)
-    if (search) {
-      filter.atendimento_pai = {
-        beneficiaria: {
-          _or: [
-            { nome_completo: { _icontains: search } },
-            { cpf: { _contains: search } },
-          ],
-        },
-      };
+    const termo = (search || "").trim();
+    if (termo) {
+      // O CPF é gravado só com dígitos: "123.456" não achava nada. E sem
+      // dígitos no termo (busca por nome) o CPF fica de fora — `_contains ""`
+      // casaria com todas.
+      const digitos = somenteDigitos(termo);
+      const ou: any[] = [{ nome_completo: { _icontains: termo } }];
+      if (digitos) ou.push({ cpf: { _contains: digitos } });
+      condicoes.push({ atendimento_pai: { beneficiaria: { _or: ou } } });
     }
+    const filter = { _and: condicoes };
 
     const tramitacoes = await directus.request(
       readItems("tramitacoes", {
@@ -70,7 +82,10 @@ export async function getKanbanData(search?: string, setorId?: string) {
         ],
         filter,
         sort: ["-data_recebimento"],
-        limit: 100, // Traz os 100 mais relevantes do filtro atual
+        // Sem teto: com 100 o quadro truncava em silêncio e colunas
+        // inteiras pareciam vazias. O volume de demandas não arquivadas
+        // cabe numa consulta.
+        limit: -1,
       }),
     );
 

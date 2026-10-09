@@ -1,16 +1,20 @@
 import { getKanbanData, getSetoresOptions, getStatusEtapasOptions } from "./actions";
 import { KanbanBoard } from "./kanban-board";
 import { AlertCircle } from "lucide-react";
+import { getCurrentAccess } from "@/lib/permissions";
 
 export const dynamic = "force-dynamic";
 
 export default async function TramitacoesPage() {
   // Busca dados iniciais, setores e status de etapa em paralelo
-  const [kanbanResult, setores, statusEtapas] = await Promise.all([
+  const [kanbanResult, setores, statusEtapas, access] = await Promise.all([
     getKanbanData(),
     getSetoresOptions(),
     getStatusEtapasOptions(),
+    getCurrentAccess(),
   ]);
+  // O prontuário exige o módulo "mulheres"; sem ele o link só levaria a erro.
+  const podeAbrirProntuario = access.isAdmin || access.allowedKeys.includes("mulheres");
 
   if (!kanbanResult.success || !kanbanResult.data) {
     return (
@@ -38,6 +42,7 @@ export default async function TramitacoesPage() {
           initialData={kanbanResult.data}
           setores={Array.isArray(setores) ? setores : []}
           statusEtapas={Array.isArray(statusEtapas) ? (statusEtapas as { id: number; nome: string }[]) : []}
+          podeAbrirProntuario={podeAbrirProntuario}
         />
       </div>
     </div>

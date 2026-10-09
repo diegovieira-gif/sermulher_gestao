@@ -1,3 +1,5 @@
+import { dataEmBrasilia } from "@/lib/datas";
+
 /**
  * Exportação CSV das beneficiárias.
  *
@@ -145,5 +147,6 @@ export function montarCsv(
 
 /** Nome do arquivo com a data, para não sobrescrever exportações anteriores. */
 export function nomeArquivoCsv(prefixo: string, data = new Date()): string {
-  return `${prefixo}_${data.toISOString().slice(0, 10)}.csv`;
+  // Dia de Brasília: toISOString() é UTC e depois das 21h já seria amanhã.
+  return `${prefixo}_${dataEmBrasilia(data)}.csv`;
 }

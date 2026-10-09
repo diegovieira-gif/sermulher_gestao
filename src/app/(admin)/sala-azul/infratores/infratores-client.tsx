@@ -92,13 +92,13 @@ export function InfratoresClient({
     try {
       const result = await deleteInfrator(deletingId);
       if (result.success) {
-        toast.success("Infrator removido com sucesso");
+        toast.success("Autor removido com sucesso");
         router.refresh();
       } else {
         toast.error("Erro ao remover: " + result.error);
       }
     } catch (error) {
-      toast.error("Erro interno ao remover infrator");
+      toast.error("Erro interno ao remover autor");
     } finally {
       setDeletingId(null);
     }
@@ -109,7 +109,7 @@ export function InfratoresClient({
     setEditingInfrator(null);
     router.refresh();
     toast.success(
-      editingInfrator ? "Infrator atualizado!" : "Infrator cadastrado!",
+      editingInfrator ? "Autor atualizado!" : "Autor cadastrado!",
     );
   };
 
@@ -134,7 +134,7 @@ export function InfratoresClient({
           <div>
             <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
               <ShieldAlert className="h-6 w-6 text-primary" />
-              Gestão de Infratores
+              Gestão de Autores
             </h2>
             <p className="text-sm text-muted-foreground">
               Gerencie os participantes dos grupos reflexivos
@@ -157,7 +157,7 @@ export function InfratoresClient({
               className="bg-primary hover:bg-primary/90 gap-2"
             >
               <Plus className="h-4 w-4" />
-              Novo Infrator
+              Novo Autor
             </Button>
           </div>
         </div>
@@ -192,7 +192,7 @@ export function InfratoresClient({
                     colSpan={5}
                     className="h-24 text-center text-muted-foreground"
                   >
-                    Nenhum infrator encontrado.
+                    Nenhum autor encontrado.
                   </TableCell>
                 </TableRow>
               ) : (
@@ -274,7 +274,7 @@ export function InfratoresClient({
           <div className="flex justify-between items-end">
             <div>
               <h1 className="text-2xl font-bold text-foreground mb-1">
-                Relatório de Infratores
+                Relatório de Autores
               </h1>
               <p className="text-sm text-muted-foreground">
                 Sala Azul - Grupos Reflexivos para Homens
@@ -341,7 +341,7 @@ export function InfratoresClient({
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {editingInfrator ? "Editar Infrator" : "Novo Infrator"}
+              {editingInfrator ? "Editar Autor" : "Novo Autor"}
             </DialogTitle>
           </DialogHeader>
           <InfratorForm
@@ -360,7 +360,7 @@ export function InfratoresClient({
             <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
             <AlertDialogDescription>
               Esta ação não pode ser desfeita. Isso excluirá permanentemente o
-              registro do infrator.
+              registro do autor.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

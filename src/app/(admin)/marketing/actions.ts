@@ -11,6 +11,7 @@ import {
 import { revalidatePath } from "next/cache";
 import { marketingPostSchema } from "./schemas";
 import { assertAccess } from "@/lib/permissions";
+import { limitesDoMes, mesAtualEmBrasilia } from "@/lib/datas";
 
 const COLLECTION = "marketing_items";
 
@@ -124,13 +125,9 @@ export async function deleteMarketingItem(id: number) {
 export async function getMarketingStats() {
   await assertAccess("marketing");
   try {
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-      .toISOString()
-      .split("T")[0];
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-      .toISOString()
-      .split("T")[0];
+    // Mês corrente de Brasília, independente do fuso do processo.
+    const { ano, mes } = mesAtualEmBrasilia();
+    const { inicio: startOfMonth, fim: endOfMonth } = limitesDoMes(ano, mes);
 
     // Busca Paralela: Totais e Agrupamentos
     const [totais, porCanal, porCampanha, topPost] = await Promise.all([

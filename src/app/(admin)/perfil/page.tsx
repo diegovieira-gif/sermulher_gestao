@@ -1,5 +1,4 @@
-import { getMyProfile } from "./actions";
-import { getAuditLogs } from "../auditoria/actions";
+import { getMinhaAtividade, getMyProfile } from "./actions";
 import { PerfilClient } from "./perfil-client";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +15,9 @@ export default async function PerfilPage() {
   }
 
   const perfil = profileResult.data;
-  const auditResult = await getAuditLogs({ user: perfil.id, page: 1, limit: 15 });
+  // A atividade é sempre a da sessão (o id é resolvido no servidor) e não
+  // depende do módulo Auditoria — sem ele a página inteira caía.
+  const auditResult = await getMinhaAtividade({ page: 1, limit: 15 });
 
   return (
     <PerfilClient

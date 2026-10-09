@@ -1,7 +1,10 @@
 import "server-only";
 import { createItem, readItems, updateItem } from "@directus/sdk";
 import { getDirectusAdmin } from "@/lib/directus";
-import type { TipoNotificacao } from "@/lib/notificacoes-formato";
+import {
+  notificacaoCancelavel,
+  type TipoNotificacao,
+} from "@/lib/notificacoes-formato";
 
 // Regras de agendamento e texto vivem num módulo puro, testável sem servidor.
 export {
@@ -121,11 +124,10 @@ export async function cancelarPendentes(
     const agora = new Date().toISOString();
     await Promise.all(
       pendentes
-        // Já enviado por algum canal externo não é mais cancelável.
-        .filter((n) => {
-          const c = n.canais || {};
-          return !c.email && !c.whatsapp;
-        })
+        // Já ENTREGUE por algum canal externo não é mais cancelável. Erro ou
+        // "pulado" não contam: antes qualquer registro em `canais` bastava, e
+        // um lembrete cujo e-mail falhou sobrevivia à saída da pessoa da equipe.
+        .filter((n) => notificacaoCancelavel(n.canais))
         .map((n) =>
           client.request(updateItem(COLLECTION, n.id, { cancelada_em: agora })),
         ),

@@ -24,6 +24,7 @@ import {
     Download
 } from "lucide-react";
 import { baixarCsv } from "@/lib/csv";
+import { mesAtualEmBrasilia } from "@/lib/datas";
 import {
     Card,
     CardContent,
@@ -119,7 +120,7 @@ export function IndicadoresClient({ dados, mesInicial, anoInicial }: Indicadores
             ["— Devolutivas", dados.acoes.atendimentosTecnicos.devolutivas],
             ...grupo("Atendimentos por setor", dados.acoes.porSetor),
             ["Turmas ativas", dados.acoes.educacao.turmasAtivas],
-            ["Alunas matriculadas", dados.acoes.educacao.totalAlunas],
+            ["Alunas matriculadas (turmas em curso no mês)", dados.acoes.educacao.totalAlunas],
             ["Eventos no mês", dados.acoes.eventos.total],
             ["Reuniões de rede", dados.acoes.eventos.reunioesRede],
             [],
@@ -141,7 +142,7 @@ export function IndicadoresClient({ dados, mesInicial, anoInicial }: Indicadores
 
     const anosDisponiveis = Array.from(
         { length: 5 },
-        (_, i) => new Date().getFullYear() - i,
+        (_, i) => mesAtualEmBrasilia().ano - i,
     );
 
     // Evita renderização dos gráficos no servidor (Hydration Error)
@@ -325,6 +326,9 @@ export function IndicadoresClient({ dados, mesInicial, anoInicial }: Indicadores
                             <p className="text-xs font-bold text-emerald-600 uppercase mb-1 dark:text-emerald-400">Escola de Capacitação</p>
                             <div className="text-3xl font-black text-foreground">{dados.acoes.educacao.turmasAtivas}</div>
                             <p className="text-[10px] text-muted-foreground mt-1">Turmas Ativas no Mês</p>
+                            <p className="text-[10px] text-muted-foreground">
+                                Alunas matriculadas nelas: <b>{dados.acoes.educacao.totalAlunas}</b>
+                            </p>
                         </div>
 
                         <div className="bg-violet-50 p-4 rounded-lg border border-violet-100 dark:bg-violet-950/40 dark:border-violet-900">

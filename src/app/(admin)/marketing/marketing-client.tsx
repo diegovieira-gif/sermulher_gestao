@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { formatarData, hojeEmBrasilia } from "@/lib/datas";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -109,7 +110,8 @@ export function MarketingClient({
     resolver: zodResolver(marketingPostSchema),
     defaultValues: {
       titulo: "",
-      data_publicacao: new Date().toISOString().split("T")[0],
+      // Hoje em Brasília: o dia em UTC virava "amanhã" depois das 21h.
+      data_publicacao: hojeEmBrasilia(),
       canal: "Instagram" as const,
       formato: "Feed/Post" as const,
       alcance: 0,
@@ -137,7 +139,8 @@ export function MarketingClient({
     setEditId(null);
     form.reset({
       titulo: "",
-      data_publicacao: new Date().toISOString().split("T")[0],
+      // Hoje em Brasília: o dia em UTC virava "amanhã" depois das 21h.
+      data_publicacao: hojeEmBrasilia(),
       canal: "Instagram",
       formato: "Feed/Post",
       alcance: 0,
@@ -475,9 +478,9 @@ export function MarketingClient({
                   items.map((item) => (
                     <TableRow key={item.id}>
                       <TableCell>
-                        {new Date(item.data_publicacao).toLocaleDateString(
-                          "pt-BR",
-                        )}
+                        {/* Campo date: sem `new Date`, que o lia como meia-noite
+                            UTC e mostrava o dia anterior. */}
+                        {formatarData(item.data_publicacao)}
                       </TableCell>
                       <TableCell className="font-medium">
                         {item.titulo}

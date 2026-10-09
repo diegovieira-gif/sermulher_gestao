@@ -377,6 +377,10 @@ export function CramForm({
       const resultado = await saveInstrumental(valores);
       if (resultado.success) {
         rascunho.limpar();
+        // Na edição o push leva para a mesma rota e o formulário não remonta:
+        // sem o reset ele continuava "sujo" — o aviso de saída e o rascunho
+        // local seguiam ativos depois de salvar.
+        form.reset(valores);
         toast.success(
           edicao ? "Instrumental atualizado." : "Instrumental registrado com sucesso.",
         );

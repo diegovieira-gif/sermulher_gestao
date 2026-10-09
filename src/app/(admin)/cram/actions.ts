@@ -11,7 +11,7 @@ import {
 } from "@directus/sdk";
 import { getDirectusAdmin } from "@/lib/directus";
 import { assertAccess } from "@/lib/permissions";
-import { evolucaoSchema, instrumentalSchema, piaSchema } from "./schemas";
+import { evolucaoSchema, instrumentalSchema, pactuacoesPreenchidas, piaSchema } from "./schemas";
 
 /**
  * Autoriza o usuário no módulo "cram" e devolve o cliente admin (lazy).
@@ -317,6 +317,9 @@ export async function getPiaPorAtendimento(atendimentoId: number) {
       readItems(PIA, {
         fields: ["*"],
         filter: { cram_atendimento: { _eq: atendimentoId } },
+        // Ordem fixa: se houver PIA duplicado (criado antes da correção do
+        // duplo salvamento), a tela e o savePia sempre usam o mais antigo.
+        sort: ["id"],
         limit: 1,
       }),
     )) as Array<Record<string, unknown>>;
@@ -355,7 +358,7 @@ async function sincronizarPactuacoes(
   directus: Awaited<ReturnType<typeof getCramDirectus>>,
   piaId: number,
   linhas: Array<Record<string, unknown>>,
-) {
+): Promise<number[]> {
   const atuais = (await directus.request(
     readItems(PACTUACOES, {
       fields: ["id"],
@@ -374,23 +377,42 @@ async function sincronizarPactuacoes(
     }
   }
 
+  // Devolve os ids na ordem das linhas: o formulário passa a conhecê-los e o
+  // próximo salvamento atualiza em vez de apagar e recriar.
+  const ids: number[] = [];
   for (const [indice, linha] of linhas.entries()) {
     const { id, ...campos } = linha;
     const payload = { ...campos, pia: piaId, sort: indice };
     if (id && Number(id) > 0) {
       await directus.request(updateItem(PACTUACOES, Number(id), payload));
+      ids.push(Number(id));
     } else {
-      await directus.request(createItem(PACTUACOES, payload));
+      const criada = (await directus.request(createItem(PACTUACOES, payload))) as { id: number };
+      ids.push(Number(criada.id));
     }
   }
+  return ids;
 }
 
 export async function savePia(input: unknown) {
   const directus = await getCramDirectus();
 
-  const validacao = piaSchema.safeParse(input);
+  // Linhas de pactuação em branco são ignoradas, não reprovadas.
+  const bruto = (input ?? {}) as Record<string, unknown>;
+  const validacao = piaSchema.safeParse({
+    ...bruto,
+    pactuacoes: pactuacoesPreenchidas(
+      Array.isArray(bruto.pactuacoes) ? (bruto.pactuacoes as Array<Record<string, unknown>>) : [],
+    ),
+  });
   if (!validacao.success) {
     const primeiro = validacao.error.issues[0];
+    if (primeiro?.path[0] === "pactuacoes" && typeof primeiro.path[1] === "number") {
+      return {
+        success: false,
+        error: `Pactuação ${primeiro.path[1] + 1}: ${primeiro.message}.`,
+      };
+    }
     return {
       success: false,
       error: primeiro ? `${primeiro.path.join(".")}: ${primeiro.message}` : "Dados inválidos.",
@@ -402,23 +424,37 @@ export async function savePia(input: unknown) {
   const payload = { ...resto, data_abertura: normalizeDate(resto.data_abertura) };
 
   try {
-    let piaId: number;
-    if (id) {
-      await directus.request(updateItem(PIA, id, payload));
-      piaId = id;
+    // Sem id (formulário aberto antes do primeiro salvamento, outra aba,
+    // duplo clique): o atendimento tem um único PIA — atualiza o existente
+    // em vez de criar um segundo.
+    let piaId: number | undefined = id || undefined;
+    if (!piaId && dados.cram_atendimento) {
+      const existentes = (await directus.request(
+        readItems(PIA, {
+          fields: ["id"],
+          filter: { cram_atendimento: { _eq: dados.cram_atendimento } },
+          sort: ["id"],
+          limit: 1,
+        }),
+      )) as Array<{ id: number }>;
+      piaId = existentes[0]?.id;
+    }
+
+    if (piaId) {
+      await directus.request(updateItem(PIA, piaId, payload));
     } else {
       const criado = (await directus.request(createItem(PIA, payload))) as { id: number };
       piaId = criado.id;
     }
 
-    await sincronizarPactuacoes(
+    const pactuacaoIds = await sincronizarPactuacoes(
       directus,
       piaId,
       pactuacoes as unknown as Array<Record<string, unknown>>,
     );
 
     if (dados.cram_atendimento) revalidatePath(`/cram/${dados.cram_atendimento}`);
-    return { success: true, id: piaId };
+    return { success: true, id: piaId, pactuacaoIds };
   } catch (error) {
     console.error("Erro ao salvar PIA:", error);
     return { success: false, error: "Erro ao salvar o plano individual." };

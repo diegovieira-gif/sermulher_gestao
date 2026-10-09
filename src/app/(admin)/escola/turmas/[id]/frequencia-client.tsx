@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -16,6 +16,7 @@ import { getFrequenciaByData, saveFrequencia, type Matricula, type PresencaPaylo
 import { toast } from "sonner";
 import { Loader2, Save, Calendar } from "lucide-react";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
+import { booleano, hojeEmBrasilia } from "@/lib/datas";
 
 interface FrequenciaClientProps {
   turmaId: number;
@@ -25,14 +26,14 @@ interface FrequenciaClientProps {
 type EstadoPresenca = Record<number, boolean>;
 
 export function FrequenciaClient({ turmaId, matriculas }: FrequenciaClientProps) {
-  const [selectedDate, setSelectedDate] = useState<string>(() => {
-    // Data de hoje no formato YYYY-MM-DD
-    const today = new Date();
-    return today.toISOString().split("T")[0];
-  });
+  // Hoje em Brasília: o toISOString (UTC) virava amanhã depois das 21h.
+  const [selectedDate, setSelectedDate] = useState<string>(hojeEmBrasilia);
   const [presencas, setPresencas] = useState<EstadoPresenca>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  // O botão desabilitado só vale após o re-render; a ref barra o duplo clique
+  // imediato que disparava duas gravações da mesma chamada.
+  const salvandoRef = useRef(false);
 
   // Carrega frequência quando a data muda
   useEffect(() => {
@@ -48,13 +49,13 @@ export function FrequenciaClient({ turmaId, matriculas }: FrequenciaClientProps)
         // Converte array de registros para objeto { beneficiariaId: presente }
         const presencasMap: EstadoPresenca = {};
         result.data.forEach((registro) => {
-          presencasMap[registro.beneficiaria] = registro.presente;
+          presencasMap[registro.beneficiaria] = booleano(registro.presente);
         });
 
         // Inicializa beneficiárias que não têm registro como presentes (padrão)
         matriculas.forEach((matricula) => {
-          if (!(matricula.beneficiaria.id in presencasMap)) {
-            presencasMap[matricula.beneficiaria.id] = true;
+          if (!(matricula.beneficiaria?.id in presencasMap)) {
+            presencasMap[matricula.beneficiaria?.id] = true;
           }
         });
 
@@ -63,7 +64,7 @@ export function FrequenciaClient({ turmaId, matriculas }: FrequenciaClientProps)
         // Se não há registros, inicializa todos como presentes
         const presencasInicial: EstadoPresenca = {};
         matriculas.forEach((matricula) => {
-          presencasInicial[matricula.beneficiaria.id] = true;
+          presencasInicial[matricula.beneficiaria?.id] = true;
         });
         setPresencas(presencasInicial);
       }
@@ -73,7 +74,7 @@ export function FrequenciaClient({ turmaId, matriculas }: FrequenciaClientProps)
       // Inicializa com todos presentes em caso de erro
       const presencasInicial: EstadoPresenca = {};
       matriculas.forEach((matricula) => {
-        presencasInicial[matricula.beneficiaria.id] = true;
+        presencasInicial[matricula.beneficiaria?.id] = true;
       });
       setPresencas(presencasInicial);
     } finally {
@@ -89,12 +90,14 @@ export function FrequenciaClient({ turmaId, matriculas }: FrequenciaClientProps)
   }
 
   async function handleSave() {
+    if (salvandoRef.current) return;
+    salvandoRef.current = true;
     setIsSaving(true);
     try {
       // Converte o estado para array de PresencaPayload
       const presencasArray: PresencaPayload[] = matriculas.map((matricula) => ({
-        beneficiariaId: matricula.beneficiaria.id,
-        presente: presencas[matricula.beneficiaria.id] ?? true,
+        beneficiariaId: matricula.beneficiaria?.id,
+        presente: presencas[matricula.beneficiaria?.id] ?? true,
       }));
 
       const result = await saveFrequencia(turmaId, selectedDate, presencasArray);
@@ -108,11 +111,15 @@ export function FrequenciaClient({ turmaId, matriculas }: FrequenciaClientProps)
       console.error("Erro ao salvar frequência:", error);
       toast.error("Erro inesperado ao salvar chamada");
     } finally {
+      salvandoRef.current = false;
       setIsSaving(false);
     }
   }
 
-  const presentes = Object.values(presencas).filter((p) => p === true).length;
+  // Conta só as alunas da lista (o mapa pode ter registros de quem saiu da turma).
+  const presentes = matriculas.filter(
+    (m) => booleano(presencas[m.beneficiaria?.id] ?? true),
+  ).length;
   const ausentes = matriculas.length - presentes;
 
   if (matriculas.length === 0) {
@@ -192,7 +199,7 @@ export function FrequenciaClient({ turmaId, matriculas }: FrequenciaClientProps)
             </TableHeader>
             <TableBody>
               {matriculas.map((matricula, index) => {
-                const beneficiariaId = matricula.beneficiaria.id;
+                const beneficiariaId = matricula.beneficiaria?.id;
                 const isPresente = presencas[beneficiariaId] ?? true;
 
                 return (
@@ -201,7 +208,7 @@ export function FrequenciaClient({ turmaId, matriculas }: FrequenciaClientProps)
                       {index + 1}
                     </TableCell>
                     <TableCell className="font-medium">
-                      {matricula.beneficiaria.nome_completo}
+                      {matricula.beneficiaria?.nome_completo ?? "-"}
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-2">

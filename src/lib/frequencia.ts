@@ -1,3 +1,5 @@
+import { booleano } from "./datas";
+
 /**
  * Frequência de um participante da Sala Azul.
  *
@@ -30,7 +32,9 @@ export function frequenciasPorParticipacao(
   const sessoes = new Set(sessaoIds.map(Number));
   const presentes = new Map<number, Set<number>>();
   for (const r of registros) {
-    if (r.presente !== true) continue;
+    // O SQLite desta instância devolve booleano como 1/0: `=== true` contava
+    // toda presença como falta.
+    if (!booleano(r.presente)) continue;
     const sessao = Number(r.sessao_id);
     const participacao = Number(r.participacao_id);
     if (!sessoes.has(sessao)) continue;

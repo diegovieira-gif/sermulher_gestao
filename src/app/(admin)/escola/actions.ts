@@ -5,6 +5,8 @@ import { assertAccess } from "@/lib/permissions";
 import { EscolaAlunoDB, EscolaCursoDB, EscolaTurmaDB } from "@/types/database";
 import { createItem, deleteItem, readItems, updateItem } from "@directus/sdk";
 import { revalidatePath } from "next/cache";
+import { booleano, hojeEmBrasilia } from "@/lib/datas";
+import { planejarFrequencia } from "./frequencia-plano";
 import { z } from "zod";
 
 const CURSO_FIELDS = [
@@ -162,11 +164,13 @@ export async function getCursosOptions() {
 const turmaSchema = z.object({
   id: z.number().optional(),
   nome: z.string().min(2, "Informe o nome da turma"),
-  curso: z.coerce.number(),
+  // O formulário começa com curso 0 ("nenhum"): sem o positive() a turma
+  // ia ao Directus sem curso válido e o erro voltava genérico.
+  curso: z.coerce.number().int().positive("Selecione o curso"),
   instrutor: z.string().min(2, "Informe o instrutor"),
   vagas: z.coerce.number().int().positive("Vagas deve ser maior que zero"),
-  data_inicio: z.string().optional(),
-  data_fim: z.string().optional(),
+  data_inicio: z.string().optional().nullable(),
+  data_fim: z.string().optional().nullable(),
   status: z.enum(["aberta", "em_andamento", "concluida", "cancelada"]),
 });
 
@@ -216,10 +220,19 @@ export async function saveTurma(data: TurmaPayload) {
   const directus = await getEscolaDirectus();
   const parsed = turmaSchema.safeParse(data);
   if (!parsed.success) {
-    return { success: false, error: "Dados inválidos. Verifique os campos." };
+    return {
+      success: false,
+      error: parsed.error.issues[0]?.message || "Dados inválidos. Verifique os campos.",
+    };
   }
 
-  const { id, ...payload } = parsed.data;
+  const { id, ...campos } = parsed.data;
+  // Campo date do Directus recusa "": turma sem datas não salvava.
+  const payload = {
+    ...campos,
+    data_inicio: campos.data_inicio || null,
+    data_fim: campos.data_fim || null,
+  };
 
   try {
     if (id) {
@@ -342,7 +355,12 @@ export async function getMatriculasByTurma(turmaId: number) {
       }),
     );
 
-    return { success: true, data: matriculas as Matricula[] };
+    // Matrícula sem beneficiária (vínculo apagado) derrubava a tela da turma
+    // em `matricula.beneficiaria.id`: fica de fora da lista.
+    const validas = (matriculas as Array<Matricula | (Omit<Matricula, "beneficiaria"> & { beneficiaria: null })>)
+      .filter((m): m is Matricula => Boolean(m.beneficiaria?.id));
+
+    return { success: true, data: validas };
   } catch (error) {
     console.error("Erro ao buscar matrículas:", error);
     return { success: false, error: "Erro ao buscar matrículas." };
@@ -430,7 +448,8 @@ export async function saveMatricula(turmaId: number, beneficiariaId: number) {
       createItem("escola_matriculas", {
         turma: turmaId,
         beneficiaria: beneficiariaId,
-        data_matricula: new Date().toISOString(),
+        // Campo date: o dia em Brasília (o toISOString virava amanhã após 21h).
+        data_matricula: hojeEmBrasilia(),
         status: "ativa",
       }),
     );
@@ -553,7 +572,11 @@ export async function getFrequenciaByData(turmaId: number, data: string) {
       }),
     );
 
-    return { success: true, data: frequencias as RegistroFrequencia[] };
+    // O SQLite devolve 1/0 em `presente`: normaliza para o tipo declarado.
+    const registros = (frequencias as Array<Omit<RegistroFrequencia, "presente"> & { presente: unknown }>)
+      .map((r) => ({ ...r, presente: booleano(r.presente) }));
+
+    return { success: true, data: registros as RegistroFrequencia[] };
   } catch (error) {
     console.error("Erro ao buscar frequência:", error);
     return { success: false, error: "Erro ao buscar frequência." };
@@ -561,8 +584,8 @@ export async function getFrequenciaByData(turmaId: number, data: string) {
 }
 
 /**
- * Salva registros de frequência (chamada) de uma turma em uma data
- * Usa estratégia de upsert: deleta todos os registros da data e recria
+ * Salva registros de frequência (chamada) de uma turma em uma data.
+ * Upsert por (turma, beneficiária, data) — ver planejarFrequencia.
  */
 export async function saveFrequencia(
   turmaId: number,
@@ -571,17 +594,23 @@ export async function saveFrequencia(
 ) {
   const directus = await getEscolaDirectus();
   try {
-    // 1. Busca registros existentes nesta data/turma
-    const existingResult = await getFrequenciaByData(turmaId, data);
-    const existing = existingResult.success ? existingResult.data || [] : [];
+    // Leitura direta (e não via getFrequenciaByData): se ela falhasse, a lista
+    // vazia faria tudo ser criado de novo, em duplicata.
+    const existentes = (await directus.request(
+      readItems("escola_frequencia", {
+        filter: { _and: [{ turma: { _eq: turmaId } }, { data: { _eq: data } }] },
+        // @ts-ignore
+        fields: ["id", "beneficiaria", "presente"],
+        limit: -1,
+      }),
+    )) as Array<{ id: number; beneficiaria: unknown; presente: unknown }>;
 
-    // 2. Deleta os registros existentes
-    for (const registro of existing) {
-      await directus.request(deleteItem("escola_frequencia", registro.id));
+    const plano = planejarFrequencia(existentes, presencas);
+
+    for (const { id, presente } of plano.atualizar) {
+      await directus.request(updateItem("escola_frequencia", id, { presente }));
     }
-
-    // 3. Cria novos registros
-    for (const presenca of presencas) {
+    for (const presenca of plano.criar) {
       await directus.request(
         createItem("escola_frequencia", {
           turma: turmaId,
@@ -590,6 +619,9 @@ export async function saveFrequencia(
           presente: presenca.presente,
         }),
       );
+    }
+    for (const id of plano.remover) {
+      await directus.request(deleteItem("escola_frequencia", id));
     }
 
     revalidatePath(`/escola/turmas/${turmaId}`);
@@ -653,7 +685,9 @@ export async function getTurmaPerformance(turmaId: number) {
         // Conta presenças da aluna (presente = true)
         const presencas = frequencias.filter(
           (f) =>
-            f.beneficiaria === matricula.beneficiaria.id && f.presente === true,
+            // O SQLite devolve 1/0: `=== true` zerava as presenças.
+            Number(f.beneficiaria) === Number(matricula.beneficiaria?.id) &&
+            booleano(f.presente),
         ).length;
 
         // Calcula frequência percentual

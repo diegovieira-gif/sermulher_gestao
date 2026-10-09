@@ -42,11 +42,11 @@ const STATUS_COLOR: Record<string, string> = {
 const turmaFormSchema = z.object({
   id: z.number().optional(),
   nome: z.string().min(2, "Informe o nome da turma"),
-  curso: z.coerce.number(),
+  curso: z.coerce.number().int().positive("Selecione o curso"),
   instrutor: z.string().min(2, "Informe o instrutor"),
   vagas: z.coerce.number().int().positive("Vagas deve ser maior que zero"),
-  data_inicio: z.string().optional(),
-  data_fim: z.string().optional(),
+  data_inicio: z.string().optional().nullable(),
+  data_fim: z.string().optional().nullable(),
   status: z.enum(["aberta", "em_andamento", "concluida", "cancelada"]),
 });
 

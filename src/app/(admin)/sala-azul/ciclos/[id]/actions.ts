@@ -19,6 +19,7 @@ import {
 } from "./schemas";
 import { assertAccess } from "@/lib/permissions";
 import { frequenciasPorParticipacao, type FrequenciaCalculada } from "@/lib/frequencia";
+import { booleano } from "@/lib/datas";
 
 /**
  * Frequência de cada participação do ciclo, calculada pela lista de presença
@@ -135,6 +136,8 @@ export async function getSalaDetails(id: string | number) {
           },
         },
         sort: ["infrator.nome_completo"],
+        // Sem limite explícito o Directus corta em 100 itens.
+        limit: -1,
       })
     );
 
@@ -185,6 +188,7 @@ export async function getInfratoresDisponiveis(salaId: number) {
             _eq: salaId,
           },
         },
+        limit: -1,
       })
     );
 
@@ -212,6 +216,9 @@ export async function getInfratoresDisponiveis(salaId: number) {
         ],
         filter,
         sort: ["nome_completo"],
+        // Sem limite explícito o Directus corta em 100: infratores além do
+        // centésimo nunca apareciam para inclusão no ciclo.
+        limit: -1,
       })
     );
 
@@ -223,7 +230,7 @@ export async function getInfratoresDisponiveis(salaId: number) {
     console.error("Erro ao buscar infratores disponíveis:", error);
     return {
       success: false,
-      error: "Erro ao buscar infratores. Tente novamente.",
+      error: "Erro ao buscar autores. Tente novamente.",
       data: [],
     };
   }
@@ -257,7 +264,7 @@ export async function addParticipante(data: unknown) {
     if (participacaoExistente && participacaoExistente.length > 0) {
       return {
         success: false,
-        error: "Este infrator já está participando desta turma.",
+        error: "Este autor já está participando desta turma.",
       };
     }
 
@@ -393,6 +400,7 @@ export async function getSessoes(salaId: number) {
           },
         },
         sort: ["-data"],
+        limit: -1,
       })
     );
 
@@ -518,6 +526,7 @@ export async function getChamada(sessaoId: number, cicloId: number) {
           },
         },
         sort: ["infrator.nome_completo"],
+        limit: -1,
       })
     );
 
@@ -530,13 +539,15 @@ export async function getChamada(sessaoId: number, cicloId: number) {
             _eq: sessaoId,
           },
         },
+        limit: -1,
       })
     );
 
     // Cria um mapa para acesso rápido: participacao_id -> presente
     const presencaMap = new Map<number, boolean>();
     presencasExistentes.forEach((p: any) => {
-      presencaMap.set(p.participacao_id, p.presente === true);
+      // O SQLite devolve 1/0: `=== true` mostrava todo mundo como ausente.
+      presencaMap.set(Number(p.participacao_id), booleano(p.presente));
     });
 
     // Mescla os dados: cada participante com sua flag de presença

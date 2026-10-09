@@ -6,7 +6,8 @@ import { useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Loader2, Plus, Save, Trash2 } from "lucide-react";
 import { addEvolucao, deleteEvolucao, savePia } from "../actions";
-import { PROCEDIMENTOS_PARTICIPACAO } from "../schemas";
+import { PROCEDIMENTOS_PARTICIPACAO, pactuacoesPreenchidas } from "../schemas";
+import { hojeEmBrasilia } from "@/lib/datas";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -44,7 +45,7 @@ type PiaFormState = {
   pactuacoes: Pactuacao[];
 };
 
-const hoje = () => new Date().toISOString().slice(0, 10);
+const hoje = hojeEmBrasilia;
 
 const formatarData = (valor?: string | null) => {
   if (!valor) return "—";
@@ -103,14 +104,28 @@ export function PiaPanel({ atendimentoId, beneficiariaId, piaInicial }: PiaPanel
 
   const onSubmit = (valores: PiaFormState) => {
     startSalvamento(async () => {
+      // Mesmo filtro do servidor: as linhas em branco somem também da tela.
+      const linhas = pactuacoesPreenchidas(valores.pactuacoes);
       const resultado = await savePia({
         ...valores,
+        pactuacoes: linhas,
         beneficiaria: beneficiariaId,
         cram_atendimento: atendimentoId,
       });
 
       if (resultado.success) {
         toast.success("Plano individual salvo.");
+        // Os defaultValues só são lidos na montagem: sem o reset o id do PIA
+        // e das pactuações nunca chegava ao formulário — as evoluções ficavam
+        // bloqueadas e cada novo salvamento criava outro plano.
+        form.reset({
+          ...valores,
+          id: resultado.id,
+          pactuacoes: linhas.map((linha, indice) => ({
+            ...linha,
+            id: resultado.pactuacaoIds?.[indice] ?? linha.id,
+          })),
+        });
         router.refresh();
       } else {
         toast.error(resultado.error || "Erro ao salvar o plano.");

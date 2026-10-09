@@ -47,7 +47,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { campanhaSchema, periculosidadeSchema } from "./schemas";
+import {
+  campanhaSchema,
+  normalizarStatusCampanha,
+  periculosidadeSchema,
+} from "./schemas";
 
 interface ConfiguracoesClientProps {
   origens: any[];
@@ -336,10 +340,28 @@ export function ConfiguracoesClient({
             <GenericCrudTable
               title="Campanhas de Marketing"
               items={campanhas}
+              // Campanhas usam "ativo"/"inativo" (opções do campo no Directus e
+              // da tela /configuracoes/campanhas), não "published"/"draft" como
+              // as demais listas — por isso o status tem coluna própria.
+              showStatus={false}
               columns={[
                 { key: "nome", label: "Nome" },
                 { key: "mes", label: "Mês" },
+                {
+                  key: "status",
+                  label: "Status",
+                  render: (item: any) =>
+                    normalizarStatusCampanha(item.status) === "ativo" ? "Ativo" : "Inativo",
+                },
               ]}
+              defaultValues={{ nome: "", mes: "", cor: "#ff69b4", status: "ativo" }}
+              mapItemToFormValues={(item: any) => ({
+                id: item.id,
+                nome: item.nome || "",
+                mes: item.mes || "",
+                cor: item.cor || "#ff69b4",
+                status: normalizarStatusCampanha(item.status),
+              })}
               onSave={(data) => saveAuxItem("config_campanhas", data)}
               onDelete={(id) => deleteAuxItem("config_campanhas", id)}
               formSchema={campanhaSchema}
@@ -424,8 +446,8 @@ export function ConfiguracoesClient({
                             <SelectValue placeholder="Status" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="published">Ativo</SelectItem>
-                            <SelectItem value="draft">Inativo</SelectItem>
+                            <SelectItem value="ativo">Ativo</SelectItem>
+                            <SelectItem value="inativo">Inativo</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />

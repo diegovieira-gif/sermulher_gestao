@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { hojeEmBrasilia } from "@/lib/datas";
 
 /**
  * Instrumental de Atendimento do CRAM
@@ -512,7 +513,8 @@ export type InstrumentalFormState = z.infer<typeof instrumentalFormSchema>;
 export function instrumentalVazio(): InstrumentalFormState {
   return {
     beneficiaria: 0,
-    data_atendimento: new Date().toISOString().slice(0, 10),
+    // Dia em Brasília: o toISOString virava "amanhã" depois das 21h.
+    data_atendimento: hojeEmBrasilia(),
     turno: null,
     status: "Em preenchimento",
     busca_tipo: null,
@@ -608,6 +610,23 @@ export const piaSchema = z.object({
   participacao_obs: textoOpcional,
   pactuacoes: z.array(pactuacaoSchema).optional(),
 });
+
+/**
+ * Descarta as linhas de pactuação totalmente em branco. "Adicionar pactuação"
+ * cria uma linha vazia; se ela ficasse, a validação barrava o plano inteiro
+ * com "Informe a demanda" sem que a técnica entendesse por quê.
+ */
+export function pactuacoesPreenchidas<
+  T extends { demanda_identificada?: unknown; servico_ofertado?: unknown; acao_realizada?: unknown },
+>(linhas: T[] | null | undefined): T[] {
+  const preenchido = (v: unknown) => typeof v === "string" && v.trim() !== "";
+  return (linhas ?? []).filter(
+    (l) =>
+      preenchido(l.demanda_identificada) ||
+      preenchido(l.servico_ofertado) ||
+      preenchido(l.acao_realizada),
+  );
+}
 
 export type PiaFormValues = z.input<typeof piaSchema>;
 export type Pia = z.infer<typeof piaSchema>;

@@ -28,6 +28,8 @@ import { BeneficiariaForm } from "./beneficiaria-form";
 import { BeneficiariasFiltros } from "./beneficiarias-filtros";
 import { deleteBeneficiaria, getBeneficiariasExport } from "./actions";
 import { montarCsv, nomeArquivoCsv } from "./exportacao";
+import { hojeEmBrasilia } from "@/lib/datas";
+import { idadeEm } from "../../relatorios/calculos";
 import {
   Select,
   SelectContent,
@@ -665,19 +667,8 @@ export function BeneficiariasClient({
                     {b.data_nascimento ? (
                       <div className="flex flex-col">
                         <span className="text-foreground text-sm font-medium">
-                          {(() => {
-                            const today = new Date();
-                            const birthDate = new Date(b.data_nascimento);
-                            let age = today.getFullYear() - birthDate.getFullYear();
-                            const m = today.getMonth() - birthDate.getMonth();
-                            if (
-                              m < 0 ||
-                              (m === 0 && today.getDate() < birthDate.getDate())
-                            ) {
-                              age--;
-                            }
-                            return age + " anos";
-                          })()}
+                          {/* Sem new Date(): "AAAA-MM-DD" vira o dia anterior no fuso de Brasília */}
+                          {`${idadeEm(b.data_nascimento, hojeEmBrasilia()) ?? "-"} anos`}
                         </span>
                         <span className="text-muted-foreground text-xs font-mono mt-0.5">
                           {formatDateDisplay(b.data_nascimento)}
@@ -967,16 +958,7 @@ export function BeneficiariasClient({
                     <p className="text-sm font-medium text-foreground">
                       {previewBeneficiaria.data_nascimento ? (
                         <>
-                          {(() => {
-                            const today = new Date();
-                            const birthDate = new Date(previewBeneficiaria.data_nascimento);
-                            let age = today.getFullYear() - birthDate.getFullYear();
-                            const m = today.getMonth() - birthDate.getMonth();
-                            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-                              age--;
-                            }
-                            return `${age} anos`;
-                          })()}{" "}
+                          {`${idadeEm(previewBeneficiaria.data_nascimento, hojeEmBrasilia()) ?? "-"} anos`}{" "}
                           <span className="text-muted-foreground text-xs font-mono">
                             ({formatDateDisplay(previewBeneficiaria.data_nascimento)})
                           </span>

@@ -10,7 +10,7 @@ export enum StatusParticipacao {
 
 // Schema para adicionar participante
 export const addParticipanteSchema = z.object({
-  infrator: z.number().int("ID do infrator é obrigatório"),
+  infrator: z.number().int("ID do autor é obrigatório"),
   sala: z.number().int("ID da sala é obrigatório"),
   status_participacao: z
     .nativeEnum(StatusParticipacao)

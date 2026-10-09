@@ -29,6 +29,8 @@ import {
   enfileirar,
   type NovaNotificacao,
 } from "@/lib/notificacoes";
+import { mudouDataHora, mudouTexto } from "@/lib/notificacoes-formato";
+import { agoraDeParede, textoDeParede, type CalendarEventDTO } from "./calendario";
 
 /**
  * Autoriza o usuário no módulo "eventos" e devolve o cliente admin (lazy).
@@ -40,17 +42,9 @@ async function getEventosDirectus() {
 }
 
 // --- Tipos Unificados ---
-export type CalendarEvent = {
-  id: string | number;
-  title: string;
-  start: Date;
-  end: Date;
-  allDay: boolean;
-  type: "manual" | "escola" | "sala_azul";
-  color: string;
-  description?: string;
-  status?: string;
-};
+// Vivem em ./calendario (módulo puro): o servidor devolve as datas como texto
+// de parede e o navegador monta o Date — ver o comentário de lá.
+export type { CalendarEvent, CalendarEventDTO } from "./calendario";
 
 export type TipoEventoOption = { id: number; nome: string; icone?: string };
 
@@ -120,7 +114,8 @@ export async function getEventosLista(query: EventosListaQuery = {}) {
   // A "situação" não é uma coluna: é a posição do evento no tempo. Traduzir
   // para filtros de data mantém o recorte correto sobre a base inteira, em vez
   // de sobre a página carregada.
-  const agora = new Date().toISOString();
+  // Colunas `dateTime` guardam hora de parede de Brasília, sem fuso.
+  const agora = agoraDeParede();
   if (query.situacao === "Breve") {
     filtros.push({ data_inicio: { _gt: agora } });
   } else if (query.situacao === "Em Andamento") {
@@ -194,7 +189,8 @@ export async function getEventosParaExportar(query: EventosListaQuery = {}) {
       _or: [{ nome: { _icontains: termo } }, { local: { _icontains: termo } }],
     });
   }
-  const agora = new Date().toISOString();
+  // Colunas `dateTime` guardam hora de parede de Brasília, sem fuso.
+  const agora = agoraDeParede();
   if (query.situacao === "Breve") filtros.push({ data_inicio: { _gt: agora } });
   else if (query.situacao === "Em Andamento") {
     filtros.push({ data_inicio: { _lte: agora } });
@@ -282,15 +278,23 @@ export async function updateEvento(id: number, data: Evento) {
 
     const antes = anterior[0];
     if (antes) {
-      const mudouInicio = antes.data_inicio !== validation.data.data_inicio;
-      const mudouLocal = (antes.local ?? "") !== (validation.data.local ?? "");
+      // O Directus devolve "…T14:00:00" e o form envia "…T14:00": comparar
+      // cru acusava mudança em toda edição e a equipe inteira era avisada.
+      const mudouInicio = mudouDataHora(antes.data_inicio, validation.data.data_inicio);
+      const mudouLocal = mudouTexto(antes.local, validation.data.local);
       if (mudouInicio || mudouLocal) {
-        await avisarEquipeSobreAlteracao(id, validation.data, {
-          mudouInicio,
-          mudouLocal,
-          localAnterior: antes.local ?? null,
-          inicioAnterior: antes.data_inicio ?? null,
-        });
+        // O evento JÁ foi salvo: falha no aviso não pode virar erro para a
+        // usuária (ela tentaria de novo e reavisaria a equipe). Vai para o log.
+        try {
+          await avisarEquipeSobreAlteracao(id, validation.data, {
+            mudouInicio,
+            mudouLocal,
+            localAnterior: antes.local ?? null,
+            inicioAnterior: antes.data_inicio ?? null,
+          });
+        } catch (error) {
+          console.error("[eventos] evento salvo, mas o aviso à equipe falhou:", error);
+        }
       }
     }
 
@@ -318,12 +322,14 @@ export async function deleteEvento(id: number) {
 
 export async function getGlobalEvents(): Promise<{
   success: boolean;
-  data?: CalendarEvent[];
+  data?: CalendarEventDTO[];
   error?: string;
 }> {
   const directus = await getEventosDirectus();
   try {
-    const globalEvents: CalendarEvent[] = [];
+    // Datas como texto de parede (sem `new Date` aqui): o servidor não sabe o
+    // fuso do navegador, e o Date montado aqui chegava deslocado lá.
+    const globalEvents: CalendarEventDTO[] = [];
 
     // Usamos Promise.allSettled para tolerância a falhas
     const [manuaisResult, turmasResult, sessoesResult] =
@@ -380,11 +386,13 @@ export async function getGlobalEvents(): Promise<{
     // Processar Manuais
     if (manuaisResult.status === "fulfilled" && manuaisResult.value) {
       manuaisResult.value.forEach((evt: any) => {
+        const inicio = textoDeParede(evt.data_inicio);
+        if (!inicio) return;
         globalEvents.push({
           id: `manual-${evt.id}`,
           title: evt.nome, // Campo correto é 'nome'
-          start: new Date(evt.data_inicio),
-          end: new Date(evt.data_fim || evt.data_inicio),
+          start: inicio,
+          end: textoDeParede(evt.data_fim) || inicio,
           allDay: false,
           type: "manual",
           color: "#a855f7", // Purple (Identidade visual da página)
@@ -401,8 +409,8 @@ export async function getGlobalEvents(): Promise<{
           globalEvents.push({
             id: `turma-ini-${turma.id}`,
             title: `Início: ${turma.nome}`,
-            start: new Date(turma.data_inicio),
-            end: new Date(turma.data_inicio),
+            start: textoDeParede(turma.data_inicio).slice(0, 10),
+            end: textoDeParede(turma.data_inicio).slice(0, 10),
             allDay: true,
             type: "escola",
             color: "#059669", // Emerald
@@ -414,8 +422,8 @@ export async function getGlobalEvents(): Promise<{
           globalEvents.push({
             id: `turma-fim-${turma.id}`,
             title: `Formatura: ${turma.nome}`,
-            start: new Date(turma.data_fim),
-            end: new Date(turma.data_fim),
+            start: textoDeParede(turma.data_fim).slice(0, 10),
+            end: textoDeParede(turma.data_fim).slice(0, 10),
             allDay: true,
             type: "escola",
             color: "#059669",
@@ -433,8 +441,9 @@ export async function getGlobalEvents(): Promise<{
           globalEvents.push({
             id: `sessao-${sessao.id}`,
             title: `Sala Azul: ${sessao.tema || "Encontro"}`,
-            start: new Date(sessao.data),
-            end: new Date(sessao.data),
+            // `ciclo_sessoes.data` é dateTime (hora de parede).
+            start: textoDeParede(sessao.data),
+            end: textoDeParede(sessao.data),
             allDay: false,
             type: "sala_azul",
             color: "#2563eb", // Blue
@@ -889,8 +898,13 @@ export async function registrarMembroEquipe(input: {
     )) as { id: number };
 
     // O aviso não pode derrubar a escalação: se falhar, a pessoa continua na
-    // equipe e o erro fica no log.
-    await avisarEscalado(dados.evento, dados.usuario, criado.id);
+    // equipe e o erro fica no log. Sem este try, a usuária via "erro", tentava
+    // de novo e recebia "já consta na equipe".
+    try {
+      await avisarEscalado(dados.evento, dados.usuario, criado.id);
+    } catch (error) {
+      console.error("[eventos] escalação salva, mas o aviso falhou:", error);
+    }
 
     revalidatePath("/eventos");
     return { success: true };
@@ -918,7 +932,12 @@ export async function removerMembroEquipe(id: number) {
 
     const vinculo = antes[0];
     if (vinculo?.usuario && vinculo.evento) {
-      await avisarRemocao(id, vinculo.evento, vinculo.usuario);
+      // Remoção já feita: falha no aviso fica no log, não vira erro na tela.
+      try {
+        await avisarRemocao(id, vinculo.evento, vinculo.usuario);
+      } catch (error) {
+        console.error("[eventos] remoção feita, mas o aviso falhou:", error);
+      }
     }
 
     revalidatePath("/eventos");

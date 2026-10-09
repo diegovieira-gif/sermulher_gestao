@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { IndicadoresClient } from "./indicadores-client"; // Adjust path if needed
 import { getIndicadoresCRAM } from "./actions";
+import { mesAtualEmBrasilia } from "@/lib/datas";
 
 export default async function IndicadoresPage({
     searchParams,
@@ -9,9 +10,11 @@ export default async function IndicadoresPage({
 }) {
     const params = await searchParams; // Next.js 15+ needs await for searchParams
 
-    const now = new Date();
-    const mes = params?.mes ? Number(params.mes) : now.getMonth() + 1;
-    const ano = params?.ano ? Number(params.ano) : now.getFullYear();
+    // Mês corrente no calendário de Brasília: em UTC, das 21h do último dia
+    // em diante a página já abria no mês seguinte (vazio).
+    const atual = mesAtualEmBrasilia();
+    const mes = params?.mes ? Number(params.mes) : atual.mes;
+    const ano = params?.ano ? Number(params.ano) : atual.ano;
 
     const { success, data } = await getIndicadoresCRAM(mes, ano);
 

@@ -48,6 +48,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { formatarData, hojeEmBrasilia } from "@/lib/datas";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 export type HistoricoEntrega = {
@@ -90,7 +91,7 @@ export function BeneficiosTab({
     defaultValues: {
       beneficiaria: beneficiariaId,
       beneficio: undefined,
-      data_entrega: new Date().toISOString().slice(0, 10),
+      data_entrega: hojeEmBrasilia(), // UTC viraria amanhã depois das 21h
       quantidade: 1,
       observacao: "",
     },
@@ -117,7 +118,7 @@ export function BeneficiosTab({
       form.reset({
         beneficiaria: beneficiariaId,
         beneficio: undefined,
-        data_entrega: new Date().toISOString().slice(0, 10),
+        data_entrega: hojeEmBrasilia(), // UTC viraria amanhã depois das 21h
         quantidade: 1,
         observacao: "",
       });
@@ -319,9 +320,7 @@ export function BeneficiosTab({
                 return (
                   <TableRow key={entrega.id}>
                     <TableCell>
-                      {entrega.data_entrega
-                        ? new Date(entrega.data_entrega).toLocaleDateString("pt-BR")
-                        : "-"}
+                      {formatarData(entrega.data_entrega)}
                     </TableCell>
                     <TableCell className="font-medium">
                       {entrega.beneficio?.nome || "-"}

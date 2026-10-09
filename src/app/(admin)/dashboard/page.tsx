@@ -4,6 +4,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { getDirectusClient, safeDirectusCall } from "@/lib/directus";
 import { readMe } from "@directus/sdk";
+import { mesAtualEmBrasilia } from "@/lib/datas";
 
 export const dynamic = "force-dynamic";
 
@@ -13,9 +14,10 @@ export default async function DashboardPage({
   searchParams: Promise<{ mes?: string; ano?: string }>;
 }) {
   const sp = await searchParams;
-  const agora = new Date();
-  const mes = Number(sp.mes) || agora.getMonth() + 1;
-  const ano = Number(sp.ano) || agora.getFullYear();
+  // Mês corrente no calendário de Brasília (o servidor pode estar em UTC).
+  const agora = mesAtualEmBrasilia();
+  const mes = Number(sp.mes) || agora.mes;
+  const ano = Number(sp.ano) || agora.ano;
 
   // 1. Busca estatísticas do dashboard (período selecionado ou mês corrente)
   const statsResult = await getDashboardStats({ mes, ano });

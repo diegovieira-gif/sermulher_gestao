@@ -3,6 +3,8 @@
 import { getDirectusAdmin } from "@/lib/directus";
 import { assertAccess } from "@/lib/permissions";
 import { readItems } from "@directus/sdk";
+import { limitesDoMes } from "@/lib/datas";
+import { FAIXAS_ETARIAS, faixaEtaria, filtroMesDateTime, idadeEm } from "../calculos";
 
 export type IndicadoresData = {
     identificacao: {
@@ -41,22 +43,6 @@ export type IndicadoresData = {
     };
 };
 
-function calculateAge(birthDateString?: string): number | null {
-    if (!birthDateString) return null;
-    const birthDate = new Date(birthDateString);
-    const otherDate = new Date();
-    let years = otherDate.getFullYear() - birthDate.getFullYear();
-
-    if (
-        otherDate.getMonth() < birthDate.getMonth() ||
-        (otherDate.getMonth() === birthDate.getMonth() &&
-            otherDate.getDate() < birthDate.getDate())
-    ) {
-        years--;
-    }
-    return years;
-}
-
 export async function getIndicadoresCRAM(
     mes: number,
     ano: number,
@@ -65,22 +51,31 @@ export async function getIndicadoresCRAM(
     await assertAccess("relatorios");
     const directus = getDirectusAdmin();
     try {
-        const startOfMonth = new Date(ano, mes - 1, 1);
-        const endOfMonth = new Date(ano, mes, 0); // Last day of month
-
-        // Directus filter dates (YYYY-MM-DD)
-        const startDateStr = startOfMonth.toISOString().split("T")[0];
-        const endDateStr = endOfMonth.toISOString().split("T")[0];
+        // Campos `date` (data_inicio/data_fim de turma, data_publicacao) usam o
+        // dia 1 e o último dia; campos `dateTime` (data_abertura,
+        // data_recebimento, data_inicio de evento) usam `_gte`/`_lt` — com
+        // `_between` até "último dia 00:00" o último dia do mês sumia.
+        const { inicio: startDateStr, fim: endDateStr } = limitesDoMes(ano, mes);
+        const mesDateTime = filtroMesDateTime(ano, mes);
 
         // --- 1. BUSCA PARALELA DOS DADOS ---
         // Usando try/catch individual para identificar qual requisição falhou
         const promises = [
-            // A. ATENDIMENTOS (Novos Casos)
+            // A. ATENDIMENTOS (Novos Casos) — também a base do perfil
+            // demográfico: são as mulheres que CHEGARAM no mês.
             directus.request(
                 readItems("atendimentos", {
-                    fields: ["id", "origem_id.nome"],
+                    fields: [
+                        "id",
+                        "data_abertura",
+                        "origem_id.nome",
+                        "beneficiaria.id",
+                        "beneficiaria.data_nascimento",
+                        "beneficiaria.raca_cor_id.nome",
+                        "beneficiaria.escolaridade_id.nome",
+                    ],
                     filter: {
-                        data_abertura: { _between: [startDateStr, endDateStr] },
+                        data_abertura: mesDateTime,
                     },
                     limit: -1,
                 }),
@@ -92,7 +87,7 @@ export async function getIndicadoresCRAM(
                 readItems("tramitacoes", {
                     fields: ["id", "tipo_demanda", "setor_responsavel.nome"], // Added sector name
                     filter: {
-                        data_recebimento: { _between: [startDateStr, endDateStr] },
+                        data_recebimento: mesDateTime,
                     },
                     limit: -1,
                 }),
@@ -124,7 +119,7 @@ export async function getIndicadoresCRAM(
                 readItems("eventos_campanhas", {
                     fields: ["id", "nome", "tipo_id.nome"],
                     filter: {
-                        data_inicio: { _between: [startDateStr, endDateStr] },
+                        data_inicio: mesDateTime,
                     },
                     limit: -1,
                 }),
@@ -143,31 +138,33 @@ export async function getIndicadoresCRAM(
             ).then(res => ({ status: 'fulfilled', value: res, key: 'marketing' }))
                 .catch(err => ({ status: 'rejected', reason: err, key: 'marketing' })),
 
-            // F. DADOS PARA PERFIL
+            // F. ALUNAS MATRICULADAS — matrículas vigentes (nem canceladas nem
+            // evadidas) em turmas que estiveram em curso no mês: o mesmo
+            // critério de "Turmas ativas", para os dois números conversarem.
             directus.request(
-                readItems("tramitacoes", {
-                    fields: [
-                        "atendimento_pai.beneficiaria.id",
-                        "atendimento_pai.beneficiaria.data_nascimento",
-                        "atendimento_pai.beneficiaria.raca_cor_id.nome",
-                        "atendimento_pai.beneficiaria.escolaridade_id.nome",
-                        // Fallback fields caso a profundidade falhe, pelo menos pegamos o ID
-                        "atendimento_pai.beneficiaria.*"
-                    ],
+                readItems("escola_matriculas", {
+                    fields: ["beneficiaria"],
                     filter: {
-                        data_recebimento: { _between: [startDateStr, endDateStr] },
+                        _and: [
+                            { turma: { data_inicio: { _lte: endDateStr } } },
+                            {
+                                _or: [
+                                    { turma: { data_fim: { _gte: startDateStr } } },
+                                    { turma: { data_fim: { _null: true } } },
+                                ],
+                            },
+                            {
+                                _or: [
+                                    { status: { _nin: ["cancelada", "evadida"] } },
+                                    { status: { _null: true } },
+                                ],
+                            },
+                        ],
                     },
                     limit: -1,
-                    deep: {
-                        "atendimento_pai": {
-                            "beneficiaria": {
-                                _limit: -1
-                            }
-                        }
-                    }
-                })
-            ).then(res => ({ status: 'fulfilled', value: res, key: 'perfil' }))
-                .catch(err => ({ status: 'rejected', reason: err, key: 'perfil' }))
+                }),
+            ).then(res => ({ status: 'fulfilled', value: res, key: 'matriculas' }))
+                .catch(err => ({ status: 'rejected', reason: err, key: 'matriculas' })),
         ];
 
         const results = await Promise.all(promises);
@@ -194,7 +191,11 @@ export async function getIndicadoresCRAM(
         // @ts-ignore
         const marketing = results.find(r => r.key === 'marketing').value;
         // @ts-ignore
-        const tramitacoesPerfil = results.find(r => r.key === 'perfil').value;
+        const matriculas = results.find(r => r.key === 'matriculas').value;
+        // A mesma aluna em duas turmas conta uma vez.
+        const totalAlunas = new Set(
+            (matriculas as any[]).map((m) => m.beneficiaria).filter((b) => b != null),
+        ).size;
 
         // --- 2. PROCESSAMENTO (Identificação & Demanda) ---
         // Agrupar por Origem
@@ -297,13 +298,19 @@ export async function getIndicadoresCRAM(
 
 
         // --- 5. PROCESSAMENTO (Perfil das Usuárias) ---
-        // Dedup beneficiárias
-        const beneficiariasUnicas = new Map<number, any>();
+        // "Novos casos" = beneficiárias dos atendimentos ABERTOS no mês. Antes
+        // vinha das tramitações recebidas no mês, que misturam casos antigos
+        // e deixam de fora quem chegou e ainda não foi encaminhada.
+        // Dedup: a mesma mulher com dois atendimentos no mês conta uma vez.
+        const beneficiariasUnicas = new Map<number, { b: any; referencia: string }>();
 
-        tramitacoesPerfil.forEach((t: any) => {
-            const benef = t.atendimento_pai?.beneficiaria;
-            if (benef?.id) {
-                beneficiariasUnicas.set(benef.id, benef);
+        atendimentos.forEach((a: any) => {
+            const benef = a.beneficiaria;
+            if (benef?.id && !beneficiariasUnicas.has(benef.id)) {
+                beneficiariasUnicas.set(benef.id, {
+                    b: benef,
+                    referencia: String(a.data_abertura || endDateStr),
+                });
             }
         });
 
@@ -315,13 +322,11 @@ export async function getIndicadoresCRAM(
 
         const perfilRaca: Record<string, number> = {};
         const perfilEscolaridade: Record<string, number> = {};
-        const perfilFaixaEtaria: Record<string, number> = {
-            "Jovem (18-29)": 0,
-            "Adulta (30-59)": 0,
-            "Idosa (60+)": 0,
-        };
+        const perfilFaixaEtaria: Record<string, number> = Object.fromEntries(
+            FAIXAS_ETARIAS.map((f) => [f, 0]),
+        );
 
-        beneficiariasUnicas.forEach((b) => {
+        beneficiariasUnicas.forEach(({ b, referencia }) => {
             // Raça
             const raca = b.raca_cor_id?.nome || "Não informada";
             perfilRaca[raca] = (perfilRaca[raca] || 0) + 1;
@@ -330,14 +335,9 @@ export async function getIndicadoresCRAM(
             const escola = b.escolaridade_id?.nome || "Não informada";
             perfilEscolaridade[escola] = (perfilEscolaridade[escola] || 0) + 1;
 
-            // Idade
-            const idade = calculateAge(b.data_nascimento);
-            if (idade !== null) {
-                if (idade >= 60) perfilFaixaEtaria["Idosa (60+)"]++;
-                else if (idade >= 30) perfilFaixaEtaria["Adulta (30-59)"]++;
-                else perfilFaixaEtaria["Jovem (18-29)"]++; // Inclui menores de 18 aqui ou cria Criança/Adolescente?
-                // CRAM geralmente é mulher adulta, mas pode haver jovens. Ajuste conforme regra de negócio.
-            }
+            // Idade na data em que chegou ao serviço; menores de 18 e datas
+            // ausentes têm faixa própria em vez de distorcer/sumir do total.
+            perfilFaixaEtaria[faixaEtaria(idadeEm(b.data_nascimento, referencia))]++;
         });
 
         const racaCorData = Object.entries(perfilRaca).map(([name, value]) => ({ name, value }));
@@ -362,7 +362,7 @@ export async function getIndicadoresCRAM(
                     porSetor,
                     educacao: {
                         turmasAtivas: turmas.length,
-                        totalAlunas: 0, // Não calculado nesta versão simples
+                        totalAlunas,
                     },
                     eventos: {
                         total: eventos.length,

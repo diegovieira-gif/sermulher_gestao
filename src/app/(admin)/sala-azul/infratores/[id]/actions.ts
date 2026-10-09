@@ -3,6 +3,7 @@
 import { directus } from "@/lib/directus";
 import { readItems, readItem } from "@directus/sdk";
 import { assertAccess } from "@/lib/permissions";
+import { frequenciasPorParticipacao } from "@/lib/frequencia";
 
 /**
  * Busca o histórico de participações de um infrator em ciclos
@@ -29,60 +30,61 @@ export async function getInfratorHistory(infratorId: number) {
           },
         },
         sort: ["-sala.data_inicio"], // Mais recentes primeiro
+        limit: -1,
       })
     );
 
-    // Para cada participação, calcula a frequência real baseada nas presenças
-    const historicoComFrequencia = await Promise.all(
-      participacoes.map(async (participacao: any) => {
-        // Busca todas as sessões do ciclo
-        const sessoes = await directus.request(
-          readItems("ciclo_sessoes", {
-            fields: ["id"],
-            filter: {
-              sala_id: {
-                _eq: participacao.sala?.id,
-              },
-            },
-          })
-        );
+    // Mesma conta da lista do ciclo e do relatório ao Judiciário
+    // (frequenciasPorParticipacao): presença de sessão excluída não conta.
+    // A conta própria que havia aqui somava essas presenças e passava de 100%.
+    const salaIds = [
+      ...new Set(participacoes.map((p: any) => Number(p.sala?.id)).filter((n) => n > 0)),
+    ];
+    const participacaoIds = participacoes.map((p: any) => Number(p.id));
+    const [sessoes, registros] = await Promise.all([
+      salaIds.length
+        ? directus.request(
+            readItems("ciclo_sessoes", {
+              fields: ["id", "sala_id"],
+              filter: { sala_id: { _in: salaIds } },
+              limit: -1,
+            })
+          )
+        : Promise.resolve([]),
+      participacaoIds.length
+        ? directus.request(
+            readItems("sessoes_presenca", {
+              fields: ["sessao_id", "participacao_id", "presente"],
+              filter: { participacao_id: { _in: participacaoIds } },
+              limit: -1,
+            })
+          )
+        : Promise.resolve([]),
+    ]);
 
-        // Busca todas as presenças desta participação
-        const presencas = await directus.request(
-          readItems("sessoes_presenca", {
-            fields: ["presente"],
-            filter: {
-              participacao_id: {
-                _eq: participacao.id,
-              },
-            },
-          })
-        );
+    const historicoComFrequencia = participacoes.map((participacao: any) => {
+      const sessaoIds = (sessoes as Array<Record<string, unknown>>)
+        .filter((s) => Number(s.sala_id) === Number(participacao.sala?.id))
+        .map((s) => Number(s.id));
+      const frequencia = frequenciasPorParticipacao(
+        sessaoIds,
+        registros as Array<Record<string, unknown>>,
+        [Number(participacao.id)]
+      ).get(Number(participacao.id));
 
-        // Calcula frequência real
-        const totalSessoes = sessoes.length;
-        const presencasCount = presencas.filter(
-          (p: any) => p.presente === true
-        ).length;
-        const frequenciaCalculada =
-          totalSessoes > 0
-            ? Math.round((presencasCount / totalSessoes) * 100)
-            : participacao.frequencia_percentual || 0;
-
-        return {
-          participacao_id: participacao.id,
-          sala_id: participacao.sala?.id,
-          nome_ciclo: participacao.sala?.nome_ciclo || "Ciclo sem nome",
-          data_inicio: participacao.sala?.data_inicio || null,
-          data_termino: participacao.sala?.data_termino || null,
-          status_ciclo: participacao.sala?.status || "Desconhecido",
-          status_participacao: participacao.status_participacao || "Cursando",
-          frequencia_percentual: frequenciaCalculada,
-          total_sessoes: totalSessoes,
-          presencas: presencasCount,
-        };
-      })
-    );
+      return {
+        participacao_id: participacao.id,
+        sala_id: participacao.sala?.id,
+        nome_ciclo: participacao.sala?.nome_ciclo || "Ciclo sem nome",
+        data_inicio: participacao.sala?.data_inicio || null,
+        data_termino: participacao.sala?.data_termino || null,
+        status_ciclo: participacao.sala?.status || "Desconhecido",
+        status_participacao: participacao.status_participacao || "Cursando",
+        frequencia_percentual: frequencia?.percentual ?? 0,
+        total_sessoes: frequencia?.totalSessoes ?? 0,
+        presencas: frequencia?.presencas ?? 0,
+      };
+    });
 
     return {
       success: true,
@@ -113,19 +115,29 @@ export async function getInfratorById(id: number) {
           "nivel_id.cor",
           "status_legal_id.id",
           "status_legal_id.nome",
+          // M2M em dois níveis (ver sincronizarTiposAgressao em ../actions):
+          // só assim chega o id do tipo, e não o da linha de junção.
+          "tipos_agressao_lista.infratores_tipos_agressao_id.tipo_agressao_id",
         ],
       })
     );
 
+    // O formulário de edição espera a lista achatada em ids de tipo.
+    const tipos = Array.isArray(infrator.tipos_agressao_lista)
+      ? (infrator.tipos_agressao_lista as any[])
+          .map((item) => Number(item?.infratores_tipos_agressao_id?.tipo_agressao_id))
+          .filter((n) => Number.isFinite(n) && n > 0)
+      : [];
+
     return {
       success: true,
-      data: infrator,
+      data: { ...infrator, tipos_agressao_lista: tipos },
     };
   } catch (error) {
     console.error("Erro ao buscar infrator:", error);
     return {
       success: false,
-      error: "Erro ao buscar dados do infrator.",
+      error: "Erro ao buscar dados do autor.",
     };
   }
 }

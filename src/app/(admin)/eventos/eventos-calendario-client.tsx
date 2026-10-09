@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   format,
@@ -26,10 +26,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { EventoForm } from "./evento-form";
 import { AgendaImpressao } from "./agenda-impressao";
-import type { CalendarEvent } from "./actions";
+import { paraCalendarEvent, type CalendarEventDTO } from "./calendario";
 
 interface EventosCalendarioClientProps {
-  initialEvents: CalendarEvent[];
+  initialEvents: CalendarEventDTO[];
   tiposEventoOptions: { id: number; nome: string; icone?: string }[];
 }
 
@@ -48,10 +48,16 @@ const ORIGENS = [
 ];
 
 export function EventosCalendarioClient({
-  initialEvents,
+  initialEvents: eventosDoServidor,
   tiposEventoOptions,
 }: EventosCalendarioClientProps) {
   const router = useRouter();
+  // O Date é montado AQUI, no fuso do navegador, a partir do texto de parede:
+  // 14:00 aparece 14:00 e o dia 20 cai no dia 20 em qualquer máquina.
+  const initialEvents = useMemo(
+    () => eventosDoServidor.map(paraCalendarEvent),
+    [eventosDoServidor],
+  );
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);

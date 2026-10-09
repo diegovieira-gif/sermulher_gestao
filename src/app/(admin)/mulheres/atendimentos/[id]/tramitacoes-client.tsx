@@ -40,6 +40,7 @@ import {
   type ConfigOption,
 } from "./actions";
 import { StatusEtapa } from "./schemas";
+import { formatarData, formatarDataHora } from "@/lib/datas";
 
 // Mapa de ícones para a timeline, por nome do tipo de demanda (fallback: Clock).
 const TIPO_DEMANDA_ICONS: Record<string, React.ComponentType<any>> = {
@@ -106,33 +107,13 @@ export function TramitacoesClient({
     }
   };
 
-  // Função para formatar data
-  const formatDate = (dateString: string | null | undefined): string => {
-    if (!dateString) return "-";
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString("pt-BR", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    } catch {
-      return dateString;
-    }
-  };
+  // Datas no calendário de Brasília, sem depender do fuso do navegador
+  // (ver src/lib/datas.ts).
+  const formatDate = (dateString: string | null | undefined): string =>
+    formatarDataHora(dateString);
 
-  // Função para formatar apenas data (sem hora)
-  const formatDateOnly = (dateString: string | null | undefined): string => {
-    if (!dateString) return "-";
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString("pt-BR");
-    } catch {
-      return dateString;
-    }
-  };
+  const formatDateOnly = (dateString: string | null | undefined): string =>
+    formatarData(dateString);
 
   // Função para obter nome do usuário responsável
   const getUsuarioNome = (usuario: TramitacaoWithRelations["usuario_responsavel"]): string => {

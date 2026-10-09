@@ -37,6 +37,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
+import { formatarData } from "@/lib/datas";
 
 interface InfratorDetailsClientProps {
   infrator: any;
@@ -96,23 +97,16 @@ export function InfratorDetailsClient({
         toast.error(result.error);
       }
     } catch (error) {
-      toast.error("Erro ao salvar infrator");
+      toast.error("Erro ao salvar autor");
       console.error(error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Função para formatar data
-  const formatDate = (dateString: string | null | undefined): string => {
-    if (!dateString) return "-";
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString("pt-BR");
-    } catch {
-      return dateString;
-    }
-  };
+  // Datas "AAAA-MM-DD" do Directus: `new Date()` + fuso local mostrava um dia antes.
+  const formatDate = (dateString: string | null | undefined): string =>
+    formatarData(dateString);
 
   // Função para formatar período
   const formatPeriodo = (
@@ -192,7 +186,7 @@ export function InfratorDetailsClient({
                     <FormItem>
                       <FormLabel>
                         Nome Completo <span className="text-destructive">*</span>
-                        <InfoTooltip text="Nome completo do infrator conforme documentos oficiais." />
+                        <InfoTooltip text="Nome completo do autor conforme documentos oficiais." />
                       </FormLabel>
                       <FormControl>
                         <Input placeholder="João Silva" {...field} />
@@ -209,7 +203,7 @@ export function InfratorDetailsClient({
                     <FormItem>
                       <FormLabel>
                         CPF <span className="text-destructive">*</span>
-                        <InfoTooltip text="Cadastro de Pessoa Física do infrator. Documento obrigatório para emissão de certificados oficiais." />
+                        <InfoTooltip text="Cadastro de Pessoa Física do autor. Documento obrigatório para emissão de certificados oficiais." />
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -230,7 +224,7 @@ export function InfratorDetailsClient({
                     <FormItem>
                       <FormLabel>
                         Data de Nascimento
-                        <InfoTooltip text="Data de nascimento do infrator para cálculo de idade e relatórios." />
+                        <InfoTooltip text="Data de nascimento do autor para cálculo de idade e relatórios." />
                       </FormLabel>
                       <FormControl>
                         <Input 
@@ -419,7 +413,7 @@ export function InfratorDetailsClient({
                 Histórico de Participações
               </h3>
               <p className="text-sm text-muted-foreground">
-                Lista de todos os ciclos em que este infrator participou ou está
+                Lista de todos os ciclos em que este autor participou ou está
                 participando.
               </p>
             </div>
@@ -447,7 +441,7 @@ export function InfratorDetailsClient({
                       </TableHead>
                       <TableHead>
                         Status Participação
-                        <InfoTooltip text="Situação da participação do infrator no ciclo." />
+                        <InfoTooltip text="Situação da participação do autor no ciclo." />
                       </TableHead>
                       <TableHead>
                         Frequência

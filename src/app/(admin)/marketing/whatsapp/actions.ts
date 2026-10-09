@@ -12,12 +12,20 @@ import {
   createItems,
   updateItem,
   deleteItem,
+  deleteItems,
   readItem,
   readSingleton,
   updateSingleton,
   aggregate,
   uploadFiles,
 } from "@directus/sdk";
+import { hojeEmBrasilia } from "@/lib/datas";
+import {
+  dataMenosAnos,
+  mesEDia,
+  mesmoSegundo,
+  motivoBloqueioDisparo,
+} from "./regras-disparo";
 
 // Tipos de retorno das server actions: uniões discriminadas pelo literal
 // `success`, para que os consumidores possam estreitar com `if (result.success)`
@@ -38,7 +46,12 @@ type DispatchResult =
       total: number;
       isBatchN8n?: boolean;
     }
-  | ActionFailure;
+  | (ActionFailure & {
+      /** O envio chegou a começar (campanha reservada como "running"). */
+      iniciado?: boolean;
+      /** Recusado por não haver ninguém elegível — normal em "aniversariantes". */
+      semPublico?: boolean;
+    });
 
 // Shapes dos registros do Directus usados por este módulo (as coleções
 // 'campanhas', 'disparos' e 'configuracoes_site' não fazem parte do schema
@@ -152,6 +165,32 @@ async function assertCronOrMarketingAccess(): Promise<void> {
 }
 
 // 1. WhatsApp Connection Configuration Settings
+
+/**
+ * Leitura da configuração com o cliente RECEBIDO, sem checagem de sessão.
+ *
+ * Interna (não exportada): o núcleo do disparo roda também pelo cron, que não
+ * tem cookie. Chamar a action `getWhatsappConfig` de lá fazia `assertAccess`
+ * redirecionar para o login (NEXT_REDIRECT), o erro era engolido e toda
+ * campanha automática falhava em silêncio.
+ */
+async function lerConfigWhatsapp(
+  client: DirectusRestClient,
+): Promise<WhatsappConfigData | null> {
+  const configItem = await client.request(
+    readSingleton("configuracoes_site", {
+      fields: [
+        "id",
+        "evolution_api_url",
+        "evolution_api_token",
+        "evolution_api_instance",
+        "n8n_webhook_url",
+      ],
+    })
+  );
+  return configItem ? toPlainObject(configItem as WhatsappConfigData) : null;
+}
+
 export async function getWhatsappConfig(): Promise<
   ActionResult<WhatsappConfigData | null>
 > {
@@ -159,22 +198,7 @@ export async function getWhatsappConfig(): Promise<
   try {
     return await safeDirectusCall(async () => {
       const client = await getDirectusClient({ requireAuth: true });
-
-      const configItem = await client.request(
-        readSingleton("configuracoes_site", {
-          fields: [
-            "id",
-            "evolution_api_url",
-            "evolution_api_token",
-            "evolution_api_instance",
-            "n8n_webhook_url",
-          ],
-        })
-      );
-      return {
-        success: true,
-        data: configItem ? toPlainObject(configItem) : null,
-      };
+      return { success: true, data: await lerConfigWhatsapp(client) };
     });
   } catch (error: any) {
     console.error("Erro em getWhatsappConfig:", error);
@@ -271,6 +295,15 @@ export async function testEvolutionConnection(config: {
   instance?: string;
 }): Promise<ConnectionTestResult> {
   await assertAccess("marketing");
+  return testarConexaoGowa(config);
+}
+
+// Teste de conexão sem checagem de sessão — usado pelo núcleo do disparo
+// (inclusive no cron). A action exportada acima mantém o `assertAccess`.
+async function testarConexaoGowa(config: {
+  url: string;
+  token: string;
+}): Promise<ConnectionTestResult> {
   try {
     const { url, token } = config;
     if (!url || !token) {
@@ -521,11 +554,10 @@ export type BeneficiariaFilter = {
   aniversariantes_hoje?: boolean | null;
 };
 
-// Subtrai N anos da data de hoje e devolve no formato YYYY-MM-DD.
+// Subtrai N anos da data de HOJE EM BRASÍLIA e devolve no formato YYYY-MM-DD.
+// (O `toISOString` anterior dava o dia em UTC: depois das 21h, "amanhã".)
 function dateMinusYears(years: number): string {
-  const d = new Date();
-  d.setFullYear(d.getFullYear() - years);
-  return d.toISOString().slice(0, 10);
+  return dataMenosAnos(hojeEmBrasilia(), years);
 }
 
 // Monta o filtro do Directus a partir do filtro estruturado, sempre
@@ -570,10 +602,12 @@ function buildBeneficiariaFilter(f?: BeneficiariaFilter): Record<string, any> {
     and.push({ data_nascimento: { _gte: dateMinusYears(f.idade_max + 1) } });
 
   // Aniversariantes de hoje: usa funções de data do Directus (month/day).
+  // "Hoje" no calendário de Brasília — getMonth/getDate seguem o fuso do
+  // processo, e num servidor em UTC a campanha das 21h ia para os de amanhã.
   if (f.aniversariantes_hoje) {
-    const now = new Date();
-    and.push({ "month(data_nascimento)": { _eq: now.getMonth() + 1 } });
-    and.push({ "day(data_nascimento)": { _eq: now.getDate() } });
+    const { mes, dia } = mesEDia(hojeEmBrasilia());
+    and.push({ "month(data_nascimento)": { _eq: mes } });
+    and.push({ "day(data_nascimento)": { _eq: dia } });
   }
 
   const q = (f.busca || "").trim();
@@ -806,11 +840,14 @@ type DirectusRestClient = Awaited<ReturnType<typeof getDirectusClient>>;
 
 export async function triggerCampaignDispatch(
   campaignId: string,
-  target: DispatchTarget
+  target: DispatchTarget,
+  opcoes: { reenvioConfirmado?: boolean } = {},
 ): Promise<DispatchResult> {
   await assertAccess("marketing");
   const client = await getDirectusClient({ requireAuth: true });
-  return dispatchCampaignWithClient(client, campaignId, target);
+  return dispatchCampaignWithClient(client, campaignId, target, {
+    reenvioConfirmado: opcoes.reenvioConfirmado === true,
+  });
 }
 
 // Variante para execução automática (cron): usa o cliente admin estático,
@@ -829,14 +866,25 @@ export async function triggerCampaignDispatchAdmin(
 async function dispatchCampaignWithClient(
   client: DirectusRestClient,
   campaignId: string,
-  target: DispatchTarget
+  target: DispatchTarget,
+  opcoes: { reenvioConfirmado?: boolean } = {},
 ): Promise<DispatchResult> {
+  // Vira true quando a campanha é reservada como "running": a partir daí pode
+  // ter havido envio, e quem chamou não deve tratar a falha como "não rodou".
+  let iniciado = false;
   try {
     // 1. Fetch campaign message template
     const campaign = await client.request(readItem("campanhas", campaignId));
     if (!campaign || !campaign.mensagem) {
       return { success: false, error: "Campanha ou mensagem não encontrada." };
     }
+
+    // Trava no servidor contra disparo duplicado (clique duplo, duas abas,
+    // campanha já concluída). O botão da tela não é proteção suficiente.
+    const bloqueio = motivoBloqueioDisparo(campaign, new Date(), opcoes);
+    if (bloqueio) return { success: false, error: bloqueio };
+    const statusAnterior: string =
+      campaign.status && campaign.status !== "running" ? campaign.status : "draft";
 
     // 2. Fetch beneficiaries details conforme o modo de público
     let beneficiariesRaw: any[];
@@ -880,13 +928,18 @@ async function dispatchCampaignWithClient(
     if (beneficiaries.length === 0) {
       return {
         success: false,
+        semPublico: true,
         error: "Nenhuma beneficiária elegível (com telefone válido) encontrada.",
       };
     }
 
-    // 3. Get WhatsApp Settings
-    const configResult = await getWhatsappConfig();
-    const config = configResult.success ? configResult.data : null;
+    // 3. Get WhatsApp Settings — com o cliente recebido (ver lerConfigWhatsapp).
+    let config: WhatsappConfigData | null = null;
+    try {
+      config = await lerConfigWhatsapp(client);
+    } catch (error) {
+      console.error("Erro ao ler a configuração do WhatsApp:", error);
+    }
 
     // GoWA precisa apenas de URL base + credenciais Basic Auth (usuario:senha).
     // Observação: quando `useGowa`/`useN8n` são true, os respectivos campos de
@@ -908,13 +961,9 @@ async function dispatchCampaignWithClient(
 
     // --- CASE A: BATCH DISPATCH (MORE THAN 1 RECIPIENT) ---
     if (isBatch && useN8n) {
-      // Update campaign status to running
-      await client.request(
-        updateItem("campanhas", campaignId, {
-          status: "running",
-          data_envio: new Date().toISOString(),
-        })
-      );
+      const conflito = await reservarCampanha(client, campaignId);
+      if (conflito) return { success: false, error: conflito };
+      iniciado = true;
 
       // Create disparos logs in Directus as "scheduled"
       const dataToCreate = beneficiaries.map((b: any) => ({
@@ -960,8 +1009,24 @@ async function dispatchCampaignWithClient(
         }
       } catch (err: any) {
         console.error("Erro ao chamar n8n webhook:", err);
-        // Revert campaign status to draft and delete the created disparos
-        await client.request(updateItem("campanhas", campaignId, { status: "draft" }));
+        // O n8n não recebeu nada: apaga os disparos criados (senão ficam
+        // "scheduled" para sempre no histórico) e devolve a campanha ao status
+        // de antes. Nenhuma mensagem saiu, então não conta como iniciado.
+        const ids = (Array.isArray(createdDisparos) ? createdDisparos : [])
+          .map((d: any) => d?.id)
+          .filter((id: unknown) => id !== undefined && id !== null) as number[];
+        try {
+          if (ids.length > 0) await client.request(deleteItems("disparos", ids));
+        } catch (delErr) {
+          console.error("Falha ao apagar os disparos do lote não enviado:", delErr);
+        }
+        try {
+          await client.request(
+            updateItem("campanhas", campaignId, { status: statusAnterior }),
+          );
+        } catch (stErr) {
+          console.error("Falha ao restaurar o status da campanha:", stErr);
+        }
         return {
           success: false,
           error: `Falha ao acionar o n8n para disparo em lote: ${err.message || err}`,
@@ -985,7 +1050,7 @@ async function dispatchCampaignWithClient(
     // dispositivo logado (sessão ativa). Evita falhas confusas quando o WhatsApp
     // está desconectado/sem QR pareado.
     if (useGowa) {
-      const conn = await testEvolutionConnection({
+      const conn = await testarConexaoGowa({
         url: config.evolution_api_url!,
         token: config.evolution_api_token!,
       });
@@ -999,12 +1064,9 @@ async function dispatchCampaignWithClient(
       }
     }
 
-    await client.request(
-      updateItem("campanhas", campaignId, {
-        status: "running",
-        data_envio: new Date().toISOString(),
-      })
-    );
+    const conflito = await reservarCampanha(client, campaignId);
+    if (conflito) return { success: false, error: conflito };
+    iniciado = true;
 
     let successCount = 0;
     let failedCount = 0;
@@ -1212,8 +1274,39 @@ async function dispatchCampaignWithClient(
     };
   } catch (error: any) {
     console.error("Erro no disparo da campanha:", error);
-    return { success: false, error: error?.message || "Erro desconhecido ao processar disparos." };
+    return {
+      success: false,
+      iniciado,
+      error: error?.message || "Erro desconhecido ao processar disparos.",
+    };
   }
+}
+
+/**
+ * Reserva a campanha para este disparo: grava "running" com uma marca de
+ * tempo e relê. Se outra execução gravou depois (clique duplo, cron
+ * sobreposto), a marca relida é a dela e esta desiste. Não elimina a corrida
+ * por completo, mas reduz a janela de segundos para milissegundos — o
+ * suficiente sem montar uma fila de jobs. Devolve a mensagem de conflito, ou
+ * null quando a reserva é nossa.
+ */
+async function reservarCampanha(
+  client: DirectusRestClient,
+  campaignId: string,
+): Promise<string | null> {
+  const marca = new Date();
+  marca.setMilliseconds(0);
+  const marcaIso = marca.toISOString();
+  await client.request(
+    updateItem("campanhas", campaignId, { status: "running", data_envio: marcaIso }),
+  );
+  const relida = (await client.request(
+    readItem("campanhas", campaignId, { fields: ["status", "data_envio"] }),
+  )) as { status?: string | null; data_envio?: string | null };
+  if (relida?.status !== "running" || !mesmoSegundo(relida.data_envio, marcaIso)) {
+    return "Outro disparo desta campanha começou ao mesmo tempo; este foi interrompido para não duplicar mensagens.";
+  }
+  return null;
 }
 
 // 7. Execução de campanhas automáticas (agendadas) — chamada pelo cron.
@@ -1266,6 +1359,7 @@ export async function runDueAutomaticCampaigns() {
     );
 
     const results: any[] = [];
+    let falhas = 0;
 
     for (const c of Array.isArray(campaigns) ? campaigns : []) {
       const horario = String(c.horario || "").trim();
@@ -1296,29 +1390,66 @@ export async function runDueAutomaticCampaigns() {
       }
 
       // Marca ANTES de disparar para garantir idempotência (evita duplo envio
-      // se o cron disparar mais de uma vez na mesma hora).
+      // se o cron disparar mais de uma vez na mesma hora). Se o disparo for
+      // recusado antes de começar, a marca é desfeita logo abaixo.
       await client.request(
         updateItem("campanhas", c.id, { ultima_execucao: dateStr })
       );
 
-      let filter: BeneficiariaFilter = {};
-      if (c.filtro_json) {
-        filter =
-          typeof c.filtro_json === "string"
-            ? (JSON.parse(c.filtro_json) as BeneficiariaFilter)
-            : (c.filtro_json as BeneficiariaFilter);
+      let res: DispatchResult;
+      try {
+        let filter: BeneficiariaFilter = {};
+        if (c.filtro_json) {
+          filter =
+            typeof c.filtro_json === "string"
+              ? (JSON.parse(c.filtro_json) as BeneficiariaFilter)
+              : (c.filtro_json as BeneficiariaFilter);
+        }
+        res = await dispatchCampaignWithClient(client, String(c.id), {
+          mode: "filtered",
+          filter,
+        });
+      } catch (error: any) {
+        res = { success: false, error: error?.message || "Falha ao preparar o disparo." };
       }
 
-      const res = await dispatchCampaignWithClient(client, String(c.id), {
-        mode: "filtered",
-        filter,
-      });
+      // Ninguém elegível hoje (ex.: nenhuma aniversariante) não é falha: a
+      // campanha rodou e não tinha público. Fica registrada como executada.
+      if (!res.success && res.semPublico) {
+        results.push({ id: c.id, nome: c.nome, success: true, skipped: true, reason: res.error });
+        continue;
+      }
 
-      results.push({ id: c.id, nome: c.nome, dispatched: true, result: res });
+      if (!res.success) {
+        falhas++;
+        // `ultima_execucao` só fica gravada se o envio chegou a começar; se foi
+        // recusado antes (GoWA desconectado, configuração ausente...), desfaz a
+        // marca para não constar como "executada hoje" algo que não rodou.
+        if (!res.iniciado) {
+          try {
+            await client.request(
+              updateItem("campanhas", c.id, { ultima_execucao: c.ultima_execucao ?? null })
+            );
+          } catch (error) {
+            console.error("Falha ao desfazer ultima_execucao:", error);
+          }
+        }
+      }
+
+      results.push({
+        id: c.id,
+        nome: c.nome,
+        dispatched: true,
+        success: res.success,
+        result: res,
+      });
     }
 
     return {
-      success: true,
+      // Falha de qualquer campanha devida aparece para o agendador (HTTP 500
+      // na rota), em vez de um "success: true" que escondia o problema.
+      success: falhas === 0,
+      failed: falhas,
       executedAt: `${dateStr} ${String(hour).padStart(2, "0")}:00 ${SCHEDULER_TZ}`,
       considered: campaigns.length,
       results,

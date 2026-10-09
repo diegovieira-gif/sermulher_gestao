@@ -1,7 +1,7 @@
 {
   "id": "6.1",
   "modulo": "6 — Sala Azul",
-  "titulo": "Cadastrar um participante (infrator)",
+  "titulo": "Cadastrar um participante (autor)",
   "publico": "Equipe da Sala Azul",
   "pre_requisitos": ["0.2"],
   "objetivo": "Ao final, a participante cadastra um autor de violência com processo, nível de risco e status legal, e lê o alerta de risco do painel.",
@@ -21,7 +21,7 @@
       "tipo": "cartao",
       "cartao": {
         "titulo": "Cadastros que nunca se misturam",
-        "linhas": ["Beneficiárias: as mulheres atendidas", "Infratores: os autores acompanhados na Sala Azul", "São bases separadas, de propósito"]
+        "linhas": ["Beneficiárias: as mulheres atendidas", "Autores: os autores de violência acompanhados na Sala Azul", "São bases separadas, de propósito"]
       },
       "narracao": "Atenção a um ponto: aqui o cadastro é de autores de violência, e não de beneficiárias. São duas bases separadas, de propósito. Nunca cadastre um autor como beneficiária, nem procure uma mulher atendida aqui."
     },
@@ -33,16 +33,16 @@
     },
     {
       "id": "c04",
-      "narracao": "No menu da Sala Azul, abra Infratores e clique em Novo Infrator.",
+      "narracao": "No menu da Sala Azul, abra Autores e clique em Novo Autor.",
       "acao": { "tipo": "navegar", "url": "/sala-azul/infratores" },
-      "foco": { "seletor": "role=button[name=\"Novo Infrator\"]", "zoom": 2.0 }
+      "foco": { "seletor": "role=button[name=\"Novo Autor\"]", "zoom": 2.0 }
     },
     {
       "id": "c05",
       "narracao": "Informe o nome completo e o CPF, só com números. O número do processo é o que liga este cadastro à determinação judicial, então copie com cuidado.",
       "acao": [
-        { "tipo": "clicar", "seletor": "role=button[name=\"Novo Infrator\"]" },
-        { "tipo": "digitar", "seletor": "[placeholder=\"Nome do infrator\"]", "texto": "João Exemplo Santos" }
+        { "tipo": "clicar", "seletor": "role=button[name=\"Novo Autor\"]" },
+        { "tipo": "digitar", "seletor": "[placeholder=\"Nome do autor\"]", "texto": "João Exemplo Santos" }
       ],
       "foco": { "seletor": "role=dialog", "zoom": 1.4 }
     },

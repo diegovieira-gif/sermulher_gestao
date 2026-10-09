@@ -3,6 +3,7 @@
 import { directus } from "@/lib/directus";
 import { readItems, readItem } from "@directus/sdk";
 import { assertAccess } from "@/lib/permissions";
+import { booleano } from "@/lib/datas";
 
 /**
  * Busca dados completos para o Relatório Individual de Frequência
@@ -78,6 +79,7 @@ export async function getRelatorioIndividual(
           },
         },
         sort: ["data"],
+        limit: -1,
       })
     );
 
@@ -90,17 +92,19 @@ export async function getRelatorioIndividual(
             _eq: participacaoIdNum,
           },
         },
+        limit: -1,
       })
     );
 
     // 5. Processa os dados no JS: Cruza Sessões com Presenças
     const sessoesComPresenca = sessoes.map((sessao) => {
-      const presenca = presencas.find((p) => p.sessao_id === sessao.id);
+      const presenca = presencas.find((p) => Number(p.sessao_id) === Number(sessao.id));
       return {
         id: sessao.id,
         data: sessao.data,
         tema: sessao.tema || "-",
-        presente: presenca ? presenca.presente === true : false,
+        // O SQLite devolve 1/0: `=== true` zerava a frequência do relatório.
+        presente: presenca ? booleano(presenca.presente) : false,
       };
     });
 

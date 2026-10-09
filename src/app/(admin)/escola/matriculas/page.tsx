@@ -13,6 +13,7 @@ import { Users, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { formatarData } from "@/lib/datas";
 
 export const dynamic = "force-dynamic";
 
@@ -76,7 +77,8 @@ export default async function MatriculasGlobalPage() {
                     <TableCell>{mat.beneficiaria?.cpf || "-"}</TableCell>
                     <TableCell>{mat.turma?.nome || "Turma removida"}</TableCell>
                     <TableCell>
-                      {new Date(mat.data_matricula).toLocaleDateString("pt-BR")}
+                      {/* Sem new Date(): data "AAAA-MM-DD" no fuso local saía um dia antes. */}
+                      {formatarData(mat.data_matricula)}
                     </TableCell>
                     <TableCell>
                       <Badge

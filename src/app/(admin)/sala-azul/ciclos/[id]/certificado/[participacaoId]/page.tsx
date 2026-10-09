@@ -1,6 +1,7 @@
 import { getCertificadoData } from "./actions";
 import { AlertCircle } from "lucide-react";
 import { PrintButton } from "./print-button"; // Importando o componente cliente
+import { dataLocal, formatarData, hojeEmBrasilia } from "@/lib/datas";
 
 interface PageProps {
   params: Promise<{
@@ -31,8 +32,10 @@ export default async function CertificadoPage({ params }: PageProps) {
   const sala = p.sala;
   
   // Formatação de datas
-  const formatDate = (dateStr: string) => 
-    new Date(dateStr).toLocaleDateString("pt-BR", { day: 'numeric', month: 'long', year: 'numeric' });
+  // dataLocal (meio-dia local): `new Date("AAAA-MM-DD")` é meia-noite UTC e
+  // saía um dia antes no certificado.
+  const formatDate = (dateStr: string | null | undefined) =>
+    !dateStr ? "-" : dataLocal(dateStr).toLocaleDateString("pt-BR", { day: 'numeric', month: 'long', year: 'numeric' });
 
   const responsavel = sala.responsavel_tecnico 
     ? `${sala.responsavel_tecnico.first_name} ${sala.responsavel_tecnico.last_name}`
@@ -89,7 +92,7 @@ export default async function CertificadoPage({ params }: PageProps) {
           {/* Rodapé / Autenticação */}
           <div className="mt-12 text-center text-xs text-slate-400">
             <p>Este documento comprova a participação para fins judiciais.</p>
-            <p>Registro: {p.id} • Emitido em: {new Date().toLocaleDateString("pt-BR")}</p>
+            <p>Registro: {p.id} • Emitido em: {formatarData(hojeEmBrasilia())}</p>
           </div>
 
         </div>

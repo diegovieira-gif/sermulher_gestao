@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
+import { campanhaSchema } from "../schemas";
 
 const MESES = [
   "Janeiro",
@@ -114,8 +115,9 @@ export default function CampanhasPage() {
           cor: item.cor || "#000000",
           status: item.status || "ativo",
         })}
-        // Schema específico para campanhas
-        formSchema={undefined}
+        // Schema de campanhas: o padrão da tabela descartava o campo `mes`
+        // (z.object remove chaves desconhecidas) e gravava "published".
+        formSchema={campanhaSchema}
         // Campos customizados do formulário (Nome, Mês, Cor, Status)
         renderFormFields={(form: any) => (
           <>

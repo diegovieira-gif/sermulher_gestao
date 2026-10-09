@@ -37,6 +37,9 @@ import { Plus, Pencil, Trash2, Calendar, CheckSquare, User } from "lucide-react"
 import { toast } from "sonner";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import type { SessaoData } from "./schemas";
+// formatarData da lib: `new Date("AAAA-MM-DD")` formatado no fuso local
+// mostrava a data um dia antes.
+import { formatarData } from "@/lib/datas";
 
 interface Sessao {
   id: number;
@@ -58,20 +61,6 @@ interface ChamadaItem {
 interface SessoesClientProps {
   salaId: number;
   sessoes: Sessao[];
-}
-
-// Função para formatar data no formato DD/MM/YYYY
-function formatarData(data: string | Date): string {
-  try {
-    const date = typeof data === "string" ? new Date(data) : data;
-    return new Intl.DateTimeFormat("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    }).format(date);
-  } catch {
-    return String(data);
-  }
 }
 
 export function SessoesClient({ salaId, sessoes }: SessoesClientProps) {
@@ -105,10 +94,9 @@ export function SessoesClient({ salaId, sessoes }: SessoesClientProps) {
 
   const handleEdit = (sessao: Sessao) => {
     setSelectedSessao(sessao);
-    // Formata a data para o formato input[type="date"] (YYYY-MM-DD)
-    const date = new Date(sessao.data);
-    const formattedDate = date.toISOString().split("T")[0];
-    setDataInput(formattedDate);
+    // input[type="date"] quer AAAA-MM-DD: a data escrita, sem passar por
+    // Date/toISOString (que convertia para UTC e podia trocar o dia).
+    setDataInput(String(sessao.data ?? "").slice(0, 10));
     setTemaInput(sessao.tema || "");
     setRelatorioInput(sessao.relatorio || "");
     setFormOpen(true);

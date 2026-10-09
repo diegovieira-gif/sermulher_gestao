@@ -29,6 +29,7 @@ import { Plus, Pencil, Trash2, Eye, ChevronLeft, ChevronRight } from "lucide-rea
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { toast } from "sonner";
 import Link from "next/link";
+import { formatarData } from "@/lib/datas";
 import type {
   AtendimentosMeta,
   BeneficiariaOption,
@@ -139,16 +140,10 @@ export function AtendimentosClient({
     }
   };
 
-  // Função auxiliar para formatar data (dd/MM/yyyy)
-  const formatDate = (dateString: string | null | undefined): string => {
-    if (!dateString) return "-";
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString("pt-BR");
-    } catch {
-      return dateString;
-    }
-  };
+  // Data dd/MM/yyyy sem conversão de fuso: `new Date("AAAA-MM-DD")` é
+  // meia-noite UTC e aparecia como o dia ANTERIOR no Brasil.
+  const formatDate = (dateString: string | null | undefined): string =>
+    formatarData(dateString);
 
   // Função auxiliar para formatar CPF
   const formatCPF = (cpf: string | null | undefined): string => {

@@ -59,6 +59,9 @@ import { toast } from "sonner";
 import { StatusParticipacao } from "./schemas";
 import Link from "next/link";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
+// formatarData da lib: `new Date("AAAA-MM-DD")` formatado no fuso local
+// mostrava a data um dia antes.
+import { formatarData } from "@/lib/datas";
 
 interface Participante {
   id: number;
@@ -122,20 +125,6 @@ interface ParticipantesClientProps {
   infratoresDisponiveis: Infrator[];
 }
 
-// Função para formatar data
-function formatarData(data: string | Date): string {
-  try {
-    const date = typeof data === "string" ? new Date(data) : data;
-    return new Intl.DateTimeFormat("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    }).format(date);
-  } catch {
-    return String(data);
-  }
-}
-
 // Função para obter a variante do badge baseado no status
 function getStatusBadgeVariant(status: string | null): "default" | "success" | "destructive" | "warning" {
   if (!status) return "default";
@@ -182,7 +171,7 @@ export function ParticipantesClient({
 
   const handleAddParticipante = () => {
     if (!selectedInfrator) {
-      toast.error("Selecione um infrator para adicionar");
+      toast.error("Selecione um autor para adicionar");
       return;
     }
 
@@ -314,14 +303,14 @@ export function ParticipantesClient({
         <h2 className="text-lg font-semibold mb-4">Adicionar Participante</h2>
         <div className="flex gap-4 items-end">
           <div className="flex-1">
-            <Label htmlFor="infrator">Infrator</Label>
+            <Label htmlFor="infrator">Autor</Label>
             <Select
               value={selectedInfrator}
               onValueChange={setSelectedInfrator}
               disabled={isAdding || infratoresDisponiveis.length === 0}
             >
               <SelectTrigger id="infrator" className="w-full">
-                <SelectValue placeholder="Selecione um infrator" />
+                <SelectValue placeholder="Selecione um autor" />
               </SelectTrigger>
               <SelectContent>
                 {infratoresDisponiveis.map((infrator: any) => (
@@ -348,7 +337,7 @@ export function ParticipantesClient({
           <TableHeader>
             <TableRow>
               <TableHead>
-                Infrator
+                Autor
                 <InfoTooltip text="Nome completo do participante do ciclo." />
               </TableHead>
               <TableHead>
@@ -361,7 +350,7 @@ export function ParticipantesClient({
               </TableHead>
               <TableHead>
                 Contato
-                <InfoTooltip text="Telefone para comunicação com o infrator." />
+                <InfoTooltip text="Telefone para comunicação com o autor." />
               </TableHead>
               <TableHead>
                 Frequência

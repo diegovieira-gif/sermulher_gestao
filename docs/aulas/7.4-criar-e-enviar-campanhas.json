@@ -1,0 +1,106 @@
+{
+  "id": "7.4",
+  "modulo": "7 — Comunicação",
+  "titulo": "Criar e enviar campanhas: a Avaliação de Atendimento",
+  "publico": "Equipe de comunicação",
+  "pre_requisitos": ["7.2"],
+  "objetivo": "Ao final, a participante cria um modelo de campanha e sabe enviar uma campanha já cadastrada — como a de Avaliação de Atendimento — escolhendo o público, conferindo a conexão do WhatsApp e confirmando o reenvio.",
+  "tarefa_final": "Abra a Campanha de Avaliação de Atendimento, escolha o público por filtros e confira quantas pessoas vão receber — sem disparar.",
+  "duracao_alvo_seg": 210,
+  "elenco": ["avaliacao"],
+
+  "pendencias": [
+    "Captura em modo produção (--producao): só a linha da Campanha de Avaliação de Atendimento fica nítida; as demais campanhas são borradas. A aba Configuração da Conexão (credenciais) fica fora do vídeo.",
+    "NUNCA clicar em Disparar durante a captura: as cenas param na conferência do público. O botão de confirmação de reenvio é marcado só para mostrar o aviso."
+  ],
+
+  "cenas": [
+    {
+      "id": "c01",
+      "tipo": "cartao",
+      "cartao": { "titulo": "Criar e enviar campanhas", "subtitulo": "Módulo sete · Comunicação" },
+      "narracao": "Neste vídeo você vai criar um modelo de campanha e, depois, enviar uma campanha que já está cadastrada: a Campanha de Avaliação de Atendimento, que convida as mulheres atendidas a avaliar a Secretaria."
+    },
+    {
+      "id": "c02",
+      "borrar": ["div.bg-purple-50.rounded-xl.p-3"],
+      "narracao": "No menu, em Marketing e Comunicação, abra Campanhas WhatsApp. Na aba Campanhas ficam os modelos: cada linha é uma campanha pronta, com nome, objetivo, mensagem e situação.",
+      "acao": { "tipo": "navegar", "url": "/marketing/whatsapp" },
+      "foco": { "seletor": "text=Modelos de Campanhas WhatsApp", "zoom": 1.6 }
+    },
+    {
+      "id": "c03",
+      "borrar": ["div.bg-purple-50.rounded-xl.p-3"],
+      "narracao": "Para criar uma campanha nova, clique em Criar Campanha. Dê um nome que a equipe reconheça e escreva o objetivo, para todo mundo saber para que ela serve.",
+      "acao": { "tipo": "clicar", "seletor": "role=button[name=\"Criar Campanha\"]" },
+      "foco": { "seletor": "[placeholder=\"Ex: Informativo Outubro Rosa\"]", "zoom": 1.8 }
+    },
+    {
+      "id": "c04",
+      "borrar": ["div.bg-purple-50.rounded-xl.p-3"],
+      "narracao": "Escreva a mensagem. A marcação primeiro nome, entre chaves, vira o nome de cada destinatária. Lembre da regra do vídeo anterior: nada de citar atendimento ou violência, porque o celular pode estar nas mãos de outra pessoa.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "text=Mensagem do WhatsApp", "zoom": 1.7 }
+    },
+    {
+      "id": "c05",
+      "borrar": ["div.bg-purple-50.rounded-xl.p-3"],
+      "narracao": "Em Tipo de envio, escolha Manual quando a equipe decide a hora de enviar, ou Automática para repetir nos dias e no horário marcados. Salve, e a campanha passa a aparecer entre os modelos. Aqui, vamos só fechar sem salvar.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "text=Tipo de envio", "zoom": 1.7 }
+    },
+    {
+      "id": "c06",
+      "borrar": ["div.bg-purple-50.rounded-xl.p-3"],
+      "narracao": "Agora, o envio de uma campanha que já existe. Na linha da Campanha de Avaliação de Atendimento, o botão com o aviãozinho de papel é Disparar Campanha. Ele não envia nada ainda: abre o painel de envio.",
+      "acao": { "tipo": "tecla", "tecla": "Escape" },
+      "foco": { "seletor": "tr:has-text(\"Campanha de Avaliação de Atendimento\")", "zoom": 1.6 }
+    },
+    {
+      "id": "c07",
+      "borrar": ["div.bg-purple-50.rounded-xl.p-3"],
+      "narracao": "No painel, releia a mensagem da campanha. É exatamente esse texto que vai chegar, com o link para a avaliação.",
+      "acao": { "tipo": "clicar", "seletor": "tr:has-text(\"Campanha de Avaliação de Atendimento\") [title=\"Disparar Campanha\"]" },
+      "foco": { "seletor": "text=Mensagem da Campanha:", "zoom": 1.6 }
+    },
+    {
+      "id": "c08",
+      "borrar": ["div.bg-purple-50.rounded-xl.p-3"],
+      "narracao": "Como esta campanha já foi enviada antes, o sistema avisa e pede confirmação. Um novo disparo manda a mensagem de novo para todo o público escolhido, inclusive para quem já recebeu. Só marque a confirmação se o reenvio for mesmo a intenção.",
+      "acao": { "tipo": "nenhuma" },
+      "foco": { "seletor": "text=Esta campanha já foi enviada", "zoom": 1.8 }
+    },
+    {
+      "id": "c09",
+      "borrar": ["div.bg-purple-50.rounded-xl.p-3"],
+      "narracao": "Escolha o público. Todas envia para todas as mulheres elegíveis. Por filtros recorta o público, por exemplo pelas aniversariantes do dia ou pela situação cadastral, e mostra na hora quantas pessoas correspondem. Selecionar permite escolher pessoa por pessoa.",
+      "acao": { "tipo": "clicar", "seletor": "role=button[name=/Por filtros/]" },
+      "foco": { "seletor": "role=button[name=/Por filtros/]", "zoom": 1.7 }
+    },
+    {
+      "id": "c10",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Antes de disparar",
+        "linhas": ["O WhatsApp está conectado? Use Testar Conexão", "Offline? Conectar WhatsApp mostra o QR Code", "Releia a mensagem e confira o público", "Disparo enviado não volta"]
+      },
+      "narracao": "Antes de disparar, confira a conexão. O botão Testar Conexão mostra se o WhatsApp está conectado. Se aparecer Offline, o botão Conectar WhatsApp abre um QR Code: quem está com o celular oficial da Secretaria lê o código e pronto. Depois, releia a mensagem e confira o público. Disparo enviado não volta."
+    },
+    {
+      "id": "c11",
+      "borrar": ["div.bg-purple-50.rounded-xl.p-3"],
+      "narracao": "Cada envio fica registrado na aba Histórico de Envio, com a situação de cada mensagem. É ali que você confere se a campanha chegou.",
+      "acao": [{ "tipo": "tecla", "tecla": "Escape" }, { "tipo": "clicar", "seletor": "text=Histórico de Envio" }],
+      "foco": { "seletor": "text=Linha do Tempo de Disparos", "zoom": 1.6 }
+    },
+    {
+      "id": "c12",
+      "tipo": "cartao",
+      "cartao": {
+        "titulo": "Sua vez",
+        "linhas": ["Abra a Campanha de Avaliação de Atendimento", "Escolha o público por filtros", "Confira quantas pessoas vão receber", "Não dispare: só confira"]
+      },
+      "narracao": "Agora é com você. Abra a Campanha de Avaliação de Atendimento, escolha o público por filtros e confira quantas pessoas vão receber. Neste exercício, não dispare: só confira."
+    }
+  ]
+}

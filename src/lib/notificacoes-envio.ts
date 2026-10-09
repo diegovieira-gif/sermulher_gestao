@@ -1,6 +1,19 @@
 import "server-only";
 import { readItems, readSingleton, updateItem } from "@directus/sdk";
 import { getDirectusAdmin } from "@/lib/directus";
+import { booleano } from "@/lib/datas";
+import {
+  canalResolvido,
+  decidirEmail,
+  decidirWhatsapp,
+  estadoEnviado,
+  estadoFalha,
+  estadoPulado,
+  formatarNumeroWhatsapp,
+  lerCanais,
+  notificacaoPrecisaEnvio,
+  numeroWhatsappValido,
+} from "@/lib/notificacoes-formato";
 
 /**
  * Consumidor da fila de notificações: entrega por e-mail e WhatsApp.
@@ -12,11 +25,28 @@ import { getDirectusAdmin } from "@/lib/directus";
  * Nenhum canal é obrigatório: sem SMTP configurado o e-mail simplesmente não
  * sai, sem telefone/consentimento o WhatsApp não sai, e o aviso continua
  * disponível no sino. Degradar é melhor que falhar.
+ *
+ * Todo canal termina RESOLVIDO (entregue, pulado ou desistido após
+ * MAX_TENTATIVAS) — ver `notificacoes-formato.ts`. Um canal que "não se
+ * aplica" e ficasse sem registro manteria o aviso na frente da fila para
+ * sempre; com 50 desses, nada mais saía.
  */
 
 const COLLECTION = "notificacoes";
 /** Teto por execução: evita que uma fila represada vire uma rajada de envio. */
 const LOTE = 50;
+/** Tamanho de cada página lida ao procurar o que ainda precisa de envio. */
+const PAGINA = 200;
+/** Teto de páginas por varredura — a janela abaixo já limita o volume. */
+const MAX_PAGINAS = 25;
+/**
+ * Janela de envio por canal externo. Aviso que não saiu em 3 dias (ex.: o cron
+ * ficou parado) deixa de ir por e-mail/WhatsApp — "amanhã tem evento" chegando
+ * depois do evento é pior que nada. Continua no sino. Também limita a leitura:
+ * `canais` é JSON e o Directus não filtra dentro dele, então o "já resolvido"
+ * é decidido em memória.
+ */
+const JANELA_MS = 3 * 24 * 60 * 60 * 1000;
 
 interface NotificacaoPendente {
   id: number;
@@ -85,29 +115,6 @@ async function enviarEmail(
 
 // --- WhatsApp (GoWA) ----------------------------------------------------------
 
-/**
- * Normaliza o número no mesmo padrão do disparo de campanhas.
- *
- * A regra do nono dígito não é capricho: contas de WhatsApp em DDDs >= 31
- * (Sergipe é 79) costumam estar registradas SEM o 9 extra, e o GoWA envia
- * para o JID exato que recebe — com o 9 sobrando, a mensagem não chega.
- */
-function formatarNumeroWhatsapp(telefone: string): string {
-  let n = telefone.replace(/\D/g, "");
-  if (n.length === 10 || n.length === 11) n = "55" + n;
-  if (n.startsWith("55") && n.length === 13) {
-    const ddd = parseInt(n.substring(2, 4), 10);
-    if (n.charAt(4) === "9" && ddd >= 31) n = n.substring(0, 4) + n.substring(5);
-  }
-  return n;
-}
-
-function numeroValido(digitos: string): boolean {
-  if (!/^55\d{10,11}$/.test(digitos)) return false;
-  const ddd = parseInt(digitos.substring(2, 4), 10);
-  return ddd >= 11 && ddd <= 99;
-}
-
 interface ConfigGowa {
   url: string;
   token: string;
@@ -144,7 +151,7 @@ async function enviarWhatsapp(
   texto: string,
 ): Promise<{ ok: boolean; erro?: string }> {
   const numero = formatarNumeroWhatsapp(telefone);
-  if (!numeroValido(numero)) return { ok: false, erro: "número inválido" };
+  if (!numeroWhatsappValido(numero)) return { ok: false, erro: "número inválido" };
 
   try {
     const res = await fetch(`${cfg.url}/send/message`, {
@@ -177,37 +184,91 @@ export interface ResultadoEnvio {
   falhas: number;
 }
 
+/**
+ * Lê, por páginas em ordem de id, os avisos vencidos que ainda têm canal
+ * externo a processar — até `LOTE`. Paginar por `id > último` (e não um único
+ * `limit: 50` por data) impede que avisos já resolvidos ocupem o lote.
+ */
+async function lerPendentes(
+  client: ReturnType<typeof getDirectusAdmin>,
+  agora: Date,
+): Promise<NotificacaoPendente[]> {
+  const agoraIso = agora.toISOString();
+  const inicioJanela = new Date(agora.getTime() - JANELA_MS).toISOString();
+  const encontrados: NotificacaoPendente[] = [];
+  let ultimoId = 0;
+
+  for (let pagina = 0; pagina < MAX_PAGINAS && encontrados.length < LOTE; pagina++) {
+    const linhas = (await client.request(
+      readItems(COLLECTION, {
+        filter: {
+          _and: [
+            { id: { _gt: ultimoId } },
+            { cancelada_em: { _null: true } },
+            // Imediatos criados na janela, ou agendados que venceram na janela.
+            // O lembrete agendado para amanhã fica de fora.
+            {
+              _or: [
+                {
+                  _and: [
+                    { agendada_para: { _null: true } },
+                    { date_created: { _gte: inicioJanela } },
+                  ],
+                },
+                {
+                  _and: [
+                    { agendada_para: { _lte: agoraIso } },
+                    { agendada_para: { _gte: inicioJanela } },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        fields: [
+          "id",
+          "tipo",
+          "titulo",
+          "mensagem",
+          "canais",
+          "destinatario.id",
+          "destinatario.first_name",
+          "destinatario.last_name",
+          "destinatario.email",
+          "destinatario.telefone_notificacao",
+          "destinatario.notificar_whatsapp",
+        ],
+        sort: ["id"],
+        limit: PAGINA,
+      }),
+    )) as unknown as NotificacaoPendente[];
+
+    for (const n of linhas) {
+      if (notificacaoPrecisaEnvio(n.canais, agora)) encontrados.push(n);
+      if (encontrados.length >= LOTE) break;
+    }
+    if (linhas.length < PAGINA) break;
+    ultimoId = linhas[linhas.length - 1].id;
+  }
+
+  return encontrados;
+}
+
+async function gravarCanais(
+  client: ReturnType<typeof getDirectusAdmin>,
+  id: number,
+  canais: Record<string, unknown>,
+): Promise<void> {
+  try {
+    await client.request(updateItem(COLLECTION, id, { canais }));
+  } catch (error) {
+    console.error("[notificacoes] falha ao marcar canais:", error);
+  }
+}
+
 export async function enviarNotificacoesPendentes(): Promise<ResultadoEnvio> {
   const client = getDirectusAdmin();
-  const agora = new Date().toISOString();
-
-  const pendentes = (await client.request(
-    readItems(COLLECTION, {
-      filter: {
-        cancelada_em: { _null: true },
-        // Já vencidas ou imediatas — o lembrete agendado para amanhã fica de fora.
-        _or: [
-          { agendada_para: { _null: true } },
-          { agendada_para: { _lte: agora } },
-        ],
-      },
-      fields: [
-        "id",
-        "tipo",
-        "titulo",
-        "mensagem",
-        "canais",
-        "destinatario.id",
-        "destinatario.first_name",
-        "destinatario.last_name",
-        "destinatario.email",
-        "destinatario.telefone_notificacao",
-        "destinatario.notificar_whatsapp",
-      ],
-      sort: ["date_created"],
-      limit: LOTE,
-    }),
-  )) as unknown as NotificacaoPendente[];
+  const pendentes = await lerPendentes(client, new Date());
 
   const resultado: ResultadoEnvio = {
     analisadas: 0,
@@ -216,59 +277,67 @@ export async function enviarNotificacoesPendentes(): Promise<ResultadoEnvio> {
     falhas: 0,
   };
 
-  const cfgGowa = await lerConfigGowa();
+  // Só consulta o GoWA se houver o que mandar.
+  const cfgGowa = pendentes.length > 0 ? await lerConfigGowa() : null;
+  const smtp = smtpConfigurado();
 
   for (const n of pendentes) {
-    const canais = (n.canais || {}) as Record<string, unknown>;
+    const canais = lerCanais(n.canais);
     const destinatario = n.destinatario;
-    if (!destinatario) continue;
-
-    // Nada a fazer se ambos os canais externos já foram resolvidos.
-    if (canais.email && canais.whatsapp) continue;
+    const alteracoes: Record<string, unknown> = { ...canais };
     resultado.analisadas++;
 
+    // Destinatário apagado: nada a entregar, mas o aviso precisa sair da fila.
+    if (!destinatario) {
+      for (const k of ["email", "whatsapp"] as const) {
+        if (!canalResolvido(canais[k])) {
+          alteracoes[k] = estadoPulado("sem destinatário");
+        }
+      }
+      await gravarCanais(client, n.id, alteracoes);
+      continue;
+    }
+
     const texto = `${n.titulo}\n\n${n.mensagem}`;
-    const alteracoes: Record<string, unknown> = { ...canais };
 
     // E-mail
-    if (!canais.email && destinatario.email && smtpConfigurado()) {
-      const r = await enviarEmail(destinatario.email, n.titulo, n.mensagem);
-      alteracoes.email = r.ok
-        ? { enviado_em: new Date().toISOString() }
-        : { erro: r.erro, tentado_em: new Date().toISOString() };
+    const decEmail = decidirEmail(canais.email, {
+      email: destinatario.email,
+      smtp,
+    });
+    if (decEmail.acao === "pular") {
+      alteracoes.email = estadoPulado(decEmail.motivo);
+    } else if (decEmail.acao === "enviar") {
+      const r = await enviarEmail(destinatario.email!, n.titulo, n.mensagem);
+      alteracoes.email = r.ok ? estadoEnviado() : estadoFalha(canais.email, r.erro);
       if (r.ok) resultado.emailEnviados++;
       else resultado.falhas++;
     }
 
     // WhatsApp — exige número E consentimento explícito. O Directus devolve
-    // booleanos como 1/0 nesta instância, daí a comparação frouxa.
-    const querWhats =
-      destinatario.notificar_whatsapp === true ||
-      destinatario.notificar_whatsapp === 1;
-    if (
-      !canais.whatsapp &&
-      querWhats &&
-      destinatario.telefone_notificacao &&
-      cfgGowa
-    ) {
+    // booleanos como 1/0 nesta instância, daí o `booleano`.
+    const decWhats = decidirWhatsapp(canais.whatsapp, {
+      consentimento: booleano(destinatario.notificar_whatsapp),
+      telefone: destinatario.telefone_notificacao,
+      gowa: Boolean(cfgGowa),
+    });
+    if (decWhats.acao === "pular") {
+      alteracoes.whatsapp = estadoPulado(decWhats.motivo);
+    } else if (decWhats.acao === "enviar" && cfgGowa) {
       const r = await enviarWhatsapp(
         cfgGowa,
-        destinatario.telefone_notificacao,
+        destinatario.telefone_notificacao!,
         texto,
       );
       alteracoes.whatsapp = r.ok
-        ? { enviado_em: new Date().toISOString() }
-        : { erro: r.erro, tentado_em: new Date().toISOString() };
+        ? estadoEnviado()
+        : estadoFalha(canais.whatsapp, r.erro);
       if (r.ok) resultado.whatsappEnviados++;
       else resultado.falhas++;
     }
 
-    if (Object.keys(alteracoes).length !== Object.keys(canais).length) {
-      try {
-        await client.request(updateItem(COLLECTION, n.id, { canais: alteracoes }));
-      } catch (error) {
-        console.error("[notificacoes] falha ao marcar canais:", error);
-      }
+    if (decEmail.acao !== "aguardar" || decWhats.acao !== "aguardar") {
+      await gravarCanais(client, n.id, alteracoes);
     }
   }
 

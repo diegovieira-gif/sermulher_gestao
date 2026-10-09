@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { hojeEmBrasilia } from "@/lib/datas";
 
 // Enum para Status de Atendimento
 export enum StatusAtendimento {
@@ -33,7 +34,7 @@ export const atendimentoSchema = z.object({
     .default(StatusAtendimento.ABERTO),
   data_abertura: z
     .string()
-    .default(() => new Date().toISOString().split("T")[0]),
+    .default(() => hojeEmBrasilia()), // dia de Brasília, não o de UTC
   encaminhamento_id: z
     .coerce
     .number({ message: "Selecione o encaminhamento" })

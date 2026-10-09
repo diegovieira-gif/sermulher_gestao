@@ -46,7 +46,7 @@ const FRIENDLY_COLLECTIONS: Record<string, string> = {
   atendimentos: "Atendimentos",
   eventos: "Agenda Institucional",
   salas_azul: "Sala Azul - Ciclos",
-  infratores: "Sala Azul - Infratores",
+  infratores: "Sala Azul - Autores",
   participacoes_sala_azul: "Sala Azul - Participações",
   frequencias_sala_azul: "Sala Azul - Frequências",
   config_origens: "Config - Origens",

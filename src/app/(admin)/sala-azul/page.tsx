@@ -107,7 +107,7 @@ export default async function SalaAzulPage() {
                 <Users className="h-8 w-8 text-primary" />
               </div>
               <div>
-                <h3 className="text-xl font-semibold">Gestão de Infratores</h3>
+                <h3 className="text-xl font-semibold">Gestão de Autores</h3>
                 <p className="text-sm text-muted-foreground">
                   Cadastrar, monitorar e avaliar participantes
                 </p>
@@ -153,7 +153,7 @@ export default async function SalaAzulPage() {
           </div>
           <div className="text-2xl font-bold">{stats.totalParticipantes}</div>
           <p className="text-xs text-muted-foreground">
-            Infratores cadastrados
+            Autores cadastrados
           </p>
         </div>
         <div className="rounded-xl border bg-card p-6 shadow-sm">

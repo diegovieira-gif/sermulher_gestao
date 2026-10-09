@@ -23,7 +23,9 @@ const SALA_FIELDS = [
   // Relacionamento Local
   "local_id.id",
   "local_id.nome",
-  // Relacionamento Responsável Técnico
+  // Relacionamento Responsável Técnico — o id é o que o formulário de edição
+  // usa para pré-selecionar o facilitador; sem ele o campo abria vazio.
+  "responsavel_tecnico.id",
   "responsavel_tecnico.first_name",
   "responsavel_tecnico.last_name",
   // CORREÇÃO: Busca o ID das participações reais (não infratores M2M)
@@ -41,6 +43,8 @@ export async function getSalas() {
         // @ts-ignore
         fields: SALA_FIELDS,
         sort: ["-data_inicio"],
+        // Sem limite explícito o Directus corta em 100 ciclos.
+        limit: -1,
       })
     );
 
@@ -69,6 +73,7 @@ export async function getOptions() {
         readItems("locais", {
           fields: ["id", "nome"],
           sort: ["nome"],
+          limit: -1,
         })
       ),
       // Busca usuários do Directus usando API REST (não pode usar readItems para core collections)
