@@ -1,8 +1,13 @@
 import { z } from "zod";
 
-export const contatoSchema = z.object({
-  melhor_turno_contato: z.enum(["Manhã", "Tarde"]).optional().nullable(),
-});
+// `.loose()`: o JSON de contato de cadastros antigos traz outras chaves
+// (telefone, email…). Com o objeto estrito o zod as descartava e salvar a
+// ficha apagava esses dados do banco.
+export const contatoSchema = z
+  .object({
+    melhor_turno_contato: z.enum(["Manhã", "Tarde"]).optional().nullable(),
+  })
+  .loose();
 
 export const enderecoSchema = z.object({
   cep: z.string().optional().nullable(),

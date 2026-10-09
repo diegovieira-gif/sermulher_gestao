@@ -59,6 +59,9 @@ import { toast } from "sonner";
 import { StatusParticipacao } from "./schemas";
 import Link from "next/link";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
+// formatarData da lib: `new Date("AAAA-MM-DD")` formatado no fuso local
+// mostrava a data um dia antes.
+import { formatarData } from "@/lib/datas";
 
 interface Participante {
   id: number;
@@ -120,20 +123,6 @@ interface ParticipantesClientProps {
   sala: Sala;
   participacoes: Participante[];
   infratoresDisponiveis: Infrator[];
-}
-
-// Função para formatar data
-function formatarData(data: string | Date): string {
-  try {
-    const date = typeof data === "string" ? new Date(data) : data;
-    return new Intl.DateTimeFormat("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    }).format(date);
-  } catch {
-    return String(data);
-  }
 }
 
 // Função para obter a variante do badge baseado no status

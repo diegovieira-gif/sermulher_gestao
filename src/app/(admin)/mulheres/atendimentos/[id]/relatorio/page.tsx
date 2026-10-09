@@ -2,6 +2,9 @@ import { getAtendimentoDetails, getTramitacoes } from "../actions";
 import { notFound } from "next/navigation";
 import { htmlParaTexto } from "@/lib/texto-seguro";
 import { PrintButton } from "./print-button"; // Importando o componente cliente
+import { booleano, formatarData, hojeEmBrasilia } from "@/lib/datas";
+import { mascararTelefone } from "@/lib/utils";
+import { necessidadesParaTexto } from "../../necessidades";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -27,15 +30,26 @@ export default async function RelatorioAtendimentoPage({ params }: PageProps) {
   const tramitacoes =
     tramitacoesRes.success && tramitacoesRes.data ? tramitacoesRes.data : [];
 
-  // Parse seguro de JSONs
-  const contato =
-    typeof mulher?.contato === "string"
-      ? JSON.parse(mulher.contato)
-      : mulher?.contato || {};
-  const endereco =
-    typeof mulher?.endereco === "string"
-      ? JSON.parse(mulher.endereco)
-      : mulher?.endereco || {};
+  // Parse seguro de JSONs: um valor malformado no cadastro não pode derrubar
+  // a emissão do relatório inteiro.
+  const lerJson = (valor: unknown): Record<string, any> => {
+    if (typeof valor === "string") {
+      try {
+        const obj = JSON.parse(valor);
+        return obj && typeof obj === "object" ? obj : {};
+      } catch {
+        return {};
+      }
+    }
+    return valor && typeof valor === "object" ? (valor as Record<string, any>) : {};
+  };
+  const contato = lerJson(mulher?.contato);
+  const endereco = lerJson(mulher?.endereco);
+  // O telefone fica na coluna `telefone` (só dígitos); `contato.telefone` é
+  // de cadastros antigos. Antes só o legado era lido e saía sempre "-".
+  const telefone = mulher?.telefone || contato.telefone;
+  const textoNecessidades = (valor: unknown) =>
+    necessidadesParaTexto(valor) || "Nenhuma registrada.";
 
   return (
     <div className="min-h-screen bg-gray-50 p-8 print:bg-white print:p-0">
@@ -60,7 +74,7 @@ export default async function RelatorioAtendimentoPage({ params }: PageProps) {
             <p>
               Protocolo: <strong>#{atendimento.id}</strong>
             </p>
-            <p>Emissão: {new Date().toLocaleDateString("pt-BR")}</p>
+            <p>Emissão: {formatarData(hojeEmBrasilia())}</p>
           </div>
         </div>
 
@@ -86,16 +100,14 @@ export default async function RelatorioAtendimentoPage({ params }: PageProps) {
             </div>
             <div>
               <span className="block text-slate-500 text-xs">Telefone</span>
-              <span className="text-slate-900">{contato.telefone || "-"}</span>
+              <span className="text-slate-900">{telefone ? mascararTelefone(telefone) : "-"}</span>
             </div>
             <div>
               <span className="block text-slate-500 text-xs">
                 Data de Nascimento
               </span>
               <span className="text-slate-900">
-                {mulher?.data_nascimento
-                  ? new Date(mulher.data_nascimento).toLocaleDateString("pt-BR")
-                  : "-"}
+                {formatarData(mulher?.data_nascimento)}
               </span>
             </div>
             <div className="col-span-2">
@@ -120,11 +132,7 @@ export default async function RelatorioAtendimentoPage({ params }: PageProps) {
                 Data de Abertura
               </span>
               <strong className="text-slate-800">
-                {atendimento.data_abertura
-                  ? new Date(atendimento.data_abertura).toLocaleDateString(
-                      "pt-BR",
-                    )
-                  : "-"}
+                {formatarData(atendimento.data_abertura)}
               </strong>
             </div>
             <div>
@@ -157,7 +165,7 @@ export default async function RelatorioAtendimentoPage({ params }: PageProps) {
                   Gestante ou Puérpera
                 </span>
                 <span className="text-slate-900 font-medium">
-                  {atendimento.gestante_puerpera ? "Sim" : "Não"}
+                  {booleano(atendimento.gestante_puerpera) ? "Sim" : "Não"}
                 </span>
               </div>
               <div className="col-span-2">
@@ -165,7 +173,7 @@ export default async function RelatorioAtendimentoPage({ params }: PageProps) {
                   Necessidades Sociais
                 </span>
                 <div className="mt-1 text-slate-800 whitespace-pre-wrap bg-slate-50 p-2 rounded text-xs min-h-[40px]">
-                  {atendimento.necessidades_sociais || "Nenhuma registrada."}
+                  {textoNecessidades(atendimento.necessidades_sociais)}
                 </div>
               </div>
             </div>
@@ -191,7 +199,7 @@ export default async function RelatorioAtendimentoPage({ params }: PageProps) {
                     Medida Protetiva
                   </span>
                   <span className="text-slate-900 font-medium">
-                    {atendimento.medida_protetiva ? "Sim" : "Não"}
+                    {booleano(atendimento.medida_protetiva) ? "Sim" : "Não"}
                   </span>
                 </div>
               </div>
@@ -237,7 +245,7 @@ export default async function RelatorioAtendimentoPage({ params }: PageProps) {
                   Necessidades Jurídicas
                 </span>
                 <div className="mt-1 text-slate-800 whitespace-pre-wrap bg-slate-50 p-2 rounded text-xs min-h-[40px]">
-                  {atendimento.necessidades_juridicas || "Nenhuma registrada."}
+                  {textoNecessidades(atendimento.necessidades_juridicas)}
                 </div>
               </div>
             </div>
@@ -315,7 +323,7 @@ export default async function RelatorioAtendimentoPage({ params }: PageProps) {
                       </span>
                     </h3>
                     <span className="text-xs text-slate-400 font-mono">
-                      {new Date(t.data_recebimento).toLocaleDateString("pt-BR")}
+                      {formatarData(t.data_recebimento)}
                     </span>
                   </div>
                   <div className="text-sm text-slate-700 leading-relaxed text-justify whitespace-pre-wrap">

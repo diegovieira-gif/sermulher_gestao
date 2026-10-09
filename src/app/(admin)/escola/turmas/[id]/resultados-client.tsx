@@ -70,7 +70,7 @@ export function ResultadosClient({ performance }: ResultadosClientProps) {
               <TableRow key={item.id}>
                 {/* Nome da Aluna */}
                 <TableCell className="font-medium">
-                  {item.beneficiaria.nome_completo}
+                  {item.beneficiaria?.nome_completo ?? "—"}
                 </TableCell>
 
                 {/* Presenças */}

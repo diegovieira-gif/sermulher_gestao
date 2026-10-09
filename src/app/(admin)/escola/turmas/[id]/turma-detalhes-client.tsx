@@ -66,6 +66,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
+import { formatarData } from "@/lib/datas";
 
 interface TurmaDetalhesClientProps {
   turma: any;
@@ -121,14 +122,9 @@ function formatCPF(cpf?: string) {
   return cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
 }
 
+// Sem `new Date("AAAA-MM-DD")`: formatado no fuso local saía um dia antes.
 function formatDate(date?: string) {
-  if (!date) return "—";
-  try {
-    const d = new Date(date);
-    return d.toLocaleDateString("pt-BR");
-  } catch {
-    return "—";
-  }
+  return formatarData(date, "—");
 }
 
 export function TurmaDetalhesClient({
@@ -211,7 +207,7 @@ export function TurmaDetalhesClient({
 
   // Beneficiárias já matriculadas (para filtrar do combobox se necessário)
   const alreadyEnrolled = new Set(
-    currentMatriculas.map((m) => m.beneficiaria.id),
+    currentMatriculas.map((m) => m.beneficiaria?.id),
   );
 
   async function handleAddMatricula() {
@@ -374,21 +370,21 @@ export function TurmaDetalhesClient({
                   {currentMatriculas.map((matricula) => (
                     <TableRow key={matricula.id}>
                       <TableCell className="font-medium">
-                        {matricula.beneficiaria.nome_completo}
+                        {matricula.beneficiaria?.nome_completo ?? "—"}
                       </TableCell>
                       <TableCell>
-                        {formatCPF(matricula.beneficiaria.cpf)}
+                        {formatCPF(matricula.beneficiaria?.cpf)}
                       </TableCell>
                       <TableCell>
                         {formatDate(matricula.data_matricula)}
                       </TableCell>
                       <TableCell>
-                        {typeof matricula.beneficiaria.contato === "object" &&
+                        {typeof matricula.beneficiaria?.contato === "object" &&
                         matricula.beneficiaria.contato !== null
                           ? matricula.beneficiaria.contato.telefone ||
                             matricula.beneficiaria.contato.email ||
                             "—"
-                          : matricula.beneficiaria.contato || "—"}
+                          : matricula.beneficiaria?.contato || "—"}
                       </TableCell>
                       <TableCell>
                         {(() => {

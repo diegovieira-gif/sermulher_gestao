@@ -37,6 +37,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
+import { formatarData } from "@/lib/datas";
 
 interface InfratorDetailsClientProps {
   infrator: any;
@@ -103,16 +104,9 @@ export function InfratorDetailsClient({
     }
   };
 
-  // Função para formatar data
-  const formatDate = (dateString: string | null | undefined): string => {
-    if (!dateString) return "-";
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString("pt-BR");
-    } catch {
-      return dateString;
-    }
-  };
+  // Datas "AAAA-MM-DD" do Directus: `new Date()` + fuso local mostrava um dia antes.
+  const formatDate = (dateString: string | null | undefined): string =>
+    formatarData(dateString);
 
   // Função para formatar período
   const formatPeriodo = (

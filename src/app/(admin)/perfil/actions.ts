@@ -9,6 +9,8 @@ import {
   updateMe,
 } from "@directus/sdk";
 import { getDirectusClient, safeDirectusCall } from "@/lib/directus";
+import { assertAuthenticated, getSessaoValidada } from "@/lib/permissions";
+import type { AuditLog } from "../auditoria/actions";
 
 const API_URL =
   process.env.DIRECTUS_API_URL ||
@@ -61,6 +63,57 @@ export async function getMyProfile(): Promise<
   } catch (error) {
     console.error("Erro ao carregar perfil:", error);
     return { success: false, error: "Não foi possível carregar o perfil." };
+  }
+}
+
+/**
+ * Atividade recente da PRÓPRIA pessoa logada (aba "Atividade" do Meu Perfil).
+ *
+ * Não reaproveita `getAuditLogs`: aquela exige o módulo "auditoria", e a página
+ * de perfil quebrava para quem não o tem — inclusive impedindo trocar a senha.
+ * Aqui basta estar autenticada, mas o id vem da sessão confirmada pelo Directus
+ * (nunca do cliente): o log é lido com o token administrativo, então aceitar
+ * um id de fora permitiria ler a atividade de qualquer usuária.
+ */
+export async function getMinhaAtividade(params: { page?: number; limit?: number } = {}): Promise<{
+  success: boolean;
+  data: AuditLog[];
+  meta: { filter_count: number; total_count: number };
+  error?: string;
+}> {
+  await assertAuthenticated();
+  const vazio = { filter_count: 0, total_count: 0 };
+  try {
+    const sessao = await getSessaoValidada();
+    if (!sessao) return { success: false, data: [], meta: vazio, error: "Sessão inválida." };
+
+    const page = Math.max(1, Math.floor(Number(params.page) || 1));
+    const limit = Math.min(50, Math.max(1, Math.floor(Number(params.limit) || 15)));
+    const token = process.env.DIRECTUS_TOKEN || "";
+    if (!token) throw new Error("DIRECTUS_TOKEN não está configurado.");
+
+    const query = new URLSearchParams();
+    query.append("fields", "id,action,timestamp,collection,item,ip,user_agent,user.id,user.first_name,user.last_name,user.email");
+    query.append("sort", "-timestamp");
+    query.append("limit", String(limit));
+    query.append("offset", String((page - 1) * limit));
+    query.append("meta", "filter_count,total_count");
+    query.append("filter", JSON.stringify({ user: { _eq: sessao.userId } }));
+
+    const res = await fetch(`${API_URL}/activity?${query.toString()}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+    if (!res.ok) throw new Error(`Erro na API do Directus: ${res.statusText}`);
+    const json = await res.json();
+    return {
+      success: true,
+      data: (json.data || []) as AuditLog[],
+      meta: (json.meta || vazio) as { filter_count: number; total_count: number },
+    };
+  } catch (error) {
+    console.error("Erro ao carregar a atividade do perfil:", error);
+    return { success: false, data: [], meta: vazio, error: "Não foi possível carregar a atividade." };
   }
 }
 

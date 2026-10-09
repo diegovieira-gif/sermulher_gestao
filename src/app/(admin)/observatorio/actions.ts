@@ -37,7 +37,7 @@ export async function getCollectionData(collection: ObserCollection, search?: st
 
     const items = await getDirectusAdmin().request(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      readItems(collection as any, { filter, sort: config.sort, limit: 200, fields })
+      readItems(collection as any, { filter, sort: config.sort, limit: -1, fields })
     );
 
     return { success: true, data: items };

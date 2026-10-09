@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Filter, Loader2, Search, Trash2, LayoutGrid, List } from "lucide-react";
 import { toast } from "sonner";
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { KanbanCard, getKanbanData, updateTramitacaoStatus, deleteTramitacao } from "./actions";
+import { formatarData } from "@/lib/datas";
 import {
   Table,
   TableBody,
@@ -53,10 +54,16 @@ export function KanbanBoard({
   initialData,
   setores,
   statusEtapas = [],
+  podeAbrirProntuario = false,
 }: {
   initialData: KanbanCard[];
   setores: any[];
   statusEtapas?: { id: number; nome: string }[];
+  /**
+   * O prontuário é do módulo "mulheres": para um perfil só com
+   * "tramitacoes", o link levava a um "Acesso negado" sem tratamento.
+   */
+  podeAbrirProntuario?: boolean;
 }) {
   // Colunas derivadas da coleção config_status_etapa (com fallback estático).
   const COLUNAS =
@@ -92,19 +99,25 @@ export function KanbanBoard({
   const [sectorFilter, setSectorFilter] = useState("all");
   const [isFiltering, setIsFiltering] = useState(false);
 
+  // Número da última busca disparada: uma resposta lenta de um termo antigo
+  // não pode sobrescrever o resultado do termo atual.
+  const ultimaBusca = useRef(0);
+
   // Debounce simples para evitar chamadas excessivas
   useEffect(() => {
     const timer = setTimeout(async () => {
+      const busca = ++ultimaBusca.current;
       setIsFiltering(true);
       try {
         const result = await getKanbanData(search, sectorFilter);
+        if (busca !== ultimaBusca.current) return; // resposta atrasada
         if (result.success && result.data) {
           setCards(result.data);
         }
       } catch (error) {
         console.error("Erro ao filtrar:", error);
       } finally {
-        setIsFiltering(false);
+        if (busca === ultimaBusca.current) setIsFiltering(false);
       }
     }, 500);
 
@@ -232,7 +245,7 @@ export function KanbanBoard({
                     </TableCell>
                     <TableCell className="text-foreground text-sm">{card.tipo_demanda}</TableCell>
                     <TableCell className="text-muted-foreground text-xs">
-                      {new Date(card.data_recebimento).toLocaleDateString("pt-BR")}
+                      {formatarData(card.data_recebimento)}
                     </TableCell>
                     <TableCell>
                       <Badge
@@ -261,15 +274,17 @@ export function KanbanBoard({
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Link href={`/mulheres/atendimentos/${card.atendimento_id}`}>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 text-xs text-primary hover:bg-primary/10"
-                          >
-                            Abrir Prontuário
-                          </Button>
-                        </Link>
+                        {podeAbrirProntuario && card.atendimento_id && (
+                          <Link href={`/mulheres/atendimentos/${card.atendimento_id}`}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 text-xs text-primary hover:bg-primary/10"
+                            >
+                              Abrir Prontuário
+                            </Button>
+                          </Link>
+                        )}
                         <Button
                           size="icon"
                           variant="ghost"
@@ -332,9 +347,7 @@ export function KanbanBoard({
                             {card.setor_nome}
                           </Badge>
                           <span className="text-[10px] text-muted-foreground">
-                            {new Date(card.data_recebimento).toLocaleDateString(
-                              "pt-BR",
-                            )}
+                            {formatarData(card.data_recebimento)}
                           </span>
                         </div>
 
@@ -349,17 +362,21 @@ export function KanbanBoard({
                         </p>
 
                         <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-border">
-                          <Link
-                            href={`/mulheres/atendimentos/${card.atendimento_id}`}
-                          >
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 text-[10px] text-primary px-2 hover:bg-primary/10"
+                          {podeAbrirProntuario && card.atendimento_id ? (
+                            <Link
+                              href={`/mulheres/atendimentos/${card.atendimento_id}`}
                             >
-                              Abrir Prontuário
-                            </Button>
-                          </Link>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 text-[10px] text-primary px-2 hover:bg-primary/10"
+                              >
+                                Abrir Prontuário
+                              </Button>
+                            </Link>
+                          ) : (
+                            <span />
+                          )}
 
                           <div className="flex gap-1">
                             <Button

@@ -4,9 +4,20 @@
  * BOM UTF-8 para os acentos abrirem corretos no Excel.
  */
 
+/**
+ * Texto que começa com = + - @ (ou TAB/CR) o Excel interpreta como FÓRMULA:
+ * um nome cadastrado como `=HYPERLINK(...)` vira link ativo na planilha
+ * (injeção de fórmula/CSV). O apóstrofo na frente faz o Excel tratar a célula
+ * como texto. Números (typeof number) ficam de fora — `-5` é um dado legítimo.
+ */
+const INICIO_DE_FORMULA = /^[=+\-@\t\r]/;
+
 function formatarCelula(valor: string | number | null | undefined): string {
   if (valor === null || valor === undefined) return "";
-  const texto = String(valor);
+  let texto = String(valor);
+  if (typeof valor === "string" && INICIO_DE_FORMULA.test(texto)) {
+    texto = `'${texto}`;
+  }
   if (/[";\n\r]/.test(texto)) {
     return `"${texto.replace(/"/g, '""')}"`;
   }

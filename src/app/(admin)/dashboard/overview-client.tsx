@@ -35,6 +35,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import type { DashboardStats } from "./actions";
+import {
+  FUSO,
+  dataEmBrasilia,
+  dataLocal,
+  hojeEmBrasilia,
+  mesAtualEmBrasilia,
+} from "@/lib/datas";
 
 const MESES_LABEL = [
   "Janeiro",
@@ -171,18 +178,19 @@ export function OverviewClient({
   const router = useRouter();
   const [mudandoPeriodo, startPeriodo] = useTransition();
 
-  const agora = new Date();
-  const mesSel = mesReferencia ?? agora.getMonth() + 1;
-  const anoSel = anoReferencia ?? agora.getFullYear();
+  // Mês corrente no calendário de Brasília, igual ao do servidor — senão o
+  // seletor e os dados divergem perto da meia-noite UTC.
+  const agora = mesAtualEmBrasilia();
+  const mesSel = mesReferencia ?? agora.mes;
+  const anoSel = anoReferencia ?? agora.ano;
   const anosDisponiveis = Array.from(
     { length: 5 },
-    (_, i) => agora.getFullYear() - i,
+    (_, i) => agora.ano - i,
   );
 
   const mudarPeriodo = (mes: number, ano: number) => {
     startPeriodo(() => {
-      const ehCorrente =
-        mes === agora.getMonth() + 1 && ano === agora.getFullYear();
+      const ehCorrente = mes === agora.mes && ano === agora.ano;
       router.push(ehCorrente ? "/dashboard" : `/dashboard?mes=${mes}&ano=${ano}`);
     });
   };
@@ -341,6 +349,7 @@ export function OverviewClient({
   ];
 
   const dataAtual = new Date().toLocaleDateString("pt-BR", {
+    timeZone: FUSO,
     weekday: "long",
     year: "numeric",
     month: "long",
@@ -358,14 +367,15 @@ export function OverviewClient({
 
   const getLabelDataRelativa = (dataStr: string) => {
     if (!dataStr) return "";
-    const data = new Date(dataStr);
-    const hoje = new Date();
-    const amanha = new Date();
-    amanha.setDate(amanha.getDate() + 1);
+    // `data_inicio` é hora de parede ("AAAA-MM-DDTHH:mm:ss"): compara só o
+    // dia escrito com hoje/amanhã em Brasília, sem conversão de fuso.
+    const dia = String(dataStr).slice(0, 10);
+    const hoje = hojeEmBrasilia();
+    const amanha = dataEmBrasilia(new Date(Date.now() + 24 * 60 * 60 * 1000));
 
-    if (data.toDateString() === hoje.toDateString()) return "Hoje";
-    if (data.toDateString() === amanha.toDateString()) return "Amanhã";
-    return data.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+    if (dia === hoje) return "Hoje";
+    if (dia === amanha) return "Amanhã";
+    return dataLocal(dia).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
   };
 
   return (

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
+import { hojeEmBrasilia } from "@/lib/datas";
 import { toast } from "sonner";
 import { Loader2, Plus, Trash2, Users } from "lucide-react";
 import {
@@ -54,7 +55,8 @@ const formatarCpf = (cpf?: string | null) => {
   return digitos.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
 };
 
-const hoje = () => new Date().toISOString().slice(0, 10);
+// Hoje em Brasília: o dia em UTC virava "amanhã" depois das 21h.
+const hoje = () => hojeEmBrasilia();
 
 interface ParticipantesDialogProps {
   evento: { id: number; nome: string } | null;

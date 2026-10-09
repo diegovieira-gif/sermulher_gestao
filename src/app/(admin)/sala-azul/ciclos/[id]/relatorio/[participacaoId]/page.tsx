@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getRelatorioIndividual } from "./actions";
 import { PrintButton } from "./print-button";
+import { formatarData } from "@/lib/datas";
 
 interface PageProps {
   params: Promise<{
@@ -20,20 +21,9 @@ export default async function RelatorioPage({ params }: PageProps) {
 
   const { ciclo, participante, sessoes, resumo } = result.data;
 
-  // Função para formatar data
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "-";
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString("pt-BR", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      });
-    } catch {
-      return dateString;
-    }
-  };
+  // Datas do Directus sem conversão de fuso: `new Date("AAAA-MM-DD")`
+  // formatado no fuso local saía um dia antes no relatório ao Judiciário.
+  const formatDate = (dateString: string | null) => formatarData(dateString);
 
   return (
     <>

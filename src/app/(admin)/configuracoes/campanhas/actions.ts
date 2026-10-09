@@ -4,6 +4,7 @@ import { directus, getDirectusAdmin } from "@/lib/directus";
 import { assertAccess } from "@/lib/permissions";
 import { readItems, createItem, updateItem, deleteItem } from "@directus/sdk";
 import { revalidatePath } from "next/cache";
+import { normalizarStatusCampanha } from "../schemas";
 
 const COLLECTION = "config_campanhas";
 
@@ -15,7 +16,9 @@ export type Campanha = {
   status?: "ativo" | "inativo";
 };
 
-// Listar apenas campanhas ativas
+// Lista TODAS as campanhas: esta é a tela de gestão, onde uma campanha
+// inativa precisa aparecer para poder ser reativada ou corrigida. Filtrar por
+// status é papel dos selects que oferecem campanhas para escolha.
 export async function getCampanhas() {
   await assertAccess("configuracoes");
   try {
@@ -23,11 +26,17 @@ export async function getCampanhas() {
     // @ts-ignore fields are dynamic
     const items = await adminDirectus.request(
       readItems(COLLECTION, {
-        filter: { status: { _eq: "ativo" } },
         sort: ["id"],
+        limit: -1,
       }),
     );
-    return { success: true, data: items };
+    // Registros gravados pela aba principal antigamente vinham como
+    // "published"/"draft"; aqui todos saem como "ativo"/"inativo".
+    const data = (items as Campanha[]).map((c) => ({
+      ...c,
+      status: normalizarStatusCampanha(c.status),
+    }));
+    return { success: true, data };
   } catch (error) {
     console.error("Erro ao buscar campanhas:", error);
     return { success: false, data: [] };

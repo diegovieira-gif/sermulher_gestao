@@ -446,6 +446,9 @@ export async function getHistoricoBeneficios(beneficiariaId: string) {
       readItems("entregas_beneficios", {
         filter: { beneficiaria: { _eq: beneficiariaId } },
         sort: ["-data_entrega"],
+        // Sem limite explícito o Directus devolve só 100 — o histórico
+        // de uma beneficiária antiga ficava incompleto sem aviso.
+        limit: -1,
         fields: [
           "*",
           // @ts-ignore
@@ -725,6 +728,9 @@ export async function getParticipacoesEvento(beneficiariaId: string) {
       readItems("participacoes_evento", {
         filter: { beneficiaria: { _eq: beneficiariaId } },
         sort: ["-data_participacao"],
+        // Sem limite explícito o Directus devolve só 100 — o histórico
+        // de uma beneficiária antiga ficava incompleto sem aviso.
+        limit: -1,
         fields: [
           "*",
           // @ts-ignore
@@ -969,6 +975,9 @@ export async function getInscricoesCurso(beneficiariaId: string) {
       readItems("inscricoes_curso", {
         filter: { beneficiaria: { _eq: beneficiariaId } },
         sort: ["-data_inscricao"],
+        // Sem limite explícito o Directus devolve só 100 — o histórico
+        // de uma beneficiária antiga ficava incompleto sem aviso.
+        limit: -1,
         fields: [
           "*",
           // @ts-ignore

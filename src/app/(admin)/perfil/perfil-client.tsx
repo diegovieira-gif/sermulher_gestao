@@ -31,9 +31,10 @@ import {
 } from "@/components/ui/table";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { getAuditLogs, type AuditLog } from "../auditoria/actions";
+import type { AuditLog } from "../auditoria/actions";
 import {
   changeMyPassword,
+  getMinhaAtividade,
   updateMinhasNotificacoes,
   type MeuPerfil,
 } from "./actions";
@@ -121,7 +122,7 @@ export function PerfilClient({ perfil, initialLogs, initialMeta }: PerfilClientP
   const loadPage = async (p: number) => {
     setLoadingLogs(true);
     try {
-      const res = await getAuditLogs({ user: perfil.id, page: p, limit });
+      const res = await getMinhaAtividade({ page: p, limit });
       if (res.success) {
         setLogs(res.data);
         setMeta(res.meta);

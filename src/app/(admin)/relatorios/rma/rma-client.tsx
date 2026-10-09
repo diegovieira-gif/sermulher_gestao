@@ -8,6 +8,7 @@ import {
   Download,
 } from "lucide-react";
 import { baixarCsv } from "@/lib/csv";
+import { mesAtualEmBrasilia } from "@/lib/datas";
 import {
   Card,
   CardContent,
@@ -92,7 +93,7 @@ export function RMAClient({ dados, mesInicial, anoInicial }: RMAClientProps) {
 
   const anosDisponiveis = Array.from(
     { length: 5 },
-    (_, i) => new Date().getFullYear() - i,
+    (_, i) => mesAtualEmBrasilia().ano - i,
   );
 
   return (

@@ -3,6 +3,13 @@
 import { redirect } from "next/navigation";
 import { getDirectusClient } from "@/lib/directus";
 import { readItems, aggregate } from "@directus/sdk";
+import {
+  dataEmBrasilia,
+  hojeEmBrasilia,
+  limitesDoMes,
+  mesAtualEmBrasilia,
+} from "@/lib/datas";
+import { filtroMesDateTime } from "../relatorios/calculos";
 
 // Indicadores (KPIs) exibidos como cards no Dashboard
 export type DashboardIndicadores = {
@@ -69,42 +76,39 @@ export async function getDashboardStats(periodo?: PeriodoDashboard): Promise<{
 }> {
   const directus = await getDirectusClient({ requireAuth: true });
 
-  // Configuração de datas
-  const now = new Date();
+  // Configuração de datas — sempre no calendário de Brasília. Em UTC, das 21h
+  // em diante "hoje" e "mês atual" já eram o dia/mês seguinte.
+  const hoje = hojeEmBrasilia();
+  const atual = mesAtualEmBrasilia();
 
-  // Data de hoje zerada (00:00:00) para garantir que eventos de hoje apareçam
-  const todayStart = new Date(now);
-  todayStart.setHours(0, 0, 0, 0);
-  const todayStr = todayStart.toISOString();
+  // Eventos de hoje em diante. `data_inicio` é `dateTime` (hora de parede):
+  // compara com 00:00 de hoje sem fuso.
+  const todayStr = `${hoje}T00:00:00`;
 
   // Período de referência: mês corrente por padrão, ou o mês/ano escolhido no
   // seletor do dashboard — permite responder "e em junho, como foi?".
   const mesSel =
     periodo && periodo.mes >= 1 && periodo.mes <= 12
       ? periodo.mes
-      : now.getMonth() + 1;
+      : atual.mes;
   const anoSel =
     periodo && periodo.ano >= 2000 && periodo.ano <= 2100
       ? periodo.ano
-      : now.getFullYear();
-  const mesCorrente =
-    mesSel === now.getMonth() + 1 && anoSel === now.getFullYear();
+      : atual.ano;
+  const mesCorrente = mesSel === atual.mes && anoSel === atual.ano;
 
-  const startOfMonth = new Date(anoSel, mesSel - 1, 1)
-    .toISOString()
-    .split("T")[0];
-  const endOfMonth = new Date(anoSel, mesSel, 0).toISOString().split("T")[0];
+  // Campos `date` (data_entrega) usam dia 1..último dia; campos `dateTime`
+  // (data_abertura, data_recebimento) usam _gte/_lt — com _between até
+  // "último dia 00:00" o último dia do mês ficava de fora.
+  const { inicio: startOfMonth, fim: endOfMonth } = limitesDoMes(anoSel, mesSel);
+  const mesDateTime = filtroMesDateTime(anoSel, mesSel);
 
   // Gráfico: últimos 30 dias no mês corrente; o mês inteiro quando é um
   // período passado escolhido no seletor.
-  const chartStartDate = new Date();
-  chartStartDate.setDate(chartStartDate.getDate() - 30);
-  const chartStartDateStr = mesCorrente
-    ? chartStartDate.toISOString().split("T")[0]
-    : startOfMonth;
-  const chartEndDateStr = mesCorrente
-    ? new Date().toISOString().split("T")[0]
-    : endOfMonth;
+  const inicio30Dias = dataEmBrasilia(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
+  const filtroGrafico = mesCorrente
+    ? { _gte: `${inicio30Dias}T00:00:00`, _lte: `${hoje}T23:59:59` }
+    : mesDateTime;
 
   try {
     // Executa as queries em paralelo para performance
@@ -120,7 +124,7 @@ export async function getDashboardStats(periodo?: PeriodoDashboard): Promise<{
         aggregate("atendimentos", {
           aggregate: { count: "*" },
           query: {
-            filter: { data_abertura: { _between: [startOfMonth, endOfMonth] } },
+            filter: { data_abertura: mesDateTime },
           },
         }),
       ),
@@ -130,7 +134,7 @@ export async function getDashboardStats(periodo?: PeriodoDashboard): Promise<{
       directus.request(
         readItems("atendimentos", {
           filter: {
-            data_abertura: { _between: [chartStartDateStr, chartEndDateStr] },
+            data_abertura: filtroGrafico,
           },
           fields: ["data_abertura"],
           limit: -1,
@@ -229,8 +233,13 @@ export async function getDashboardStats(periodo?: PeriodoDashboard): Promise<{
     };
 
     const monthRange = { _between: [startOfMonth, endOfMonth] };
+    // "Finalizada" (ciclo da Sala Azul) e "Arquivado" (demanda) também
+    // encerram: sem eles, ciclos terminados contavam como ativos e demandas
+    // arquivadas como abertas.
     const statusConcluido = [
       "Finalizado",
+      "Finalizada",
+      "Arquivado",
       "Concluído",
       "Concluido",
       "Cancelado",
@@ -240,6 +249,14 @@ export async function getDashboardStats(periodo?: PeriodoDashboard): Promise<{
       "finalizado",
       "cancelada",
     ];
+    // Status vazio = ainda em aberto (o Kanban mostra como "Aguardando").
+    // `_nin` sozinho descarta o NULL no SQL, então ele entra pelo `_or`.
+    const emAberto = (campo: string) => ({
+      _or: [
+        { [campo]: { _nin: statusConcluido } },
+        { [campo]: { _null: true } },
+      ],
+    });
 
     const indicadorDefs: Array<[keyof DashboardIndicadores, Promise<number>]> = [
       ["totalBeneficiarias", countOf("beneficiarias")],
@@ -247,7 +264,7 @@ export async function getDashboardStats(periodo?: PeriodoDashboard): Promise<{
       ["eventosProximos", Promise.resolve(eventosFormatados.length)],
       [
         "demandasAbertas",
-        countOf("tramitacoes", { status_etapa: { _nin: statusConcluido } }),
+        countOf("tramitacoes", emAberto("status_etapa")),
       ],
       [
         "comMedidaProtetiva",
@@ -261,18 +278,18 @@ export async function getDashboardStats(periodo?: PeriodoDashboard): Promise<{
       ["comFilhos", countOf("beneficiarias", { quantidade_filhos: { _gt: 0 } })],
       [
         "turmasAtivas",
-        countOf("escola_turmas", { status: { _nin: statusConcluido } }),
+        countOf("escola_turmas", emAberto("status")),
       ],
       ["alunasMatriculadas", Promise.resolve(totalAlunas)],
       ["cursosDisponiveis", countOf("escola_cursos")],
       ["infratores", Promise.resolve(totalInfratores)],
       [
         "ciclosReflexivos",
-        countOf("salas_azul", { status: { _nin: statusConcluido } }),
+        countOf("salas_azul", emAberto("status")),
       ],
       [
         "encaminhamentosMes",
-        countOf("tramitacoes", { data_recebimento: monthRange }),
+        countOf("tramitacoes", { data_recebimento: mesDateTime }),
       ],
       [
         "beneficiosMes",

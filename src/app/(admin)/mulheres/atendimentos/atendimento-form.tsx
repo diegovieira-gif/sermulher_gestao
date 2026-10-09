@@ -50,6 +50,8 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { todayLocalISO } from "@/lib/utils";
+import { booleano } from "@/lib/datas";
+import { necessidadesParaTexto } from "./necessidades";
 import { useRascunho } from "@/hooks/use-rascunho";
 import { RascunhoBanner } from "@/components/shared/rascunho-banner";
 
@@ -232,11 +234,15 @@ export function AtendimentoForm({
         data_abertura: dataAberturaFormatted || todayLocalISO(),
         encaminhamento_id: encaminhamentoId || undefined,
         tipos_violencia: tiposViolenciaIds,
-        medida_protetiva: atendimento.medida_protetiva || false,
-        gestante_puerpera: atendimento.gestante_puerpera || false,
+        // O SQLite devolve 1/0 nos booleanos e o schema exige boolean:
+        // sem normalizar, editar um atendimento antigo falhava na validação.
+        medida_protetiva: booleano(atendimento.medida_protetiva),
+        gestante_puerpera: booleano(atendimento.gestante_puerpera),
         boletim_ocorrencia: atendimento.boletim_ocorrencia || undefined,
-        necessidades_sociais: atendimento.necessidades_sociais || undefined,
-        necessidades_juridicas: atendimento.necessidades_juridicas || undefined,
+        // Registros legados guardam objeto/array; o textarea mostrava
+        // "[object Object]" e salvar gravava esse texto por cima.
+        necessidades_sociais: necessidadesParaTexto(atendimento.necessidades_sociais) || undefined,
+        necessidades_juridicas: necessidadesParaTexto(atendimento.necessidades_juridicas) || undefined,
         avaliacao_risco: atendimento.avaliacao_risco || {},
       };
     }

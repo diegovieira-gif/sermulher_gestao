@@ -47,4 +47,20 @@ test.describe("montarCsv", () => {
   test("não cita células comuns (arquivo legível)", () => {
     expect(montarCsv([["Aracaju", "Centro"]])).toBe("Aracaju;Centro");
   });
+
+  test("neutraliza texto que o Excel leria como fórmula", () => {
+    expect(montarCsv([['=HYPERLINK("x")']])).toBe(`"'=HYPERLINK(""x"")"`);
+    expect(montarCsv([["+55 79"], ["-teste"], ["@soma"]])).toBe("'+55 79\r\n'-teste\r\n'@soma");
+    expect(montarCsv([["\tabc"]])).toBe("'\tabc");
+    // CR no início também força as aspas (é quebra de linha)
+    expect(montarCsv([["\rabc"]])).toBe("\"'\rabc\"");
+  });
+
+  test("números negativos não recebem apóstrofo", () => {
+    expect(montarCsv([[-5, 0, 3.5]])).toBe("-5;0;3.5");
+  });
+
+  test("texto comum com hífen no meio não é alterado", () => {
+    expect(montarCsv([["Maria-José"]])).toBe("Maria-José");
+  });
 });

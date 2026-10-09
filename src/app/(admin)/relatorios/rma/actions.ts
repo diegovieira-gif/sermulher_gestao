@@ -3,6 +3,7 @@
 import { getDirectusAdmin } from "@/lib/directus";
 import { assertAccess } from "@/lib/permissions";
 import { readItems } from "@directus/sdk";
+import { filtroMesDateTime } from "../calculos";
 
 /**
  * Tipos de retorno para o RMA
@@ -24,9 +25,13 @@ export type RMAStats = {
 };
 
 /**
- * Calcula o primeiro e último dia do mês/ano especificado
+ * Limites do mês para `data_abertura` e `data_recebimento` — campos
+ * `dateTime` (hora de parede, sem fuso): `_gte` dia 1 00:00 e `_lt` dia 1 do
+ * mês seguinte. Antes os limites saíam de `toISOString()` (UTC), deslocados
+ * 3 horas em relação ao que foi digitado: entravam casos do mês anterior e
+ * saíam os das últimas horas do mês.
  */
-function getRangeDatas(mes: number, ano: number): { inicio: string; fim: string } {
+function getRangeDatas(mes: number, ano: number): { _gte: string; _lt: string } {
   // Validação de entrada
   if (mes < 1 || mes > 12) {
     throw new Error("Mês inválido. Deve estar entre 1 e 12.");
@@ -35,18 +40,7 @@ function getRangeDatas(mes: number, ano: number): { inicio: string; fim: string 
     throw new Error("Ano inválido. Deve estar entre 2000 e 2100.");
   }
 
-  // Primeiro dia do mês (00:00:00)
-  const inicio = new Date(ano, mes - 1, 1);
-  inicio.setHours(0, 0, 0, 0);
-
-  // Último dia do mês (23:59:59)
-  const fim = new Date(ano, mes, 0);
-  fim.setHours(23, 59, 59, 999);
-
-  return {
-    inicio: inicio.toISOString(),
-    fim: fim.toISOString(),
-  };
+  return filtroMesDateTime(ano, mes);
 }
 
 /**
@@ -63,7 +57,7 @@ export async function getRMAStats({
   await assertAccess("relatorios");
   const directus = getDirectusAdmin();
   try {
-    const { inicio, fim } = getRangeDatas(mes, ano);
+    const periodo = getRangeDatas(mes, ano);
 
     // 1. Busca NOVOS CASOS (Atendimentos criados no mês)
     // Contamos apenas atendimentos abertos neste mês
@@ -71,10 +65,7 @@ export async function getRMAStats({
       readItems("atendimentos", {
         fields: ["id", "tipos_violencia"],
         filter: {
-          data_abertura: {
-            _gte: inicio,
-            _lte: fim,
-          },
+          data_abertura: periodo,
         },
         limit: -1,
       })
@@ -93,10 +84,7 @@ export async function getRMAStats({
           }
         ],
         filter: {
-          data_recebimento: {
-            _gte: inicio,
-            _lte: fim,
-          },
+          data_recebimento: periodo,
         },
         limit: -1,
       })

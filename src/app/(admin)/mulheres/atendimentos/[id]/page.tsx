@@ -32,6 +32,8 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import Link from "next/link";
+import { booleano, formatarData } from "@/lib/datas";
+import { lerNecessidades } from "../necessidades";
 
 interface PageProps {
   params: Promise<{
@@ -39,56 +41,35 @@ interface PageProps {
   }>;
 }
 
-// Helper para renderizar listas de JSON (Necessidades)
+// Necessidades: texto livre (formato atual do formulário) ou objeto/array
+// legado — ver `lerNecessidades`. Antes só o legado era exibido; o texto
+// digitado aparecia como "Dados inválidos".
 function JsonList({
   data,
   emptyMessage,
 }: {
-  data: any;
+  data: unknown;
   emptyMessage: string;
 }) {
-  if (!data) return <p className="text-sm text-muted-foreground">{emptyMessage}</p>;
+  const lido = lerNecessidades(data);
+  if (!lido) return <p className="text-sm text-muted-foreground">{emptyMessage}</p>;
 
-  // Se for string, tenta parsear
-  let parsedData = data;
-  if (typeof data === "string") {
-    try {
-      parsedData = JSON.parse(data);
-    } catch (e) {
-      return <p className="text-sm text-muted-foreground">Dados inválidos</p>;
-    }
-  }
-
-  // Se for objeto/array
-  if (typeof parsedData === "object" && parsedData !== null) {
-    const entries = Object.entries(parsedData);
-    if (entries.length === 0)
-      return <p className="text-sm text-muted-foreground">{emptyMessage}</p>;
-
+  if (lido.tipo === "texto") {
     return (
-      <ul className="space-y-2 mt-2">
-        {entries.map(([key, value]) => {
-          // Ignorar chaves vazias ou valores nulos/falsos se desejar limpar a view
-          if (!value) return null;
-
-          // Formatar chave (ex: "necessidade_moradia" -> "Necessidade Moradia")
-          const formattedKey = key.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
-
-          return (
-            <li key={key} className="flex items-start gap-2 text-sm">
-              <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 dark:text-green-400" />
-              <span>
-                <span className="font-medium text-foreground">{formattedKey}:</span>{" "}
-                <span className="text-muted-foreground">{String(value)}</span>
-              </span>
-            </li>
-          );
-        })}
-      </ul>
+      <p className="text-sm text-foreground whitespace-pre-wrap">{lido.texto}</p>
     );
   }
 
-  return <p className="text-sm text-muted-foreground">{String(parsedData)}</p>;
+  return (
+    <ul className="space-y-2 mt-2">
+      {lido.itens.map((item, i) => (
+        <li key={i} className="flex items-start gap-2 text-sm">
+          <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 dark:text-green-400" />
+          <span className="text-foreground">{item}</span>
+        </li>
+      ))}
+    </ul>
+  );
 }
 
 // Helper para Avaliação de Risco
@@ -227,14 +208,14 @@ export default async function AtendimentoDetailPage({ params }: PageProps) {
             </h1>
             <p className="text-sm text-muted-foreground">
               Aberto em{" "}
-              {new Date(atendimento.data_abertura || "").toLocaleDateString(
-                "pt-BR",
-              )}
+              {/* dateTime de parede: `new Date` + fuso podia trocar o dia */}
+              {formatarData(atendimento.data_abertura)}
             </p>
           </div>
         </div>
         <div className="flex gap-2">
-          {atendimento.sigiloso && (
+          {/* booleano(): o SQLite devolve 1/0 e `0 && …` renderiza "0" */}
+          {booleano(atendimento.sigiloso) && (
             <Badge variant="destructive" className="flex items-center gap-1">
               Sigiloso
             </Badge>
@@ -348,7 +329,7 @@ export default async function AtendimentoDetailPage({ params }: PageProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {atendimento.gestante_puerpera && (
+                {booleano(atendimento.gestante_puerpera) && (
                   <div className="p-3 bg-pink-50 border border-pink-200 rounded-lg flex items-center gap-3 dark:bg-pink-950/40 dark:border-pink-800">
                     <Baby className="h-5 w-5 text-pink-600 dark:text-pink-400" />
                     <span className="font-semibold text-pink-800 dark:text-pink-200">Gestante / Puérpera</span>
@@ -374,7 +355,7 @@ export default async function AtendimentoDetailPage({ params }: PageProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {atendimento.medida_protetiva && (
+                {booleano(atendimento.medida_protetiva) && (
                   <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3 animate-pulse dark:bg-red-950/40 dark:border-red-800">
                     <Shield className="h-5 w-5 text-red-600 dark:text-red-400" />
                     <span className="font-bold text-red-800 dark:text-red-200">Medida Protetiva Vigente</span>

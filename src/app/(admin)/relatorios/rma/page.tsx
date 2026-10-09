@@ -1,5 +1,6 @@
 import { getRMAStats } from './actions';
 import { RMAClient } from './rma-client';
+import { mesAtualEmBrasilia } from '@/lib/datas';
 
 interface PageProps {
   searchParams: Promise<{
@@ -11,14 +12,15 @@ interface PageProps {
 export default async function RMAPage({ searchParams }: PageProps) {
   const params = await searchParams;
 
-  // Valores padrão: mês e ano atuais
-  const hoje = new Date();
-  const mes = params.mes ? parseInt(params.mes, 10) : hoje.getMonth() + 1;
-  const ano = params.ano ? parseInt(params.ano, 10) : hoje.getFullYear();
+  // Valores padrão: mês e ano atuais no calendário de Brasília (o servidor
+  // pode estar em UTC, onde das 21h em diante já é o mês seguinte).
+  const hoje = mesAtualEmBrasilia();
+  const mes = params.mes ? parseInt(params.mes, 10) : hoje.mes;
+  const ano = params.ano ? parseInt(params.ano, 10) : hoje.ano;
 
   // Validação básica
-  const mesValido = mes >= 1 && mes <= 12 ? mes : hoje.getMonth() + 1;
-  const anoValido = ano >= 2000 && ano <= 2100 ? ano : hoje.getFullYear();
+  const mesValido = mes >= 1 && mes <= 12 ? mes : hoje.mes;
+  const anoValido = ano >= 2000 && ano <= 2100 ? ano : hoje.ano;
 
   // Busca dados do RMA
   const result = await getRMAStats({ mes: mesValido, ano: anoValido });

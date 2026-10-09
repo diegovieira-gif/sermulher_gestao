@@ -11,6 +11,7 @@ import {
 } from "@directus/sdk";
 import { atendimentoFormSchema } from "./schemas";
 import { assertAccess } from "@/lib/permissions";
+import { hojeEmBrasilia } from "@/lib/datas";
 
 const slugify = (value: string) =>
   value
@@ -256,7 +257,8 @@ export async function saveAtendimento(data: unknown) {
       status: validatedData.status,
       data_abertura:
         normalizeDate(validatedData.data_abertura) ||
-        new Date().toISOString().split("T")[0],
+        // "hoje" em Brasília — em UTC, depois das 21h já seria amanhã
+        hojeEmBrasilia(),
       medida_protetiva: validatedData.medida_protetiva,
       gestante_puerpera: validatedData.gestante_puerpera,
       boletim_ocorrencia: validatedData.boletim_ocorrencia,
@@ -334,21 +336,29 @@ export async function saveAtendimento(data: unknown) {
         }),
       );
 
-      try {
-        const violencias = await directus.request(
-          readItems("config_tipos_agressao", {
-            fields: ["nome"],
-            filter: { id: { _in: validatedData.tipos_violencia } },
-          }),
-        );
-        const nomes = Array.isArray(violencias)
-          ? violencias.map((item: any) => item?.nome).filter(Boolean)
-          : [];
-        if (nomes.length) {
-          payload.tipos_violencia = nomes.join(",");
+      if (validatedData.tipos_violencia.length === 0) {
+        // Todos os tipos removidos: o texto (snapshot usado pelo RMA e pelo
+        // relatório) também precisa ser limpo — antes ficava o antigo. E
+        // `_in: []` não é consulta válida, então nem consulta.
+        payload.tipos_violencia = null;
+      } else {
+        try {
+          const violencias = await directus.request(
+            readItems("config_tipos_agressao", {
+              fields: ["nome"],
+              filter: { id: { _in: validatedData.tipos_violencia } },
+              limit: -1,
+            }),
+          );
+          const nomes = Array.isArray(violencias)
+            ? violencias.map((item: any) => item?.nome).filter(Boolean)
+            : [];
+          if (nomes.length) {
+            payload.tipos_violencia = nomes.join(",");
+          }
+        } catch {
+          // se falhar, não bloqueia a gravação
         }
-      } catch {
-        // se falhar, não bloqueia a gravação
       }
     }
 

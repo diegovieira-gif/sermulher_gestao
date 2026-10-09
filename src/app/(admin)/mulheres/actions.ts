@@ -3,6 +3,7 @@
 import { getDirectusClient } from "@/lib/directus";
 import { readItems } from "@directus/sdk";
 import { assertAccess } from "@/lib/permissions";
+import { dataEmBrasilia, hojeEmBrasilia } from "@/lib/datas";
 
 // Tipos para as estatísticas
 export type MulheresDashboardStats = {
@@ -49,10 +50,10 @@ export async function getMulheresDashboardStats(): Promise<
   try {
     const directus = await getDirectusClient({ requireAuth: true });
 
-    // Prefixo ano-mês atual (ex.: "2026-06"). Usar componentes locais evita
-    // discrepâncias de timezone (o container roda tipicamente em UTC).
-    const now = new Date();
-    const anoMesAtual = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    // Prefixo ano-mês atual (ex.: "2026-06") no calendário de Brasília — os
+    // componentes locais de `new Date()` seguem o fuso do container, que pode
+    // ser UTC (das 21h do último dia em diante já seria o mês seguinte).
+    const anoMesAtual = hojeEmBrasilia().slice(0, 7);
 
     // Buscar beneficiárias e atendimentos em paralelo.
     // Importante: não silenciar erros com `[]` — um erro transitório (timeout,
@@ -85,18 +86,25 @@ export async function getMulheresDashboardStats(): Promise<
     // 1. KPIs
     const totalBeneficiarias = beneficiarias.length;
     
-    // Casos ativos são os que estão "Aberto" ou "Em andamento"
+    // Casos ativos são os que estão "Aberto" ou "Em andamento". Sem status
+    // conta como Aberto — é o padrão do formulário e o que a lista exibe.
     const atendimentosEmAndamento = atendimentos.filter(
-      (a: any) => a.status === "Em andamento" || a.status === "Aberto"
+      (a: any) => !a.status || a.status === "Em andamento" || a.status === "Aberto"
     ).length;
 
     // Novos atendimentos este mês: compara o prefixo ano-mês de data_abertura
     // (com fallback para date_created, caso o registro tenha sido criado direto
     // no Directus sem preencher data_abertura).
     const novosAtendimentosMes = atendimentos.filter((a: any) => {
-      const dataRef = a.data_abertura || a.date_created;
+      // data_abertura é hora de parede (o prefixo já é o mês certo);
+      // date_created é instante UTC e precisa ir para o calendário de Brasília.
+      const dataRef = a.data_abertura
+        ? String(a.data_abertura)
+        : a.date_created
+          ? dataEmBrasilia(new Date(a.date_created))
+          : null;
       if (!dataRef) return false;
-      return String(dataRef).slice(0, 7) === anoMesAtual;
+      return dataRef.slice(0, 7) === anoMesAtual;
     }).length;
 
     // 2. Gráfico: Tipos de Violência - Agrupar por tipos_violencia (que é uma string separada por vírgula no banco)

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Fragment } from "react";
+import { useState, useEffect, useRef, Fragment } from "react";
 import {
   Tabs,
   TabsList,
@@ -84,17 +84,31 @@ export function ObservatorioClient({
   const [editingId, setEditingId] = useState<ObserId | null>(null);
   const [saving, setSaving] = useState(false);
 
+  // Aba vigente e número da última consulta: uma resposta que chega depois de
+  // trocar de aba (ou de digitar outra busca) é descartada. Antes, a lista de
+  // uma aba podia aparecer sob outra — e editar/excluir mirava o registro
+  // errado, pois o id era o da coleção anterior.
+  const abaAtual = useRef(activeTab);
+  const ultimaConsulta = useRef(0);
+  // Só a PRIMEIRA montagem aproveita os dados vindos do servidor. Voltar à
+  // primeira aba depois precisa buscar de novo, senão ela exibia o que
+  // estivesse em `data` — a lista da aba anterior.
+  const primeiraCarga = useRef(true);
+
   // Load data when tab or search changes
   useEffect(() => {
-    if (activeTab === COLLECTIONS_CONFIG[0].name && searchTerm === "" && initialData.length > 0 && !error) {
-        // Skip first load if we already have initialData for the first tab
-        return;
+    abaAtual.current = activeTab;
+    if (primeiraCarga.current) {
+      primeiraCarga.current = false;
+      if (!initialError) return;
     }
 
+    const consulta = ++ultimaConsulta.current;
     const fetchData = async () => {
       setLoading(true);
       setError(null);
       const result = await getCollectionData(activeTab, searchTerm);
+      if (consulta !== ultimaConsulta.current) return; // resposta atrasada
       if (result.success) {
         setData(result.data as Registro[]);
       } else {
@@ -106,7 +120,15 @@ export function ObservatorioClient({
 
     const timer = setTimeout(fetchData, 500);
     return () => clearTimeout(timer);
-  }, [activeTab, searchTerm, initialData, error]);
+  }, [activeTab, searchTerm, initialError]);
+
+  const trocarAba = (aba: ObserCollection) => {
+    // Limpa na hora: durante o debounce a tabela não pode mostrar (nem deixar
+    // editar) os registros da aba anterior.
+    setData([]);
+    setLoading(true);
+    setActiveTab(aba);
+  };
 
   const currentConfig = COLLECTIONS_CONFIG.find(c => c.name === activeTab) as CollectionConfig;
   const colunas = currentConfig.fields.filter((f) => f.listar);
@@ -160,8 +182,10 @@ export function ObservatorioClient({
       toast.success(editingId ? "Item atualizado!" : "Item criado!");
       setIsDialogOpen(false);
       // Refresh data
-      const refreshed = await getCollectionData(activeTab, searchTerm);
-      if (refreshed.success) setData(refreshed.data as Registro[]);
+      const aba = activeTab;
+      const refreshed = await getCollectionData(aba, searchTerm);
+      // Se a pessoa trocou de aba enquanto salvava, não sobrescreve a lista nova.
+      if (refreshed.success && abaAtual.current === aba) setData(refreshed.data as Registro[]);
       if (activeTab === 'obser_periodos') {
         const novos = await getRelationData('obser_periodos');
         if (novos.success) setPeriodos(novos.data as Periodo[]);
@@ -245,7 +269,7 @@ export function ObservatorioClient({
       </div>
 
       <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
-        <Tabs defaultValue={activeTab} onValueChange={(v) => setActiveTab(v as ObserCollection)}>
+        <Tabs defaultValue={activeTab} onValueChange={(v) => trocarAba(v as ObserCollection)}>
           <div className="border-b border-border px-4 pt-4 overflow-x-auto">
             <TabsList className="bg-muted mb-[-1px] rounded-b-none h-12">
               {COLLECTIONS_CONFIG.map(config => (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -242,8 +242,27 @@ export function BeneficiariaForm({
 
   const cepValue = form.watch("endereco.cep");
 
+  // CEP já gravado na ficha: abrir "Editar" não pode disparar o ViaCEP, que
+  // sobrescrevia logradouro/bairro/cidade conferidos à mão. A busca só roda
+  // quando a pessoa digita um CEP diferente do salvo.
+  const cepSalvo = useMemo(() => {
+    const end = beneficiaria?.endereco;
+    const obj =
+      typeof end === "string"
+        ? (() => {
+            try {
+              return JSON.parse(end);
+            } catch {
+              return null;
+            }
+          })()
+        : end;
+    return String(obj?.cep ?? "").replace(/\D/g, "");
+  }, [beneficiaria]);
+
   useEffect(() => {
     const cleanCep = (cepValue || "").replace(/\D/g, "");
+    if (beneficiaria && cleanCep === cepSalvo) return;
     if (cleanCep.length === 8 && cleanCep !== lastSearchedCep) {
       const searchCep = async () => {
         setIsSearchingCEP(true);
@@ -270,7 +289,7 @@ export function BeneficiariaForm({
       };
       searchCep();
     }
-  }, [cepValue, lastSearchedCep, form]);
+  }, [cepValue, lastSearchedCep, form, beneficiaria, cepSalvo]);
 
   useEffect(() => {
     if (!open) {
@@ -311,8 +330,11 @@ export function BeneficiariaForm({
         raca_cor_id: beneficiaria.raca_cor_id,
         estado_civil_id: beneficiaria.estado_civil_id,
         quantidade_filhos: beneficiaria.quantidade_filhos || 0,
-        // melhor_turno_contato agora fica dentro de contato
+        // melhor_turno_contato agora fica dentro de contato. As demais chaves
+        // do JSON (telefone/email de cadastros antigos) são preservadas para
+        // não serem apagadas ao salvar.
         contato: {
+          ...(parsedContato && typeof parsedContato === "object" ? parsedContato : {}),
           melhor_turno_contato:
             parsedContato?.melhor_turno_contato || null,
         },
