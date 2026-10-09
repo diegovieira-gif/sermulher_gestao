@@ -85,6 +85,7 @@ import {
 import { MessageEditor } from "./message-editor";
 import { ConectarWhatsappDialog } from "./conectar-whatsapp-dialog";
 import { formatarData } from "@/lib/datas";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 
 interface Beneficiaria {
   id: string;
@@ -580,7 +581,16 @@ export function WhatsappClient() {
         {/* Connection Widget */}
         <div className="flex items-center gap-3 bg-purple-50 dark:bg-purple-950/20 border border-purple-100 dark:border-purple-900/50 rounded-xl p-3">
           <div className="flex flex-col">
-            <span className="text-xs text-purple-700 dark:text-purple-300 font-medium">GoWA (WhatsApp)</span>
+            <span className="text-xs text-purple-700 dark:text-purple-300 font-medium flex items-center whitespace-nowrap">
+              GoWA (WhatsApp)
+              <InfoTooltip
+                side="bottom"
+                text="Conecte aqui somente o WhatsApp da Recepção ou o número definido pelo Gabinete/Ascom para os disparos em nome da Secretaria. Nunca um celular pessoal: todas as campanhas saem por este número."
+              />
+            </span>
+            <span className="mt-0.5 w-fit whitespace-nowrap rounded-full bg-purple-100 dark:bg-purple-900/50 px-1.5 py-px text-[10px] font-medium text-purple-800 dark:text-purple-200">
+              Nº oficial: Recepção / Gabinete-Ascom
+            </span>
             <span className="text-[10px] text-muted-foreground font-mono truncate max-w-[120px]">
               {config.evolution_api_url || "Nenhum configurado"}
             </span>

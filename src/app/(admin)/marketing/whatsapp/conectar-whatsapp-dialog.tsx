@@ -137,7 +137,9 @@ export function ConectarWhatsappDialog({
         <DialogHeader>
           <DialogTitle>Conectar WhatsApp</DialogTitle>
           <DialogDescription>
-            Use o celular do número oficial das campanhas. No WhatsApp, abra{" "}
+            Use o celular da <strong>Recepção</strong> ou o número definido pelo{" "}
+            <strong>Gabinete/Ascom</strong> para os disparos em nome da Secretaria — nunca um celular
+            pessoal. No WhatsApp, abra{" "}
             <strong>Configurações → Aparelhos conectados → Conectar um aparelho</strong>.
           </DialogDescription>
         </DialogHeader>
