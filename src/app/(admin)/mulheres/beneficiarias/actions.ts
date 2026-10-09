@@ -22,7 +22,7 @@ import {
 import { calcularCompletude } from "./completude";
 import { assertAccess } from "@/lib/permissions";
 import { getDirectusAdmin } from "@/lib/directus";
-import { configSiged, SIGED_TIMEOUT_MS } from "@/lib/siged";
+import { consultarCpfSiged } from "@/lib/siged";
 import { mascararCpf, somenteDigitos } from "@/lib/utils";
 
 // URL da API (Fallback seguro para localhost)
@@ -660,43 +660,9 @@ export async function deletarEntrega(id: number, beneficiariaId: number) {
 
 export async function findBeneficiariaByCPF(cpf: string) {
   await assertAccess("mulheres");
-  try {
-    const cleanCpf = cpf.replace(/\D/g, "");
-    if (cleanCpf.length !== 11) {
-      return { success: false, error: "CPF inválido. Deve conter 11 dígitos numéricos." };
-    }
-
-    // URL e token vêm do ambiente — ver lib/siged.ts. Sem token, a consulta
-    // fica desligada e o formulário segue sem o preenchimento automático.
-    const siged = configSiged();
-    if (!siged) {
-      return { success: false, error: "Consulta à rede municipal não configurada." };
-    }
-
-    const response = await fetch(siged.url, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${siged.token}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ userCPF: cleanCpf }),
-      signal: AbortSignal.timeout(SIGED_TIMEOUT_MS),
-    });
-
-    if (!response.ok) {
-      return { success: false, error: `Erro na API externa: ${response.statusText}` };
-    }
-
-    const json = await response.json();
-    if (json.status === "success" && Array.isArray(json.data) && json.data.length > 0) {
-      return { success: true, data: json.data[0] };
-    }
-
-    return { success: true, data: null };
-  } catch (error: any) {
-    console.error("Error fetching findByCPF:", error);
-    return { success: false, error: error?.message || "Erro de conexão ao buscar CPF." };
-  }
+  // URL, token e tempo limite em lib/siged.ts — a mesma consulta serve ao
+  // cadastro de autores (Sala Azul).
+  return consultarCpfSiged(cpf);
 }
 
 // --- Participações em Eventos (coleção participacoes_evento) ---

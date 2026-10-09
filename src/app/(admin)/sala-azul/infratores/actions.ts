@@ -5,6 +5,57 @@ import { createItem, deleteItem, readItems, updateItem } from "@directus/sdk";
 import { revalidatePath } from "next/cache";
 import { InsertInfrator, insertInfratorSchema } from "./schemas";
 import { assertAccess } from "@/lib/permissions";
+import { somenteDigitos } from "@/lib/utils";
+import {
+  consultarCpfSiged,
+  nascimentoDoSiged,
+  telefoneDoSiged,
+} from "@/lib/siged";
+
+/** Autor já cadastrado com este CPF (ignorando o próprio, na edição). */
+async function autorComCpf(cpf: string, ignorarId?: number) {
+  const filtro: Record<string, unknown> = { cpf: { _eq: cpf } };
+  if (ignorarId) filtro.id = { _neq: ignorarId };
+  const achados = (await directus.request(
+    readItems("infratores", { filter: filtro, fields: ["id", "nome_completo"], limit: 1 }),
+  )) as { id: number; nome_completo: string }[];
+  return achados[0] ?? null;
+}
+
+/**
+ * CPF digitado no cadastro de autor, como no de beneficiária: primeiro
+ * confere se o autor já está na Sala Azul (evita ficha dupla), depois busca
+ * nome, nascimento e telefone na rede municipal (SIGED).
+ */
+export async function consultarCpfAutor(cpf: string, ignorarId?: number): Promise<
+  | { success: true; existente: { id: number; nome_completo: string } | null; dados: { nome_completo: string; data_nascimento: string; telefone: string } | null }
+  | { success: false; error: string }
+> {
+  await assertAccess("sala-azul");
+  const limpo = somenteDigitos(cpf);
+  if (limpo.length !== 11) return { success: false, error: "CPF deve ter 11 dígitos." };
+  try {
+    const existente = await autorComCpf(limpo, ignorarId);
+    if (existente) return { success: true, existente, dados: null };
+    const r = await consultarCpfSiged(limpo);
+    if (!r.success) return { success: false, error: r.error };
+    const d = r.data;
+    return {
+      success: true,
+      existente: null,
+      dados: d
+        ? {
+            nome_completo: (d.userName || "").trim(),
+            data_nascimento: nascimentoDoSiged(d.userBorn),
+            telefone: telefoneDoSiged(d.userPhone1),
+          }
+        : null,
+    };
+  } catch (error) {
+    console.error("Erro ao consultar CPF do autor:", error);
+    return { success: false, error: "Não foi possível consultar o CPF." };
+  }
+}
 
 const INFRATOR_FIELDS = [
   'id',
@@ -149,7 +200,7 @@ export async function saveInfrator(data: InsertInfrator & { id?: number }) {
   // Validação Zod
   const validation = insertInfratorSchema.safeParse(data);
   if (!validation.success) {
-    return { success: false, error: "Dados inválidos" };
+    return { success: false, error: validation.error.issues[0]?.message || "Dados inválidos" };
   }
 
   // Separa campos virtuais. O payload sai do dado VALIDADO — o objeto cru do
@@ -157,14 +208,36 @@ export async function saveInfrator(data: InsertInfrator & { id?: number }) {
   const { id, tipos_agressao_ids, telefone, ...rest } = validation.data;
 
   // Monta payload para o Directus
-  const payload = {
-    ...rest,
-    // O Directus recusa "" em campo date.
-    data_nascimento: rest.data_nascimento || null,
-    contato: telefone ? { telefone } : null, // Salva no JSON
-  };
-
   try {
+    // Mesmo CPF não vira duas fichas de autor.
+    const duplicado = await autorComCpf(rest.cpf, id);
+    if (duplicado) {
+      return {
+        success: false,
+        error: `Este CPF já está cadastrado para ${duplicado.nome_completo} (nº ${duplicado.id}).`,
+      };
+    }
+
+    // Telefone só em dígitos (a máscara é da tela), dentro do JSON `contato`
+    // — preservando outras chaves que a ficha já tenha.
+    let contatoAtual: Record<string, unknown> = {};
+    if (id) {
+      const [atual] = (await directus.request(
+        readItems("infratores", { filter: { id: { _eq: id } }, fields: ["contato"], limit: 1 }),
+      )) as { contato?: unknown }[];
+      if (atual?.contato && typeof atual.contato === "object") contatoAtual = { ...(atual.contato as Record<string, unknown>) };
+    }
+    const fone = somenteDigitos(telefone);
+    if (fone) contatoAtual.telefone = fone;
+    else delete contatoAtual.telefone;
+
+    const payload = {
+      ...rest,
+      // O Directus recusa "" em campo date.
+      data_nascimento: rest.data_nascimento || null,
+      contato: Object.keys(contatoAtual).length ? contatoAtual : null,
+    };
+
     let infratorId: number;
     if (id) {
       await directus.request(updateItem('infratores', id, payload));

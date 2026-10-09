@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { configSiged, SIGED_URL_PADRAO } from "../../src/lib/siged";
+import { configSiged, nascimentoDoSiged, SIGED_URL_PADRAO, telefoneDoSiged } from "../../src/lib/siged";
 
 /**
  * Configuração da consulta de CPF no SIGED.
@@ -31,4 +31,12 @@ test.describe("configSiged", () => {
       configSiged({ SIGED_API_TOKEN: " abc ", SIGED_API_URL: " https://prod.test/findByCPF " }),
     ).toEqual({ url: "https://prod.test/findByCPF", token: "abc" });
   });
+});
+
+test("nascimento e telefone do SIGED viram o formato do SIGMA", () => {
+  expect(nascimentoDoSiged("05/03/1990")).toBe("1990-03-05");
+  expect(nascimentoDoSiged("1990-03-05")).toBe("");
+  expect(nascimentoDoSiged(null)).toBe("");
+  expect(telefoneDoSiged("+55 (79) 99999-0000")).toBe("79999990000");
+  expect(telefoneDoSiged("(79) 3214-0000")).toBe("7932140000");
 });
