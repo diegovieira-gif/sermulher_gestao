@@ -14,7 +14,9 @@ const nextConfig: NextConfig = {
         "fluxo-sermulher.aracaju.se.gov.br",
         "https://sigma-sermulher.aracaju.se.gov.br",
         "sigma-sermulher.aracaju.se.gov.br",
-        "*.aracaju.se.gov.br",
+        // Sem curinga "*.aracaju.se.gov.br": qualquer página de outro
+        // subdomínio da prefeitura poderia disparar server actions com a
+        // sessão de quem estivesse logada no SIGMA.
         "localhost:3000",
         "localhost:3002",
         "192.168.0.118:3002"

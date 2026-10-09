@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { htmlParaTexto } from "@/lib/texto-seguro";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -155,21 +156,12 @@ export function TramitacoesClient({
     return TIPO_DEMANDA_ICONS[tipo] || Clock;
   };
 
-  // Função para renderizar relato técnico (com quebra de linha)
-  const renderRelatoTecnico = (relato: string | null): React.ReactNode => {
+  // Relato técnico como TEXTO (com quebra de linha). Relatos antigos com HTML
+  // de editor rico são convertidos; HTML nunca é injetado na página (XSS).
+  const renderRelatoTecnico = (bruto: string | null): React.ReactNode => {
+    const relato = htmlParaTexto(bruto);
     if (!relato) return <span className="text-muted-foreground italic">Sem relato</span>;
-    
-    // Se contém HTML (rich text), renderiza com dangerouslySetInnerHTML
-    if (relato.includes("<") && relato.includes(">")) {
-      return (
-        <div 
-          className="prose prose-sm dark:prose-invert max-w-none"
-          dangerouslySetInnerHTML={{ __html: relato }}
-        />
-      );
-    }
-    
-    // Caso contrário, quebra por linhas
+
     return (
       <div className="whitespace-pre-wrap text-sm">
         {relato.split("\n").map((line, i) => (

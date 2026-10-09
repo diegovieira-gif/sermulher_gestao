@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { getDirectusClient, getDirectusAdmin, safeDirectusCall } from "@/lib/directus";
-import { assertAccess } from "@/lib/permissions";
+import { assertAccess, assertAdmin } from "@/lib/permissions";
+import { IMAGENS_ACEITAS } from "@/lib/arquivo-seguro";
 import { secureCompare } from "@/lib/secure-compare";
 import {
   readItems,
@@ -191,7 +192,10 @@ export async function saveWhatsappConfig(data: {
   evolution_api_instance: string | null;
   n8n_webhook_url: string | null;
 }): Promise<ActionResult<WhatsappConfigData>> {
-  await assertAccess("marketing");
+  // Só administradoras: o disparo manda ao webhook do n8n o token do Directus
+  // (o fluxo de lá atualiza o status de cada envio). Quem pudesse trocar a URL
+  // receberia esse token num servidor próprio.
+  await assertAdmin();
   try {
     return await safeDirectusCall(async () => {
       const client = await getDirectusClient({ requireAuth: true });
@@ -423,8 +427,9 @@ export async function uploadCampaignImage(
     if (!(file instanceof File)) {
       return { success: false, error: "Nenhum arquivo enviado." };
     }
-    if (!file.type.startsWith("image/")) {
-      return { success: false, error: "O arquivo precisa ser uma imagem." };
+    // Lista fechada: "image/*" incluía SVG, que carrega script (XSS).
+    if (!IMAGENS_ACEITAS.includes(file.type)) {
+      return { success: false, error: "Envie a imagem em JPG, PNG, WebP ou GIF." };
     }
     // Limite defensivo (WhatsApp/GoWA não aceitam mídia muito grande).
     if (file.size > 5 * 1024 * 1024) {

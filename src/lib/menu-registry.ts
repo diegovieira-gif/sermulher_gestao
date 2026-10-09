@@ -83,8 +83,11 @@ export function getAllowedMenuKeys(
   // Admin nunca é bloqueado.
   if (isAdmin) return [...ALL_MENU_KEYS];
 
-  // Sem configuração ou "permitir tudo" → acesso total (default seguro).
-  if (!config || config.permitir_tudo) return [...ALL_MENU_KEYS];
+  // Sem configuração (perfil novo, ou a leitura falhou) → só o essencial.
+  // Antes era o menu completo; como as actions usam o token administrativo,
+  // um perfil recém-criado ganhava acesso de administradora a tudo.
+  if (!config) return [...ALWAYS_ON_KEYS];
+  if (config.permitir_tudo) return [...ALL_MENU_KEYS];
 
   const raw = Array.isArray(config.menus) ? (config.menus as unknown[]) : [];
   const selected = raw.filter(

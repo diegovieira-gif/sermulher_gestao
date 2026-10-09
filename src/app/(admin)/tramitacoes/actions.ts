@@ -2,9 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { directus } from "@/lib/directus";
-import { readItems, updateItem, deleteItem } from "@directus/sdk";
+import { readItem, readItems, updateItem, deleteItem } from "@directus/sdk";
 import { StatusEtapa } from "@/app/(admin)/mulheres/atendimentos/[id]/schemas";
-import { getCurrentDemandAccess } from "@/lib/demanda-permissions";
+import { getCurrentDemandAccess, tipoDemandaPermitido } from "@/lib/demanda-permissions";
 import { assertAccess } from "@/lib/permissions";
 
 export type KanbanCard = {
@@ -95,8 +95,28 @@ export async function getKanbanData(search?: string, setorId?: string) {
   }
 }
 
+/**
+ * O id vem do cliente: sem conferir o tipo, um perfil restrito movia ou
+ * excluía demandas de tipos que nem consegue ver no quadro.
+ */
+async function demandaAcessivel(id: number): Promise<boolean> {
+  const access = await getCurrentDemandAccess();
+  if (access.allowedTipos === null) return true;
+  try {
+    const t = (await directus.request(readItem("tramitacoes", id, { fields: ["tipo_demanda"] }))) as {
+      tipo_demanda?: string | null;
+    };
+    return tipoDemandaPermitido(access, t?.tipo_demanda);
+  } catch {
+    return false;
+  }
+}
+
 export async function updateTramitacaoStatus(id: number, novoStatus: string) {
   await assertAccess("tramitacoes");
+  if (!(await demandaAcessivel(id))) {
+    return { success: false, error: "Seu perfil não tem acesso a este tipo de demanda." };
+  }
   try {
     await directus.request(
       updateItem("tramitacoes", id, { status_etapa: novoStatus }),
@@ -135,6 +155,9 @@ export async function getStatusEtapasOptions() {
 
 export async function deleteTramitacao(id: number) {
   await assertAccess("tramitacoes");
+  if (!(await demandaAcessivel(id))) {
+    return { success: false, error: "Seu perfil não tem acesso a este tipo de demanda." };
+  }
   try {
     await directus.request(deleteItem("tramitacoes", id));
     revalidatePath("/tramitacoes");

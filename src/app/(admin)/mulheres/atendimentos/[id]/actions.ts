@@ -133,12 +133,17 @@ export async function getAtendimentoDetails(id: number) {
 export async function getTramitacoes(atendimentoId: number) {
   await assertAccess("mulheres");
   try {
+    // Mesma restrição por tipo de demanda do Kanban: o relato técnico de um
+    // tipo não liberado não aparece no prontuário nem no relatório.
+    const demandAccess = await getCurrentDemandAccess();
+    const filtroTipo =
+      demandAccess.allowedTipos === null
+        ? []
+        : [{ tipo_demanda: { _in: demandAccess.allowedTipos.length ? demandAccess.allowedTipos : ["__none__"] } }];
     const tramitacoes = await directus.request(
       readItems("tramitacoes", {
         filter: {
-          atendimento_pai: {
-            _eq: atendimentoId,
-          },
+          _and: [{ atendimento_pai: { _eq: atendimentoId } }, ...filtroTipo],
         },
         sort: ["-data_recebimento"],
         fields: [

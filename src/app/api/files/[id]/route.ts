@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { cabecalhosDeArquivo } from "@/lib/arquivo-seguro";
 
 export async function GET(
   request: NextRequest,
@@ -45,13 +46,11 @@ export async function GET(
 
     // Repassa o tipo e a disposição vindos do Directus (preserva o nome real do
     // arquivo). Faz streaming do corpo, sem carregar tudo em memória.
-    const headers = new Headers();
-    headers.set(
-      "Content-Type",
-      upstream.headers.get("content-type") || "application/octet-stream",
+    // SVG/HTML nunca vão inline (XSS na origem do app): ver cabecalhosDeArquivo.
+    const headers = cabecalhosDeArquivo(
+      upstream.headers.get("content-type"),
+      upstream.headers.get("content-disposition"),
     );
-    const disposition = upstream.headers.get("content-disposition");
-    if (disposition) headers.set("Content-Disposition", disposition);
     const length = upstream.headers.get("content-length");
     if (length) headers.set("Content-Length", length);
     headers.set("Cache-Control", "private, max-age=3600");

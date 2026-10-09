@@ -57,15 +57,16 @@ const noCacheFetch = async (url: RequestInfo | URL, init?: RequestInit) => {
   //   chamada segue SEM Authorization (papel público do Directus). Nunca
   //   escalar para o token admin aqui — o proxy só verifica a PRESENÇA do
   //   cookie, então um cookie vazio/forjado não pode ganhar privilégio.
-  // - Fora de contexto de requisição (build estático), `cookies()` lança e
-  //   caímos no token estático do servidor, como antes.
+  // - Fora de contexto de requisição (build, cache, prerender), `cookies()`
+  //   lança e a chamada segue SEM credencial. Antes caía no token admin: um
+  //   dado lido assim num trecho cacheado seria servido a qualquer visitante.
+  //   Quem precisa do admin usa `getDirectusAdmin()`, explicitamente.
   let token = "";
   try {
     const cookieStore = await cookies();
     token = cookieStore.get("directus_token")?.value ?? "";
   } catch {
-    // Fora de contexto de requisição (ex: build estático) → token do servidor.
-    token = directusToken;
+    token = "";
   }
 
   const headers = new Headers(init?.headers);

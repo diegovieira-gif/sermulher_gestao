@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { cabecalhosDeArquivo } from "@/lib/arquivo-seguro";
 
 // Proxy autenticado para a imagem de uma campanha (directus_files), usado apenas
 // para PREVIEW no painel. Exige sessão e usa o token do PRÓPRIO usuário, para
@@ -41,13 +42,10 @@ export async function GET(
     }
 
     const buffer = await res.arrayBuffer();
-    return new NextResponse(buffer, {
-      status: 200,
-      headers: {
-        "Content-Type": res.headers.get("content-type") || "image/jpeg",
-        "Cache-Control": "private, max-age=300",
-      },
-    });
+    // SVG/HTML nunca vão inline (XSS na origem do app): ver cabecalhosDeArquivo.
+    const headers = cabecalhosDeArquivo(res.headers.get("content-type"), null);
+    headers.set("Cache-Control", "private, max-age=300");
+    return new NextResponse(buffer, { status: 200, headers });
   } catch (error) {
     console.error("[Proxy imagem campanha] Erro:", error);
     return NextResponse.json(
