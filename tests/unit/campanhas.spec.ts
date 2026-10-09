@@ -34,6 +34,16 @@ test.describe("motivoBloqueioDisparo", () => {
     ).not.toBeNull();
   });
 
+  test("manual concluída só reenvia com confirmação explícita", () => {
+    const concluida = { status: "completed", tipo: "manual" };
+    expect(motivoBloqueioDisparo(concluida, AGORA, { reenvioConfirmado: true })).toBeNull();
+    expect(motivoBloqueioDisparo(concluida, AGORA, { reenvioConfirmado: false })).not.toBeNull();
+    // A confirmação não libera um envio que ainda está em andamento.
+    expect(
+      motivoBloqueioDisparo({ status: "running", tipo: "manual" }, AGORA, { reenvioConfirmado: true }),
+    ).not.toBeNull();
+  });
+
   test("automática concluída roda de novo no dia seguinte", () => {
     expect(motivoBloqueioDisparo({ status: "completed", tipo: "automatica" }, AGORA)).toBeNull();
   });
