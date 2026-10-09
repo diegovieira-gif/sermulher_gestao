@@ -45,7 +45,7 @@
     },
     {
       "id": "c06",
-      "narracao": "Em Participantes, use Adicionar Participante, escolha o infrator na lista e clique em Adicionar à Turma. Só aparece quem já foi cadastrado em Infratores.",
+      "narracao": "Em Participantes, use Adicionar Participante, escolha o autor na lista e clique em Adicionar à Turma. Só aparece quem já foi cadastrado em Autores.",
       "acao": { "tipo": "nenhuma" },
       "foco": { "seletor": "text=Adicionar Participante", "zoom": 1.8 }
     },

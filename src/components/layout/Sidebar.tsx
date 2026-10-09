@@ -125,7 +125,7 @@ const MENU_ITEMS: MenuItemConfig[] = [
     items: [
       { label: "Painel Sala Azul", href: "/sala-azul" },
       { label: "Ciclos Reflexivos", href: "/sala-azul/ciclos" },
-      { label: "Infratores", href: "/sala-azul/infratores" },
+      { label: "Autores", href: "/sala-azul/infratores" },
     ],
   },
   {

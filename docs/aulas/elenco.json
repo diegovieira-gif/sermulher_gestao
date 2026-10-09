@@ -96,6 +96,14 @@
     }
   ],
 
+  "campanhas": [
+    {
+      "chave": "avaliacao",
+      "titulo": "Campanha de Avaliação de Atendimento",
+      "papel": "EXCEÇÃO à regra do elenco: campanha REAL e institucional, já cadastrada em produção (só texto da Secretaria, sem dado pessoal). Não é semeada nem apagada; usada no 7.4."
+    }
+  ],
+
   "escola": {
     "curso": "Inclusão Digital",
     "turma": "Inclusão Digital — Manhã A",

@@ -137,7 +137,7 @@ export async function getInfratorById(id: number) {
     console.error("Erro ao buscar infrator:", error);
     return {
       success: false,
-      error: "Erro ao buscar dados do infrator.",
+      error: "Erro ao buscar dados do autor.",
     };
   }
 }

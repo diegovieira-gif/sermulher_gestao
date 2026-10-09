@@ -840,11 +840,14 @@ type DirectusRestClient = Awaited<ReturnType<typeof getDirectusClient>>;
 
 export async function triggerCampaignDispatch(
   campaignId: string,
-  target: DispatchTarget
+  target: DispatchTarget,
+  opcoes: { reenvioConfirmado?: boolean } = {},
 ): Promise<DispatchResult> {
   await assertAccess("marketing");
   const client = await getDirectusClient({ requireAuth: true });
-  return dispatchCampaignWithClient(client, campaignId, target);
+  return dispatchCampaignWithClient(client, campaignId, target, {
+    reenvioConfirmado: opcoes.reenvioConfirmado === true,
+  });
 }
 
 // Variante para execução automática (cron): usa o cliente admin estático,
@@ -863,7 +866,8 @@ export async function triggerCampaignDispatchAdmin(
 async function dispatchCampaignWithClient(
   client: DirectusRestClient,
   campaignId: string,
-  target: DispatchTarget
+  target: DispatchTarget,
+  opcoes: { reenvioConfirmado?: boolean } = {},
 ): Promise<DispatchResult> {
   // Vira true quando a campanha é reservada como "running": a partir daí pode
   // ter havido envio, e quem chamou não deve tratar a falha como "não rodou".
@@ -877,7 +881,7 @@ async function dispatchCampaignWithClient(
 
     // Trava no servidor contra disparo duplicado (clique duplo, duas abas,
     // campanha já concluída). O botão da tela não é proteção suficiente.
-    const bloqueio = motivoBloqueioDisparo(campaign);
+    const bloqueio = motivoBloqueioDisparo(campaign, new Date(), opcoes);
     if (bloqueio) return { success: false, error: bloqueio };
     const statusAnterior: string =
       campaign.status && campaign.status !== "running" ? campaign.status : "draft";

@@ -171,7 +171,7 @@ export function ParticipantesClient({
 
   const handleAddParticipante = () => {
     if (!selectedInfrator) {
-      toast.error("Selecione um infrator para adicionar");
+      toast.error("Selecione um autor para adicionar");
       return;
     }
 
@@ -303,14 +303,14 @@ export function ParticipantesClient({
         <h2 className="text-lg font-semibold mb-4">Adicionar Participante</h2>
         <div className="flex gap-4 items-end">
           <div className="flex-1">
-            <Label htmlFor="infrator">Infrator</Label>
+            <Label htmlFor="infrator">Autor</Label>
             <Select
               value={selectedInfrator}
               onValueChange={setSelectedInfrator}
               disabled={isAdding || infratoresDisponiveis.length === 0}
             >
               <SelectTrigger id="infrator" className="w-full">
-                <SelectValue placeholder="Selecione um infrator" />
+                <SelectValue placeholder="Selecione um autor" />
               </SelectTrigger>
               <SelectContent>
                 {infratoresDisponiveis.map((infrator: any) => (
@@ -337,7 +337,7 @@ export function ParticipantesClient({
           <TableHeader>
             <TableRow>
               <TableHead>
-                Infrator
+                Autor
                 <InfoTooltip text="Nome completo do participante do ciclo." />
               </TableHead>
               <TableHead>
@@ -350,7 +350,7 @@ export function ParticipantesClient({
               </TableHead>
               <TableHead>
                 Contato
-                <InfoTooltip text="Telefone para comunicação com o infrator." />
+                <InfoTooltip text="Telefone para comunicação com o autor." />
               </TableHead>
               <TableHead>
                 Frequência

@@ -34,7 +34,7 @@ export type SalaFormValues = z.input<typeof insertSalaSchema>;
 // --- SCHEMAS DE PARTICIPANTES ---
 
 export const addParticipanteSchema = z.object({
-  infrator: z.number().int("ID do infrator é obrigatório"),
+  infrator: z.number().int("ID do autor é obrigatório"),
   sala: z.number().int("ID da sala é obrigatório"),
   // CORREÇÃO: Removido o segundo argumento { errorMap... } que estava depreciado
   status_participacao: z

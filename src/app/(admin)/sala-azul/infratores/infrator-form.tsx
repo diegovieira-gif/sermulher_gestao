@@ -112,7 +112,7 @@ export function InfratorForm({
               <FormItem>
                 <FormLabel>Nome Completo *</FormLabel>
                 <FormControl>
-                  <Input placeholder="Nome do infrator" {...field} />
+                  <Input placeholder="Nome do autor" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -314,7 +314,7 @@ export function OverviewClient({
       title: "Sala Azul & Encaminhamentos",
       items: [
         {
-          label: "Infratores Monitorados",
+          label: "Autores Monitorados",
           value: ind.infratores,
           hint: "acompanhados",
           icon: ShieldAlert,

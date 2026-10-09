@@ -140,7 +140,7 @@ Gestão da autonomia financeira através de qualificação profissional.
 
 Acompanhamento de homens autores de violência (Lei Maria da Penha).
 
-### Cadastro de Infrator
+### Cadastro de Autor
 
 1. Acesse **"Sala Azul"** > **"Participantes"**.
 2. Cadastre os dados e o **Nº do Processo**.

@@ -97,7 +97,7 @@ export function InfratorDetailsClient({
         toast.error(result.error);
       }
     } catch (error) {
-      toast.error("Erro ao salvar infrator");
+      toast.error("Erro ao salvar autor");
       console.error(error);
     } finally {
       setIsSubmitting(false);
@@ -186,7 +186,7 @@ export function InfratorDetailsClient({
                     <FormItem>
                       <FormLabel>
                         Nome Completo <span className="text-destructive">*</span>
-                        <InfoTooltip text="Nome completo do infrator conforme documentos oficiais." />
+                        <InfoTooltip text="Nome completo do autor conforme documentos oficiais." />
                       </FormLabel>
                       <FormControl>
                         <Input placeholder="João Silva" {...field} />
@@ -203,7 +203,7 @@ export function InfratorDetailsClient({
                     <FormItem>
                       <FormLabel>
                         CPF <span className="text-destructive">*</span>
-                        <InfoTooltip text="Cadastro de Pessoa Física do infrator. Documento obrigatório para emissão de certificados oficiais." />
+                        <InfoTooltip text="Cadastro de Pessoa Física do autor. Documento obrigatório para emissão de certificados oficiais." />
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -224,7 +224,7 @@ export function InfratorDetailsClient({
                     <FormItem>
                       <FormLabel>
                         Data de Nascimento
-                        <InfoTooltip text="Data de nascimento do infrator para cálculo de idade e relatórios." />
+                        <InfoTooltip text="Data de nascimento do autor para cálculo de idade e relatórios." />
                       </FormLabel>
                       <FormControl>
                         <Input 
@@ -413,7 +413,7 @@ export function InfratorDetailsClient({
                 Histórico de Participações
               </h3>
               <p className="text-sm text-muted-foreground">
-                Lista de todos os ciclos em que este infrator participou ou está
+                Lista de todos os ciclos em que este autor participou ou está
                 participando.
               </p>
             </div>
@@ -441,7 +441,7 @@ export function InfratorDetailsClient({
                       </TableHead>
                       <TableHead>
                         Status Participação
-                        <InfoTooltip text="Situação da participação do infrator no ciclo." />
+                        <InfoTooltip text="Situação da participação do autor no ciclo." />
                       </TableHead>
                       <TableHead>
                         Frequência

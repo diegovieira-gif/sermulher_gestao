@@ -26,12 +26,16 @@ export interface CampanhaParaDisparo {
  *
  * - "running": já há um envio em andamento → disparar de novo duplicaria as
  *   mensagens (clique duplo, duas abas, cron sobreposto).
- * - "completed": a campanha manual já foi enviada. A automática volta a
- *   rodar todo dia; para ela a proteção do mesmo dia é `ultima_execucao`.
+ * - "completed": a campanha manual já foi enviada. Reenviar (ex.: a pesquisa
+ *   de avaliação, repetida para quem chegou depois) é permitido só com
+ *   `reenvioConfirmado` — a pessoa marcou, na tela, que sabe que é um novo
+ *   envio. A automática volta a rodar todo dia; para ela a proteção do mesmo
+ *   dia é `ultima_execucao`.
  */
 export function motivoBloqueioDisparo(
   campanha: CampanhaParaDisparo,
   agora: Date = new Date(),
+  opcoes: { reenvioConfirmado?: boolean } = {},
 ): string | null {
   const automatica = campanha.tipo === "automatica";
 
@@ -45,8 +49,8 @@ export function motivoBloqueioDisparo(
     return "Esta campanha já está sendo enviada. Aguarde o término antes de disparar de novo.";
   }
 
-  if (campanha.status === "completed" && !automatica) {
-    return "Esta campanha já foi enviada. Para reenviar, crie uma nova campanha (ou duplique esta).";
+  if (campanha.status === "completed" && !automatica && !opcoes.reenvioConfirmado) {
+    return "Esta campanha já foi enviada. Para enviar de novo, confirme o reenvio na tela de disparo.";
   }
 
   return null;

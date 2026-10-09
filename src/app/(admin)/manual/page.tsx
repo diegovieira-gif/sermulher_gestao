@@ -1314,7 +1314,7 @@ export default function ManualPage() {
       >
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="s1">
-            <AccordionTrigger>Infratores</AccordionTrigger>
+            <AccordionTrigger>Autores</AccordionTrigger>
             <AccordionContent className="text-sm text-muted-foreground">
               Cadastre os autores de violência encaminhados pelo judiciário, com
               seus dados e <strong>nível de periculosidade</strong>. O painel da
@@ -1324,7 +1324,7 @@ export default function ManualPage() {
           <AccordionItem value="s2">
             <AccordionTrigger>Ciclos Reflexivos e presença</AccordionTrigger>
             <AccordionContent className="text-sm text-muted-foreground">
-              Vincule os infratores a <strong>Ciclos Reflexivos</strong>. O
+              Vincule os autores a <strong>Ciclos Reflexivos</strong>. O
               sistema controla a <strong>presença obrigatória</strong> em cada
               sessão e permite emitir <strong>certificados e relatórios</strong>{" "}
               de participação ao final do ciclo.

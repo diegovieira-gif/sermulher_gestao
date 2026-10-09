@@ -230,7 +230,7 @@ export async function getInfratoresDisponiveis(salaId: number) {
     console.error("Erro ao buscar infratores disponíveis:", error);
     return {
       success: false,
-      error: "Erro ao buscar infratores. Tente novamente.",
+      error: "Erro ao buscar autores. Tente novamente.",
       data: [],
     };
   }
@@ -264,7 +264,7 @@ export async function addParticipante(data: unknown) {
     if (participacaoExistente && participacaoExistente.length > 0) {
       return {
         success: false,
-        error: "Este infrator já está participando desta turma.",
+        error: "Este autor já está participando desta turma.",
       };
     }
 

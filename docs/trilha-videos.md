@@ -238,7 +238,7 @@ Público: equipe da Escola da Mulher.
 Público: equipe da Sala Azul. **Atenção:** aqui o cadastro é de autores de
 violência, e não de beneficiárias. Os dois nunca se misturam.
 
-### 6.1 — Cadastrar um participante (infrator) · 2 min
+### 6.1 — Cadastrar um participante (autor) · 2 min
 - Dados pessoais, número do processo, **nível de risco** e **status legal**.
 - O alerta de risco no painel.
 - *Tarefa:* cadastrar um participante fictício.
@@ -262,7 +262,7 @@ violência, e não de beneficiárias. Os dois nunca se misturam.
 
 ---
 
-## Módulo 7 — Comunicação (3 vídeos, ~6 min)
+## Módulo 7 — Comunicação (4 vídeos, ~9 min)
 
 Público: equipe de comunicação.
 
@@ -285,6 +285,17 @@ Público: equipe de comunicação.
   serviços, campanhas, cursos e projetos.
 - **Contatos:** as mensagens que chegam pelo site público.
 - *Tarefa:* cadastrar um serviço numa categoria existente.
+
+### 7.4 — Criar e enviar campanhas: a Avaliação de Atendimento · 3 min
+- **Criar Campanha:** nome, objetivo, mensagem com o primeiro nome, tipo de
+  envio (manual ou automática).
+- **Enviar uma campanha já cadastrada** — a Campanha de Avaliação de
+  Atendimento: rever a mensagem, o aviso de **reenvio** (campanha já
+  enviada pede confirmação) e a escolha do público.
+- Antes de disparar: **Testar Conexão** e, se estiver offline, **Conectar
+  WhatsApp** pelo QR Code. O **Histórico de Envio**.
+- *Tarefa:* abrir a campanha de avaliação, filtrar o público e conferir —
+  sem disparar.
 
 ---
 

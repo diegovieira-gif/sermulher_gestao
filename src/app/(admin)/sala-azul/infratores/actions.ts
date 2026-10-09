@@ -139,7 +139,7 @@ export async function getInfratores() {
     console.error("Erro busca:", error);
     return { 
       success: false, 
-      error: "Erro ao buscar infratores." 
+      error: "Erro ao buscar autores." 
     };
   }
 }
@@ -175,11 +175,11 @@ export async function saveInfrator(data: InsertInfrator & { id?: number }) {
     }
     await sincronizarTiposAgressao(infratorId, tipos_agressao_ids);
     revalidatePath("/sala-azul/infratores");
-    return { success: true, message: id ? "Infrator atualizado com sucesso." : "Infrator cadastrado com sucesso." };
+    return { success: true, message: id ? "Autor atualizado com sucesso." : "Autor cadastrado com sucesso." };
 
   } catch (error: any) {
     console.error("Erro ao salvar:", error);
-    return { success: false, error: "Erro ao salvar infrator." };
+    return { success: false, error: "Erro ao salvar autor." };
   }
 }
 
@@ -188,7 +188,7 @@ export async function deleteInfrator(id: number) {
   try {
     await directus.request(deleteItem('infratores', id));
     revalidatePath("/sala-azul/infratores");
-    return { success: true, message: "Infrator excluído com sucesso." };
+    return { success: true, message: "Autor excluído com sucesso." };
   } catch (error) {
     return { success: false, error: "Erro ao excluir." };
   }

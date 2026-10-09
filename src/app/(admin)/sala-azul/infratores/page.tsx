@@ -21,7 +21,7 @@ export default async function InfratoresPage() {
           <AlertTitle>Erro ao carregar dados</AlertTitle>
           <AlertDescription>
             {infratoresResult.error ||
-              "Não foi possível carregar a lista de infratores."}
+              "Não foi possível carregar a lista de autores."}
           </AlertDescription>
         </Alert>
       </div>
