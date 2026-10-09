@@ -140,25 +140,20 @@ async function getAuthenticatedClient() {
 
 // --- Ações de Leitura (Queries) ---
 
-export async function getBeneficiarias(
-  page = 1,
-  search = "",
-  limit = 10,
-  filters?: {
-    medidaProtetiva?: boolean;
-    bolsaFamilia?: boolean;
-    bpc?: boolean;
-    bairro?: string;
-  },
-  sortField = "created_at",
-  sortOrder: "asc" | "desc" = "desc"
-) {
-  await assertAccess("mulheres");
-  const { client } = await getAuthenticatedClient();
-  const offset = (page - 1) * limit;
+export type FiltrosBeneficiarias = {
+  medidaProtetiva?: boolean;
+  bolsaFamilia?: boolean;
+  bpc?: boolean;
+  bairro?: string;
+};
 
+/**
+ * Filtro do Directus para busca + filtros booleanos. Usado pela listagem E pela
+ * exportação — se divergirem, o CSV sai com quem não estava na tela (antes a
+ * exportação ignorava os filtros e baixava a base inteira).
+ */
+function filtroDeBeneficiarias(search: string, filters?: FiltrosBeneficiarias) {
   const filterConditions: any[] = [];
-
   if (search) {
     // O CPF é armazenado apenas com dígitos (ver replace no create/update),
     // mas a busca chega mascarada (ex.: "123.456.789-01"). Comparamos o CPF
@@ -175,18 +170,24 @@ export async function getBeneficiarias(
     }
     filterConditions.push({ _or: orConditions });
   }
+  if (filters?.medidaProtetiva) filterConditions.push({ possui_medida_protetiva: { _eq: true } });
+  if (filters?.bolsaFamilia) filterConditions.push({ recebe_bolsa_familia: { _eq: true } });
+  if (filters?.bpc) filterConditions.push({ recebe_bpc: { _eq: true } });
+  return filterConditions.length > 0 ? { _and: filterConditions } : {};
+}
 
-  if (filters?.medidaProtetiva) {
-    filterConditions.push({ possui_medida_protetiva: { _eq: true } });
-  }
+export async function getBeneficiarias(
+  page = 1,
+  search = "",
+  limit = 10,
+  filters?: FiltrosBeneficiarias,
+  sortField = "created_at",
+  sortOrder: "asc" | "desc" = "desc"
+) {
+  await assertAccess("mulheres");
+  const { client } = await getAuthenticatedClient();
+  const offset = (page - 1) * limit;
 
-  if (filters?.bolsaFamilia) {
-    filterConditions.push({ recebe_bolsa_familia: { _eq: true } });
-  }
-
-  if (filters?.bpc) {
-    filterConditions.push({ recebe_bpc: { _eq: true } });
-  }
 
   // Observação: `endereco` é um campo JSON (string) e o Directus não suporta
   // operadores de texto (_icontains/_contains) nem path nesse tipo. Por isso o
@@ -194,7 +195,7 @@ export async function getBeneficiarias(
   // server-side.
   const bairroFiltro = filters?.bairro?.trim();
   const sortExpr = sortOrder === "desc" ? `-${sortField}` : sortField;
-  const filter = filterConditions.length > 0 ? { _and: filterConditions } : {};
+  const filter = filtroDeBeneficiarias(search, filters);
 
   const parse = (item: any) => ({
     ...item,
@@ -369,28 +370,16 @@ export async function getBeneficiariaFormOptions() {
  * @param search  Mesmo filtro da listagem (nome ou CPF).
  * @param ids     Quando informado, exporta apenas estes registros.
  */
-export async function getBeneficiariasExport(search = "", ids?: number[]) {
+export async function getBeneficiariasExport(
+  search = "",
+  ids?: number[],
+  filters?: FiltrosBeneficiarias,
+) {
   await assertAccess("mulheres");
   const { client } = await getAuthenticatedClient();
-  // CPF é armazenado só com dígitos; compara pela versão sem máscara (ver getBeneficiarias).
-  const searchDigits = search.replace(/\D/g, "");
-
-  const filtroBusca = search
-    ? {
-      _or: [
-        { nome_completo: { _icontains: search } },
-        ...(searchDigits
-          ? [
-            { cpf: { _contains: searchDigits } },
-            { telefone: { _contains: searchDigits } },
-          ]
-          : []),
-      ],
-    }
-    : {};
-
-  const filter =
-    ids && ids.length > 0 ? { id: { _in: ids } } : filtroBusca;
+  const porSelecao = !!ids && ids.length > 0;
+  const filter = porSelecao ? { id: { _in: ids } } : filtroDeBeneficiarias(search, filters);
+  const bairroFiltro = porSelecao ? "" : (filters?.bairro?.trim().toLowerCase() ?? "");
 
   // `*` cobre as colunas simples; os M2O precisam ser pedidos campo a campo
   // para virem com o nome junto do id.
@@ -434,11 +423,14 @@ export async function getBeneficiariasExport(search = "", ids?: number[]) {
       items = (await buscar(["*"])) as any[];
     }
 
-    const parsedItems = items.map((item: any) => ({
-      ...item,
-      endereco: parseJsonField(item.endereco),
-      contato: parseJsonField(item.contato),
-    }));
+    const parsedItems = items
+      .map((item: any) => ({
+        ...item,
+        endereco: parseJsonField(item.endereco),
+        contato: parseJsonField(item.contato),
+      }))
+      // bairro mora num JSON que o Directus não filtra (ver getBeneficiarias)
+      .filter((b: any) => !bairroFiltro || String(b.endereco?.bairro ?? "").trim().toLowerCase() === bairroFiltro);
     return { success: true, data: parsedItems };
   } catch (error) {
     console.error("Erro ao exportar beneficiárias:", error);
@@ -840,8 +832,11 @@ export type EventoLinhaDoTempo = {
  * sem acesso ao CRAM no Directus), a linha do tempo mostra o que conseguiu.
  */
 export async function getLinhaDoTempo(beneficiariaId: string) {
-  await assertAccess("mulheres");
+  const access = await assertAccess("mulheres");
   const { client } = await getAuthenticatedClient();
+  // O instrumental do CRAM (tipos de violência) só aparece para quem tem o
+  // módulo CRAM — "mulheres" sozinho não basta.
+  const veCram = access.isAdmin || access.allowedKeys.includes("cram");
 
   const consultas = await Promise.allSettled([
     client.request(
@@ -860,15 +855,16 @@ export async function getLinhaDoTempo(beneficiariaId: string) {
       }),
     ),
     // CRAM usa o cliente admin: a coleção não é exposta ao token do usuário.
-    // O acesso já foi validado pelo assertAccess acima.
-    getDirectusAdmin().request(
-      readItems("cram_atendimentos", {
-        filter: { beneficiaria: { _eq: beneficiariaId } },
-        fields: ["id", "data_atendimento", "status", "tipos_violencia"],
-        sort: ["-data_atendimento"],
-        limit: -1,
-      }),
-    ),
+    veCram
+      ? getDirectusAdmin().request(
+          readItems("cram_atendimentos", {
+            filter: { beneficiaria: { _eq: beneficiariaId } },
+            fields: ["id", "data_atendimento", "status", "tipos_violencia"],
+            sort: ["-data_atendimento"],
+            limit: -1,
+          }),
+        )
+      : Promise.resolve([]),
     client.request(
       readItems("entregas_beneficios", {
         filter: { beneficiaria: { _eq: beneficiariaId } },

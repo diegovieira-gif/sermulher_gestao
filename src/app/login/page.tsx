@@ -39,8 +39,17 @@ export default function LoginPage() {
   const destinoPosLogin = () => {
     const params = new URLSearchParams(window.location.search);
     const destino = params.get("redirect") || "";
-    if (destino.startsWith("/") && !destino.startsWith("//")) return destino;
-    return "/dashboard";
+    // Checar o texto não basta: "/\evil.com" e "/%5Cevil.com" passam no
+    // "começa com / e não com //", e o navegador os resolve para outro site.
+    // Resolver contra a própria origem e exigir a mesma origem resolve todos.
+    if (!destino.startsWith("/")) return "/dashboard";
+    try {
+      const url = new URL(destino, window.location.origin);
+      if (url.origin !== window.location.origin) return "/dashboard";
+      return url.pathname + url.search + url.hash;
+    } catch {
+      return "/dashboard";
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

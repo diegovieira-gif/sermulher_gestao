@@ -289,8 +289,14 @@ export function BeneficiariasClient({
   const exportarCsv = async (ids?: number[]) => {
     setIsExporting(true);
     try {
-      const termoBusca = searchParams.get("search") || "";
-      const resultado = await getBeneficiariasExport(termoBusca, ids);
+      // Os mesmos parâmetros da listagem (page.tsx): o arquivo traz exatamente
+      // quem está filtrado na tela — nunca a base inteira por engano.
+      const resultado = await getBeneficiariasExport(searchParams.get("q") || "", ids, {
+        medidaProtetiva: searchParams.get("medidaProtetiva") === "true",
+        bolsaFamilia: searchParams.get("bolsaFamilia") === "true",
+        bpc: searchParams.get("bpc") === "true",
+        bairro: searchParams.get("bairro") || "",
+      });
 
       if (!resultado.success || !resultado.data) {
         toast.error(resultado.error || "Erro ao exportar dados.");

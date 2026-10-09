@@ -24,9 +24,9 @@ test.describe("getAllowedMenuKeys", () => {
     expect(permitido.sort()).toEqual([...ALL_MENU_KEYS].sort());
   });
 
-  test("perfil sem configuração recebe acesso total (default documentado)", () => {
+  test("perfil sem configuração recebe só o essencial (fail-closed)", () => {
     expect(getAllowedMenuKeys(false, null).sort()).toEqual(
-      [...ALL_MENU_KEYS].sort(),
+      [...ALWAYS_ON_KEYS].sort(),
     );
   });
 

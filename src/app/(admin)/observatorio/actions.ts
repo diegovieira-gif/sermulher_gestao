@@ -15,8 +15,13 @@ function mensagemDirectus(error: unknown): string | null {
 
 export async function getCollectionData(collection: ObserCollection, search?: string) {
   await assertAccess("observatorio");
+  let config: ReturnType<typeof configDa>;
   try {
-    const config = configDa(collection);
+    config = configDa(collection);
+  } catch {
+    return { success: false, error: "Coleção não permitida." };
+  }
+  try {
     const filter: Record<string, unknown> = {};
     const termo = (search || "").trim();
     if (termo) {
@@ -51,8 +56,13 @@ export async function saveItem(
   id?: ObserId
 ) {
   await assertAccess("observatorio");
+  let config: ReturnType<typeof configDa>;
   try {
-    const config = configDa(collection);
+    config = configDa(collection);
+  } catch {
+    return { success: false, error: "Coleção não permitida." };
+  }
+  try {
     const { payload, faltando } = montarRegistro(config, data);
     if (faltando.length) {
       return { success: false, error: `Preencha: ${faltando.join(", ")}.` };
@@ -92,6 +102,13 @@ export async function saveItem(
 
 export async function removeItem(collection: ObserCollection, id: ObserId) {
   await assertAccess("observatorio");
+  // O nome da coleção chega do cliente e a exclusão usa o token admin: sem
+  // esta checagem, removeItem("beneficiarias", 123) apagava uma ficha.
+  try {
+    configDa(collection);
+  } catch {
+    return { success: false, error: "Coleção não permitida." };
+  }
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await getDirectusAdmin().request(deleteItem(collection as any, id as any));
@@ -107,6 +124,9 @@ export async function removeItem(collection: ObserCollection, id: ObserId) {
 /** Períodos para os seletores, do mais recente ao mais antigo. */
 export async function getRelationData(collection: "obser_periodos") {
   await assertAccess("observatorio");
+  if (collection !== "obser_periodos") {
+    return { success: false, error: "Coleção não permitida." };
+  }
   try {
     const items = await getDirectusAdmin().request(
       readItems(collection, { limit: -1, fields: ["id", "nome_periodo", "ordem"], sort: ["-ordem"] })

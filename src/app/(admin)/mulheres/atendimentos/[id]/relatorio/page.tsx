@@ -1,5 +1,6 @@
 import { getAtendimentoDetails, getTramitacoes } from "../actions";
 import { notFound } from "next/navigation";
+import { htmlParaTexto } from "@/lib/texto-seguro";
 import { PrintButton } from "./print-button"; // Importando o componente cliente
 
 interface PageProps {
@@ -317,10 +318,9 @@ export default async function RelatorioAtendimentoPage({ params }: PageProps) {
                       {new Date(t.data_recebimento).toLocaleDateString("pt-BR")}
                     </span>
                   </div>
-                  <div
-                    className="text-sm text-slate-700 leading-relaxed text-justify"
-                    dangerouslySetInnerHTML={{ __html: t.relato_tecnico }}
-                  />
+                  <div className="text-sm text-slate-700 leading-relaxed text-justify whitespace-pre-wrap">
+                    {htmlParaTexto(t.relato_tecnico)}
+                  </div>
                   <div className="mt-1 text-xs text-slate-400">
                     Responsável:{" "}
                     {t.usuario_responsavel?.first_name || "Sistema"}

@@ -49,6 +49,12 @@ export async function POST(request: Request) {
       );
     }
 
+    // A tentativa conta ANTES de ir ao Directus e é perdoada no sucesso.
+    // Registrar só depois do `await` deixava 500 requisições simultâneas
+    // passarem todas pela checagem acima antes de a primeira falha contar.
+    registrarFalha(chaveIp);
+    registrarFalha(chaveEmail);
+
     // Modo "json": o refresh_token vem no corpo da resposta em vez de um cookie
     // no domínio do Directus — que seria inútil aqui, já que o Next roda em
     // outra origem. Sem isso não há como renovar a sessão.
@@ -59,8 +65,6 @@ export async function POST(request: Request) {
     const authResult = await directus.login(email, password);
 
     if (!authResult || !authResult.access_token) {
-      registrarFalha(chaveIp);
-      registrarFalha(chaveEmail);
       return NextResponse.json({ error: "Credenciais inválidas." }, { status: 401 });
     }
 
@@ -105,9 +109,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error("[Login API] Erro:", error);
-    // O SDK lança em credencial errada — a falha conta para o limite.
-    if (chaveIp) registrarFalha(chaveIp);
-    if (chaveEmail) registrarFalha(chaveEmail);
+    // O SDK lança em credencial errada — a falha já foi contada acima.
     return NextResponse.json({ error: "Credenciais inválidas ou erro no servidor." }, { status: 401 });
   }
 }
