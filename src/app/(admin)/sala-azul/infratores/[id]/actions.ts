@@ -4,6 +4,7 @@ import { directus } from "@/lib/directus";
 import { readItems, readItem } from "@directus/sdk";
 import { assertAccess } from "@/lib/permissions";
 import { frequenciasPorParticipacao } from "@/lib/frequencia";
+import { lerSimNao } from "../schemas";
 
 /**
  * Busca o histórico de participações de um infrator em ciclos
@@ -131,7 +132,11 @@ export async function getInfratorById(id: number) {
 
     return {
       success: true,
-      data: { ...infrator, tipos_agressao_lista: tipos },
+      data: {
+        ...infrator,
+        tipos_agressao_lista: tipos,
+        medida_revogada: lerSimNao(infrator.medida_revogada),
+      },
     };
   } catch (error) {
     console.error("Erro ao buscar infrator:", error);
