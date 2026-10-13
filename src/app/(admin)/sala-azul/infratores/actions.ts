@@ -3,7 +3,7 @@
 import { directus } from "@/lib/directus";
 import { createItem, deleteItem, readItems, updateItem } from "@directus/sdk";
 import { revalidatePath } from "next/cache";
-import { InsertInfrator, insertInfratorSchema } from "./schemas";
+import { InsertInfrator, insertInfratorSchema, lerSimNao } from "./schemas";
 import { assertAccess } from "@/lib/permissions";
 import { somenteDigitos } from "@/lib/utils";
 import {
@@ -64,6 +64,8 @@ const INFRATOR_FIELDS = [
   'data_nascimento',
   'contato',
   'numero_processo',
+  'observacao',
+  'medida_revogada',
   // Relacionamentos M2O (ainda precisamos dos nomes aqui)
   'nivel_id.id',
   'nivel_id.nome',
@@ -184,6 +186,7 @@ export async function getInfratores() {
       data: items.map((item: any) => ({
         ...item,
         tipos_agressao_lista: idsDosTipos(item.tipos_agressao_lista),
+        medida_revogada: lerSimNao(item.medida_revogada),
       })),
     };
   } catch (error) {
@@ -235,6 +238,8 @@ export async function saveInfrator(data: InsertInfrator & { id?: number }) {
       ...rest,
       // O Directus recusa "" em campo date.
       data_nascimento: rest.data_nascimento || null,
+      observacao: rest.observacao?.trim() || null,
+      medida_revogada: rest.medida_revogada ?? null,
       contato: Object.keys(contatoAtual).length ? contatoAtual : null,
     };
 

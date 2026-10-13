@@ -14,6 +14,9 @@ export const insertInfratorSchema = z.object({
   data_nascimento: z.string().optional().nullable(),
   telefone: z.string().optional(), // Virtual - será salvo dentro de 'contato' (JSON)
   numero_processo: z.string().optional(),
+  observacao: z.string().max(5000, "Observação muito longa").optional().nullable(),
+  // null = não informado; o SQLite devolve 1/0 — normalizar antes (booleano()).
+  medida_revogada: z.boolean().nullable().optional(),
   // Input tipado como number | string: os selects fornecem string e o zod
   // converte para number na validação.
   nivel_id: z.coerce
@@ -31,3 +34,12 @@ export const insertInfratorSchema = z.object({
 export type Infrator = z.infer<typeof insertInfratorSchema>;
 export type InfratorFormValues = z.input<typeof insertInfratorSchema>;
 export type InsertInfrator = z.infer<typeof insertInfratorSchema>;
+
+/**
+ * Sim/Não opcional vindo do Directus (o SQLite devolve 1/0, às vezes texto):
+ * true, false ou null quando não informado.
+ */
+export function lerSimNao(v: unknown): boolean | null {
+  if (v === null || v === undefined || v === "") return null;
+  return v === true || v === 1 || v === "1" || v === "true";
+}

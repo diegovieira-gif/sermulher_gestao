@@ -24,8 +24,11 @@ import { Checkbox } from "@/components/ui/checkbox"; // Import do Checkbox
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { consultarCpfAutor, saveInfrator } from "./actions";
+import { Textarea } from "@/components/ui/textarea";
+import { SimNao } from "./sim-nao";
 import { mascararCpf, mascararTelefone, somenteDigitos } from "@/lib/utils";
 import {
+  lerSimNao,
   insertInfratorSchema,
   type InfratorFormValues,
   type InsertInfrator,
@@ -76,6 +79,8 @@ export function InfratorForm({
       data_nascimento: initialData?.data_nascimento || "",
       telefone: somenteDigitos(initialData?.contato?.telefone),
       numero_processo: initialData?.numero_processo || "",
+      observacao: initialData?.observacao || "",
+      medida_revogada: lerSimNao(initialData?.medida_revogada),
       nivel_id: initialData?.nivel_id?.id || initialData?.nivel_id,
       status_legal_id:
         initialData?.status_legal_id?.id || initialData?.status_legal_id,
@@ -303,6 +308,42 @@ export function InfratorForm({
                     ))}
                   </SelectContent>
                 </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        {/* Medida revogada e observação */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <FormField
+            control={form.control}
+            name="medida_revogada"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Medida revogada</FormLabel>
+                <FormControl>
+                  <SimNao name={field.name} value={field.value} onChange={field.onChange} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="observacao"
+            render={({ field }) => (
+              <FormItem className="md:col-span-2">
+                <FormLabel>Observação</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Informações relevantes sobre o autor"
+                    rows={3}
+                    {...field}
+                    value={field.value || ""}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}

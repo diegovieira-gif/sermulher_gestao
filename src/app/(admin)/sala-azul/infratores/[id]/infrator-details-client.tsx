@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  lerSimNao,
   insertInfratorSchema,
   type InfratorFormValues,
 } from "../schemas";
@@ -37,6 +38,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
+import { Textarea } from "@/components/ui/textarea";
+import { SimNao } from "../sim-nao";
 import { formatarData } from "@/lib/datas";
 
 interface InfratorDetailsClientProps {
@@ -73,6 +76,8 @@ export function InfratorDetailsClient({
     nivel_id: infrator.nivel_id?.id || infrator.nivel_id,
     status_legal_id: infrator.status_legal_id?.id || infrator.status_legal_id,
     telefone: infrator.contato?.telefone || "",
+    observacao: infrator.observacao || "",
+    medida_revogada: lerSimNao(infrator.medida_revogada),
     tipos_agressao_ids: Array.isArray(infrator.tipos_agressao_lista)
       ? infrator.tipos_agressao_lista.map((item: any) =>
           typeof item === "number" ? item : item.tipo_agressao_id?.id || item.id
@@ -160,6 +165,11 @@ export function InfratorDetailsClient({
             <p className="text-muted-foreground">
               CPF: {infrator.cpf} | Processo: {infrator.numero_processo || "-"}
             </p>
+            {lerSimNao(infrator.medida_revogada) !== null && (
+              <Badge variant="outline" className="mt-1">
+                Medida revogada: {lerSimNao(infrator.medida_revogada) ? "Sim" : "Não"}
+              </Badge>
+            )}
           </div>
         </div>
       </div>
@@ -268,6 +278,47 @@ export function InfratorDetailsClient({
                         <Input
                           placeholder="0000000-00.0000.0.00.0000"
                           {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Situação da medida e observação */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold">Situação</h3>
+
+                <FormField
+                  control={form.control}
+                  name="medida_revogada"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Medida revogada
+                        <InfoTooltip text="A medida protetiva relacionada a este autor foi revogada? Deixe em branco se não souber." />
+                      </FormLabel>
+                      <FormControl>
+                        <SimNao name={field.name} value={field.value} onChange={field.onChange} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="observacao"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Observação</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Informações relevantes sobre o autor"
+                          rows={4}
+                          {...field}
+                          value={field.value || ""}
                         />
                       </FormControl>
                       <FormMessage />

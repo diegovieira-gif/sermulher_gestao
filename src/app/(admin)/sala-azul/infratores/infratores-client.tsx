@@ -205,6 +205,11 @@ export function InfratoresClient({
                       <div className="flex flex-col">
                         <span className="text-foreground">
                           {item.nome_completo}
+                          {item.medida_revogada === true && (
+                            <Badge variant="outline" className="ml-2 text-[10px] py-0">
+                              Medida revogada
+                            </Badge>
+                          )}
                         </span>
                         <span className="text-xs text-muted-foreground">
                           {item.cpf}
@@ -214,14 +219,19 @@ export function InfratoresClient({
                     <TableCell>
                       <Badge variant="outline" className="bg-muted/50">
                         <Gavel className="h-3 w-3 mr-1 text-muted-foreground" />
-                        Status Legal
+                        {item.status_legal_id?.nome || "Não informado"}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <span
-                        className={`px-2.5 py-0.5 rounded-full text-xs font-medium border`}
+                        className="px-2.5 py-0.5 rounded-full text-xs font-medium border"
+                        style={
+                          item.nivel_id?.cor
+                            ? { borderColor: item.nivel_id.cor, color: item.nivel_id.cor }
+                            : undefined
+                        }
                       >
-                        Nível
+                        {item.nivel_id?.nome || "---"}
                       </span>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground font-mono">
@@ -310,6 +320,7 @@ export function InfratoresClient({
                 <td className="py-3 pr-4">
                   <div className="font-semibold text-foreground">
                     {item.nome_completo}
+                    {item.medida_revogada === true && " (medida revogada)"}
                   </div>
                   <div className="text-muted-foreground text-xs">
                     {item.cpf || "CPF não informado"}
@@ -318,10 +329,12 @@ export function InfratoresClient({
                 <td className="py-3 font-mono text-foreground">
                   {item.numero_processo || "---"}
                 </td>
-                <td className="py-3 text-foreground">Status Legal</td>
+                <td className="py-3 text-foreground">
+                  {item.status_legal_id?.nome || "---"}
+                </td>
                 <td className="py-3">
-                  <span className={`text-xs font-bold uppercase text-foreground`}>
-                    Nível
+                  <span className="text-xs font-bold uppercase text-foreground">
+                    {item.nivel_id?.nome || "---"}
                   </span>
                 </td>
               </tr>

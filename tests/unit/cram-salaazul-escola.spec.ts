@@ -69,3 +69,14 @@ test.describe("planejarFrequencia", () => {
     expect(plano.criar).toEqual([{ beneficiariaId: 2, presente: true }]);
   });
 });
+
+test("medida revogada: 1/0 do SQLite vira sim/não; vazio fica não informado", async () => {
+  const { lerSimNao } = await import("../../src/app/(admin)/sala-azul/infratores/schemas");
+  expect(lerSimNao(1)).toBe(true);
+  expect(lerSimNao(true)).toBe(true);
+  expect(lerSimNao(0)).toBe(false);
+  expect(lerSimNao(false)).toBe(false);
+  expect(lerSimNao(null)).toBeNull();
+  expect(lerSimNao(undefined)).toBeNull();
+  expect(lerSimNao("")).toBeNull();
+});
