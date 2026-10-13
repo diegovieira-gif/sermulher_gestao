@@ -28,7 +28,7 @@ Estar nesta lista já revela atendimento pela Secretaria da Mulher. Por isso:
 | `nome` | Sim (`nome_completo`) |
 | `data_nascimento` | Sim, ou vazio |
 | `ultima_atualizacao` | Sim — `date_updated` (ou `date_created`) no horário de Brasília |
-| `nome_mae` | Vazio — o SIGMA não registra |
+| `nome_mae` | Sim (campo "Nome da Mãe" da ficha), ou vazio |
 | `vinculos_familiares` | `[]` — o SIGMA não registra vínculos com CPF |
 | `endereco`, `bairro` | **Não enviados** |
 

@@ -51,7 +51,7 @@ export async function carregarElegiveisHub(): Promise<BeneficiariaHub[]> {
   const filtroCpf = encodeURIComponent(JSON.stringify({ cpf: { _nnull: true, _nempty: true } }));
   const [beneficiarias, atendimentos] = await Promise.all([
     lerDirectus<BeneficiariaHub[]>(
-      `/items/beneficiarias?fields=id,cpf,nome_completo,data_nascimento,possui_medida_protetiva,date_created,date_updated&filter=${filtroCpf}&sort=id&limit=-1`,
+      `/items/beneficiarias?fields=id,cpf,nome_completo,nome_mae,data_nascimento,possui_medida_protetiva,date_created,date_updated&filter=${filtroCpf}&sort=id&limit=-1`,
     ),
     lerDirectus<{ beneficiaria: number | null }[]>(
       `/items/atendimentos?fields=beneficiaria&filter=${encodeURIComponent(

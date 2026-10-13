@@ -40,13 +40,15 @@ test("medida protetiva (ficha ou atendimento) e CPF inválido ficam fora", () =>
 
 test("o registro enviado não leva endereço, telefone nem e-mail", () => {
   const c = paraCidadaoHub(
-    b(7, { cpf: "123.456.789-09", date_updated: "2026-10-13T15:04:05.000Z" }) as BeneficiariaHub &
+    b(7, { cpf: "123.456.789-09", nome_mae: "  Maria da Silva ", date_updated: "2026-10-13T15:04:05.000Z" }) as BeneficiariaHub &
       Record<string, unknown>,
   );
   expect(Object.keys(c).sort()).toEqual(
     ["cpf", "data_nascimento", "nome", "nome_mae", "qtd_vinculos_familiares", "ultima_atualizacao", "vinculos_familiares"].sort(),
   );
   expect(c.cpf).toBe("12345678909");
+  expect(c.nome_mae).toBe("Maria da Silva");
+  expect(paraCidadaoHub(b(9)).nome_mae).toBe("");
   expect(c.ultima_atualizacao).toBe("2026-10-13 12:04:05");
   expect(c.vinculos_familiares).toEqual([]);
 });

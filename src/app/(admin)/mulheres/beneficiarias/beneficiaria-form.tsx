@@ -62,6 +62,7 @@ const ABA_POR_CAMPO: Record<string, string> = {
   cpf: "Dados Pessoais",
   nome_completo: "Dados Pessoais",
   nome_social: "Dados Pessoais",
+  nome_mae: "Dados Pessoais",
   data_nascimento: "Dados Pessoais",
   quantidade_filhos: "Dados Pessoais",
   raca_cor_id: "Dados Pessoais",
@@ -133,6 +134,7 @@ export function BeneficiariaForm({
     defaultValues: {
       nome_completo: "",
       nome_social: "",
+      nome_mae: "",
       cpf: "",
       data_nascimento: "",
       raca_cor_id: undefined,
@@ -327,6 +329,7 @@ export function BeneficiariaForm({
         nao_receber_mensagens: beneficiaria.nao_receber_mensagens || false,
         email: beneficiaria.email || "",
         nome_social: beneficiaria.nome_social || "",
+        nome_mae: beneficiaria.nome_mae || "",
         raca_cor_id: beneficiaria.raca_cor_id,
         estado_civil_id: beneficiaria.estado_civil_id,
         quantidade_filhos: beneficiaria.quantidade_filhos || 0,
@@ -361,6 +364,7 @@ export function BeneficiariaForm({
       form.reset({
         nome_completo: "",
         nome_social: "",
+        nome_mae: "",
         cpf: "",
         data_nascimento: "",
         raca_cor_id: undefined,
@@ -551,6 +555,23 @@ export function BeneficiariaForm({
                         </FormLabel>
                         <FormControl>
                           <Input placeholder="Nome Social" {...field} value={field.value || ""} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="nome_mae"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Nome da Mãe
+                          <InfoTooltip text="Nome completo da mãe, como no documento. Ajuda a confirmar a identidade no Hub de Dados da Prefeitura." />
+                        </FormLabel>
+                        <FormControl>
+                          <Input placeholder="Nome completo da mãe" {...field} value={field.value || ""} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

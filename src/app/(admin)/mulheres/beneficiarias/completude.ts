@@ -52,6 +52,8 @@ export const CAMPOS_COMPLETUDE: CampoCompletude[] = [
 
   // Médio — alimenta relatório oficial.
   { caminho: "raca_cor_id", rotulo: "Raça/cor", peso: "medio", aba: "dados-pessoais" },
+  // Nome da mãe: o Hub de Dados Municipais usa para conferir a identidade.
+  { caminho: "nome_mae", rotulo: "Nome da mãe", peso: "medio", aba: "dados-pessoais" },
   { caminho: "escolaridade_id", rotulo: "Escolaridade", peso: "medio", aba: "dados-sociais" },
   { caminho: "situacao_trabalho_id", rotulo: "Situação de trabalho", peso: "medio", aba: "dados-sociais" },
 

@@ -9,8 +9,8 @@
  * ┌─ MINIMIZAÇÃO (LGPD) ──────────────────────────────────────────────────────┐
  * │ Estar nesta lista já revela que a mulher foi atendida pela Secretaria da  │
  * │ Mulher — dado sensível, e endereço é o que um agressor procura. Por isso: │
- * │ • só CPF, nome, nascimento e data da última alteração — SEM endereço,     │
- * │   bairro, telefone ou e-mail;                                             │
+ * │ • só CPF, nome, nascimento, nome da mãe e data da última alteração —      │
+ * │   SEM endereço, bairro, telefone ou e-mail;                               │
  * │ • fora quem tem medida protetiva (na ficha ou em qualquer atendimento);   │
  * │ • fora quem não tem CPF válido (o Hub descartaria de qualquer forma);     │
  * │ • autores da Sala Azul NUNCA entram.                                      │
@@ -30,6 +30,7 @@ export type BeneficiariaHub = {
   id: number;
   cpf?: string | null;
   nome_completo?: string | null;
+  nome_mae?: string | null;
   data_nascimento?: string | null;
   possui_medida_protetiva?: unknown;
   date_created?: string | null;
@@ -107,7 +108,7 @@ export function paraCidadaoHub(b: BeneficiariaHub): CidadaoHub {
     data_nascimento: /^\d{4}-\d{2}-\d{2}/.test(b.data_nascimento ?? "")
       ? String(b.data_nascimento).slice(0, 10)
       : "",
-    nome_mae: "", // o SIGMA não registra nome da mãe
+    nome_mae: (b.nome_mae ?? "").trim(),
     ultima_atualizacao: ultimaAtualizacaoHub(b.date_updated || b.date_created),
     qtd_vinculos_familiares: 0, // o SIGMA não registra vínculos com CPF
     vinculos_familiares: [],
