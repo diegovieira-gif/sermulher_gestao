@@ -30,6 +30,7 @@ export const COLUNAS_EXPORT: ColunaExport[] = [
 
   { cabecalho: "nome_completo", caminho: "nome_completo" },
   { cabecalho: "nome_social", caminho: "nome_social" },
+  { cabecalho: "nome_mae", caminho: "nome_mae" },
   { cabecalho: "cpf", caminho: "cpf" },
   { cabecalho: "data_nascimento", caminho: "data_nascimento" },
 

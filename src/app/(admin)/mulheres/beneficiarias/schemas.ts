@@ -26,6 +26,7 @@ export const beneficiariaSchema = z.object({
     .min(3, "Nome completo deve ter no mínimo 3 caracteres"),
 
   nome_social: z.string().optional().nullable(),
+  nome_mae: z.string().optional().nullable(),
 
   cpf: z
     .string()

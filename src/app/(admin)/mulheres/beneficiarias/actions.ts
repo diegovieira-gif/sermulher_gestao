@@ -33,6 +33,7 @@ const BENEFICIARIA_FIELDS = [
   "id",
   "nome_completo",
   "nome_social",
+  "nome_mae",
   "cpf",
   "data_nascimento",
   "raca_cor_id",
@@ -64,6 +65,7 @@ type BeneficiariaRecord = {
   id: number;
   nome_completo: string;
   nome_social?: string | null;
+  nome_mae?: string | null;
   cpf?: string | null;
   data_nascimento?: string | null;
   raca_cor_id?: number | null;
