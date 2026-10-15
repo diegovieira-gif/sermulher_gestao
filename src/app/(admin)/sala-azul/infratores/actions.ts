@@ -6,11 +6,7 @@ import { revalidatePath } from "next/cache";
 import { InsertInfrator, insertInfratorSchema, lerSimNao } from "./schemas";
 import { assertAccess } from "@/lib/permissions";
 import { somenteDigitos } from "@/lib/utils";
-import {
-  consultarCpfSiged,
-  nascimentoDoSiged,
-  telefoneDoSiged,
-} from "@/lib/siged";
+import { consultarCpfUnificado } from "@/lib/consulta-cpf";
 
 /** Autor já cadastrado com este CPF (ignorando o próprio, na edição). */
 async function autorComCpf(cpf: string, ignorarId?: number) {
@@ -25,10 +21,10 @@ async function autorComCpf(cpf: string, ignorarId?: number) {
 /**
  * CPF digitado no cadastro de autor, como no de beneficiária: primeiro
  * confere se o autor já está na Sala Azul (evita ficha dupla), depois busca
- * nome, nascimento e telefone na rede municipal (SIGED).
+ * nome, nascimento e telefone no Hub de Dados Municipais e no SIGED.
  */
 export async function consultarCpfAutor(cpf: string, ignorarId?: number): Promise<
-  | { success: true; existente: { id: number; nome_completo: string } | null; dados: { nome_completo: string; data_nascimento: string; telefone: string } | null }
+  | { success: true; existente: { id: number; nome_completo: string } | null; dados: { nome_completo: string; data_nascimento: string; telefone: string } | null; origens?: string[] }
   | { success: false; error: string }
 > {
   await assertAccess("sala-azul");
@@ -37,18 +33,13 @@ export async function consultarCpfAutor(cpf: string, ignorarId?: number): Promis
   try {
     const existente = await autorComCpf(limpo, ignorarId);
     if (existente) return { success: true, existente, dados: null };
-    const r = await consultarCpfSiged(limpo);
-    if (!r.success) return { success: false, error: r.error };
-    const d = r.data;
+    const { dados: d, origens } = await consultarCpfUnificado(limpo);
     return {
       success: true,
       existente: null,
+      origens,
       dados: d
-        ? {
-            nome_completo: (d.userName || "").trim(),
-            data_nascimento: nascimentoDoSiged(d.userBorn),
-            telefone: telefoneDoSiged(d.userPhone1),
-          }
+        ? { nome_completo: d.nome_completo, data_nascimento: d.data_nascimento, telefone: d.telefone }
         : null,
     };
   } catch (error) {

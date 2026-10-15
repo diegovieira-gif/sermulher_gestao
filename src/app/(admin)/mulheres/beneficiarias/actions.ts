@@ -22,7 +22,7 @@ import {
 import { calcularCompletude } from "./completude";
 import { assertAccess } from "@/lib/permissions";
 import { getDirectusAdmin } from "@/lib/directus";
-import { consultarCpfSiged } from "@/lib/siged";
+import { consultarCpfUnificado } from "@/lib/consulta-cpf";
 import { mascararCpf, somenteDigitos } from "@/lib/utils";
 
 // URL da API (Fallback seguro para localhost)
@@ -660,11 +660,18 @@ export async function deletarEntrega(id: number, beneficiariaId: number) {
   }
 }
 
+/**
+ * CPF digitado no cadastro: busca no Hub de Dados Municipais e no SIGED, em
+ * paralelo e só no servidor (lib/consulta-cpf.ts). `data: null` = não achado.
+ */
 export async function findBeneficiariaByCPF(cpf: string) {
   await assertAccess("mulheres");
-  // URL, token e tempo limite em lib/siged.ts — a mesma consulta serve ao
-  // cadastro de autores (Sala Azul).
-  return consultarCpfSiged(cpf);
+  const cleanCpf = String(cpf ?? "").replace(/\D/g, "");
+  if (cleanCpf.length !== 11) {
+    return { success: false as const, error: "CPF inválido. Deve conter 11 dígitos numéricos." };
+  }
+  const { dados, origens } = await consultarCpfUnificado(cleanCpf);
+  return { success: true as const, data: dados, origens };
 }
 
 // --- Participações em Eventos (coleção participacoes_evento) ---

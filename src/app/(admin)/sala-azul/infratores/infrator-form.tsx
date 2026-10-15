@@ -111,7 +111,7 @@ export function InfratorForm({
           return;
         }
         if (!r.dados) return;
-        toast.success("Dados localizados na rede municipal!");
+        toast.success(`Dados localizados${r.origens?.length ? ` (${r.origens.join(" e ")})` : ""}. Confira antes de salvar.`);
         // Só preenche o que está vazio: não apaga o que a pessoa já digitou.
         const vazio = (campo: "nome_completo" | "data_nascimento" | "telefone") =>
           !String(form.getValues(campo) ?? "").trim();

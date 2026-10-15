@@ -194,43 +194,37 @@ export function BeneficiariaForm({
             return;
           }
 
+          // Hub de Dados Municipais + SIGED, combinados no servidor.
           const res = await findBeneficiariaByCPF(cleanCpf);
           if (res.success && res.data) {
-            const data = res.data;
-            toast.success("Dados da beneficiária localizados na rede municipal!");
-            
-            if (data.userName) form.setValue("nome_completo", data.userName, { shouldValidate: true });
-            if (data.userSocialName) form.setValue("nome_social", data.userSocialName, { shouldValidate: true });
-            
-            if (data.userBorn) {
-              const parts = data.userBorn.split("/");
-              if (parts.length === 3) {
-                form.setValue("data_nascimento", `${parts[2]}-${parts[1]}-${parts[0]}`, { shouldValidate: true });
+            const d = res.data;
+            toast.success(
+              `Dados localizados${res.origens?.length ? ` (${res.origens.join(" e ")})` : ""}. Confira antes de salvar.`,
+            );
+            // Só preenche o que está vazio: não apaga o que já foi digitado.
+            const preencher = (
+              campo: "nome_completo" | "nome_social" | "nome_mae" | "data_nascimento" | "telefone" | "email"
+                | "endereco.cep" | "endereco.logradouro" | "endereco.numero" | "endereco.bairro" | "endereco.cidade",
+              valor: string,
+            ) => {
+              if (valor && !String(form.getValues(campo) ?? "").trim()) {
+                form.setValue(campo, valor, { shouldValidate: true });
               }
-            }
-            
-            if (data.userPhone1) {
-              let phone = data.userPhone1.replace(/\D/g, "");
-              if (phone.startsWith("55") && (phone.length === 12 || phone.length === 13)) {
-                phone = phone.substring(2);
-              }
-              form.setValue("telefone", phone, { shouldValidate: true });
-            }
-            
-            if (data.userMail) form.setValue("email", data.userMail, { shouldValidate: true });
-            
-            form.setValue("endereco.logradouro", data.userAddressStreet || "", { shouldValidate: true });
-            form.setValue("endereco.numero", data.userAddressNumber || "", { shouldValidate: true });
-            
-            if (data.userAddressDistrict) {
-              form.setValue("endereco.bairro", data.userAddressDistrict.trim(), { shouldValidate: true });
-            }
-            
-            if (data.userAddressCity === "2800308") {
-              form.setValue("endereco.cidade", "Aracaju", { shouldValidate: true });
-            } else if (data.userAddressCity) {
-              form.setValue("endereco.cidade", data.userAddressCity, { shouldValidate: true });
-            }
+            };
+            preencher("nome_completo", d.nome_completo);
+            preencher("nome_social", d.nome_social);
+            preencher("nome_mae", d.nome_mae);
+            preencher("data_nascimento", d.data_nascimento);
+            preencher("telefone", d.telefone);
+            preencher("email", d.email);
+            // O CEP veio junto com o endereço: marca como já consultado para o
+            // ViaCEP não sobrescrever a rua que acabou de ser preenchida.
+            if (d.endereco.cep) setLastSearchedCep(d.endereco.cep);
+            preencher("endereco.cep", d.endereco.cep);
+            preencher("endereco.logradouro", d.endereco.logradouro);
+            preencher("endereco.numero", d.endereco.numero);
+            preencher("endereco.bairro", d.endereco.bairro);
+            preencher("endereco.cidade", d.endereco.cidade);
           }
         } catch (err) {
           console.error("Error searching CPF:", err);
