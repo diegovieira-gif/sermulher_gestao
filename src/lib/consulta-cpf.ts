@@ -59,3 +59,45 @@ export async function consultarCpfUnificado(
   ]);
   return combinarDados(hub, siged);
 }
+
+export const HUB_BUSCA_URL_PADRAO = "https://portal.educacao.aju.br/webservice/hub/findCidadao";
+
+/**
+ * `POST hub/findCidadao`: busca por nome, telefone e/ou nascimento (os
+ * filtros valem juntos). Até 50 resultados; `truncado` quando havia mais.
+ * Usado SÓ na tela "Localizar CPF", por ação de uma pessoa da equipe.
+ */
+export async function buscarCidadaosHub(filtros: {
+  nome?: string;
+  telefone?: string;
+  data_nascimento?: string;
+}): Promise<
+  | { ok: true; data: { nome?: string; cpf?: string; data_nascimento?: string }[]; truncado: boolean }
+  | { ok: false; erro: string }
+> {
+  const token = process.env.HUB_CONSULTA_TOKEN?.trim();
+  if (!token) return { ok: false, erro: "Consulta ao Hub de Dados não configurada." };
+  const url = process.env.HUB_BUSCA_URL?.trim() || HUB_BUSCA_URL_PADRAO;
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(filtros),
+      cache: "no-store",
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+    const j = (await res.json().catch(() => null)) as {
+      status?: string;
+      message?: string;
+      data?: { nome?: string; cpf?: string; data_nascimento?: string }[];
+      truncado?: boolean;
+    } | null;
+    if (res.status === 401 || res.status === 403) return { ok: false, erro: "O Hub recusou a chave de acesso." };
+    if (j?.status === "success") return { ok: true, data: j.data ?? [], truncado: !!j.truncado };
+    if (j?.status === "not found") return { ok: true, data: [], truncado: false };
+    return { ok: false, erro: j?.message || `Hub respondeu HTTP ${res.status}.` };
+  } catch (error) {
+    console.error("[hub-busca] falha:", error instanceof Error ? error.message : error);
+    return { ok: false, erro: "Não foi possível alcançar o Hub de Dados." };
+  }
+}

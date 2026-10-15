@@ -210,6 +210,8 @@ interface BeneficiariasClientProps {
     bpc: number;
     recentes: number;
   };
+  /** Administradoras veem o atalho para "Localizar CPF". */
+  podeLocalizarCpf?: boolean;
 }
 
 export function BeneficiariasClient({
@@ -217,6 +219,7 @@ export function BeneficiariasClient({
   meta,
   formOptions,
   metrics,
+  podeLocalizarCpf = false,
 }: BeneficiariasClientProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -416,15 +419,24 @@ export function BeneficiariasClient({
             Gerencie o cadastro das mulheres atendidas ({meta.total} registros).
           </p>
         </div>
-        <Button
-          onClick={() => {
-            setSelectedBeneficiaria(null);
-            setFormOpen(true);
-          }}
-          className="bg-purple-600 hover:bg-purple-700 font-semibold shadow-sm transition-all"
-        >
-          <Plus className="mr-2 h-4 w-4" /> Nova Beneficiária
-        </Button>
+        <div className="flex gap-2">
+          {podeLocalizarCpf && (
+            <Link href="/mulheres/beneficiarias/localizar-cpf">
+              <Button variant="outline" className="font-semibold">
+                Localizar CPF
+              </Button>
+            </Link>
+          )}
+          <Button
+            onClick={() => {
+              setSelectedBeneficiaria(null);
+              setFormOpen(true);
+            }}
+            className="bg-purple-600 hover:bg-purple-700 font-semibold shadow-sm transition-all"
+          >
+            <Plus className="mr-2 h-4 w-4" /> Nova Beneficiária
+          </Button>
+        </div>
       </div>
 
       {/* 1. Cards de Métricas Rápidas */}

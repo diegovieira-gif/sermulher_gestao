@@ -1,5 +1,6 @@
 import { getBeneficiarias, getBeneficiariaFormOptions, getBeneficiariasMetrics } from "./actions";
 import { BeneficiariasClient } from "./beneficiarias-client";
+import { getCurrentAccess } from "@/lib/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -33,10 +34,11 @@ export default async function BeneficiariasPage({ searchParams }: PageProps) {
   const sortOrder = (params?.sortOrder as "asc" | "desc") || "desc";
 
   // Busca dados com paginação, busca, filtros e ordenação
-  const [result, formOptionsResult, metricsResult] = await Promise.all([
+  const [result, formOptionsResult, metricsResult, acesso] = await Promise.all([
     getBeneficiarias(page, search, limit, { medidaProtetiva, bolsaFamilia, bpc, bairro }, sortField, sortOrder),
     getBeneficiariaFormOptions(),
     getBeneficiariasMetrics(),
+    getCurrentAccess(),
   ]);
 
   if (!result.success) {
@@ -57,6 +59,7 @@ export default async function BeneficiariasPage({ searchParams }: PageProps) {
         meta={result.meta || { total: 0, page: 1, limit: 10, totalPages: 1 }}
         formOptions={formOptions}
         metrics={metrics}
+        podeLocalizarCpf={acesso.isAdmin}
       />
     </div>
   );
