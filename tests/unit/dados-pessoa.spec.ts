@@ -54,3 +54,9 @@ test("combinação: Hub manda, SIGED completa; endereço de uma origem só", () 
   expect(so.dados!.endereco.logradouro).toBe("OUTRA RUA");
   expect(combinarDados(null, null)).toEqual({ dados: null, origens: [] });
 });
+
+test("ficha do Hub: CPF no caminho da URL", async () => {
+  const { urlFichaHub } = await import("../../src/lib/consulta-cpf");
+  expect(urlFichaHub("12345678901")).toBe("https://portal.educacao.aju.br/webservice/hub/cidadao/12345678901");
+  expect(urlFichaHub("12345678901", "https://x.test/hub/cidadao/")).toBe("https://x.test/hub/cidadao/12345678901");
+});
