@@ -32,7 +32,46 @@ export type SugestaoCpf = {
   criterios: string[];
   nome_confere: boolean;
   nascimento_confere: boolean;
+  /**
+   * Recorte da ficha do Hub (`hub/cidadao`) deste CPF — só o que completa a
+   * ficha ao confirmar: nome da mãe, nascimento e endereço. Guardado na
+   * pré-busca porque o servidor ainda não alcança o Hub; apagado ao
+   * confirmar ou descartar.
+   */
+  hub_ficha?: FichaHubRecorte | null;
+  /** Só na tela: existe ficha do Hub guardada (o conteúdo fica no servidor). */
+  tem_ficha_hub?: boolean;
 };
+
+export type FichaHubRecorte = {
+  status: "success";
+  resumo: { nome?: string; data_nascimento?: string; nome_mae?: string; bairro?: string };
+  fontes: { ultima_atualizacao_na_fonte?: string; dados: { endereco?: Record<string, unknown> | null } }[];
+};
+
+/** Da resposta completa de `hub/cidadao`, só o necessário para completar a ficha. */
+export function recortarFichaHub(json: unknown): FichaHubRecorte | null {
+  const j = json as {
+    status?: string;
+    resumo?: Record<string, unknown>;
+    fontes?: { ultima_atualizacao_na_fonte?: string; dados?: { endereco?: Record<string, unknown> | null } | null }[];
+  } | null;
+  if (!j || j.status !== "success" || !j.resumo) return null;
+  const txt = (v: unknown) => (typeof v === "string" ? v : undefined);
+  return {
+    status: "success",
+    resumo: {
+      nome: txt(j.resumo.nome),
+      data_nascimento: txt(j.resumo.data_nascimento),
+      nome_mae: txt(j.resumo.nome_mae),
+      bairro: txt(j.resumo.bairro),
+    },
+    fontes: (j.fontes ?? []).map((f) => ({
+      ultima_atualizacao_na_fonte: f.ultima_atualizacao_na_fonte,
+      dados: { endereco: f.dados?.endereco ?? null },
+    })),
+  };
+}
 
 export type SugestoesCpf = {
   buscado_em: string; // ISO
@@ -152,4 +191,60 @@ export function lerSugestoes(v: unknown): SugestoesCpf | null {
   }
   if (!o || typeof o !== "object" || !Array.isArray((o as SugestoesCpf).candidatos)) return null;
   return o as SugestoesCpf;
+}
+
+export type DadosParaCompletar = {
+  nome_social?: string;
+  data_nascimento?: string;
+  nome_mae?: string;
+  telefone?: string;
+  email?: string;
+  endereco?: Record<string, string>;
+};
+
+/**
+ * O que gravar na ficha ao confirmar o CPF: só campos VAZIOS da ficha. O
+ * endereço vai inteiro e só quando a ficha não tem nem CEP nem rua — juntar a
+ * rua de uma origem com o número de outra produz um endereço que não existe.
+ * Devolve também os rótulos do que foi completado, para a tela informar.
+ */
+export function camposParaCompletar(
+  ficha: Record<string, unknown>,
+  dados: DadosParaCompletar | null,
+): { payload: Record<string, unknown>; completados: string[] } {
+  const payload: Record<string, unknown> = {};
+  const completados: string[] = [];
+  if (!dados) return { payload, completados };
+  const vazio = (v: unknown) => !String(v ?? "").trim();
+  const simples: [keyof DadosParaCompletar, string][] = [
+    ["nome_mae", "nome da mãe"],
+    ["data_nascimento", "nascimento"],
+    ["nome_social", "nome social"],
+    ["telefone", "telefone"],
+    ["email", "e-mail"],
+  ];
+  for (const [campo, rotulo] of simples) {
+    const valor = dados[campo];
+    if (typeof valor === "string" && valor.trim() && vazio(ficha[campo])) {
+      payload[campo] = valor.trim();
+      completados.push(rotulo);
+    }
+  }
+  let atual = ficha.endereco;
+  if (typeof atual === "string") {
+    try {
+      atual = JSON.parse(atual);
+    } catch {
+      atual = null;
+    }
+  }
+  const end = (atual && typeof atual === "object" ? atual : {}) as Record<string, unknown>;
+  const novo = Object.fromEntries(
+    Object.entries(dados.endereco ?? {}).filter(([, v]) => typeof v === "string" && v.trim()),
+  );
+  if (vazio(end.cep) && vazio(end.logradouro) && (novo.cep || novo.logradouro)) {
+    payload.endereco = { ...end, ...novo };
+    completados.push("endereço");
+  }
+  return { payload, completados };
 }

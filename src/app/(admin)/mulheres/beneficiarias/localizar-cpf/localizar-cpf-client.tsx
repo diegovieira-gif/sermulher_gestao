@@ -78,7 +78,11 @@ export function LocalizarCpfClient({ fichasIniciais }: { fichasIniciais: FichaLo
     try {
       const r = await confirmarCpf(f.id, c.cpf);
       if (!r.success) return toast.error(r.error);
-      toast.success("CPF gravado. Abra a ficha para completar os demais dados.");
+      toast.success(
+        r.completados.length
+          ? `CPF gravado. Ficha completada: ${r.completados.join(", ")}.`
+          : "CPF gravado. Nada a completar (campos já preenchidos ou sem dados no Hub).",
+      );
       atualizar(f.id, () => null);
     } finally {
       setOcupada(null);
@@ -174,6 +178,9 @@ export function LocalizarCpfClient({ fichasIniciais }: { fichasIniciais: FichaLo
                           <Badge variant={c.nascimento_confere ? "default" : "outline"} className="text-[10px]">
                             {c.nascimento_confere ? "nascimento confere" : "nascimento diferente"}
                           </Badge>
+                        )}
+                        {c.tem_ficha_hub && (
+                          <Badge variant="secondary" className="text-[10px]">completa a ficha</Badge>
                         )}
                         <span className="text-[10px] text-muted-foreground">achado por {c.criterios.join(", ")}</span>
                         <Button size="sm" className="ml-auto" disabled={ocupadaAqui} onClick={() => confirmar(f, c)}>

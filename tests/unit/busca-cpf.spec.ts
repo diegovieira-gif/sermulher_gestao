@@ -54,3 +54,22 @@ test("lerSugestoes aceita objeto ou texto JSON", () => {
   expect(lerSugestoes("lixo")).toBeNull();
   expect(lerSugestoes(null)).toBeNull();
 });
+
+test("completar ao confirmar: só campos vazios; endereço inteiro e só se a ficha não tem", async () => {
+  const { camposParaCompletar } = await import("../../src/lib/busca-cpf");
+  const dados = {
+    nome_mae: "Josefa Souza", data_nascimento: "1990-05-10", telefone: "79999990000", email: "",
+    endereco: { cep: "49044000", logradouro: "Rua Nova", numero: "22", complemento: "", bairro: "Santa Maria", cidade: "Aracaju" },
+  };
+  const r1 = camposParaCompletar({ telefone: "7932140000", data_nascimento: null, endereco: '{"bairro":"Centro"}' }, dados);
+  expect(r1.payload).toEqual({
+    nome_mae: "Josefa Souza", data_nascimento: "1990-05-10",
+    endereco: { bairro: "Santa Maria", cep: "49044000", logradouro: "Rua Nova", numero: "22", cidade: "Aracaju" },
+  });
+  expect(r1.completados).toEqual(["nome da mãe", "nascimento", "endereço"]);
+  // ficha já tem rua: endereço não é tocado
+  const r2 = camposParaCompletar({ endereco: { logradouro: "Rua Velha" }, nome_mae: "X" }, dados);
+  expect(r2.payload.endereco).toBeUndefined();
+  expect(r2.payload.nome_mae).toBeUndefined();
+  expect(camposParaCompletar({}, null)).toEqual({ payload: {}, completados: [] });
+});
